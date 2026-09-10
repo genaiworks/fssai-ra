@@ -1,0 +1,18 @@
+domain: import_boundary
+requirements:
+  - id: IB-1
+    protected_asset: The protected environment and the confidential data within it
+    permitted_operation: Inbound-only transfer of validated, signed artifacts
+    enforcement_point: One-way gateway (data diode) plus zero-trust import validator
+    owner: Platform Security
+    test: Attempt an outbound transfer from the protected side; confirm no delivery path exists
+    evidence_artifact: Ingestion log with source, stripped markers, and byte count
+    failure_response: Block source, quarantine artifact, and raise an alert
+  - id: IB-2
+    protected_asset: Model integrity against hostile or malformed inputs
+    permitted_operation: Accept only allowed content types within size and schema limits
+    enforcement_point: Type, size, schema, and signature checks before the protocol break
+    owner: Platform Security
+    test: Submit an oversize, wrong-type, or unsigned artifact; confirm quarantine
+    evidence_artifact: Quarantine record with reason
+    failure_response: Reject and quarantine; do not deliver inward

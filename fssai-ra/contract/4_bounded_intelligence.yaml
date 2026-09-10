@@ -1,0 +1,18 @@
+domain: bounded_intelligence
+requirements:
+  - id: BI-1
+    protected_asset: Agent authority and data reach
+    permitted_operation: Only granted tools, permitted operations, and in-scope data
+    enforcement_point: Semantic router plus per-agent identity, tools, scope, and limits
+    owner: AI Platform
+    test: Have an agent attempt an out-of-scope tool or data access; confirm denial
+    evidence_artifact: Agent policy record and denied-call log
+    failure_response: Deny, scope down the agent, and escalate
+  - id: BI-2
+    protected_asset: Instruction integrity of retrieved content
+    permitted_operation: Treat retrieved text as untrusted evidence, never as instructions
+    enforcement_point: Untrusted-evidence wrapper and content sanitization at import
+    owner: AI Platform
+    test: Supply a document carrying an embedded instruction; confirm it is not executed
+    evidence_artifact: Ingestion log of stripped markers
+    failure_response: Strip active content; label as evidence; deny any resulting action

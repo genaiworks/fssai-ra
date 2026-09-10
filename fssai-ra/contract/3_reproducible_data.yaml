@@ -1,0 +1,10 @@
+domain: reproducible_data
+requirements:
+  - id: RD-1
+    protected_asset: Approved data states used by decisions
+    permitted_operation: Versioned commit, read, and rollback with signed manifests
+    enforcement_point: Lineage-logged transforms and atomic snapshots
+    owner: Data Platform
+    test: Reconstruct the exact inputs of a past decision from its pinned snapshot
+    evidence_artifact: Signed snapshot manifest bound to the decision record
+    failure_response: Roll back to the last approved snapshot and rebuild indexes

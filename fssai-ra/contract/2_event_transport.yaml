@@ -1,0 +1,10 @@
+domain: event_transport
+requirements:
+  - id: ET-1
+    protected_asset: Ingested event stream and its ordering
+    permitted_operation: Durable, ordered, replayable append and read
+    enforcement_point: Event log with partition order, retention, per-item hash and trace id
+    owner: Data Platform
+    test: Kill a consumer mid-stream and confirm correct replay from the last offset
+    evidence_artifact: Offset and trace log per item
+    failure_response: Replay from the last committed offset and investigate the gap
