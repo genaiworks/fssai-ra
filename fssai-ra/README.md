@@ -1,22 +1,22 @@
 # FSSAI-RA — Fail-Secure Sovereign AI Reference Architecture
 
-A **runnable, vendor-neutral reference implementation** for building next-generation,
-AI-based systems on big-data tooling (Kafka, Spark, Iceberg) with a security spine
-(one-way data diode, least-privilege agents, human-in-the-loop, tamper-evident
-evidence).
+A **runnable teaching-profile reference implementation** for specifying and testing
+the authority boundaries of agentic AI. The synthetic student-support workflow runs
+in memory; adapter seams show where Kafka, Spark, Iceberg, and a local model can be
+evaluated without pretending those production systems are included in the demo.
 
-> **Design claim: containment, not invulnerability.** No single compromised file,
-> model, agent, user, or software layer should gain unchecked access, take a
-> consequential action, or erase the record without meeting an *independent*
-> control. When a required authorization is missing or uncertain, the system
-> **fails secure** — the automated action is denied and a defined manual path
-> preserves service.
+**Companion paper:** *Trust by Construction: A Testable Architecture for Sovereign
+AI Agents in Education*
+**Repository:** https://github.com/genaiworks/fssai-ra
 
-This repository is the working code behind the paper *Trust by Construction: A
-Fail-Secure Reference Architecture for Sovereign Agentic AI*. It runs with **no
-external infrastructure** (in-memory reference backends) so you can read it, run
-it, and test it in seconds — then swap in real Kafka/Spark/Iceberg/local-LLM via
-the adapter seams.
+> **Bounded claim: testable containment in a declared environment.** The teaching
+> profile demonstrates independent checks for specified failure paths. It is not a
+> production deployment, security certification, hardware-isolation proof, or claim
+> that a single host can withstand its own administrator.
+
+The original contribution is the **control contract**: each governance requirement
+names the protected asset, permitted operation, enforcement point, owner, test,
+evidence artifact, and failure response. The code makes that contract inspectable.
 
 ## The pipeline
 
@@ -49,7 +49,7 @@ the adapter seams.
 
 ```bash
 pip install -e ".[dev]"      # or: pip install pyyaml pytest
-pytest -q                    # 11 tests: contract + 5 attacks + 3 ablations
+pytest -q                    # contract, attack, ablation, and exact-action tests
 python examples/demo_student_support.py
 ```
 
@@ -61,7 +61,12 @@ python examples/demo_student_support.py
 | Event transport | `src/fssaira/event_transport.py` | `contract/2_event_transport.yaml` (ET-1) |
 | Reproducible data | `src/fssaira/reproducible_data.py` | `contract/3_reproducible_data.yaml` (RD-1) |
 | Bounded intelligence | `src/fssaira/bounded_intelligence.py` | `contract/4_bounded_intelligence.yaml` (BI-1, BI-2) |
-| Accountable action | `src/fssaira/accountable_action.py`, `evidence.py` | `contract/5_accountable_action.yaml` (AA-1..3) |
+| Accountable action | `src/fssaira/accountable_action.py`, `exact_action.py`, `evidence.py` | `contract/5_accountable_action.yaml` (AA-1..4) |
+
+The accountable-action domain also includes `src/fssaira/exact_action.py`. It binds
+a human approval to the exact target, arguments, evidence version, and case version;
+records intent before execution; rejects changed or expired approvals; and makes
+retries idempotent. See `tests/test_exact_action.py`.
 
 The **control contract** (`contract/*.yaml`) records, for every requirement, the
 seven fields from the paper — protected asset, permitted operation, enforcement
@@ -72,14 +77,28 @@ YAML, so it doubles as a conformance checklist.
 
 | Adversarial case | Independent control | Test |
 |---|---|---|
-| Prompt injection | active content stripped; retrieved text is untrusted evidence; egress tools denied; diode has no outward path | `test_prompt_injection_is_stripped_and_egress_blocked` |
+| Prompt injection specimen | one recognizable malicious line is removed; retrieved text remains untrusted; egress tools are denied; the simulated diode exposes no outward method | `test_prompt_injection_is_stripped_and_egress_blocked` |
 | Poisoned source data | lineage + snapshots → identify and roll back to last approved state | `test_poisoned_data_is_contained_by_rollback` |
 | Model hallucination / wrong action | advice separated from authority; high-impact needs a named human | `test_hallucinated_high_impact_action_needs_named_human` |
 | Compromised model / update | signature-checked ingestion + quarantine; no self-escalation | `test_compromised_update_is_quarantined_and_no_self_escalation` |
 | Insider record tampering | append-only hash chain detects silent edits | `test_insider_record_tampering_is_detected` |
 
-`tests/test_ablations.py` removes one control at a time and shows the harm
-returns — evidence that each control is load-bearing.
+`tests/test_ablations.py` removes one control at a time and shows the harm returns
+in the synthetic scenario. This supports a narrow implementation claim, not a
+general causal or security guarantee.
+
+## One-minute exact-action demonstration
+
+1. An agent proposes moving synthetic case `S-104` from `draft` to
+   `ready_for_officer_review` against version 7 and evidence snapshot 1.
+2. An officer approves the canonical digest of that exact proposal.
+3. Changing the target or transition produces `APPROVAL_PAYLOAD_MISMATCH` and zero
+   mutations.
+4. Executing the reviewed proposal records intent and outcome; retrying returns the
+   same receipt without a second mutation.
+
+This demonstrates a governance rule as observable behavior: **a changed proposal
+requires renewed review**.
 
 ## Extending it into your own framework
 
@@ -89,7 +108,8 @@ returns — evidence that each control is load-bearing.
   contract test still passes.
 - **Add a new application** (health, courts, benefits) by reusing the five
   domains: register tools, define a least-privilege agent, and add contract
-  entries + tests for the new consequential actions. See `CONTRIBUTING.md`.
+  entries + tests for the new consequential actions. Start with
+  [`docs/EXTENDING.md`](docs/EXTENDING.md) and `CONTRIBUTING.md`.
 
 ## Security & limitations
 
@@ -112,4 +132,4 @@ NIST SP 800-207 · NIST AI 600-1 · OWASP Top 10 for LLM Applications · MITRE A
 
 ## License
 
-Apache-2.0 — see `LICENSE`. Built to be adopted, audited, and extended.
+Apache-2.0 — see `LICENSE`. Cite the paper and software using `CITATION.cff`.

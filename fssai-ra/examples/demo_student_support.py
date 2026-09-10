@@ -7,7 +7,10 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
-from fssaira import ActionClass, ControlContract, FSSAIRAPipeline, RawInput, ToolCall
+from fssaira import (
+    AccountableExecutor, ActionClass, ActionProposal, ApprovalAuthority, CaseRegister,
+    ControlContract, EvidenceLedger, ExecutionDenied, FSSAIRAPipeline, RawInput, ToolCall,
+)
 import hashlib
 
 
@@ -39,15 +42,40 @@ def main():
                    action_class=ActionClass.HIGH_IMPACT, rationale="model is confident")
     print("   decision:", p.pep.check(bad, agent.agent))
 
-    print("\n== 4. Evidence ledger (tamper-evident) ==")
-    print("   records:", len(p.evidence), " verify():", p.evidence.verify())
+    print("\n== 4. Officer approval is bound to one exact action ==")
+    token = "demo-evidence-writer"
+    register = CaseRegister({"S-104": {"status": "draft", "version": 7}})
+    ledger = EvidenceLedger(token)
+    authority = ApprovalAuthority()
+    executor = AccountableExecutor(register, ledger, token)
+    proposal = ActionProposal(
+        request_id="req-104-a", requester=agent.agent.id,
+        operation="prepare_case_for_review", case_id="S-104", expected_version=7,
+        from_status="draft", to_status="ready_for_officer_review",
+        evidence_version="snapshot-demo-1",
+    )
+    approval = authority.approve(proposal, approver="officer-17")
+    altered = ActionProposal(**{**proposal.__dict__, "to_status": "award_approved"})
+    try:
+        executor.execute(altered, approval)
+    except ExecutionDenied as exc:
+        print("   altered proposal:", exc.code, "(zero mutations)")
+    result = executor.execute(proposal, approval)
+    replay = executor.execute(proposal, approval)
+    print("   exact proposal:", result.status, "receipt", result.receipt_hash[:12] + "...")
+    print("   retry:", "same receipt" if replay.receipt_hash == result.receipt_hash else "ERROR",
+          "mutations", register.mutation_count)
 
-    print("\n== 5. Metrics ==")
+    print("\n== 5. Evidence ledgers are tamper-evident ==")
+    print("   pipeline records:", len(p.evidence), " verify():", p.evidence.verify())
+    print("   exact-action records:", len(ledger), " verify():", ledger.verify())
+
+    print("\n== 6. Metrics ==")
     for k, v in p.metrics.snapshot().items():
         if v:
             print(f"   {k}: {v}")
 
-    print("\n== 6. Control contract loaded ==")
+    print("\n== 7. Control contract loaded ==")
     c = ControlContract.load(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "contract"))
     c.validate()
     print(f"   {len(c)} requirements across {len({r.domain for r in c})} domains, all fields present")

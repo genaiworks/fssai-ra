@@ -14,13 +14,15 @@ The strongest part of the contribution is the connection between a governance re
 
 ## Conference and submission context
 
-The invitation requests approximately 1,500 words by **21 September 2026**. It describes shortlisting for consideration as a panelist and proceedings development, rather than final acceptance. The accompanying extended abstract has approximately 1,450 words in its main body, excluding the title, keywords, and references. Its status is a proposed architecture and evaluation protocol.
+The invitation requests an extended abstract by **21 September 2026**. It describes shortlisting for consideration as a panelist and proceedings development, rather than final acceptance. The official Microsoft Form requires four separately pasted fields: Introduction, strictly 200–250 words; Development Section 1, 550–650 words; Development Section 2, 550–650 words; and Conclusion, strictly 200–250 words. References are entered separately. The form warns that it will reject submissions outside these section limits. The form-ready revision uses 217, 583, 576, and 217 whitespace-delimited words respectively (1,593 total), excluding references.
 
 UNU's published conference announcement confirms **25–26 November 2026** and the theme **“AI × Education: AI for Learning, Learning for AI.”** The supplied draft identifies Panel 2 as “Agentic AI in the Loop: From Autonomous Tools to Shared Capacity.” That panel title comes from your material; the linked conference landing page could not be retrieved during this review. The public book-series page confirms the series' scope but does not independently establish acceptance or publication of this particular contribution.
 
 Sources: [UNU conference announcement](https://unu.edu/macau/news/unu-macau-ai-conference-2026-become-sponsor), [UNU–Springer series](https://unu.edu/macau/announcement/book-series-aisd). Submission length and deadline come from your invitation.
 
-Before sending, add the actual author names, affiliation, corresponding email, and any required author declaration. Confirm the organizers' submission mechanism, formatting template, and whether references count toward the requested length. These administrative details were not supplied. The contribution can be submitted as proposed work without waiting for implementation, provided that status remains explicit.
+Before sending, add the actual author name, affiliation, corresponding email, and professional title. The form separately requires confirmation that the author respected each word limit and that the work is original. References have no displayed word limit. The repository should be public and verified in a signed-out browser before its URL is included in the submitted text.
+
+The teaching-profile implementation now passes 18 deterministic tests locally, including exact-action approval, altered-payload denial, expiry, stale-state denial, separation of duties, and idempotent retry. Describe these as tested software properties in a synthetic in-memory environment, not as a benchmark, deployment, or security certification. The broader attack, fault, reviewer, cost, and energy evaluation remains planned work.
 
 ## What changed and why
 

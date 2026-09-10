@@ -10,10 +10,16 @@ automated action is denied and a defined manual path preserves service.
 process. Requires functioning enforcement services and protected administrative
 credentials.
 
+**Assurance profile.** The included implementation is a teaching profile with
+in-memory components and synthetic cases. Its tests demonstrate specified software
+properties in that environment. They do not establish production isolation,
+comprehensive threat coverage, educational benefit, fairness, or certification.
+
 **What is contained (see `tests/test_attacks.py`).**
-- Prompt injection - active content stripped at import; retrieved text carried
-  only as untrusted evidence; egress-capable tools denied; the diode exposes no
-  outward path.
+- Prompt injection specimen - a recognizable malicious line is removed in the
+  fixture; retrieved text is still treated as untrusted evidence; egress-capable
+  tools are denied; the simulated diode exposes no outward method. Ordinary-language
+  prompt injection is not assumed to be reliably detectable or removable.
 - Poisoned data - lineage + snapshots let a poisoned state be identified and
   rolled back to the last approved snapshot.
 - Hallucinated / wrong action - advice is separated from authority; consequential
@@ -21,6 +27,9 @@ credentials.
 - Compromised model or update - signature-checked ingestion + quarantine; agents
   cannot self-escalate or edit policy.
 - Insider record tampering - append-only hash chain makes silent edits detectable.
+- Approval substitution and replay - a human approval is bound to the canonical
+  proposal, evidence and case versions; altered or expired payloads are denied and
+  retries do not create a second mutation.
 
 **Residual risks (not covered by structure alone).**
 - Compromise of a shared host administrator, the signing authority, or multiple

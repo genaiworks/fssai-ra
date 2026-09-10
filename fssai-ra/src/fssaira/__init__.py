@@ -8,7 +8,7 @@ human approval + tamper-evident evidence).
 """
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .accountable_action import ActionClass, Decision, PolicyEnforcementPoint, Tool, ToolCall
 from .bounded_intelligence import (
@@ -18,6 +18,10 @@ from .contract import ControlContract, Requirement
 from .diode import DiodeBreachError, OneWayChannel
 from .event_transport import Event, EventLog, KafkaLike
 from .evidence import EvidenceError, EvidenceLedger, EvidenceRecord
+from .exact_action import (
+    AccountableExecutor, ActionProposal, Approval, ApprovalAuthority, CaseRegister,
+    ExecutionDenied, ExecutionResult,
+)
 from .import_boundary import ImportBoundary, QuarantineError, RawInput
 from .metrics import Metrics
 from .pipeline import FSSAIRAPipeline
@@ -31,6 +35,8 @@ __all__ = [
     "DiodeBreachError", "OneWayChannel",
     "Event", "EventLog", "KafkaLike",
     "EvidenceError", "EvidenceLedger", "EvidenceRecord",
+    "AccountableExecutor", "ActionProposal", "Approval", "ApprovalAuthority", "CaseRegister",
+    "ExecutionDenied", "ExecutionResult",
     "ImportBoundary", "QuarantineError", "RawInput",
     "Metrics",
     "FSSAIRAPipeline",

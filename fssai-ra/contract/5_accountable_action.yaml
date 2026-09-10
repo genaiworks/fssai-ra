@@ -24,3 +24,11 @@ requirements:
     test: Attempt to edit or delete a past record; confirm the chain detects it
     evidence_artifact: Hash chain and independent verification result
     failure_response: Reject the write and flag the inconsistency for investigation
+  - id: AA-4
+    protected_asset: Consequential student-support case transitions
+    permitted_operation: An authorized officer may approve one exact proposed transition for a current case version
+    enforcement_point: Executor verifies the canonical proposal digest, audience, expiry, approval use, and authoritative case version before mutation
+    owner: Student Support Service Owner
+    test: Alter the target or transition after approval, replay the request, reuse approval for another request, and change the case version before execution
+    evidence_artifact: Pre-action intent and outcome receipts linked by request identifier and proposal digest
+    failure_response: Deny altered, expired, reused, or stale proposals; preserve manual review and reconciliation paths
