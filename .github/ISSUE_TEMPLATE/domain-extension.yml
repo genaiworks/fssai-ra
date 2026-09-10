@@ -1,0 +1,60 @@
+name: Domain extension proposal
+description: Propose a tested adaptation for education, health, benefits, justice, or another domain.
+title: "[Domain] "
+labels: ["extension"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use synthetic or properly licensed data. Do not include personal records,
+        credentials, vulnerability details, or claims of production assurance.
+  - type: input
+    id: workflow
+    attributes:
+      label: Bounded workflow
+      description: Name one workflow and one consequential action.
+      placeholder: An agent may propose X, but only role Y may commit it.
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Intended assurance profile
+      options:
+        - Teaching profile
+        - Institutional pilot
+        - Hardware-isolated profile
+    validations:
+      required: true
+  - type: textarea
+    id: people
+    attributes:
+      label: People and assets at risk
+      description: Identify affected people, protected records, and possible harms.
+    validations:
+      required: true
+  - type: textarea
+    id: control
+    attributes:
+      label: Independent control and real side effect
+      description: Where is authority enforced, and which side effect will the test inspect?
+    validations:
+      required: true
+  - type: textarea
+    id: recovery
+    attributes:
+      label: Manual continuity and recovery owner
+      description: Explain how service continues and name the accountable role.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Submission checks
+      options:
+        - label: I will use synthetic or properly licensed data.
+          required: true
+        - label: I will include an attack test and a benign-path test.
+          required: true
+        - label: I will state assumptions, exclusions, and profile limits.
+          required: true

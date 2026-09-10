@@ -1,5 +1,10 @@
 # FSSAI-RA — Fail-Secure Sovereign AI Reference Architecture
 
+[![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
+[![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](../LICENSE)
+[![Release v0.2.0](https://img.shields.io/badge/release-v0.2.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.2.0)
+
 A **runnable teaching-profile reference implementation** for specifying and testing
 the authority boundaries of agentic AI. The synthetic student-support workflow runs
 in memory; adapter seams show where Kafka, Spark, Iceberg, and a local model can be
@@ -48,10 +53,26 @@ evidence artifact, and failure response. The code makes that contract inspectabl
 ## Quickstart
 
 ```bash
+git clone https://github.com/genaiworks/fssai-ra.git
+cd fssai-ra/fssai-ra
 pip install -e ".[dev]"      # or: pip install pyyaml pytest
 pytest -q                    # contract, attack, ablation, and exact-action tests
 python examples/demo_student_support.py
 ```
+
+Expected test result for release `v0.2.0`: `18 passed`. The demo uses synthetic
+records and performs no network calls or external mutations.
+
+## Read this first
+
+- [`docs/ASSURANCE.md`](docs/ASSURANCE.md) maps every public claim to its test,
+  evidence, and limit.
+- [`docs/DEMO.md`](docs/DEMO.md) provides a reproducible five-minute walkthrough.
+- [`docs/EXTENDING.md`](docs/EXTENDING.md) shows how to add a domain without
+  inheriting unsupported assurance claims.
+- [`docs/SECURITY.md`](docs/SECURITY.md) defines the threat model and residual risk.
+- [`docs/extended-abstract.md`](docs/extended-abstract.md) contains the conference
+  paper narrative and evaluation plan.
 
 ## Repository map
 
@@ -130,6 +151,10 @@ NIST SP 800-207 · NIST AI 600-1 · OWASP Top 10 for LLM Applications · MITRE A
 > Sovereign Agentic AI* (UNU Macau AI Conference 2026, Panel 2). Reference
 > implementation: this repository.
 
+For stable citation, use release `v0.2.0` or commit `1392ff1`. Machine-readable
+citation metadata is available in [`CITATION.cff`](CITATION.cff).
+
 ## License
 
-Apache-2.0 — see `LICENSE`. Cite the paper and software using `CITATION.cff`.
+Apache-2.0 — see [`LICENSE`](../LICENSE). Cite the paper and software using
+`CITATION.cff`.

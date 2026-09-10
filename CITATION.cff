@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use or extend this reference architecture, cite the paper and software."
+title: "FSSAI-RA: Fail-Secure Sovereign AI Reference Architecture"
+type: software
+authors:
+  - family-names: "Srivastava"
+    given-names: "R."
+version: 0.2.0
+date-released: 2026-09-10
+url: "https://github.com/genaiworks/fssai-ra"
+repository-code: "https://github.com/genaiworks/fssai-ra"
+license: Apache-2.0
+abstract: >-
+  A teaching-profile reference implementation for connecting agentic-AI governance
+  requirements to enforcement checks, failure tests, evidence, and recovery owners.
+preferred-citation:
+  type: conference-paper
+  title: "Trust by Construction: A Testable Architecture for Sovereign AI Agents in Education"
+  authors:
+    - family-names: "Srivastava"
+      given-names: "R."
+  year: 2026
+  conference:
+    name: "UNU Macau AI Conference 2026"
