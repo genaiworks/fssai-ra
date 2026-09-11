@@ -309,6 +309,17 @@ def create_app(
     def get_proposal_evidence(request_id: str, caller: Caller):
         return {"request_id": request_id, "records": plane.evidence_for(request_id)}
 
+    @app.get("/v1/proposals/{request_id}/packet", tags=["evidence"])
+    def export_packet(request_id: str, caller: Caller, response: Response):
+        # This private operational artifact contains identities and case references.
+        # It is not a public student portal or a redacted disclosure response.
+        require(caller, "platform_operator")
+        from .decision_packet import export_decision_packet
+
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Content-Disposition"] = 'attachment; filename="decision-packet.json"'
+        return export_decision_packet(plane, request_id)
+
     # -- evidence ----------------------------------------------------------
     @app.get("/v1/evidence", tags=["evidence"])
     def list_evidence(

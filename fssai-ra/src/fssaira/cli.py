@@ -389,6 +389,15 @@ def cmd_model_propose(args) -> int:
     return 0
 
 
+def cmd_packet_check(args) -> int:
+    from .packet_verifier import main as inspect_main
+
+    arguments = [str(args.path)]
+    if args.expected_sha256 is not None:
+        arguments += ["--expected-sha256", args.expected_sha256]
+    return inspect_main(arguments)
+
+
 def cmd_evidence_verify(args) -> int:
     records = json.loads(Path(args.path).read_text(encoding="utf-8"))
     if isinstance(records, dict):
@@ -612,6 +621,11 @@ def build_parser() -> argparse.ArgumentParser:
         "verify", help="re-verify an exported hash chain"))
     evidence_verify.add_argument("path", type=Path)
     evidence_verify.set_defaults(func=cmd_evidence_verify)
+
+    packet = sub.add_parser("packet-check", help="inspect a private decision packet offline; missing anchor exits 2")
+    packet.add_argument("path", type=Path)
+    packet.add_argument("--expected-sha256", default=None)
+    packet.set_defaults(func=cmd_packet_check)
 
     diode = sub.add_parser("diode", help="the one-way import path")
     diode_sub = diode.add_subparsers(dest="diode_command", required=True)
