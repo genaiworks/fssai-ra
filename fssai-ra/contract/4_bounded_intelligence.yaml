@@ -1,18 +1,46 @@
 domain: bounded_intelligence
 requirements:
   - id: BI-1
-    protected_asset: Agent authority and data reach
-    permitted_operation: Only granted tools, permitted operations, and in-scope data
-    enforcement_point: Semantic router plus per-agent identity, tools, scope, and limits
-    owner: AI Platform
-    test: Have an agent attempt an out-of-scope tool or data access; confirm denial
-    evidence_artifact: Agent policy record and denied-call log
-    failure_response: Deny, scope down the agent, and escalate
+    protected_asset: The authority to act
+    permitted_operation: A model may propose tool calls; it may not execute anything
+    enforcement_point: Every proposal is routed through the policy enforcement point before it can have an effect; the backend holds no credential and no execution method
+    owner: ML Platform Owner
+    test: Run a deliberately compromised backend against a least-privilege agent and confirm every hostile proposal is denied
+    evidence_artifact: Policy decision record per proposal, including the model's rationale, recorded and never used to decide
+    failure_response: Deny the call; record the attempt; review the backend
+
   - id: BI-2
-    protected_asset: Instruction integrity of retrieved content
-    permitted_operation: Treat retrieved text as untrusted evidence, never as instructions
-    enforcement_point: Untrusted-evidence wrapper and content sanitization at import
-    owner: AI Platform
-    test: Supply a document carrying an embedded instruction; confirm it is not executed
-    evidence_artifact: Ingestion log of stripped markers
-    failure_response: Strip active content; label as evidence; deny any resulting action
+    protected_asset: Confidential records
+    permitted_operation: Egress-capable tools are denied unless a deployment explicitly permits them, and an outward destination is refused even in the arguments of a tool not classed as egress
+    enforcement_point: Default-deny egress classification plus argument inspection at the policy enforcement point
+    owner: Platform Security
+    test: Propose an egress tool and confirm denial; hide a URL in the arguments of a non-egress tool and confirm denial
+    evidence_artifact: Denied-call record naming the blocked destination
+    failure_response: Deny and alert; treat a successful egress as a disclosure incident
+
+  - id: BI-3
+    protected_asset: The review level a consequential action requires
+    permitted_operation: The action class of any proposal is read from the deployment's capability catalogue, never from the proposal
+    enforcement_point: Policy enforcement point re-derives the class before deciding; an unknown capability is classed as consequential and fails closed
+    owner: Student Support Service Owner
+    test: Submit a call that labels a consequential operation as reversible; confirm it is reclassified, still requires a named human, and the attempted downgrade is recorded
+    evidence_artifact: Policy decision record showing both the declared class and the effective class
+    failure_response: Deny; count the attempt; investigate the agent or backend that produced it
+
+  - id: BI-4
+    protected_asset: Availability of the service and its downstream systems
+    permitted_operation: An agent may make at most its granted number of enforced calls
+    enforcement_point: Call budget counted by the policy enforcement point, not by the agent's own loop
+    owner: Platform Engineering
+    test: Submit more calls than the grant permits and confirm the excess is denied with a stable code
+    evidence_artifact: Denied-call records citing budget exhaustion
+    failure_response: Deny further calls; alert the service owner; preserve the manual path
+
+  - id: BI-5
+    protected_asset: Institutional sovereignty over data and model
+    permitted_operation: Inference runs on infrastructure the institution controls; a non-local endpoint is permitted only as a recorded, deliberate exception
+    enforcement_point: Local-first backend selection, with a configuration warning whenever the endpoint is not local and an option to refuse to start rather than fall back silently
+    owner: ML Platform Owner
+    test: Configure a remote endpoint and confirm the deployment reports a sovereignty warning; configure an unreachable local model with fallback denied and confirm the failure is explicit
+    evidence_artifact: Health report naming the requested backend, the active backend, and any fallback
+    failure_response: Fail closed or fall back with the downgrade recorded; never present a fallback as the configured model

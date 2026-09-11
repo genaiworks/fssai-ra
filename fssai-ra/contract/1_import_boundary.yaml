@@ -1,18 +1,43 @@
+# Domain 1 — controlled import.
+#
+# Every requirement records the seven fields from the paper: protected asset,
+# permitted operation, enforcement point, owner, test, evidence artifact, and
+# failure response. A capability whose seven fields cannot be filled is not ready
+# to be automated.
 domain: import_boundary
 requirements:
   - id: IB-1
-    protected_asset: The protected environment and the confidential data within it
-    permitted_operation: Inbound-only transfer of validated, signed artifacts
-    enforcement_point: One-way gateway (data diode) plus zero-trust import validator
+    protected_asset: The protected domain's data and processing environment
+    permitted_operation: Accept only artifacts of a declared type and size from a registered source, authenticated by that source's key
+    enforcement_point: Import boundary validation ahead of the one-way channel; quarantine on any failure
     owner: Platform Security
-    test: Attempt an outbound transfer from the protected side; confirm no delivery path exists
-    evidence_artifact: Ingestion log with source, stripped markers, and byte count
-    failure_response: Block source, quarantine artifact, and raise an alert
+    test: Submit an oversized artifact, a disallowed content type, an unregistered source, a tampered signature, and a payload whose size does not match its envelope; confirm quarantine and no inward delivery
+    evidence_artifact: Quarantine record naming the source, reason, and byte count
+    failure_response: Quarantine the artifact, notify the source owner, and preserve the manual submission route
+
   - id: IB-2
-    protected_asset: Model integrity against hostile or malformed inputs
-    permitted_operation: Accept only allowed content types within size and schema limits
-    enforcement_point: Type, size, schema, and signature checks before the protocol break
+    protected_asset: Confidential records inside the protected domain
+    permitted_operation: Data moves low-side to high-side only; no ordinary path exists for the reverse direction
+    enforcement_point: One-way channel exposing no read, reply, or acknowledgement method, verified by inspection; a certified diode on the physical link
     owner: Platform Security
-    test: Submit an oversize, wrong-type, or unsigned artifact; confirm quarantine
-    evidence_artifact: Quarantine record with reason
-    failure_response: Reject and quarantine; do not deliver inward
+    test: Inspect the configured inward channel for any return-path method; confirm the low-side gateway exposes no read-back HTTP route; confirm the high-side receiver never transmits
+    evidence_artifact: Channel description listing every public method, plus the gateway's route table
+    failure_response: Refuse to start with a channel that exposes a return path; treat any discovered read-back route as an incident
+
+  - id: IB-3
+    protected_asset: The directionality claim itself
+    permitted_operation: Every interface in or out of the protected domain is declared, with a named control and a named owner
+    enforcement_point: Interface inventory reviewed at deployment and at every change; a diode governs one link and nothing else
+    owner: Infrastructure Owner
+    test: Enumerate declared interfaces; confirm none is missing a control or an owner; confirm outward-capable interfaces (telemetry, backup, administrative shell) are each accounted for
+    evidence_artifact: Signed interface inventory with review date and reviewer
+    failure_response: Treat an undeclared interface as an unreviewed change; suspend the directionality claim until the inventory is complete
+
+  - id: IB-4
+    protected_asset: Downstream decisions that read imported content
+    permitted_operation: Imported text is carried as untrusted evidence and is never promoted to an instruction
+    enforcement_point: Mechanically recognisable active content is stripped at the boundary; downstream, retrieved text is fenced as data and the enforcement point ignores it entirely when deciding
+    owner: ML Platform Owner
+    test: Import a prompt-injection specimen; confirm markers are removed, the item is still delivered as evidence, and a compromised model acting on it obtains no authorization
+    evidence_artifact: Ingest record listing stripped markers, byte counts, and the content hash that crossed
+    failure_response: Deny the influenced action; retain the specimen for analysis; do not rely on stripping as the control

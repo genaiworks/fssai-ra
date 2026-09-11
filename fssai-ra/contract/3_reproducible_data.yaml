@@ -1,10 +1,19 @@
 domain: reproducible_data
 requirements:
   - id: RD-1
-    protected_asset: Approved data states used by decisions
-    permitted_operation: Versioned commit, read, and rollback with signed manifests
-    enforcement_point: Lineage-logged transforms and atomic snapshots
-    owner: Data Platform
-    test: Reconstruct the exact inputs of a past decision from its pinned snapshot
-    evidence_artifact: Signed snapshot manifest bound to the decision record
-    failure_response: Roll back to the last approved snapshot and rebuild indexes
+    protected_asset: The inputs a past decision relied on
+    permitted_operation: Transforms are lineage-logged and table state is versioned, so any past decision's inputs can be reconstructed
+    enforcement_point: Lineage record per job (code version, input and output hashes, rules) plus atomic snapshots with a content manifest
+    owner: Data Platform Owner
+    test: Commit a snapshot, poison the data, then roll back and confirm the approved rows are restored exactly; confirm identical content yields an identical manifest
+    evidence_artifact: Snapshot identifier and manifest hash, bound to the decision by the approval's evidence version
+    failure_response: Roll back to the last approved snapshot; re-review every decision made against the poisoned state
+
+  - id: RD-2
+    protected_asset: The reconstructability claim
+    permitted_operation: Snapshot expiry and orphan-file cleanup must not remove a snapshot any live decision is bound to
+    enforcement_point: Retention policy for pinned snapshots reviewed as a control; a manifest identifies data but cannot restore it
+    owner: Data Platform Owner
+    test: Attempt to expire a pinned snapshot; confirm refusal or an explicit, recorded override
+    evidence_artifact: Snapshot retention policy and the pin list
+    failure_response: Record the loss explicitly; a decision whose inputs are gone must be marked unreconstructable rather than presented as reproducible

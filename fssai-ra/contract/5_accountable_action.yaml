@@ -8,27 +8,57 @@ requirements:
     test: Have the agent attempt to approve an award directly; confirm denial and required human approval
     evidence_artifact: Decision record with operation, model rationale, and named approver
     failure_response: Deny the automated action and require a named human approver
+
   - id: AA-2
     protected_asset: Agent access boundaries
     permitted_operation: The agent may not broaden its own access
-    enforcement_point: Policy enforcement point checks scope-changing operations
+    enforcement_point: Policy enforcement point checks scope-changing operations against an explicit grant
     owner: Platform Security
     test: Have the agent request an access increase; confirm denial
     evidence_artifact: Denied-call log
     failure_response: Deny and alert
+
   - id: AA-3
     protected_asset: The decision and evidence record
     permitted_operation: The agent may not alter or delete evidence
-    enforcement_point: Append-only, hash-chained ledger with a separate write credential
+    enforcement_point: Append-only, hash-chained ledger with a separate write credential held only by the evidence service; append-only enforced by database grant where available
     owner: Audit and Assurance
-    test: Attempt to edit or delete a past record; confirm the chain detects it
-    evidence_artifact: Hash chain and independent verification result
+    test: Attempt to append without the credential and confirm refusal; edit a past record and confirm the chain detects it
+    evidence_artifact: Hash chain plus an independent verification result recomputed from a second copy
     failure_response: Reject the write and flag the inconsistency for investigation
+
   - id: AA-4
-    protected_asset: Consequential student-support case transitions
-    permitted_operation: An authorized officer may approve one exact proposed transition for a current case version
-    enforcement_point: Executor verifies a trusted approval signature, canonical proposal digest, operation allowlist, audience, expiry, approval use, and authoritative case version before mutation
+    protected_asset: Consequential case transitions
+    permitted_operation: An authorized officer may approve one exact proposed transition for a current resource version
+    enforcement_point: Executor verifies a trusted approval signature, canonical proposal digest, operation allowlist, profiled transition, approver role, audience, expiry, single use, and authoritative version before any mutation
     owner: Student Support Service Owner
-    test: Alter signed approval fields, use an untrusted key, approve an unallowlisted operation, alter the target or transition, replay the request, and change the case version before execution
+    test: Alter signed approval fields; use an untrusted key; present a genuine approval addressed to another executor, for another proposal, past its expiry, or from a role not permitted for this transition; approve an unallowlisted operation or an off-profile transition; replay the request; change the resource version before execution
     evidence_artifact: Pre-action intent and outcome receipts linked by request identifier and proposal digest
     failure_response: Deny altered, expired, reused, or stale proposals; preserve manual review and reconciliation paths
+
+  - id: AA-5
+    protected_asset: The completeness of the decision record
+    permitted_operation: A resource must never move without a durable record of who authorized the move
+    enforcement_point: Where the register and the evidence ledger share a database, the mutation, receipt, intent, and outcome commit in one transaction; where they do not, a completed mutation with a missing outcome is reported as uncertain, retained, and reconciled exactly once
+    owner: Student Support Service Owner
+    test: Interrupt the outcome append on the best-effort profile and confirm an uncertain status, one mutation, and one reconciled outcome; on the transactional profile, force a failure mid-execution and confirm no partial record survives
+    evidence_artifact: Durability profile reported on health, plus the intent and outcome pair for every mutation
+    failure_response: Never retry blindly; run reconciliation; escalate to the named owner if a mutation has no outcome record after reconciliation
+
+  - id: AA-6
+    protected_asset: The integrity of the approval decision
+    permitted_operation: The requester of an action may not approve it
+    enforcement_point: Separation of duties refused at issue time by the approval service; the approver's role comes from the authenticated principal, never from the request body
+    owner: Program Registrar
+    test: Request and approve as the same identity and confirm refusal; submit an approval request naming a role the caller does not hold and confirm the caller's real role is used
+    evidence_artifact: Approval record naming the approver, their authenticated role, and the proposal digest
+    failure_response: Refuse to issue the approval; record the attempt
+
+  - id: AA-7
+    protected_asset: The assurance argument after a component is replaced
+    permitted_operation: A backend may be replaced only when the portable conformance suite still passes against it
+    enforcement_point: Conformance suite run against the configured backends, not a reference build, and published with the deployment
+    owner: Platform Engineering
+    test: Run the conformance suite against the deployment's own register, evidence store, event bus, inward channel, and model; confirm every check passes or is explicitly skipped
+    evidence_artifact: Machine-readable conformance report naming each backend and the requirement each check defends
+    failure_response: Do not deploy the replacement; record which governance claim the failing check removed

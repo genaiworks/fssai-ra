@@ -1,10 +1,28 @@
 domain: event_transport
 requirements:
   - id: ET-1
-    protected_asset: Ingested event stream and its ordering
-    permitted_operation: Durable, ordered, replayable append and read
-    enforcement_point: Event log with partition order, retention, per-item hash and trace id
-    owner: Data Platform
-    test: Kill a consumer mid-stream and confirm correct replay from the last offset
-    evidence_artifact: Offset and trace log per item
-    failure_response: Replay from the last committed offset and investigate the gap
+    protected_asset: Traceability of every accepted item
+    permitted_operation: Each accepted item receives a stable identifier, an ordering position, and a content hash
+    enforcement_point: Durable ordered log with monotonic offsets and an idempotent producer
+    owner: Platform Engineering
+    test: Append several events and confirm offsets are distinct and increasing; replay from an offset and confirm the same events in the same order
+    evidence_artifact: Offset, trace identifier, and content hash per event
+    failure_response: Halt the consumer on a detected gap; reconcile from the durable evidence ledger, which is the system of record
+
+  - id: ET-2
+    protected_asset: Correctness of anything built from the log
+    permitted_operation: Consumers must be idempotent; delivery is at-least-once and is never described as exactly-once
+    enforcement_point: Offsets committed only after the handler succeeds; duplicates de-duplicated on (partition, offset); a poisoned record goes to a dead-letter topic rather than stalling the stream
+    owner: Platform Engineering
+    test: Redeliver a processed event and confirm no duplicate effect; submit an unprocessable record and confirm the stream continues and the record is dead-lettered
+    evidence_artifact: Consumer group offsets and the dead-letter topic contents
+    failure_response: Replay from the last committed offset; a stalled projection is treated as a monitoring outage, because it is one
+
+  - id: ET-3
+    protected_asset: The decision archive
+    permitted_operation: Retention and compaction settings must outlive the challenge and appeal window for any decision they support
+    enforcement_point: Retention policy reviewed as a governance setting, not an operational default; durable evidence lives in the ledger, not in the log
+    owner: Records Manager
+    test: Confirm configured retention exceeds the declared appeal window; confirm a decision's evidence survives log expiry
+    evidence_artifact: Retention configuration with its review date
+    failure_response: Extend retention or archive before expiry; never let a log expiry silently remove a decision's basis

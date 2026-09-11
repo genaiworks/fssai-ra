@@ -1,0 +1,43 @@
+# Cross-cutting controls.
+#
+# Identity, policy administration, key management, and evidence custody must be
+# administered separately from the agent runtime. If the team that runs the agent
+# also holds the approval signing key, "independent enforcement" is a diagram,
+# not a control.
+domain: cross_cutting
+requirements:
+  - id: XC-1
+    protected_asset: The identity of every caller
+    permitted_operation: A caller acts only as an identity the control plane established; roles are claims the caller cannot assert
+    enforcement_point: Bearer-token or OIDC authentication at the API; proxy headers accepted only when an authenticating proxy is declared and overwrites them
+    owner: Identity and Access Owner
+    test: Call without a credential and with a forged one; assert a privileged role from a request body or header and confirm it is ignored
+    evidence_artifact: Authentication mode and its warnings, reported on health
+    failure_response: Refuse the request with an authentication failure; never fall back to a caller-asserted identity
+
+  - id: XC-2
+    protected_asset: The approval signing key and the evidence write credential
+    permitted_operation: These are held by the approval service and the evidence service respectively, and by nobody else
+    enforcement_point: Secret management outside the agent runtime; the deployment reports a blocking finding while any published teaching credential is active
+    owner: Key Custodian
+    test: Start with defaults and confirm the deployment reports itself as not ready; confirm an agent process cannot obtain either credential
+    evidence_artifact: Readiness report listing every active teaching default
+    failure_response: Do not accept the deployment for a pilot; rotate any credential that has been in a repository
+
+  - id: XC-3
+    protected_asset: The trustworthiness of self-reported assurance
+    permitted_operation: The evidence chain is re-verified by a process that is not the control plane
+    enforcement_point: Independent verification job reading the archive, recomputing every hash and checking for sequence gaps; a monitor that shares a process with the thing it monitors proves nothing
+    owner: Audit and Assurance
+    test: Alter and truncate an archived chain; confirm the independent job reports alteration and a sequence gap
+    evidence_artifact: Verification job output with record counts, first and last sequence, and any gaps
+    failure_response: Treat a gap or a mismatch as an incident; the primary chain is no longer citable until reconciled
+
+  - id: XC-4
+    protected_asset: Continuity of service when automation is denied
+    permitted_operation: A named manual path serves the person whose request was refused
+    enforcement_point: Manual fallback declared in the application profile and owned by a named service owner
+    owner: Student Support Service Owner
+    test: Confirm every profile declares a manual fallback and that the named owner is aware of it; measure the false-denial rate beside the containment rate
+    evidence_artifact: Profile manual-fallback text plus the utility results from the evaluation report
+    failure_response: Escalate to the service owner; a system that denies everything is fail-secure and useless
