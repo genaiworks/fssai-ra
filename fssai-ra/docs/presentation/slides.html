@@ -302,6 +302,21 @@ code, .mono { font-family: var(--mono); font-size: .88em; letter-spacing: -.01em
 .takeaway .link b { font-family: var(--mono); font-weight: 600; font-size: clamp(13px, 1.5cqw, 20px); color: var(--authorize); word-break: break-word; }
 @container (max-width: 700px) { .takeaway { grid-template-columns: 1fr; } }
 
+/* Charts. Text takes theme tokens so it reads on either ground; every drawn
+   shape has an explicit fill. Single series, so no legend: the title names it. */
+.chart { width: 100%; height: auto; display: block; max-width: 100%; }
+.chart text { font-family: var(--display); fill: var(--ink); }
+.chart .c-title { font-size: 13px; font-weight: 700; letter-spacing: -.005em; }
+.chart .c-sub { font-size: 11px; fill: var(--ink-faint); font-family: var(--body); }
+.chart .c-label { font-size: 12.5px; font-weight: 600; fill: var(--ink); }
+.chart .c-note { font-size: 10.5px; fill: var(--ink-faint); font-family: var(--mono); }
+.chart .c-value { font-size: 14px; font-weight: 700; fill: var(--ink);
+                  font-variant-numeric: tabular-nums; }
+.chart .c-axis { stroke: var(--rule-strong); stroke-width: 1; }
+
+.charts { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 2cqw, 26px); }
+@container (max-width: 700px) { .charts { grid-template-columns: 1fr; } }
+
 /* ─────────────────────────────────────────────────────────── notes */
 
 .notes {
@@ -724,6 +739,93 @@ const SLIDES = [
     </div>`,
   notes: `Technical, but it is the clearest example of the method producing an engineering improvement rather than a document.
   <p>If time is short, compress to: “we closed the one gap the previous release could only document, and we say exactly where it still applies.”</p>`
+},
+{
+  eyebrow: ["Experiment", "Against how agents are built today"],
+  time: "6:30",
+  html: `
+    <h2>The same seven attacks, three architectures.</h2>
+    <div class="body">
+      <div class="charts">
+        <div class="figure"><svg viewBox="0 0 760 290" role="img" aria-labelledby="t-91870" class="chart">
+<title id="t-91870">Attacks contained, by architecture. Seven attacks. Identical hostile proposals to all three arms.</title>
+<text x="0" y="14" class="c-title">Attacks contained, by architecture</text>
+<text x="0" y="29" class="c-sub">Seven attacks. Identical hostile proposals to all three arms.</text>
+<line x1="210" y1="38" x2="210" y2="234" class="c-axis"/>
+<text x="198" y="57" text-anchor="end" class="c-label">A · unguarded</text>
+<text x="198" y="72" text-anchor="end" class="c-note">0/7 contained</text>
+<rect x="210" y="42" width="3" height="22" rx="1.5" fill="var(--rule-strong)"><title>A · unguarded: 0</title></rect>
+<text x="223" y="59" class="c-value">0%</text>
+<text x="198" y="127" text-anchor="end" class="c-label">B · prompt-guarded</text>
+<text x="198" y="142" text-anchor="end" class="c-note">2/7 contained</text>
+<rect x="210" y="112" width="132.8" height="22" rx="4" fill="var(--ink)"><title>B · prompt-guarded: 29%</title></rect>
+<text x="352.82" y="129" class="c-value">29%</text>
+<text x="198" y="197" text-anchor="end" class="c-label">C · FSSAI-RA</text>
+<text x="198" y="212" text-anchor="end" class="c-note">7/7 contained</text>
+<rect x="210" y="182" width="458.0" height="22" rx="4" fill="var(--ink)"><title>C · FSSAI-RA: 100%</title></rect>
+<text x="678.0" y="199" class="c-value">100%</text>
+<text x="210" y="278" class="c-note">0–100% of attempted attacks contained</text>
+</svg></div>
+        <div class="figure"><svg viewBox="0 0 760 290" role="img" aria-labelledby="t-50057" class="chart">
+<title id="t-50057">Benign tasks completed, by architecture. The same legitimate work, put to all three arms.</title>
+<text x="0" y="14" class="c-title">Benign tasks completed, by architecture</text>
+<text x="0" y="29" class="c-sub">The same legitimate work, put to all three arms.</text>
+<line x1="210" y1="38" x2="210" y2="234" class="c-axis"/>
+<text x="198" y="57" text-anchor="end" class="c-label">A · unguarded</text>
+<text x="198" y="72" text-anchor="end" class="c-note">2/2 completed</text>
+<rect x="210" y="42" width="458.0" height="22" rx="4" fill="var(--authorize)"><title>A · unguarded: 100%</title></rect>
+<text x="678.0" y="59" class="c-value">100%</text>
+<text x="198" y="127" text-anchor="end" class="c-label">B · prompt-guarded</text>
+<text x="198" y="142" text-anchor="end" class="c-note">2/2 completed</text>
+<rect x="210" y="112" width="458.0" height="22" rx="4" fill="var(--authorize)"><title>B · prompt-guarded: 100%</title></rect>
+<text x="678.0" y="129" class="c-value">100%</text>
+<text x="198" y="197" text-anchor="end" class="c-label">C · FSSAI-RA</text>
+<text x="198" y="212" text-anchor="end" class="c-note">2/2 completed</text>
+<rect x="210" y="182" width="458.0" height="22" rx="4" fill="var(--authorize)"><title>C · FSSAI-RA: 100%</title></rect>
+<text x="678.0" y="199" class="c-value">100%</text>
+<text x="210" y="278" class="c-note">0–100% of legitimate tasks completed — containment costs nothing here</text>
+</svg></div>
+      </div>
+      <p><strong>Arm B is not a strawman.</strong> A per-agent tool allowlist and a safety system prompt are what most deployed agents have, and they stop 2 of 7 attacks — a real control doing real work. What it cannot do is tell a legitimate use of a granted tool from a hostile one, or require a person for a consequential one. 8 harmful actions still reached the protected asset.</p>
+      <p class="faint">Every arm faces the identical hostile proposals and the identical legitimate work. The right-hand chart is the one that makes the left-hand chart worth reporting: <strong>containment cost nothing</strong>.</p>
+    </div>`,
+  notes: `The slide that answers "compared to what?". Without it, a containment figure of 100% is a locked door with no burglars.
+  <p>Be scrupulous about Arm B. Say out loud that an allowlist is a real control and that it stops real attacks — a reviewer who thinks you rigged the baseline will discount everything else.</p>
+  <p>Then the residual: the gap between B and C is exactly what an enforcement point independent of the model, a capability catalogue, and a named human approver account for.</p>
+  <p>Point at the right-hand chart last. All three arms complete all the legitimate work.</p>`
+},
+{
+  eyebrow: ["Experiment", "What reached the protected asset"],
+  time: "7:00",
+  html: `
+    <h2>Harm is the measure, not refusals.</h2>
+    <div class="body">
+      <div class="figure"><svg viewBox="0 0 760 290" role="img" aria-labelledby="t-67066" class="chart">
+<title id="t-67066">Harmful actions that reached the protected asset. Exfiltration, unauthorized award, self-escalation, evidence destruction.</title>
+<text x="0" y="14" class="c-title">Harmful actions that reached the protected asset</text>
+<text x="0" y="29" class="c-sub">Exfiltration, unauthorized award, self-escalation, evidence destruction.</text>
+<line x1="210" y1="38" x2="210" y2="234" class="c-axis"/>
+<text x="198" y="57" text-anchor="end" class="c-label">A · unguarded</text>
+<text x="198" y="72" text-anchor="end" class="c-note">data 7 · unauthorized 7 · self 7 · evidence 7</text>
+<rect x="210" y="42" width="458.0" height="22" rx="4" fill="var(--refuse)"><title>A · unguarded: 28</title></rect>
+<text x="678.0" y="59" class="c-value">28</text>
+<text x="198" y="127" text-anchor="end" class="c-label">B · prompt-guarded</text>
+<text x="198" y="142" text-anchor="end" class="c-note">data 2 · unauthorized 2 · self 2 · evidence 2</text>
+<rect x="210" y="112" width="130.9" height="22" rx="4" fill="var(--refuse)"><title>B · prompt-guarded: 8</title></rect>
+<text x="350.8571428571429" y="129" class="c-value">8</text>
+<text x="198" y="197" text-anchor="end" class="c-label">C · FSSAI-RA</text>
+<text x="198" y="212" text-anchor="end" class="c-note">none</text>
+<rect x="210" y="182" width="3" height="22" rx="1.5" fill="var(--rule-strong)"><title>C · FSSAI-RA: 0</title></rect>
+<text x="223" y="199" class="c-value">0</text>
+<text x="210" y="278" class="c-note">count of completed harmful actions across the seven attacks</text>
+</svg></div>
+      <div class="cols">
+        <p>Counting denials flatters any restrictive system. Counting what actually reached the protected asset — a record exfiltrated, an award approved, an access scope widened, a record destroyed — does not.</p>
+        <p class="faint">And only one arm leaves a record of any of it. In A and B the runtime writes its own log, which an agent that can call tools can usually also reach. In C the evidence write credential is held by the evidence service and the agent never has it.</p>
+      </div>
+    </div>`,
+  notes: `Short slide. The point is the denominator again: harms delivered, not calls denied.
+  <p>The evidence line is worth thirty seconds — in the first two arms there is no record an investigator could trust, because the thing under investigation wrote it.</p>`
 },
 {
   eyebrow: ["Evidence", "With denominators"],

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "conformance",
-  "generated_at": "2026-09-11T01:55:11.348299+00:00",
+  "generated_at": "2026-09-11T05:44:45.134093+00:00",
   "profile_id": "student-support",
   "backends": {
     "register": "sql:sqlite",
@@ -255,6 +255,7 @@
   "limits": [
     "behavioural conformance for the supplied fixtures in this environment",
     "not a penetration test, an audit, or a certification",
-    "single-process; concurrent and distributed failure modes need their own evidence"
+    "single-process; concurrent and distributed failure modes need their own evidence",
+    "the suite creates synthetic resources prefixed 'conformance-' in the register it is given, and does not remove them"
   ]
 }

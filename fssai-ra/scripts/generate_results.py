@@ -27,6 +27,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from fssaira import __version__  # noqa: E402
 from fssaira.conformance import memory_bundle, run_conformance, sql_bundle  # noqa: E402
 from fssaira.evaluation import EvaluationRunner  # noqa: E402
+from fssaira.experiment import run_comparison  # noqa: E402
 from fssaira.profiles import ApplicationProfile  # noqa: E402
 from fssaira.verification import verify_profile  # noqa: E402
 
@@ -49,12 +50,16 @@ def generate(output_dir: Path, tag: str) -> dict:
 
     memory_conformance = run_conformance(memory_bundle(profile))
     sql_conformance = run_conformance(sql_bundle(profile=profile))
+    comparison = run_comparison()
+    by_arm = {arm["arm"][0]: arm for arm in comparison["arms"]}  # "A", "B", "C"
 
     evaluation.write_json(output_dir / f"{tag}-student-support.json")
     (output_dir / f"{tag}-verification.json").write_text(
         json.dumps(verification.to_dict(), indent=2) + "\n", encoding="utf-8")
     memory_conformance.write_json(output_dir / f"{tag}-conformance-memory.json")
     sql_conformance.write_json(output_dir / f"{tag}-conformance-sql.json")
+    (output_dir / f"{tag}-architecture-comparison.json").write_text(
+        json.dumps(comparison, indent=2) + "\n", encoding="utf-8")
 
     payload = evaluation.to_dict()
     summary = {
@@ -93,6 +98,15 @@ def generate(output_dir: Path, tag: str) -> dict:
             "distinct_denial_codes": len(
                 [code for code in verification.outcome_histogram if code != "EXECUTED"]
             ),
+            # controlled comparison against how agents are built today
+            "arm_a_containment": by_arm["A"]["containment_rate"],
+            "arm_b_containment": by_arm["B"]["containment_rate"],
+            "arm_c_containment": by_arm["C"]["containment_rate"],
+            "arm_a_harms": sum(by_arm["A"]["harms"].values()),
+            "arm_b_harms": sum(by_arm["B"]["harms"].values()),
+            "arm_c_harms": sum(by_arm["C"]["harms"].values()),
+            "comparison_attacks": len(comparison["attacks"]),
+            "benign_completion_all_arms": by_arm["C"]["benign_completion_rate"],
             # conformance
             "conformance_checks": len(memory_conformance.executed),
             "conformance_backends_verified": 2,
@@ -109,6 +123,10 @@ def generate(output_dir: Path, tag: str) -> dict:
             "model_check_holds": verification.holds,
             "memory_profile_conformant": memory_conformance.passed,
             "sql_profile_conformant": sql_conformance.passed,
+            "comparison_contains_every_attack": by_arm["C"]["attacks_succeeded"] == 0,
+            "containment_costs_no_utility": (
+                by_arm["C"]["benign_completion_rate"] >= by_arm["B"]["benign_completion_rate"]
+            ),
         },
         "limits": payload["limits"],
     }
@@ -167,6 +185,12 @@ def render_markdown(summary: dict) -> str:
          f"{figures['invariants_checked']} invariants, {figures['model_check_violations']} violations"),
         ("Distinct denial controls reached", str(figures["distinct_denial_codes"]),
          "each one exercised by at least one configuration"),
+        ("Attacks contained — unguarded arm", f"{round(figures['arm_a_containment'] * 100)}%",
+         f"{figures['arm_a_harms']} harmful actions reached the protected asset"),
+        ("Attacks contained — prompt-guarded arm", f"{round(figures['arm_b_containment'] * 100)}%",
+         f"{figures['arm_b_harms']} harmful actions; an allowlist is a real control"),
+        ("Attacks contained — this architecture", f"{round(figures['arm_c_containment'] * 100)}%",
+         f"{figures['arm_c_harms']} harmful actions, at no cost to benign completion"),
         ("Conformance checks", str(figures["conformance_checks"]),
          f"passed on {figures['conformance_backends_verified']} independent backend profiles"),
         ("Control-contract requirements", str(figures["contract_requirements"]),

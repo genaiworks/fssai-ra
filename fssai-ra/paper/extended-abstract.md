@@ -45,6 +45,8 @@ Here the implementation closes a gap the previous release could only document. W
 
 ## 4. Evidence, with denominators
 
+**Compared with how agents are built today.** A containment figure means nothing without a baseline, so the same seven attacks — identical hostile proposals, identical legitimate work — were put to three architectures. An *unguarded* arm (a model, a tool registry, a loop) contained 0% and delivered 28 harmful actions. A *prompt-guarded* arm, adding the two mitigations most commonly deployed — a safety system prompt and a per-agent tool allowlist — contained 29% and delivered 8. This arm is deliberately not a strawman: an allowlist is a real control doing real work. What it cannot do is distinguish a legitimate use of a granted tool from a hostile one, or require a person for a consequential one. This architecture contained 7 of 7 and delivered none. All three arms completed all the legitimate work, so the containment was not bought with refusals.
+
 Against the synthetic student-support profile: 30 of 30 adversarial scenarios contained, with **zero unauthorized mutations**; 240 model-checked states with zero invariant violations; authority coverage 1.0; 25 conformance checks passing on 2 backend profiles; 149 deterministic tests requiring no network and no model weights.
 
 One figure matters more than the containment rate. **6 of 6 benign tasks completed, false-denial rate 0.0.** A system that denies everything scores perfectly on containment and is useless; reporting the two together is what stops either being optimised alone. A previous version of this work listed the utility baseline as future work, which meant its headline number had no denominator.
@@ -61,6 +63,28 @@ Adoption begins with one bounded workflow and a named service owner, and the rep
 
 The proposition is actionable. Every consequential agent capability should have a named authorization boundary, an executable failure test, and a recovery owner — and publishing those three together gives institutions a concrete basis for deciding which powers to delegate, which evidence to demand, and when automation must stop.
 
+## References
+
+[1] Rose, S., Borchert, O., Mitchell, S., and Connelly, S. (2020). *Zero Trust Architecture*. NIST SP 800-207. https://doi.org/10.6028/NIST.SP.800-207
+
+[2] Autio, C., et al. (2024). *Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile*. NIST AI 600-1. https://doi.org/10.6028/NIST.AI.600-1
+
+[3] OWASP GenAI Security Project (2025). *OWASP Top 10 for Agentic Applications 2026*. https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/
+
+[4] OWASP GenAI Security Project (2026). *Agent Control Standard*. https://genai.owasp.org/resource/agent-control-standard-acs/
+
+[5] MITRE (2024). *ATLAS: Adversarial Threat Landscape for Artificial-Intelligence Systems*. https://atlas.mitre.org/
+
+[6] ISO/IEC (2023). *ISO/IEC 42001:2023 — Information technology, Artificial intelligence, Management system*. https://www.iso.org/standard/81230.html
+
+[7] Apache Software Foundation. *Apache Kafka Documentation: Design*. https://kafka.apache.org/documentation/#design
+
+[8] Apache Software Foundation. *Apache Iceberg Documentation: Maintenance*. https://iceberg.apache.org/docs/latest/maintenance/
+
+[9] UNESCO (2024). *AI Competency Framework for Teachers*. https://www.unesco.org/en/articles/ai-competency-framework-teachers
+
+[10] United Nations (2024). *Global Digital Compact*. https://www.un.org/pact-for-the-future/en/annex-i-global-digital-compact
+
 ---
 
-*Full paper, reference implementation, machine-readable evaluation results, and the conformance suite are available at the repository above. Web references checked 10 September 2026.*
+*Reference implementation, machine-readable evaluation results, the architecture comparison, and the conformance suite are available at the repository above. Web references checked 10 September 2026.*

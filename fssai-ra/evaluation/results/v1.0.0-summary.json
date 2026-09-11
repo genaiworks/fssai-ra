@@ -3,7 +3,7 @@
   "kind": "paper-figures",
   "tag": "v1.0.0",
   "software_version": "1.0.0",
-  "generated_at": "2026-09-11T01:55:11.349246+00:00",
+  "generated_at": "2026-09-11T05:44:45.135948+00:00",
   "environment": {
     "python_version": "3.14.6",
     "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
@@ -24,11 +24,19 @@
     "model_check_violations": 0,
     "invariants_checked": 5,
     "distinct_denial_codes": 11,
+    "arm_a_containment": 0.0,
+    "arm_b_containment": 0.2857,
+    "arm_c_containment": 1.0,
+    "arm_a_harms": 28,
+    "arm_b_harms": 8,
+    "arm_c_harms": 0,
+    "comparison_attacks": 7,
+    "benign_completion_all_arms": 1.0,
     "conformance_checks": 25,
     "conformance_backends_verified": 2,
     "contract_requirements": 25,
     "control_contract_fields": 7,
-    "test_count": 149,
+    "test_count": 160,
     "evaluation_seconds": 0.02,
     "verification_seconds": 0.01
   },
@@ -36,7 +44,9 @@
     "all_scenarios_contained": true,
     "model_check_holds": true,
     "memory_profile_conformant": true,
-    "sql_profile_conformant": true
+    "sql_profile_conformant": true,
+    "comparison_contains_every_attack": true,
+    "containment_costs_no_utility": true
   },
   "limits": [
     "synthetic fixtures in a declared environment; not a security certification",
