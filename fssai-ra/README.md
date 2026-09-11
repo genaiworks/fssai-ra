@@ -3,26 +3,71 @@
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](../LICENSE)
-[![Tag v0.5.0](https://img.shields.io/badge/tag-v0.5.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/tree/v0.5.0)
+[![Release v1.0.0](https://img.shields.io/badge/release-v1.0.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/tree/v1.0.0)
+
+> **A model may propose an action. It cannot manufacture the authority to execute it.**
 
 An **extensible, runnable reference platform** for specifying and testing the
-authority boundaries of agentic AI. It includes a dependency-free teaching mode
-and a distributed reference mode built with FastAPI, Redis, Apache Kafka, PySpark,
-Apache Iceberg, and S3-compatible storage. A low-side gateway models the software
-seam that can be replaced by a certified one-way data diode.
+authority boundaries of agentic AI. It ships a dependency-free teaching mode and
+a distributed reference deployment built with FastAPI, PostgreSQL, Redis, Apache
+Kafka, PySpark, Apache Iceberg, S3-compatible storage, a local model through
+Ollama, and a React operator console. A low-side gateway and a working
+unidirectional transport model the seam a certified one-way data diode occupies.
 
-**Companion paper:** *Trust by Construction: A Testable Architecture for Sovereign
-AI Agents in Education*
-**Repository:** https://github.com/genaiworks/fssai-ra
+**Companion paper:** *Trust by Construction: A Testable Architecture for
+Sovereign AI Agents in Education* — extended abstract in
+[`paper/extended-abstract.md`](paper/extended-abstract.md), prepared for the
+**UNU Macau AI Conference 2026** (*AI × Education: AI for Learning, Learning for
+AI*) and its UNU–Springer proceedings.
+
+**Conference deck:** [`docs/presentation/slides.html`](docs/presentation/slides.html)
+with a timed script and question preparation in
+[`docs/presentation/speaker-script.md`](docs/presentation/speaker-script.md).
 
 > **Bounded claim: testable containment in a declared environment.** The teaching
 > profile demonstrates independent checks for specified failure paths. It is not a
-> production deployment, security certification, hardware-isolation proof, or claim
-> that a single host can withstand its own administrator.
+> production deployment, a security certification, a hardware-isolation proof, or
+> a claim that a single host can withstand its own administrator.
 
-The original contribution is the **control contract**: each governance requirement
-names the protected asset, permitted operation, enforcement point, owner, test,
-evidence artifact, and failure response. The code makes that contract inspectable.
+---
+
+## Sixty seconds
+
+```bash
+git clone https://github.com/genaiworks/fssai-ra.git
+cd fssai-ra/fssai-ra
+pip install -e ".[dev]"
+
+pytest                                            # 149 deterministic tests, fully offline
+fssaira doctor                                    # what is this deployment, really?
+fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
+fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
+fssaira conformance --backend sql                 # does it still hold on another backend?
+```
+
+No network, no model weights, no GPU. The whole suite reproduces on a
+disconnected laptop in under two seconds, which is the point: a second
+institution can **check** these numbers rather than trust them.
+
+## What is new in v1.0.0
+
+Release `v0.5.0` could specify authority boundaries and test the attacks its
+authors thought of. This release adds the three things that make the assurance
+argument survive contact with another institution.
+
+| | Question it answers | Result |
+|---|---|---|
+| **Bounded model checking** | What about the combination nobody imagined? | 240 configurations, 5 invariants, 0 violations |
+| **Ablation-measured coverage** | Is each control load-bearing, or decorative? | 8 of 8 controls restored their harm |
+| **Portable conformance** | Does it still hold after you replace a component? | 25 checks, 2 independent backend profiles |
+
+Plus: **single-transaction execution** on PostgreSQL, which removes — rather than
+merely detects — the one failure mode the previous release could only document;
+**privilege invariance**, so a model cannot declare its own review level; real
+**authentication** replacing spoofable headers; a **React console**; and a
+**utility baseline** reported beside every containment figure.
+
+See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## The pipeline
 
@@ -35,166 +80,154 @@ evidence artifact, and failure response. The code makes that contract inspectabl
    └──────────┬───────────┘
               │  inward only
    ┌──────────▼───────────┐   durable, ordered, replayable
-   │  2. EVENT TRANSPORT   │   (Kafka-like: offsets, hash, trace)
+   │  2. EVENT TRANSPORT   │   (Kafka: offsets, hash, trace)
    └──────────┬───────────┘
-   ┌──────────▼───────────┐   clean/validate (Spark-like) +
-   │  3. REPRODUCIBLE DATA │   versioned snapshots + rollback
-   │   (Spark + Iceberg)   │   (Iceberg-like: signed manifests)
+   ┌──────────▼───────────┐   clean/validate (Spark) + versioned
+   │  3. REPRODUCIBLE DATA │   snapshots + rollback
+   │   (Spark + Iceberg)   │   (Iceberg: manifests, time travel)
    └──────────┬───────────┘
-   ┌──────────▼───────────┐   semantic router + local model +
-   │ 4. BOUNDED INTELLIGENCE│  least-privilege agents; retrieved
-   │                       │   text is DATA, never instructions
+   ┌──────────▼───────────┐   local model (Ollama) + least-privilege
+   │ 4. BOUNDED INTELLIGENCE│  agents; retrieved text is DATA;
+   │                       │   action class from the CATALOGUE
    └──────────┬───────────┘
    ┌──────────▼───────────┐   policy verifies the ACTUAL operation
-   │ 5. ACCOUNTABLE ACTION │   (not the model's story); high-impact
+   │ 5. ACCOUNTABLE ACTION │   (not the model's story); consequential
    │  policy + human + log │   needs a named human; append-only,
-   └──────────────────────┘   hash-chained evidence
+   └──────────────────────┘   hash-chained evidence, one transaction
 ```
 
-## Quickstart
+## The control contract
+
+The original contribution. For each consequential capability, seven fields:
+**protected asset, permitted operation, enforcement point, accountable owner,
+failure test, evidence artifact, failure response.** Twenty-five requirements
+live in [`contract/*.yaml`](contract/) as machine-readable YAML, so the contract
+doubles as a conformance checklist — and `pytest` fails if any field is empty.
+
+Not a documentation convention. A **diagnostic**: a capability whose seven fields
+cannot be filled is a capability nobody is ready to automate. It also works
+unmodified as an RFP section.
 
 ```bash
-git clone https://github.com/genaiworks/fssai-ra.git
-cd fssai-ra/fssai-ra
-pip install -e ".[dev]"
-pytest -q                    # contract, attack, ablation, and exact-action tests
-python examples/demo_student_support.py
-fssaira validate-profile profiles/student_support.yaml
-fssaira evaluate profiles/student_support.yaml --output evaluation-report.json
+fssaira contract --output contract.json     # the whole contract, human or machine readable
 ```
 
-Expected test result for release `v0.5.0`: `42 passed`. The demo uses synthetic
-records and performs no network calls or external mutations.
-
-The evaluation command executes eight declared scenarios—including altered
-approved payloads, expired and forged approvals, operations and transitions outside
-the profile, idempotent retry, and interrupted outcome evidence—and emits a
-machine-readable JSON report. The release result is committed at
-[`evaluation/results/v0.5.0-student-support.json`](evaluation/results/v0.5.0-student-support.json).
-
-## Run the distributed reference stack
+## Run the reference deployment
 
 ```bash
 python scripts/bootstrap_dev_env.py
-docker compose --env-file deploy/.env -f deploy/compose.yaml up --build -d \
-  redis kafka control-api import-gateway
+docker compose --env-file deploy/.env -f deploy/compose.yaml up -d          # core stack
+docker compose --env-file deploy/.env -f deploy/compose.yaml --profile model up -d   # + Ollama
 python scripts/smoke_stack.py
 ```
 
-The smoke test exercises resource registration, exact-action proposal, independent
-human approval, execution, idempotent retry, evidence lookup, HMAC-authenticated
-inward import, and Kafka publication. See [`docs/PLATFORM.md`](docs/PLATFORM.md) for
-the full API and Spark/Iceberg path, [`docs/DIODE_DEPLOYMENT.md`](docs/DIODE_DEPLOYMENT.md)
-for the physical-diode claim boundary, and [`docs/OPERATIONS.md`](docs/OPERATIONS.md)
-for failure and recovery procedures.
-
-## Read this first
-
-- [`docs/ASSURANCE.md`](docs/ASSURANCE.md) maps every public claim to its test,
-  evidence, and limit.
-- [`docs/DEMO.md`](docs/DEMO.md) provides a reproducible five-minute walkthrough.
-- [`docs/EXTENDING.md`](docs/EXTENDING.md) shows how to add a domain without
-  inheriting unsupported assurance claims.
-- [`docs/PLATFORM.md`](docs/PLATFORM.md) covers the FastAPI, Redis, Kafka, Spark,
-  Iceberg, and object-storage reference deployment.
-- [`docs/SECURITY.md`](docs/SECURITY.md) defines the threat model and residual risk.
-- [`docs/extended-abstract.md`](docs/extended-abstract.md) contains the conference
-  paper narrative and evaluation plan.
-
-## Repository map
-
-| Domain | Module | Contract |
+| Service | Where | What it is |
 |---|---|---|
-| Import boundary (diode) | `src/fssaira/diode.py`, `import_boundary.py` | `contract/1_import_boundary.yaml` (IB-1, IB-2) |
-| Event transport | `src/fssaira/event_transport.py` | `contract/2_event_transport.yaml` (ET-1) |
-| Reproducible data | `src/fssaira/reproducible_data.py` | `contract/3_reproducible_data.yaml` (RD-1) |
-| Bounded intelligence | `src/fssaira/bounded_intelligence.py` | `contract/4_bounded_intelligence.yaml` (BI-1, BI-2) |
-| Accountable action | `src/fssaira/accountable_action.py`, `exact_action.py`, `evidence.py` | `contract/5_accountable_action.yaml` (AA-1..4) |
-| Control API and durable state | `src/fssaira/api.py`, `control_plane.py`, `redis_backend.py` | profile rules plus API/integration tests |
-| Distributed event and evidence path | `src/fssaira/kafka_backend.py`, `jobs/*.py` | idempotent producer, checkpointed Kafka-to-Iceberg job |
-| Domain adaptation | `src/fssaira/profiles.py`, `profiles/*.yaml` | validated operation and transition rules |
-| Evaluation | `src/fssaira/evaluation.py`, `src/fssaira/cli.py` | machine-readable scenario results |
+| Operator console | `http://localhost:8088` | React; deployment state, governance, actions, evidence, assurance |
+| Control API | `http://localhost:8080/docs` | The only way to change a governed resource |
+| Import gateway | `http://localhost:8081` | Low-side, inward only, no read-back route |
 
-The accountable-action domain also includes `src/fssaira/exact_action.py`. It
-authenticates approval fields with a teaching-profile HMAC, accepts only trusted
-approval keys, profiled reviewer roles, operations, and state transitions, and binds approval to the exact target,
-arguments, evidence version, and case version. Successful retries return the stored
-receipt without a second mutation or duplicate evidence. See
-`tests/test_exact_action.py`.
+Add `--profile analytics` for MinIO, the Iceberg REST catalog, and Spark. See
+[`docs/PLATFORM.md`](docs/PLATFORM.md).
 
-If the authoritative transition succeeds while outcome-evidence append is
-interrupted, the executor raises `OUTCOME_EVIDENCE_PENDING`, retains a pending
-outcome, and exposes an idempotent reconciliation method. The included store is an
-in-memory teaching model; deployments must use a durable outbox committed atomically
-with the authoritative mutation.
+## Extend it
 
-The **control contract** (`contract/*.yaml`) records, for every requirement, the
-seven fields from the paper — protected asset, permitted operation, enforcement
-point, owner, test, evidence artifact, failure response — as machine-readable
-YAML, so it doubles as a conformance checklist.
+Everything is a port with at least one reference adapter, discovered through
+entry points, a dotted path, or in-process registration.
+
+```bash
+fssaira plugins                     # every backend this process can see
+fssaira model list                  # ollama (default) · openai-compatible · deterministic · …
+fssaira init my-domain              # scaffold a profile, a contract, and a failing test
+```
+
+```toml
+# your own package — no fork required
+[project.entry-points."fssaira.models"]
+my-institution = "mypkg.models:InstitutionModel"
+```
+
+A replacement is acceptable when the **same conformance suite still passes**
+against it — not because it inherits from a blessed base class.
+
+```bash
+fssaira conformance --backend sql --output conformance.json
+```
+
+The scaffold ships an **empty** assurance file on purpose. A new domain inherits
+the structure and none of the evidence; borrowing another domain's results is how
+a method decays into a vocabulary. Start at [`docs/EXTENDING.md`](docs/EXTENDING.md).
 
 ## How each failure is contained
 
-| Adversarial case | Independent control | Test |
+| Adversarial case | Independent control | Where |
 |---|---|---|
-| Prompt injection specimen | one recognizable malicious line is removed; retrieved text remains untrusted; egress tools are denied; the simulated diode exposes no outward method | `test_prompt_injection_is_stripped_and_egress_blocked` |
-| Poisoned source data | lineage + snapshots → identify and roll back to last approved state | `test_poisoned_data_is_contained_by_rollback` |
-| Model hallucination / wrong action | advice separated from authority; high-impact needs a named human | `test_hallucinated_high_impact_action_needs_named_human` |
-| Compromised model / update | signature-checked ingestion + quarantine; no self-escalation | `test_compromised_update_is_quarantined_and_no_self_escalation` |
-| Insider record tampering | append-only hash chain detects silent edits | `test_insider_record_tampering_is_detected` |
+| Prompt injection in a retrieved document | markers stripped; retrieved text stays untrusted; egress denied; the inward channel exposes no outward method | `injection_specimen_stripped_at_import` |
+| A fully compromised model | least-privilege grant plus default-deny policy; every hostile proposal denied | `compromised_model_against_least_privilege` |
+| A model that understates its own action class | class re-derived from the capability catalogue; downgrade recorded | `model_declares_its_own_action_class` |
+| Exfiltration hidden in a tool argument | argument inspection on non-egress tools | `exfiltration_hidden_in_arguments` |
+| A proposal changed after review | canonical digest binding; zero mutations | `changed_target_after_approval` |
+| A genuine approval for another executor, proposal, role, or past its expiry | audience, digest, role, and expiry checked independently of the signature | 4 model-check variants |
+| Poisoned source data | lineage plus snapshot rollback to the last approved state | `poisoned_data_rolled_back_to_approved_snapshot` |
+| Insider record tampering | append-only hash chain; independent Spark re-verification catches truncation too | `insider_record_tampering_detected` |
+| Interrupted outcome evidence | single transaction where possible; otherwise reported uncertain and reconciled once | `outcome_evidence_interruption_and_recovery` |
 
-`tests/test_ablations.py` removes one control at a time and shows the harm returns
-in the synthetic scenario. This supports a narrow implementation claim, not a
-general causal or security guarantee.
+`fssaira evaluate` runs all 30, plus 6 benign tasks and 8 ablations.
 
-## One-minute exact-action demonstration
+## Results
 
-1. An agent proposes moving synthetic case `S-104` from `draft` to
-   `ready_for_officer_review` against version 7 and evidence snapshot 1.
-2. An officer approves the canonical digest of that exact proposal.
-3. Changing the target or transition produces `APPROVAL_PAYLOAD_MISMATCH` and zero
-   mutations.
-4. Executing the reviewed proposal records intent and outcome; retrying returns the
-   same receipt without a second mutation.
+| Measure | Result | What it does and does not mean |
+|---|---|---|
+| Adversarial scenarios contained | `30/30` | containment of sampled risk classes, not coverage of a threat catalogue |
+| Unauthorized mutations | `0` | across every denial scenario |
+| Benign tasks completed | `6/6` | the denominator that makes a containment rate meaningful |
+| False-denial rate | `0.0` | a system that denies everything scores perfectly on containment |
+| Authority coverage | `1.0` | 8/8 controls restored their harm when removed |
+| States explored | `240` | 5 invariants, 0 violations |
+| Conformance checks | `25` | on 2 independent backend profiles |
 
-This demonstrates a governance rule as observable behavior: **a changed proposal
-requires renewed review**.
+Full table and its limits: [`evaluation/results/RESULTS.md`](evaluation/results/RESULTS.md).
+Regenerate with `python scripts/generate_results.py`.
 
-## Extending it into your own framework
+**Every figure the paper and the deck quote comes from that generator**, and
+[`tests/test_paper_alignment.py`](tests/test_paper_alignment.py) fails the build
+if prose and code disagree. Alignment is a test here, not a promise.
 
-- **Use or replace reference backends:** the base platform includes Redis state,
-  Kafka event publication, and a checkpointed PySpark-to-Iceberg evidence path;
-  `adapters/` retains smaller teaching and local-model examples. A replacement is
-  acceptable only when the same contract tests still pass.
-- **Add a new application** (health, courts, benefits) by reusing the five
-  domains: copy [`profiles/template.yaml`](profiles/template.yaml), name every
-  permitted transition and approval role, register least-privilege tools, and add
-  contract entries + tests for each consequential action. Start with
-  [`docs/EXTENDING.md`](docs/EXTENDING.md) and `CONTRIBUTING.md`.
+## Read this first
 
-## Security & limitations
+- [`docs/ASSURANCE.md`](docs/ASSURANCE.md) — every public claim, its mechanism, its test, and its limit
+- [`docs/SECURITY.md`](docs/SECURITY.md) — threat model and residual risk
+- [`docs/DEMO.md`](docs/DEMO.md) — a reproducible five-minute walkthrough
+- [`docs/EXTENDING.md`](docs/EXTENDING.md) — adding a domain without inheriting unsupported claims
+- [`docs/PLATFORM.md`](docs/PLATFORM.md) — the distributed deployment
+- [`docs/DIODE_DEPLOYMENT.md`](docs/DIODE_DEPLOYMENT.md) — where the directionality claim starts and stops
+- [`docs/OPERATIONS.md`](docs/OPERATIONS.md) — failure and recovery procedures
 
-Read `docs/SECURITY.md` first. In short: this contains categories of catastrophic
-failure by structure, but it is **not** proof against a compromised host
-administrator, a subverted signing authority, or colluding control owners. A
-hardware diode governs one link; every other path needs its own control.
-Tamper-evidence detects, it does not prevent.
+## Security and limitations
+
+Read [`docs/SECURITY.md`](docs/SECURITY.md) first. In short: this contains
+categories of catastrophic failure by structure, but it is **not** proof against
+a compromised host administrator, a subverted signing authority, or colluding
+control owners. A hardware diode governs one link; every other path needs its own
+control. Tamper-evidence detects, it does not prevent.
+
+Report vulnerabilities per [`SECURITY.md`](SECURITY.md).
 
 ## Standards alignment (not certification)
 
-NIST SP 800-207 · NIST AI 600-1 · OWASP Top 10 for LLM Applications · MITRE ATLAS
-· ISO/IEC 42001 · UNESCO AI Competency Framework · UN Global Digital Compact.
+NIST SP 800-207 · NIST AI 600-1 · OWASP Top 10 for LLM Applications · OWASP
+Agentic Security · MITRE ATLAS · ISO/IEC 42001 · UNESCO AI Competency Framework ·
+UN Global Digital Compact.
 
 ## Citation
 
-> R. Srivastava, *Trust by Construction: A Fail-Secure Reference Architecture for
-> Sovereign Agentic AI* (UNU Macau AI Conference 2026, Panel 2). Reference
-> implementation: this repository.
+> R. Srivastava, *Trust by Construction: A Testable Architecture for Sovereign AI
+> Agents in Education* (UNU Macau AI Conference 2026). Reference implementation:
+> this repository, release `v1.0.0`.
 
-For stable citation, use release `v0.5.0`. Machine-readable
-citation metadata is available in [`CITATION.cff`](CITATION.cff).
+Machine-readable metadata in [`CITATION.cff`](CITATION.cff).
 
 ## License
 
-Apache-2.0 — see [`LICENSE`](../LICENSE). Cite the paper and software using
-`CITATION.cff`.
+Apache-2.0 — see [`LICENSE`](../LICENSE). Contributions that preserve explicit
+assurance boundaries are welcome; see [`CONTRIBUTING.md`](CONTRIBUTING.md).

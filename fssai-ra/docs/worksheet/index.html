@@ -1,0 +1,704 @@
+<title>Authority Boundary Worksheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+
+<style>
+/* ───────────────────────────────────────────────────────────────────────────
+   Authority Boundary Worksheet — companion to the FSSAI-RA reference
+   architecture and to the UNU Macau AI Conference 2026 panel.
+
+   Same visual identity as the deck: a filed institutional record crossed with a
+   control room. Oxide red is spent only on refusal and on a field that would
+   fail review, because that is what this tool is for.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+  --ground: #e9edf1; --stage: #f8fafb; --panel: #eff3f6; --inset: #e3e9ee;
+  --ink: #111a22; --ink-soft: #46545f; --ink-faint: #7e8b96;
+  --rule: #c9d2da; --rule-strong: #a8b5c0;
+  --refuse: #a8322a; --refuse-wash: #f5e5e3;
+  --authorize: #1f6b5c; --authorize-wash: #dfeae7;
+  --mark: #8a6a1f; --mark-wash: #f4ecdb;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Newsreader", Georgia, serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0b1117; --stage: #111a21; --panel: #16212a; --inset: #0d151b;
+    --ink: #e8eef3; --ink-soft: #a4b2bd; --ink-faint: #73838f;
+    --rule: #26343f; --rule-strong: #3a4b58;
+    --refuse: #e2776c; --refuse-wash: #2c1a19;
+    --authorize: #52b79f; --authorize-wash: #14241f;
+    --mark: #d3a94a; --mark-wash: #241d0f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0b1117; --stage: #111a21; --panel: #16212a; --inset: #0d151b;
+  --ink: #e8eef3; --ink-soft: #a4b2bd; --ink-faint: #73838f;
+  --rule: #26343f; --rule-strong: #3a4b58;
+  --refuse: #e2776c; --refuse-wash: #2c1a19;
+  --authorize: #52b79f; --authorize-wash: #14241f;
+  --mark: #d3a94a; --mark-wash: #241d0f;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font-family: var(--body); font-size: 17px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 34px 60px; padding-left: clamp(16px, 4vw, 40px); padding-right: clamp(16px, 4vw, 40px); }
+
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 46px); line-height: 1.04; letter-spacing: -.022em; margin: 0 0 10px; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: clamp(19px, 2.3vw, 25px); letter-spacing: -.012em; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .01em; margin: 0; }
+p { margin: 0; max-width: 66ch; }
+.lead { font-size: clamp(17px, 1.9vw, 21px); line-height: 1.45; color: var(--ink-soft); }
+.faint { color: var(--ink-faint); font-size: 14.5px; }
+.soft { color: var(--ink-soft); }
+code, .mono { font-family: var(--mono); font-size: .87em; }
+
+header.head { border-bottom: 2px solid var(--ink); padding-bottom: 20px; margin-bottom: 26px; display: grid; gap: 12px; }
+.kicker { font-family: var(--display); font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); }
+
+section.card { background: var(--stage); border: 1px solid var(--rule); padding: clamp(18px, 2.6vw, 28px); margin-bottom: 18px; display: grid; gap: 16px; }
+
+/* ── the scorecard: the point of the tool ───────────────────────────────── */
+.score { display: grid; grid-template-columns: auto 1fr; gap: clamp(16px, 3vw, 30px); align-items: center; }
+.score .dial { display: grid; gap: 2px; justify-items: center; border: 1.5px solid var(--rule-strong); padding: 14px 20px; min-width: 128px; }
+.score .dial b { font-family: var(--display); font-weight: 700; font-size: 40px; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.score .dial span { font-family: var(--display); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); text-align: center; }
+.score.ready .dial { border-color: var(--authorize); }
+.score.ready .dial b { color: var(--authorize); }
+.score.notready .dial { border-color: var(--refuse); }
+.score.notready .dial b { color: var(--refuse); }
+.verdict { font-family: var(--display); font-weight: 600; font-size: clamp(16px, 2vw, 21px); line-height: 1.25; text-wrap: balance; }
+
+/* ── fields ─────────────────────────────────────────────────────────────── */
+.fields { display: grid; gap: 0; }
+.field { border-top: 1px solid var(--rule); padding: 15px 0; display: grid; gap: 7px; }
+.field:first-child { border-top: 0; }
+.field .row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.field label { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+.field .why { font-size: 14px; color: var(--ink-soft); max-width: 70ch; }
+textarea, input[type="text"] {
+  width: 100%; background: var(--inset); color: var(--ink);
+  border: 1px solid var(--rule-strong); border-radius: 2px;
+  padding: 9px 11px; font-family: var(--mono); font-size: 13.5px; line-height: 1.5;
+  resize: vertical;
+}
+textarea { min-height: 62px; }
+textarea:focus, input:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.flag { font-family: var(--mono); font-size: 12.5px; display: flex; gap: 8px; align-items: flex-start; padding: 7px 10px; border-radius: 2px; }
+.flag.bad { color: var(--refuse); background: var(--refuse-wash); }
+.flag.warn { color: var(--mark); background: var(--mark-wash); }
+.flag.good { color: var(--authorize); background: var(--authorize-wash); }
+.flag::before { content: attr(data-mark); font-weight: 600; }
+
+/* ── transitions table ──────────────────────────────────────────────────── */
+.transitions { display: grid; gap: 8px; }
+.trow { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.1fr auto; gap: 8px; align-items: center; }
+.trow.head span { font-family: var(--display); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+.trow input { font-size: 12.5px; padding: 7px 9px; }
+.trow .del { background: none; border: 1px solid var(--rule-strong); color: var(--ink-faint); border-radius: 2px; cursor: pointer; font: inherit; font-size: 13px; padding: 5px 10px; }
+.trow .del:hover { color: var(--refuse); border-color: var(--refuse); }
+label.check { display: flex; gap: 7px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+label.check input { width: auto; }
+
+/* ── output ─────────────────────────────────────────────────────────────── */
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.tabs button {
+  font: inherit; font-family: var(--display); font-size: 12px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  color: var(--ink-faint); padding: 8px 13px; cursor: pointer;
+}
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tabs button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+pre.out {
+  background: var(--inset); border: 1px solid var(--rule); margin: 0;
+  padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px;
+  line-height: 1.6; color: var(--ink); max-height: 460px; white-space: pre;
+}
+button.action {
+  font: inherit; font-family: var(--display); font-weight: 600; font-size: 13px;
+  background: var(--ink); color: var(--stage); border: 0; border-radius: 2px;
+  padding: 9px 16px; cursor: pointer;
+}
+button.action:hover { opacity: .88; }
+button.ghost {
+  font: inherit; font-family: var(--display); font-weight: 600; font-size: 13px;
+  background: none; color: var(--ink); border: 1px solid var(--rule-strong);
+  border-radius: 2px; padding: 8px 15px; cursor: pointer;
+}
+button.ghost:hover { border-color: var(--ink); }
+.row-actions { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+
+.callout { border-left: 3px solid var(--mark); padding: 3px 0 3px 15px; }
+.callout.refuse { border-left-color: var(--refuse); }
+.callout.ok { border-left-color: var(--authorize); }
+
+.example { display: flex; gap: 8px; flex-wrap: wrap; }
+.example button {
+  font: inherit; font-family: var(--mono); font-size: 12px;
+  background: var(--panel); border: 1px solid var(--rule-strong); color: var(--ink-soft);
+  border-radius: 999px; padding: 4px 12px; cursor: pointer;
+}
+.example button:hover { color: var(--ink); border-color: var(--ink); }
+
+footer.foot { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-faint); font-size: 14px; display: grid; gap: 6px; }
+
+@media (max-width: 720px) {
+  .score { grid-template-columns: 1fr; justify-items: start; }
+  .trow { grid-template-columns: 1fr; }
+  .trow.head { display: none; }
+}
+@media print {
+  body { background: #fff; }
+  .tabs, button, .example { display: none !important; }
+  textarea, input { border: 0; background: none; padding: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <span class="kicker">FSSAI-RA · Companion worksheet · UNU Macau AI Conference 2026</span>
+    <h1>Authority Boundary Worksheet</h1>
+    <p class="lead">One consequential capability, seven fields. If you cannot fill all seven, that
+      capability is not ready to be automated — and knowing which field you cannot fill is more
+      useful than any assurance a vendor can give you.</p>
+    <p class="faint">Fill it in below. Nothing is sent anywhere; everything stays in this browser.
+      The output is valid configuration for the open-source reference implementation, so the
+      contract you write here is the contract that gets enforced.</p>
+  </header>
+
+  <section class="card">
+    <div class="score" id="score">
+      <div class="dial"><b id="scoreN">0</b><span>of 7 fields<br>survive review</span></div>
+      <div>
+        <p class="verdict" id="verdict">Start with the capability you are most tempted to automate.</p>
+        <p class="faint" id="verdictNote" style="margin-top:6px"></p>
+      </div>
+    </div>
+    <div class="example">
+      <span class="faint" style="align-self:center">Load a worked example:</span>
+      <button type="button" data-example="student">Student support</button>
+      <button type="button" data-example="health">Clinic referral</button>
+      <button type="button" data-example="benefits">Benefits eligibility</button>
+      <button type="button" data-example="weak">A weak draft, for contrast</button>
+      <button type="button" data-example="blank">Blank</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>1 · The capability</h2>
+    <div class="fields" id="fields"></div>
+  </section>
+
+  <section class="card">
+    <h2>2 · The transitions it may perform</h2>
+    <p class="faint">Name only transitions that exist in the real process. A transition with an
+      approval role nobody holds will be approved by whoever is available.</p>
+    <div class="transitions">
+      <div class="trow head">
+        <span>Operation</span><span>From status</span><span>To status</span><span>Approval role</span><span></span>
+      </div>
+      <div id="transitions"></div>
+      <div class="row-actions"><button type="button" class="ghost" id="addTransition">Add a transition</button></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>3 · What you take away</h2>
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" aria-selected="true" data-tab="contract">contract.yaml</button>
+      <button role="tab" aria-selected="false" data-tab="profile">profile.yaml</button>
+      <button role="tab" aria-selected="false" data-tab="commands">Run it</button>
+      <button role="tab" aria-selected="false" data-tab="review">Review notes</button>
+    </div>
+    <pre class="out" id="out" tabindex="0"></pre>
+    <div class="row-actions">
+      <button type="button" class="action" id="copy">Copy</button>
+      <button type="button" class="ghost" id="print">Print or save as PDF</button>
+      <span class="faint" id="copied" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>What happens next</h2>
+    <div class="callout ok">
+      <p><strong>Seven fields filled, one workflow, one named owner.</strong> That is a pilot. Not
+        a platform, not a strategy — a pilot you can point at.</p>
+    </div>
+    <p class="soft">Save <code>profile.yaml</code> and <code>contract.yaml</code> into a directory,
+      then run the three commands on the <em>Run it</em> tab. The model checker enumerates the
+      authority space your profile declares and tells you whether any configuration lets a
+      resource move without a valid approval. It takes about a hundredth of a second and needs no
+      network, no model weights, and no GPU.</p>
+    <div class="callout refuse">
+      <p><strong>Do not copy another domain's assurance claims.</strong> The reference results
+        describe the reference profile. A new domain inherits the structure and none of the
+        evidence; borrowing results is how a method decays into a vocabulary.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Companion to <em>Trust by Construction: A Testable Architecture for Sovereign AI Agents in Education</em>.</span>
+    <span>Reference implementation, Apache-2.0: <code>github.com/genaiworks/fssai-ra</code> — release <code>v1.0.0</code>.</span>
+    <span>This worksheet checks that your answers are <em>specific</em>. It cannot check that they are <em>correct</em>; that is a governance review with the named owner in the room.</span>
+  </footer>
+</div>
+
+<script>
+/* Field definitions. The `weak` patterns encode what a reviewer actually pushes
+   back on: an owner that is a team rather than a role, an enforcement point that
+   is the model itself, a test written as an aspiration rather than an attempt. */
+const FIELDS = [
+  {
+    key: "capability", label: "Capability", short: "capability",
+    why: "One sentence, in the language of the process. Not “AI assistant” — the specific thing it does.",
+    placeholder: "Move a student-support case from draft to officer review",
+    weak: [
+      [/\b(ai|assistant|agent|copilot|llm|automation)\b/i, "warn", "Name the operation, not the technology. “An agent that helps” is not a capability."],
+    ],
+  },
+  {
+    key: "protected_asset", label: "Protected asset", short: "asset",
+    why: "What is harmed if this goes wrong? Name the thing, and whose it is.",
+    placeholder: "Award and eligibility decisions affecting a named student",
+    weak: [
+      [/\b(data|information|the system|everything)\b/i, "warn", "“Data” is not an asset. Which records, whose, and what happens to that person if they are wrong?"],
+    ],
+  },
+  {
+    key: "permitted_operation", label: "Permitted operation", short: "operation",
+    why: "The narrowest operation the agent may propose. Narrow it until it feels too narrow.",
+    placeholder: "May prepare a recommendation for a case already assigned to it",
+    weak: [
+      [/\b(any|all|manage|handle|process everything|full access)\b/i, "bad", "“Any” or “all” is not a permitted operation — it is the absence of one."],
+      [/\b(and also|as well as|plus)\b/i, "warn", "More than one operation in one field usually means more than one contract."],
+    ],
+  },
+  {
+    key: "enforcement_point", label: "Enforcement point", short: "enforcement",
+    why: "The service that verifies the actual operation against current policy — independently of the model's explanation.",
+    placeholder: "Execution service that checks the approval signature, proposal digest, role, expiry and record version before any write",
+    weak: [
+      [/\b(the model|the agent|the llm|prompt|system prompt|guardrail|instruction)\b/i, "bad", "The model cannot be its own enforcement point. If the thing being checked is also doing the checking, there is no control here."],
+      [/\b(review|oversight|policy|governance)\b/i, "warn", "Name a service that runs, not a process that meets. What refuses the call at 3am?"],
+    ],
+  },
+  {
+    key: "owner", label: "Accountable owner", short: "owner",
+    why: "A role a person holds, who answers when this fails. Not a team, not a committee, not “IT”.",
+    placeholder: "Student Support Service Owner",
+    weak: [
+      [/\b(team|committee|department|group|everyone|it|ict|vendor|supplier)\b/i, "bad", "A team cannot be accountable. Name the role one person holds — and check they know."],
+      [/\btbd\b|\bto be (decided|confirmed)\b/i, "bad", "An unowned capability is an unaccountable one. This field blocks the pilot."],
+    ],
+  },
+  {
+    key: "test", label: "Executable failure test", short: "test",
+    why: "The adversarial attempt that must fail — written so someone could run it, not describe it.",
+    placeholder: "Approve the transition, then change the target case id before execution; confirm denial and zero record changes",
+    weak: [
+      [/\b(ensure|make sure|verify that it is safe|should not|must not)\b/i, "warn", "Write the attempt, not the aspiration. What does the attacker type, and what must come back?"],
+      [/\b(monitor|review logs|audit periodically)\b/i, "bad", "Monitoring is not a failure test. A test has an input and an expected refusal."],
+    ],
+  },
+  {
+    key: "evidence_artifact", label: "Evidence artifact", short: "evidence",
+    why: "The record an affected person could use to challenge the outcome. Name the artifact, not the log level.",
+    placeholder: "Intent and outcome receipts linked by request id and proposal digest, naming the approving officer",
+    weak: [
+      [/\b(logs?|logging|telemetry|metrics|audit trail)\b/i, "warn", "“Logs” is where evidence lives, not what it is. What does the record contain that lets someone argue?"],
+    ],
+  },
+  {
+    key: "failure_response", label: "Failure response", short: "response",
+    why: "What happens instead, and who performs it. Fail-secure means a person is still served when the machine refuses.",
+    placeholder: "Deny the automated action; route the unchanged case to a named officer for manual review within one working day",
+    weak: [
+      [/\b(alert|notify|log it|escalate)\b/i, "warn", "Alerting someone is not a service. What happens to the applicant while the alert is unread?"],
+      [/\b(retry|try again)\b/i, "bad", "Retrying an action whose outcome is uncertain is how one decision becomes two."],
+    ],
+  },
+];
+
+const EXAMPLES = {
+  student: {
+    id: "student-support", title: "Student Support Review", resource: "support_case",
+    values: {
+      capability: "Move a student-support case from draft to officer review",
+      protected_asset: "Award and eligibility decisions affecting a named student",
+      permitted_operation: "A support agent may prepare a recommendation for a case already assigned to it",
+      enforcement_point: "Execution service that verifies the approval signature, canonical proposal digest, approver role, audience, expiry and current record version before any write",
+      owner: "Student Support Service Owner",
+      test: "Approve the transition, then change the target case id before execution; confirm denial with APPROVAL_PAYLOAD_MISMATCH and zero record changes",
+      evidence_artifact: "Intent and outcome receipts linked by request id and proposal digest, naming the approving officer",
+      failure_response: "Deny the automated action; route the unchanged case to a named officer for manual review within one working day",
+    },
+    transitions: [
+      { operation: "prepare_case_for_review", from: "draft", to: "ready_for_officer_review", role: "student_support_officer", consequential: true },
+      { operation: "return_case_for_correction", from: "ready_for_officer_review", to: "draft", role: "student_support_officer", consequential: true },
+    ],
+  },
+  health: {
+    id: "clinic-referral", title: "Clinic Referral Triage", resource: "referral",
+    values: {
+      capability: "Mark a referral as ready for clinician triage",
+      protected_asset: "A patient's place in a waiting list and the clinical urgency assigned to it",
+      permitted_operation: "A triage assistant may propose a priority band for a referral already in its queue",
+      enforcement_point: "Referral service that checks the proposing identity, the approving clinician's registration, and the referral's current version before writing a band",
+      owner: "Clinical Governance Lead",
+      test: "Propose a higher urgency band, obtain approval, then alter the patient identifier before execution; confirm denial and no change to either record",
+      evidence_artifact: "Band-change receipt naming the approving clinician, the evidence version, and the prior band",
+      failure_response: "Deny the automated change; leave the referral in its current band and place it on the manual triage list reviewed each morning",
+    },
+    transitions: [
+      { operation: "propose_triage_band", from: "received", to: "awaiting_clinician_review", role: "registered_clinician", consequential: true },
+    ],
+  },
+  benefits: {
+    id: "benefits-eligibility", title: "Benefits Eligibility Review", resource: "claim",
+    values: {
+      capability: "Advance a benefits claim to caseworker decision",
+      protected_asset: "A household's income for the following month",
+      permitted_operation: "An eligibility assistant may assemble evidence and propose advancing a claim it has been assigned",
+      enforcement_point: "Claims service that verifies the caseworker's authorisation, the exact claim version, and the declared evidence snapshot before advancing",
+      owner: "Benefits Delivery Manager",
+      test: "Obtain approval for one claim, then replay the same approval against a second claim; confirm denial and that neither claim advances",
+      evidence_artifact: "Decision record with the evidence snapshot id, the assembled documents, and the named caseworker",
+      failure_response: "Deny the automated advance; the claim keeps its current status and enters the manual queue with its statutory clock unaffected",
+    },
+    transitions: [
+      { operation: "advance_to_decision", from: "evidence_gathering", to: "awaiting_caseworker_decision", role: "benefits_caseworker", consequential: true },
+    ],
+  },
+  weak: {
+    id: "ai-assistant", title: "AI Assistant", resource: "record",
+    values: {
+      capability: "An AI assistant that helps staff with student queries",
+      protected_asset: "Student data",
+      permitted_operation: "Handle any student record task the staff member asks for",
+      enforcement_point: "The system prompt instructs the model not to take harmful actions",
+      owner: "The IT team",
+      test: "Ensure the assistant does not do anything unsafe",
+      evidence_artifact: "Application logs",
+      failure_response: "Alert the team and retry",
+    },
+    transitions: [
+      { operation: "do_the_thing", from: "open", to: "done", role: "any_staff", consequential: true },
+    ],
+  },
+  blank: {
+    id: "replace-me", title: "Replace Me", resource: "governed_resource",
+    values: Object.fromEntries(FIELDS.map((f) => [f.key, ""])),
+    transitions: [{ operation: "", from: "", to: "", role: "", consequential: true }],
+  },
+};
+
+const state = { values: {}, transitions: [], meta: { id: "", title: "", resource: "" } };
+
+/* ── build the form ─────────────────────────────────────────────────────── */
+const fieldsEl = document.getElementById("fields");
+FIELDS.forEach((field) => {
+  const wrap = document.createElement("div");
+  wrap.className = "field";
+  wrap.innerHTML = `
+    <div class="row"><label for="f-${field.key}">${field.label}</label></div>
+    <p class="why">${field.why}</p>
+    <textarea id="f-${field.key}" data-key="${field.key}" placeholder="${field.placeholder}"></textarea>
+    <div id="flag-${field.key}"></div>`;
+  fieldsEl.append(wrap);
+});
+
+const transitionsEl = document.getElementById("transitions");
+
+function renderTransitions() {
+  transitionsEl.replaceChildren();
+  state.transitions.forEach((row, index) => {
+    const el = document.createElement("div");
+    el.className = "trow";
+    el.innerHTML = `
+      <input type="text" id="t-op-${index}" value="${esc(row.operation)}" placeholder="prepare_for_review" aria-label="Operation">
+      <input type="text" id="t-from-${index}" value="${esc(row.from)}" placeholder="draft" aria-label="From status">
+      <input type="text" id="t-to-${index}" value="${esc(row.to)}" placeholder="ready_for_review" aria-label="To status">
+      <input type="text" id="t-role-${index}" value="${esc(row.role)}" placeholder="authorized_reviewer" aria-label="Approval role">
+      <button type="button" class="del" aria-label="Remove transition ${index + 1}">Remove</button>`;
+    el.querySelector(".del").addEventListener("click", () => {
+      state.transitions.splice(index, 1);
+      if (!state.transitions.length) state.transitions.push({ operation: "", from: "", to: "", role: "", consequential: true });
+      renderTransitions(); update();
+    });
+    ["op", "from", "to", "role"].forEach((part) => {
+      const key = { op: "operation", from: "from", to: "to", role: "role" }[part];
+      el.querySelector(`#t-${part}-${index}`).addEventListener("input", (event) => {
+        state.transitions[index][key] = event.target.value;
+        update();
+      });
+    });
+    transitionsEl.append(el);
+  });
+}
+
+function esc(value) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+}
+
+function slug(value, fallback) {
+  const out = String(value || "").toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+  return out || fallback;
+}
+
+function snake(value, fallback) {
+  const out = String(value || "").toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40);
+  return out || fallback;
+}
+
+/* ── review: the diagnostic, not a spell-checker ────────────────────────── */
+function reviewField(field, value) {
+  const text = (value || "").trim();
+  if (!text) return { level: "bad", message: "Empty. This field blocks the capability." };
+  if (text.length < 18) return { level: "bad", message: "Too thin to act on. A reviewer cannot use this." };
+  for (const [pattern, level, message] of field.weak) {
+    if (pattern.test(text)) return { level, message };
+  }
+  return { level: "good", message: "Specific enough to review." };
+}
+
+function update() {
+  let surviving = 0;
+  const notes = [];
+  FIELDS.forEach((field) => {
+    const value = state.values[field.key] ?? "";
+    const review = reviewField(field, value);
+    if (review.level === "good") surviving += 1;
+    const marks = { good: "✓", warn: "!", bad: "✕" };
+    const holder = document.getElementById(`flag-${field.key}`);
+    holder.replaceChildren();
+    const flag = document.createElement("div");
+    flag.className = `flag ${review.level}`;
+    flag.setAttribute("data-mark", marks[review.level]);
+    flag.textContent = review.message;
+    holder.append(flag);
+    if (review.level !== "good") notes.push(`${field.label}: ${review.message}`);
+  });
+
+  const score = document.getElementById("score");
+  document.getElementById("scoreN").textContent = String(surviving);
+  score.className = `score ${surviving === FIELDS.length ? "ready" : "notready"}`;
+  const verdict = document.getElementById("verdict");
+  const note = document.getElementById("verdictNote");
+  if (surviving === FIELDS.length) {
+    verdict.textContent = "All seven fields would survive a review. This capability is ready for a pilot on synthetic data.";
+    note.textContent = "Next: save the two files below, run the three commands, and put the named owner in a room with the failure test.";
+  } else if (surviving === 0) {
+    verdict.textContent = "Start with the capability you are most tempted to automate.";
+    note.textContent = "Load a worked example above if it helps to see one filled in first.";
+  } else {
+    const blockers = notes.filter((n) => n.includes("blocks") || n.includes("cannot be") || n.includes("not a")).length;
+    verdict.textContent = `${FIELDS.length - surviving} field${FIELDS.length - surviving === 1 ? "" : "s"} would not survive a review.`;
+    note.textContent = blockers
+      ? "The fields marked ✕ are the ones to fix first — each one is a control that does not exist yet."
+      : "The fields marked ! are vague rather than wrong. A reviewer will ask you to be specific.";
+  }
+  renderOutput(notes);
+}
+
+/* ── output: real, valid configuration ──────────────────────────────────── */
+function yamlText(value) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return '""';
+  return text.includes(":") || text.includes("#") || text.length > 70
+    ? `>-\n      ${text.replace(/(.{1,72})(\s|$)/g, "$1\n      ").trim()}`
+    : text;
+}
+
+function buildContract() {
+  const id = slug(state.meta.id, "replace-me");
+  const prefix = (id.split("-").map((p) => p[0]).join("") || "xx").toUpperCase().slice(0, 3);
+  const v = state.values;
+  return `# Control contract — ${state.meta.title || "Replace Me"}
+#
+# One entry per consequential capability. Seven fields each. If you cannot fill
+# all seven, the capability is not ready to be automated.
+domain: ${snake(id, "replace_me")}
+requirements:
+  - id: ${prefix}-1
+    protected_asset: ${yamlText(v.protected_asset)}
+    permitted_operation: ${yamlText(v.permitted_operation)}
+    enforcement_point: ${yamlText(v.enforcement_point)}
+    owner: ${yamlText(v.owner)}
+    test: ${yamlText(v.test)}
+    evidence_artifact: ${yamlText(v.evidence_artifact)}
+    failure_response: ${yamlText(v.failure_response)}
+`;
+}
+
+function buildProfile() {
+  const rows = state.transitions
+    .filter((t) => t.operation || t.from || t.to)
+    .map((t) => `  - operation: ${snake(t.operation, "replace_me")}
+    from_status: ${snake(t.from, "draft")}
+    to_status: ${snake(t.to, "ready_for_review")}
+    consequential: ${t.consequential !== false}
+    approval_role: ${snake(t.role, "authorized_reviewer")}`)
+    .join("\n");
+  return `# Application profile — ${state.meta.title || "Replace Me"}
+#
+# Every transition below is enforced. A transition that is not declared here
+# cannot be approved, however legitimate it looks.
+profile_id: ${slug(state.meta.id, "replace-me")}
+version: "0.1"
+title: ${state.meta.title || "Replace Me"}
+resource_name: ${snake(state.meta.resource, "governed_resource")}
+owner: ${snake(state.values.owner, "accountable_service_owner")}
+manual_fallback: ${yamlText(state.values.failure_response || "Describe the safe service path used when automation is denied.")}
+transitions:
+${rows || "  - operation: prepare_for_review\n    from_status: draft\n    to_status: ready_for_review\n    consequential: true\n    approval_role: authorized_reviewer"}
+`;
+}
+
+function buildCommands() {
+  const dir = slug(state.meta.id, "my-domain");
+  return `# 1 · Install the reference implementation (Python 3.10+, no GPU, no network needed)
+pip install "fssaira[dev] @ git+https://github.com/genaiworks/fssai-ra#subdirectory=fssai-ra"
+
+# 2 · Save the two tabs above into a directory
+mkdir -p ${dir}
+#    …paste contract.yaml and profile.yaml into ${dir}/
+
+# 3 · Check what you wrote
+fssaira validate-profile  ${dir}/profile.yaml     # is the profile well formed?
+fssaira validate-contract ${dir}                  # are all seven fields present?
+
+# 4 · Enumerate the authority space your profile declares, and check five
+#     invariants over every configuration in it. Runs offline in ~0.01s.
+fssaira verify ${dir}/profile.yaml
+
+# 5 · Run the adversarial scenarios, the benign-task baseline, and the
+#     ablations that show whether each control is load-bearing.
+fssaira evaluate ${dir}/profile.yaml --output ${dir}/results.json
+
+# 6 · Scaffold the tests, then replace the deliberately failing one with the
+#     attack you are actually afraid of.
+fssaira init ${dir} --domain-id ${slug(state.meta.id, "my-domain")} --title "${state.meta.title || "Replace Me"}"
+pytest ${dir}
+
+# What you should NOT do: copy another domain's ASSURANCE.md. A new domain
+# inherits the structure and none of the evidence.`;
+}
+
+function buildReview(notes) {
+  const lines = [
+    `Review notes — ${state.meta.title || "Replace Me"}`,
+    "=".repeat(48),
+    "",
+    notes.length
+      ? "Fields a reviewer would push back on:"
+      : "All seven fields are specific enough to review.",
+    "",
+  ];
+  notes.forEach((note) => lines.push(`  - ${note}`));
+  if (!notes.length) {
+    lines.push("  (none)");
+    lines.push("");
+    lines.push("This worksheet checks that your answers are SPECIFIC.");
+    lines.push("It cannot check that they are CORRECT. That takes a governance");
+    lines.push("review with the named owner in the room, and a failure test");
+    lines.push("that someone has actually run.");
+  }
+  lines.push("");
+  lines.push("Questions to ask before the pilot:");
+  lines.push("  - Does the named owner know they are named?");
+  lines.push("  - Has anyone run the failure test and watched it fail closed?");
+  lines.push("  - Can the person affected by this decision see the evidence artifact?");
+  lines.push("  - What is the manual path's actual turnaround, in working days?");
+  lines.push("  - Who may change this contract, and does that require a second person?");
+  return lines.join("\n");
+}
+
+let currentTab = "contract";
+let outputs = {};
+
+function renderOutput(notes) {
+  outputs = {
+    contract: buildContract(),
+    profile: buildProfile(),
+    commands: buildCommands(),
+    review: buildReview(notes),
+  };
+  document.getElementById("out").textContent = outputs[currentTab];
+}
+
+document.getElementById("tabs").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-tab]");
+  if (!button) return;
+  currentTab = button.dataset.tab;
+  [...document.querySelectorAll("#tabs button")].forEach((b) =>
+    b.setAttribute("aria-selected", String(b === button)));
+  document.getElementById("out").textContent = outputs[currentTab];
+});
+
+document.getElementById("copy").addEventListener("click", async () => {
+  const message = document.getElementById("copied");
+  try {
+    await navigator.clipboard.writeText(outputs[currentTab]);
+    message.textContent = "Copied.";
+  } catch {
+    const out = document.getElementById("out");
+    const range = document.createRange();
+    range.selectNodeContents(out);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    message.textContent = "Selected — press ⌘C or Ctrl+C.";
+  }
+  setTimeout(() => { message.textContent = ""; }, 2600);
+});
+
+document.getElementById("print").addEventListener("click", () => window.print());
+
+document.getElementById("addTransition").addEventListener("click", () => {
+  state.transitions.push({ operation: "", from: "", to: "", role: "", consequential: true });
+  renderTransitions(); update();
+});
+
+fieldsEl.addEventListener("input", (event) => {
+  const key = event.target.dataset.key;
+  if (!key) return;
+  state.values[key] = event.target.value;
+  if (key === "capability") {
+    state.meta.id = slug(event.target.value, "replace-me");
+    state.meta.title = event.target.value.slice(0, 60) || "Replace Me";
+  }
+  update();
+});
+
+document.querySelectorAll("[data-example]").forEach((button) => {
+  button.addEventListener("click", () => load(EXAMPLES[button.dataset.example]));
+});
+
+function load(example) {
+  state.values = { ...example.values };
+  state.meta = { id: example.id, title: example.title, resource: example.resource };
+  state.transitions = example.transitions.map((t) => ({ ...t }));
+  FIELDS.forEach((field) => {
+    document.getElementById(`f-${field.key}`).value = state.values[field.key] ?? "";
+  });
+  renderTransitions();
+  update();
+}
+
+/* Open in a realistic working state: the worked example, not an empty shell. */
+load(EXAMPLES.student);
+</script>
