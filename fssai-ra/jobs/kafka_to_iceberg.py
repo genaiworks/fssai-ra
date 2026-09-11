@@ -4,7 +4,7 @@ import os
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType, StringType, StructField, StructType
 
-from bootstrap_iceberg import build_spark
+from bootstrap_iceberg import CATALOG, NAMESPACE, build_spark
 
 
 ENVELOPE_SCHEMA = StructType([
@@ -13,14 +13,23 @@ ENVELOPE_SCHEMA = StructType([
         StructField("source", StringType(), False),
         StructField("text", StringType(), False),
         StructField("stripped", ArrayType(StringType()), True),
+        StructField("content_hash", StringType(), True),
     ]), False),
 ])
 
 
 def write_batch(batch, _batch_id: int) -> None:
+    """Append one micro-batch.
+
+    Delivery is at-least-once: a failure between the Iceberg commit and the
+    checkpoint commit replays the batch. The table therefore tolerates duplicate
+    rows by design, and readers de-duplicate on ``(kafka_partition,
+    kafka_offset)``, which is unique per delivery. Claiming exactly-once here
+    would be the sort of quiet inaccuracy this architecture exists to avoid.
+    """
     if batch.rdd.isEmpty():
         return
-    batch.writeTo("sovereign.fssaira.imported_evidence").append()
+    batch.writeTo(f"{CATALOG}.{NAMESPACE}.imported_evidence").append()
 
 
 def main() -> None:
@@ -46,7 +55,8 @@ def main() -> None:
         .where(F.col("event").isNotNull())
         .select(
             "event.value.source", "event.value.text", "event.value.stripped",
-            "event.trace_id", "kafka_partition", "kafka_offset", "imported_at",
+            "event.value.content_hash", "event.trace_id",
+            "kafka_partition", "kafka_offset", "imported_at",
         )
     )
     query = (

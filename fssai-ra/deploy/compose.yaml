@@ -1,6 +1,64 @@
+# FSSAI-RA reference deployment.
+#
+#   docker compose --env-file deploy/.env -f deploy/compose.yaml up -d
+#       core:      postgres, redis, kafka, control-api, import-gateway, console
+#   … --profile model       adds Ollama for local inference
+#   … --profile analytics   adds MinIO, the Iceberg REST catalog, and Spark
+#
+# Network topology mirrors the architecture rather than convenience. The control
+# plane and the low-side gateway do not share a network; the only thing that
+# crosses is a Kafka topic, which is what the import boundary publishes to. The
+# `internal: true` networks have no route off the host.
+#
+# This is a development topology. Separate containers on one host demonstrate
+# logical separation, not independent administrative trust, and a host
+# administrator can reach all of it. See docs/SECURITY.md.
+
 name: fssaira
 
+x-control-env: &control-env
+  FSSAI_PROFILE: profiles/student_support.yaml
+  FSSAI_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  FSSAI_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+  FSSAI_KAFKA_BOOTSTRAP: kafka:29092
+  FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
+  FSSAI_APPROVAL_SIGNING_KEY: ${FSSAI_APPROVAL_SIGNING_KEY}
+  FSSAI_APPROVAL_KEY_ID: ${FSSAI_APPROVAL_KEY_ID:-pilot-approval-key-1}
+  FSSAI_AUTH_MODE: ${FSSAI_AUTH_MODE:-token}
+  FSSAI_AUTH_TOKENS_JSON: ${FSSAI_AUTH_TOKENS_JSON}
+  FSSAI_MODEL: ${FSSAI_MODEL:-ollama}
+  FSSAI_OLLAMA_HOST: http://ollama:11434
+  FSSAI_OLLAMA_MODEL: ${FSSAI_OLLAMA_MODEL:-llama3.2}
+  FSSAI_MODEL_FALLBACK: ${FSSAI_MODEL_FALLBACK:-allow}
+  FSSAI_CORS_ORIGINS: http://localhost:8088,http://127.0.0.1:8088,http://localhost:5173
+
+x-hardening: &hardening
+  read_only: true
+  tmpfs: [/tmp]
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  restart: unless-stopped
+
 services:
+  # ----------------------------------------------------------- system of record
+  postgres:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      # Checksums make silent storage corruption of the evidence chain visible.
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [control]
+    restart: unless-stopped
+
   redis:
     image: redis:8.2.9-alpine
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
@@ -12,6 +70,7 @@ services:
     volumes:
       - redis-data:/data
     networks: [control]
+    restart: unless-stopped
 
   kafka:
     image: apache/kafka:4.3.1
@@ -28,6 +87,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_RETENTION_HOURS: 168
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list"]
       interval: 10s
@@ -36,33 +96,57 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
     networks: [data]
+    restart: unless-stopped
 
+  # -------------------------------------------------------------- local model
+  ollama:
+    image: ollama/ollama:latest
+    profiles: [model]
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    networks: [control]
+    restart: unless-stopped
+    # The weights stay on hardware the institution controls. That is the minimum
+    # condition for the sovereignty claim, not the whole of it.
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    profiles: [model]
+    depends_on:
+      ollama: {condition: service_started}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["sleep 5 && OLLAMA_HOST=http://ollama:11434 ollama pull ${FSSAI_OLLAMA_MODEL:-llama3.2}"]
+    networks: [control]
+    restart: "no"
+
+  # ------------------------------------------------------------ control plane
   control-api:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    environment:
-      FSSAI_PROFILE: profiles/student_support.yaml
-      FSSAI_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
-      FSSAI_KAFKA_BOOTSTRAP: kafka:29092
-      FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
-      FSSAI_APPROVAL_SIGNING_KEY: ${FSSAI_APPROVAL_SIGNING_KEY}
+    environment: *control-env
     depends_on:
+      postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
       kafka: {condition: service_healthy}
     ports: ["127.0.0.1:8080:8080"]
     # operator-side exists only so the localhost development port is reachable.
-    # Production deployments should terminate authenticated ingress in a
-    # separately governed reverse proxy and keep the service networks internal.
+    # Production should terminate authenticated ingress in a separately governed
+    # reverse proxy and keep the service networks internal.
     networks: [operator-side, control, data]
-    read_only: true
-    tmpfs: [/tmp]
+    <<: *hardening
 
   import-gateway:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    command: ["uvicorn", "fssaira.import_api:create_import_app", "--factory", "--host", "0.0.0.0", "--port", "8081"]
+    command: ["uvicorn", "fssaira.import_api:create_import_app", "--factory",
+              "--host", "0.0.0.0", "--port", "8081"]
     environment:
       FSSAI_KAFKA_BOOTSTRAP: kafka:29092
       FSSAI_IMPORT_SOURCE_KEYS_JSON: ${FSSAI_IMPORT_SOURCE_KEYS_JSON}
@@ -70,22 +154,48 @@ services:
     depends_on:
       kafka: {condition: service_healthy}
     ports: ["127.0.0.1:8081:8081"]
+    # Deliberately not on the `control` network. The gateway can publish inward
+    # and cannot reach the control plane, the database, or the console.
     networks: [low-side, data]
-    read_only: true
-    tmpfs: [/tmp]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/health"]
+      interval: 15s
+      timeout: 4s
+      retries: 5
+    <<: *hardening
 
+  console:
+    build:
+      context: ../console
+      dockerfile: Dockerfile
+    depends_on:
+      control-api: {condition: service_healthy}
+    ports: ["127.0.0.1:8088:8088"]
+    networks: [operator-side]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  # ------------------------------------------------------- analytics and archive
   minio:
     image: minio/minio:latest
+    profiles: [analytics]
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     volumes:
       - object-data:/data
     networks: [catalog]
+    restart: unless-stopped
 
   iceberg-rest:
     image: apache/iceberg-rest-fixture
+    profiles: [analytics]
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
@@ -93,8 +203,10 @@ services:
       CATALOG_WAREHOUSE: s3://warehouse/
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
       CATALOG_S3_ENDPOINT: http://minio:9000
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
     depends_on: [minio]
     networks: [catalog, data]
+    restart: unless-stopped
 
   spark-iceberg:
     image: tabulario/spark-iceberg
@@ -106,24 +218,30 @@ services:
       KAFKA_BOOTSTRAP: kafka:29092
       ICEBERG_CATALOG_URI: http://iceberg-rest:8181
       ICEBERG_WAREHOUSE: s3://warehouse/
+      S3_ENDPOINT: http://minio:9000
     volumes:
       - ../jobs:/opt/fssaira/jobs:ro
+      - ../src:/opt/fssaira/src:ro
       - spark-checkpoints:/opt/fssaira/checkpoints
     depends_on: [kafka, iceberg-rest]
     networks: [data, catalog]
 
 networks:
+  # Reachable from the host, so a developer can open the console and the API.
   operator-side: {}
+  # The gateway's own segment. It has no route to the control plane.
   low-side: {}
-  control:
-    internal: true
-  data:
-    internal: true
-  catalog:
-    internal: true
+  # State: database, cache, and model. No route off the host.
+  control: {internal: true}
+  # Event transport, shared by the gateway and the control plane.
+  data: {internal: true}
+  # Object storage and the table catalog.
+  catalog: {internal: true}
 
 volumes:
+  postgres-data: {}
   redis-data: {}
   kafka-data: {}
   object-data: {}
+  ollama-models: {}
   spark-checkpoints: {}

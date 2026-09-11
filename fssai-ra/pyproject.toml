@@ -4,12 +4,36 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fssaira"
-version = "0.5.0"
-description = "Fail-Secure Sovereign AI Reference Architecture: a runnable reference implementation for bounded, accountable, sovereign agentic AI."
+version = "1.0.0"
+description = "Fail-Secure Sovereign AI Reference Architecture: a runnable, extensible reference platform for bounded, accountable, sovereign agentic AI."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
+authors = [{ name = "R. Srivastava" }]
+keywords = [
+  "agentic-ai", "ai-governance", "zero-trust", "data-diode", "sovereign-ai",
+  "fail-secure", "reference-architecture", "digital-public-good",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Security",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = ["pyyaml>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/genaiworks/fssai-ra"
+Documentation = "https://github.com/genaiworks/fssai-ra/blob/main/fssai-ra/README.md"
+Repository = "https://github.com/genaiworks/fssai-ra"
+Issues = "https://github.com/genaiworks/fssai-ra/issues"
 
 [project.scripts]
 fssaira = "fssaira.cli:main"
@@ -17,17 +41,65 @@ fssaira = "fssaira.cli:main"
 [project.optional-dependencies]
 api = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "httpx>=0.27"]
 redis = ["redis>=5.0"]
+postgres = ["psycopg[binary]>=3.2"]
 kafka = ["confluent-kafka>=2.6"]
-iceberg = ["pyiceberg>=0.9"]
+iceberg = ["pyiceberg>=0.9", "pyarrow>=17.0"]
 spark = ["pyspark>=4.1,<4.2"]
+auth = ["pyjwt[crypto]>=2.9"]
+telemetry = [
+  "opentelemetry-sdk>=1.27",
+  "opentelemetry-exporter-otlp-proto-http>=1.27",
+  "opentelemetry-instrumentation-fastapi>=0.48b0",
+]
+# Everything the reference deployment runs in Docker.
 platform = [
   "fastapi>=0.115", "uvicorn[standard]>=0.30", "httpx>=0.27",
-  "redis>=5.0", "confluent-kafka>=2.6",
+  "redis>=5.0", "psycopg[binary]>=3.2", "confluent-kafka>=2.6", "pyjwt[crypto]>=2.9",
 ]
-dev = ["pytest>=7.0", "fastapi>=0.115", "httpx>=0.27", "redis>=5.0", "fakeredis>=2.30"]
+# Everything, for a developer who wants every path available locally.
+all = [
+  "fastapi>=0.115", "uvicorn[standard]>=0.30", "httpx>=0.27",
+  "redis>=5.0", "psycopg[binary]>=3.2", "confluent-kafka>=2.6",
+  "pyiceberg>=0.9", "pyarrow>=17.0", "pyjwt[crypto]>=2.9",
+]
+dev = [
+  "pytest>=7.0", "pytest-cov>=5.0",
+  "fastapi>=0.115", "httpx>=0.27",
+  "redis>=5.0", "fakeredis>=2.30",
+  "pyjwt[crypto]>=2.9",
+  "ruff>=0.6",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+fssaira = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+  "integration: requires external infrastructure (Redis, Kafka, Postgres, a model)",
+  "slow: takes more than a second",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore = ["E501", "B008", "SIM108"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.coverage.run]
+source = ["src/fssaira"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError"]

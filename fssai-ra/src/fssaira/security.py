@@ -77,6 +77,14 @@ class AuthConfig:
     trust_proxy_headers: bool = False
     using_development_credentials: bool = False
 
+    def __post_init__(self) -> None:
+        # An empty token map would fail every request closed, which sounds safe
+        # and is actually just broken: nobody could configure the system. Fall
+        # back to the published development credentials and say so loudly.
+        if not self.tokens:
+            self.tokens = dict(DEV_TOKENS)
+            self.using_development_credentials = True
+
     @classmethod
     def from_env(cls) -> "AuthConfig":
         mode = os.getenv("FSSAI_AUTH_MODE", "token").lower()
