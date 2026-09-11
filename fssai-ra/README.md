@@ -38,7 +38,7 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # 149 deterministic tests, fully offline
+pytest                                            # 180 deterministic tests, fully offline
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
@@ -195,13 +195,22 @@ if prose and code disagree. Alignment is a test here, not a promise.
 
 ## Read this first
 
+**If you are reviewing this**
+
+- [`docs/REVIEWERS.md`](docs/REVIEWERS.md) — **check every claim in ten minutes**, offline
 - [`docs/ASSURANCE.md`](docs/ASSURANCE.md) — every public claim, its mechanism, its test, and its limit
-- [`docs/SECURITY.md`](docs/SECURITY.md) — threat model and residual risk
-- [`docs/DEMO.md`](docs/DEMO.md) — a reproducible five-minute walkthrough
+- [`docs/RESPONSIBLE_AI.md`](docs/RESPONSIBLE_AI.md) — risk → mitigation → test → result, with the open rows marked open
+- [`docs/IMPACT.md`](docs/IMPACT.md) — who benefits, labelled *demonstrated*, *reasoned*, *hypothesis*, or *out of scope*
+
+**If you are using it**
+
+- [`docs/DEMO.md`](docs/DEMO.md) — the two-minute demonstration
+- [`docs/ADOPTION.md`](docs/ADOPTION.md) — a 30/60/90-day path to a pilot
+- [`docs/PROCUREMENT.md`](docs/PROCUREMENT.md) — the seven fields as supplier questions
 - [`docs/EXTENDING.md`](docs/EXTENDING.md) — adding a domain without inheriting unsupported claims
 - [`docs/PLATFORM.md`](docs/PLATFORM.md) — the distributed deployment
-- [`docs/DIODE_DEPLOYMENT.md`](docs/DIODE_DEPLOYMENT.md) — where the directionality claim starts and stops
 - [`docs/OPERATIONS.md`](docs/OPERATIONS.md) — failure and recovery procedures
+- [`docs/SECURITY.md`](docs/SECURITY.md) · [`docs/DIODE_DEPLOYMENT.md`](docs/DIODE_DEPLOYMENT.md) — threat model, and where the directionality claim stops
 
 ## Security and limitations
 

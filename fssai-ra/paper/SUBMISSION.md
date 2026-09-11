@@ -13,7 +13,20 @@
 - [ ] `pytest` passes and `python scripts/generate_results.py --check` reports no drift.
       **Do this first.** Every figure in the abstract comes from that run, and the
       abstract is not submittable if the repository disagrees with it.
-- [ ] Word count is in range — see [`README.md`](README.md).
+- [ ] Word count is in range — see [`README.md`](README.md). The body is **about
+      1,635 words** against a call asking for "approximately 1,500". That is a
+      deliberate ~10% over, and the alternative was cutting evidence or limits.
+
+      **If the form enforces a hard 1,500:** cut §3 (Architecture in five
+      domains) down to its first paragraph. It is the most compressible section
+      because it *describes* rather than *contributes* — a reviewer who wants the
+      architecture can read the repository, whereas §2 (the contribution), §4
+      (the evidence and its denominators) and §5 (relevance and the caveat) are
+      what the submission is judged on. Cutting §3's two property paragraphs
+      saves about 190 words and loses nothing a reviewer needs to decide.
+
+      Do **not** cut: the opening scene in §1, the limits paragraph in §4, or the
+      closing caveat in §5. Those three are what make the rest credible.
 - [ ] Tag the release so the abstract's `v1.0.0` reference resolves:
       `git tag -a v1.0.0 -m "v1.0.0" && git push --tags`
 - [ ] Confirm the repository is public, or remove the URL from the abstract.

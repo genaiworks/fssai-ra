@@ -415,24 +415,37 @@ const SLIDES = [
   <p>That sentence is the whole argument. Everything that follows is about making it something you can <em>test</em> rather than something we assert.</p>`
 },
 {
-  eyebrow: ["The question", "Why this, why now"],
-  time: "0:35",
+  eyebrow: ["The stake", "Start with a person, not a system"],
+  time: "0:40",
   html: `
-    <h2>A university deploys an agent to process student-support applications.</h2>
+    <h2>A student’s support application is refused. She asks why.</h2>
     <div class="body">
-      <p class="lead">It reads confidential records. It interprets eligibility guidance. It drafts recommendations. It calls administrative tools.</p>
-      <div class="callout">
-        <p><strong>A sentence inside an uploaded document can redirect that workflow.</strong> So can an ordinary mistake, with no attacker present at all.</p>
+      <p class="lead">Somewhere in the process, an agent read her file, interpreted the eligibility guidance, drafted a recommendation, and called an administrative tool.</p>
+      <div class="cols">
+        <div class="body">
+          <h3>Three questions she is entitled to ask</h3>
+          <div class="entries">
+            <div class="entry"><span class="k">who</span><p>Which person decided this, and were they allowed to?</p></div>
+            <div class="entry"><span class="k">what</span><p>What did they see when they decided?</p></div>
+            <div class="entry"><span class="k">how</span><p>How do I contest it?</p></div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="callout refuse">
+            <p><strong>In most agentic systems shipping today, there is no answer to any of the three.</strong> Not because anyone intended that — because nothing was built to produce one.</p>
+          </div>
+          <p class="faint">A sentence inside an uploaded document could have redirected that workflow. So could an ordinary mistake, with no attacker anywhere. From where she stands, the two are indistinguishable: an outcome, and no way in.</p>
+        </div>
       </div>
-      <p>The useful institutional question is narrower than “is the AI safe?”. It is: <strong>when the agent is wrong or compromised, what stops its proposal from becoming an unauthorized decision — and what evidence lets a student challenge the outcome?</strong></p>
     </div>
-    <div class="foot"><span>Education is where agentic AI touches people soonest, and where a wrong decision is felt as an unexplained one.</span></div>`,
-  notes: `Ground it in a real workflow before any architecture. Most rooms have someone who runs this process.
-  <p>The two failure modes are deliberately paired: the attacker and the honest mistake. A control that only handles the attacker is half a control.</p>`
+    <div class="foot"><span>Education is where agentic AI reaches people soonest — and where a wrong decision arrives as an unexplained one.</span></div>`,
+  notes: `Do not start with architecture. Start with her. Say the first line, then wait — this is the only slide where silence does real work.
+  <p>The three questions are the moral core of the whole talk: <em>who decided, what did they see, how do I contest it.</em> Everything technical afterwards exists to make those three answerable.</p>
+  <p>The last line matters most: to the person affected, a malicious injection and an honest mistake produce exactly the same experience. A control that only handles the attacker is half a control.</p>`
 },
 {
   eyebrow: ["Framing", "The move this talk makes"],
-  time: "1:15",
+  time: "1:25",
   html: `
     <h2>Sovereignty is not a postcode.</h2>
     <div class="body">
@@ -449,14 +462,14 @@ const SLIDES = [
           <div class="entry"><span class="k">06</span><p>Leave</p></div>
         </div>
       </div>
-      <p class="faint">Each one is testable. None is established by a data-centre location, a policy document, or a vendor assurance.</p>
+      <p class="faint">Each one is testable. None is established by a data-centre location, a policy document, or a vendor assurance — and none of them, on its own, answers her three questions.</p>
     </div>`,
   notes: `This is the reframe the room should remember even if they forget the architecture.
   <p>Capability six — <em>leave</em> — usually gets a reaction. Exit is the capability procurement forgets to buy.</p>`
 },
 {
   eyebrow: ["Architecture", "Where authority is checked"],
-  time: "1:50",
+  time: "2:00",
   html: `
     <h2>Five domains. One narrow waist.</h2>
     <div class="body">
@@ -554,7 +567,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Contribution", "The control contract"],
-  time: "2:00",
+  time: "2:40",
   html: `
     <h2>Seven fields, per consequential capability.</h2>
     <div class="body">
@@ -584,7 +597,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Mechanism", "Where the claim leaks"],
-  time: "2:50",
+  time: "3:25",
   html: `
     <h2>The model proposes. The policy disposes. Watch where that leaks.</h2>
     <div class="body">
@@ -616,7 +629,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Demonstration", "Ninety seconds"],
-  time: "3:30",
+  time: "4:00",
   html: `
     <h2>A changed proposal requires renewed review.</h2>
     <div class="body">
@@ -642,7 +655,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Counterfactual", "What each control is actually holding"],
-  time: "4:10",
+  time: "4:40",
   html: `
     <h2>Remove one control. Watch the harm come back.</h2>
     <div class="body">
@@ -665,7 +678,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Method", "The part that is new"],
-  time: "4:20",
+  time: "5:20",
   html: `
     <h2>Three questions a hand-written test suite cannot answer.</h2>
     <div class="body">
@@ -695,7 +708,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Finding", "What the checker caught in our own work"],
-  time: "5:10",
+  time: "6:00",
   html: `
     <h2>Our attack suite was measuring less than it claimed.</h2>
     <div class="body">
@@ -715,7 +728,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Result", "A failure mode removed, not just detected"],
-  time: "5:50",
+  time: "6:40",
   html: `
     <h2>“The case moved. Nothing says who moved it.”</h2>
     <div class="body">
@@ -742,7 +755,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Experiment", "Against how agents are built today"],
-  time: "6:30",
+  time: "7:15",
   html: `
     <h2>The same seven attacks, three architectures.</h2>
     <div class="body">
@@ -796,7 +809,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Experiment", "What reached the protected asset"],
-  time: "7:00",
+  time: "7:55",
   html: `
     <h2>Harm is the measure, not refusals.</h2>
     <div class="body">
@@ -829,7 +842,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["Evidence", "With denominators"],
-  time: "6:30",
+  time: "8:25",
   html: `
     <h2>What we can show, and what the numbers are worth.</h2>
     <div class="body">
@@ -842,14 +855,18 @@ const SLIDES = [
       <div class="callout">
         <p><strong>That last figure matters more than the first.</strong> A system that denies everything scores perfectly on containment and is useless. Reporting the two together is what stops either being optimised alone — and a previous version of this work listed the utility baseline as future work, which meant its headline number had no denominator.</p>
       </div>
-      <p class="faint">149 deterministic tests. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under two seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
+      <div class="cols">
+        <p class="faint"><strong>Beyond the cases we imagined.</strong> 6,800 randomly generated tool calls — nonexistent tools, mismatched operations, URLs in unexpected arguments, calls that lie about their own action class — checked against a reference predicate written independently of the implementation. Zero disagreements.</p>
+        <p class="faint"><strong>And what it costs.</strong> About 7 µs of overhead per policy decision; 66 µs for a full propose–approve–execute cycle. Negligible beside model inference, which we do not measure because it is a property of whichever model you choose.</p>
+      </div>
+      <p class="faint">180 deterministic tests. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
     </div>`,
   notes: `Lead with the false-denial rate if the panel is policy-heavy. It is the figure that shows we are not optimising for a security theatre metric.
   <p>“Reproduces on a disconnected laptop” is the sentence that matters for capacity building — it means an institution with no budget can verify us.</p>`
 },
 {
   eyebrow: ["Limits", "Read this before citing us"],
-  time: "7:10",
+  time: "9:00",
   html: `
     <h2>What is <em>not</em> evidenced.</h2>
     <div class="body">
@@ -868,8 +885,34 @@ const SLIDES = [
   <p>If a panellist pushes on over-claiming, this slide is the answer, and it is better delivered before the question than after.</p>`
 },
 {
+  eyebrow: ["Who this is for", "Named, with the evidence status attached"],
+  time: "9:40",
+  html: `
+    <h2>Back to her.</h2>
+    <div class="body">
+      <div class="cols wide-left">
+        <div class="entries">
+          <div class="entry"><span class="k">the applicant</span><p>A consequential decision about her cannot happen without a named person authorizing <em>that exact change</em> — and the record of it cannot be quietly edited by whoever runs the system. <span class="faint">Demonstrated.</span></p></div>
+          <div class="entry"><span class="k">the caseworker</span><p>Assistance that drafts and assembles and <em>cannot decide</em>. What they approve is what happens; a network failure never executes it twice. <span class="faint">Demonstrated.</span></p></div>
+          <div class="entry"><span class="k">the institution</span><p>A capability-by-capability basis for what to automate, and the ability to replace a vendor without losing the argument that it is safe. <span class="faint">Demonstrated.</span></p></div>
+          <div class="entry"><span class="k">institutions with no cloud budget</span><p>Every claim here verifiable offline, on a laptop, in under two seconds. They can <em>audit us</em> rather than trust us. <span class="faint">Demonstrated.</span></p></div>
+        </div>
+        <div class="body">
+          <div class="callout ok">
+            <p><strong>Her three questions become answerable.</strong> Who decided, what they saw, and how to contest it stop being matters of institutional goodwill and become properties of the system.</p>
+          </div>
+          <p class="faint">Every line on the left is labelled. Time saved, reviewer accuracy, appeal quality, cost and fairness are <strong>not</strong> on this slide, because they are not measured — they are in <code>docs/IMPACT.md</code> marked as hypotheses, with the experiment each would need.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>A perfectly governed agent enforcing an unjust policy produces well-documented injustice, faster. This makes harm attributable. It does not make a rule fair.</span></div>`,
+  notes: `The slide that connects the engineering back to the person from slide 2. Do not rush it and do not embellish it — the labels are doing the persuading.
+  <p>Say the footer line out loud. It is the most important sentence in the deck for a UN audience, because it is the limit an advocate would otherwise raise for you: governance is not justice. Owning it is what makes the rest credible.</p>
+  <p>If time is short, cut everything except the applicant row and the footer.</p>`
+},
+{
   eyebrow: ["Theme", "Both directions"],
-  time: "7:45",
+  time: "10:20",
   html: `
     <h2>AI for Learning. Learning for AI.</h2>
     <div class="body">
@@ -894,7 +937,7 @@ const SLIDES = [
 },
 {
   eyebrow: ["The ask", "Monday morning"],
-  time: "8:20",
+  time: "10:55",
   html: `
     <h2>Three things to publish, for one capability.</h2>
     <div class="body">
@@ -922,20 +965,23 @@ const SLIDES = [
 },
 {
   eyebrow: ["Close", ""],
-  time: "8:50",
+  time: "11:30",
   html: `
     <h1>A model may propose an action.<br>It cannot manufacture the authority to&nbsp;execute&nbsp;it.</h1>
     <div class="body">
+      <p class="lead">We are about to hand consequential decisions about people to systems that cannot yet say who decided, what they saw, or how to contest it. That is a choice, not a trajectory — and it is still open.</p>
       <div class="cols">
-        <p class="lead">Every consequential capability needs a named boundary, an executable failure test, and a recovery owner.</p>
+        <p>Every consequential capability needs a named authorization boundary, an executable failure test, and a recovery owner. Three things. Publishable for one capability, this quarter, by an institution with no budget.</p>
         <div class="body">
           <p class="faint"><code>github.com/genaiworks/fssai-ra</code> — Apache-2.0, release <code>v1.0.0</code></p>
-          <p class="faint">Control contract · bounded model checker · adversarial and utility evaluation · portable conformance suite · one-way import path · React operator console</p>
+          <p class="faint">Control contract · bounded model checker · adversarial, utility and ablation evaluation · portable conformance suite · one-way import path · operator console · worksheet, playbook, and procurement questions</p>
         </div>
       </div>
     </div>
     <div class="foot"><span>R. Srivastava</span><span>UNU Macau AI Conference 2026</span><span>Proceedings: UNU–Springer Book Series on AI and Sustainable Development</span></div>`,
-  notes: `Return to the opening sentence. The repetition is the point — it is the one thing worth carrying out of the room.`
+  notes: `Return to the opening sentence, then give the room the stake rather than a summary.
+  <p>The line that should land: <em>that is a choice, not a trajectory — and it is still open.</em> Say it slowly. It is the difference between a talk about software and a talk about what we owe the people these systems decide about.</p>
+  <p>Then stop. Do not add a thank-you slide; the last thing on screen should be the rule.</p>`
 },
 {
   eyebrow: ["Backup", "Architecture"],

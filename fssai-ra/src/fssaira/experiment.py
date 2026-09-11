@@ -39,10 +39,9 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 
-from .accountable_action import ActionClass, PolicyEnforcementPoint, ToolCall
-from .bounded_intelligence import Agent, ToolRegistry
+from .accountable_action import ToolCall
+from .bounded_intelligence import ToolRegistry
 from .evidence import EvidenceLedger
-from .metrics import Metrics
 from .models.adversarial import ClassDowngradingModel, CompromisedModel
 from .models.base import CapabilityCatalogue
 from .models.deterministic import DeterministicModel
@@ -267,11 +266,14 @@ class ArchitectureComparison:
                 tools=set(attack.granted_tools),
                 operations=set(attack.granted_tools),
             )
-            decisions = [
-                pipeline.pep.check(call, agent.agent) for call in self._proposals(attack)
-            ]
+            # Generate the proposals once. Calling the backend twice and zipping
+            # the results would work only because the fixture is deterministic,
+            # which is exactly the kind of accidental coupling that survives
+            # until someone makes the adversary stochastic.
+            proposals = self._proposals(attack)
+            decisions = [pipeline.pep.check(call, agent.agent) for call in proposals]
             performed = [
-                call for call, decision in zip(self._proposals(attack), decisions)
+                call for call, decision in zip(proposals, decisions, strict=True)
                 if decision.allowed
             ]
             result.attacks_attempted += 1

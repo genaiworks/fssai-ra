@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "kind": "benchmark",
+  "environment": {
+    "python_version": "3.14.6",
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+    "processor": "arm"
+  },
+  "policy_decision": {
+    "unchecked_call": {
+      "n": 5000,
+      "mean_us": 0.11,
+      "median_us": 0.12,
+      "p95_us": 0.13,
+      "p99_us": 0.17,
+      "max_us": 0.5
+    },
+    "enforced_call": {
+      "n": 5000,
+      "mean_us": 7.01,
+      "median_us": 6.38,
+      "p95_us": 8.33,
+      "p99_us": 11.29,
+      "max_us": 1550.96
+    },
+    "overhead_us": 6.9,
+    "note": "includes the catalogue lookup, grant check, argument inspection, and the hash-chained evidence append"
+  },
+  "accountable_execution": {
+    "n": 2000,
+    "mean_us": 67.96,
+    "median_us": 65.83,
+    "p95_us": 79.71,
+    "p99_us": 97.67,
+    "max_us": 290.46,
+    "note": "full propose \u2192 approve \u2192 execute: HMAC sign and verify, digest binding, version check, two hash-chained evidence records"
+  },
+  "evidence_verification": {
+    "100_records_ms": 0.29,
+    "1000_records_ms": 2.92,
+    "10000_records_ms": 28.38,
+    "note": "what an independent monitor does on a schedule; linear in chain length"
+  },
+  "bounded_model_check": {
+    "states_explored": 240,
+    "elapsed_ms": 5.83,
+    "us_per_state": 24.3,
+    "note": "each state executes the real enforcement code, not a model of it"
+  },
+  "not_measured": [
+    "model inference latency, which dominates any real deployment and is a property of the model an institution chooses",
+    "network and database round trips",
+    "throughput under concurrency"
+  ]
+}

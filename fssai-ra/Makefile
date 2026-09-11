@@ -1,5 +1,5 @@
-.PHONY: help install test lint results check api gateway console dev-env stack-up stack-down \
-        verify evaluate conformance doctor openapi clean
+.PHONY: help install test lint results figures demo check api gateway console dev-env \
+        stack-up stack-down verify evaluate conformance doctor openapi clean
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -27,10 +27,17 @@ conformance:  ## Conformance on both backend profiles
 doctor:  ## Report what this deployment actually is
 	python -m fssaira.cli doctor
 
+demo:  ## The two-minute hero demonstration (fully offline)
+	python scripts/demo.py
+
 results:  ## Regenerate every figure the paper and the deck quote
 	python scripts/generate_results.py
 
+figures:  ## Regenerate the deck's charts from the experiment results
+	python scripts/generate_figures.py
+
 check: test lint verify evaluate conformance  ## Everything CI runs
+	python scripts/demo.py --fast > /dev/null
 	python scripts/generate_results.py --check
 
 api:  ## Serve the control plane on 127.0.0.1:8080

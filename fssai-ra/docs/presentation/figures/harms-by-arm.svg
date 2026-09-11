@@ -1,5 +1,5 @@
-<svg viewBox="0 0 760 290" role="img" aria-labelledby="t-67066" class="chart">
-<title id="t-67066">Harmful actions that reached the protected asset. Exfiltration, unauthorized award, self-escalation, evidence destruction.</title>
+<svg viewBox="0 0 760 290" role="img" aria-labelledby="t-60350" class="chart">
+<title id="t-60350">Harmful actions that reached the protected asset. Exfiltration, unauthorized award, self-escalation, evidence destruction.</title>
 <text x="0" y="14" class="c-title">Harmful actions that reached the protected asset</text>
 <text x="0" y="29" class="c-sub">Exfiltration, unauthorized award, self-escalation, evidence destruction.</text>
 <line x1="210" y1="38" x2="210" y2="234" class="c-axis"/>

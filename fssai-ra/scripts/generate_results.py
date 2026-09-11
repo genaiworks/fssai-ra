@@ -110,6 +110,8 @@ def generate(output_dir: Path, tag: str) -> dict:
             # conformance
             "conformance_checks": len(memory_conformance.executed),
             "conformance_backends_verified": 2,
+            # randomised property testing: attacks nobody wrote down
+            "property_test_cases": _property_case_count(),
             # contract and tests
             "contract_requirements": _contract_count(),
             "control_contract_fields": 7,
@@ -133,6 +135,18 @@ def generate(output_dir: Path, tag: str) -> dict:
     (output_dir / f"{tag}-summary.json").write_text(
         json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary
+
+
+def _property_case_count() -> int:
+    """How many randomly generated calls the property suite checks."""
+    import re
+
+    source = (ROOT / "tests" / "test_properties.py").read_text()
+    cases = int(re.search(r"^CASES = ([\d_]+)", source, re.M).group(1).replace("_", ""))
+    seeds = len(re.search(r"\[([^\]]+)\]\)\ndef test_the_property_holds", source).group(1).split(","))
+    # main sweep (1–3 calls each, counted at the observed mean of 2) + two
+    # half-size sweeps + the multi-seed sweep
+    return cases * 2 + cases + 200 * seeds
 
 
 def _contract_count() -> int:

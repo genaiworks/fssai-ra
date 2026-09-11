@@ -2,12 +2,15 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FSSAI-RA Control Plane",
-    "description": "Reference API for exact-action proposals, human approval, execution, evidence, and recovery. Header identity is a replaceable teaching adapter.",
-    "version": "0.5.0"
+    "description": "Reference API for exact-action proposals, human approval, execution, evidence, recovery, and machine-checked assurance. A model may propose an action; it cannot manufacture the authority to execute it.",
+    "version": "1.0.0"
   },
   "paths": {
     "/health": {
       "get": {
+        "tags": [
+          "introspection"
+        ],
         "summary": "Health",
         "operationId": "health_health_get",
         "responses": {
@@ -22,8 +25,52 @@
         }
       }
     },
+    "/readiness": {
+      "get": {
+        "tags": [
+          "introspection"
+        ],
+        "summary": "Get Readiness",
+        "description": "Whether any known teaching default is still active.",
+        "operationId": "get_readiness_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "introspection"
+        ],
+        "summary": "Metrics",
+        "operationId": "metrics_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/profile": {
       "get": {
+        "tags": [
+          "governance"
+        ],
         "summary": "Get Profile",
         "operationId": "get_profile_v1_profile_get",
         "responses": {
@@ -38,26 +85,141 @@
         }
       }
     },
+    "/v1/contract": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Get Contract",
+        "description": "The seven-field control contract, as machine-readable YAML.",
+        "operationId": "get_contract_v1_contract_get",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "contract",
+              "title": "Directory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/capabilities": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Get Capabilities",
+        "description": "What a model may propose, and the review level each proposal carries.\n\nServed so an operator can see that the action class is configuration,\nnot something the model gets to assert at call time.",
+        "operationId": "get_capabilities_v1_capabilities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/interfaces": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Get Interfaces",
+        "description": "The interface inventory a directional claim depends on.",
+        "operationId": "get_interfaces_v1_interfaces_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/resources": {
       "post": {
+        "tags": [
+          "resources"
+        ],
         "summary": "Register Resource",
         "operationId": "register_resource_v1_resources_post",
         "parameters": [
           {
-            "name": "X-FSSAI-Identity",
+            "name": "authorization",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Identity"
             }
           },
           {
-            "name": "X-FSSAI-Role",
+            "name": "x-fssai-role",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Role"
             }
           }
@@ -96,6 +258,9 @@
     },
     "/v1/resources/{resource_id}": {
       "get": {
+        "tags": [
+          "resources"
+        ],
         "summary": "Get Resource",
         "operationId": "get_resource_v1_resources__resource_id__get",
         "parameters": [
@@ -109,20 +274,50 @@
             }
           },
           {
-            "name": "X-FSSAI-Identity",
+            "name": "authorization",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Identity"
             }
           },
           {
-            "name": "X-FSSAI-Role",
+            "name": "x-fssai-role",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Role"
             }
           }
@@ -151,24 +346,57 @@
     },
     "/v1/proposals": {
       "post": {
+        "tags": [
+          "actions"
+        ],
         "summary": "Create Proposal",
         "operationId": "create_proposal_v1_proposals_post",
         "parameters": [
           {
-            "name": "X-FSSAI-Identity",
+            "name": "authorization",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Identity"
             }
           },
           {
-            "name": "X-FSSAI-Role",
+            "name": "x-fssai-role",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Role"
             }
           }
@@ -205,8 +433,99 @@
         }
       }
     },
+    "/v1/proposals/{request_id}": {
+      "get": {
+        "tags": [
+          "actions"
+        ],
+        "summary": "Get Proposal",
+        "operationId": "get_proposal_v1_proposals__request_id__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/proposals/{request_id}/approval": {
       "post": {
+        "tags": [
+          "actions"
+        ],
         "summary": "Approve Proposal",
         "operationId": "approve_proposal_v1_proposals__request_id__approval_post",
         "parameters": [
@@ -220,20 +539,50 @@
             }
           },
           {
-            "name": "X-FSSAI-Identity",
+            "name": "authorization",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Identity"
             }
           },
           {
-            "name": "X-FSSAI-Role",
+            "name": "x-fssai-role",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Role"
             }
           }
@@ -272,6 +621,9 @@
     },
     "/v1/proposals/{request_id}/execute": {
       "post": {
+        "tags": [
+          "actions"
+        ],
         "summary": "Execute Proposal",
         "operationId": "execute_proposal_v1_proposals__request_id__execute_post",
         "parameters": [
@@ -285,20 +637,50 @@
             }
           },
           {
-            "name": "X-FSSAI-Identity",
+            "name": "authorization",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Identity"
             }
           },
           {
-            "name": "X-FSSAI-Role",
+            "name": "x-fssai-role",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Role"
             }
           }
@@ -327,8 +709,11 @@
     },
     "/v1/proposals/{request_id}/evidence": {
       "get": {
-        "summary": "Get Evidence",
-        "operationId": "get_evidence_v1_proposals__request_id__evidence_get",
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Get Proposal Evidence",
+        "operationId": "get_proposal_evidence_v1_proposals__request_id__evidence_get",
         "parameters": [
           {
             "name": "request_id",
@@ -340,20 +725,50 @@
             }
           },
           {
-            "name": "X-FSSAI-Identity",
+            "name": "authorization",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Identity"
             }
           },
           {
-            "name": "X-FSSAI-Role",
+            "name": "x-fssai-role",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Role"
             }
           }
@@ -380,26 +795,506 @@
         }
       }
     },
-    "/v1/reconcile": {
-      "post": {
-        "summary": "Reconcile",
-        "operationId": "reconcile_v1_reconcile_post",
+    "/v1/evidence": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "List Evidence",
+        "operationId": "list_evidence_v1_evidence_get",
         "parameters": [
           {
-            "name": "X-FSSAI-Identity",
-            "in": "header",
-            "required": true,
+            "name": "offset",
+            "in": "query",
+            "required": false,
             "schema": {
-              "type": "string",
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Identity"
             }
           },
           {
-            "name": "X-FSSAI-Role",
+            "name": "x-fssai-role",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/evidence/verify": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Verify Evidence",
+        "operationId": "verify_evidence_v1_evidence_verify_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification": {
+      "get": {
+        "tags": [
+          "assurance"
+        ],
+        "summary": "Run Verification",
+        "description": "Bounded model check of the active profile's authority invariants.",
+        "operationId": "run_verification_v1_verification_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/conformance": {
+      "get": {
+        "tags": [
+          "assurance"
+        ],
+        "summary": "Run Conformance Check",
+        "description": "Behavioural conformance of the *configured* backends, not the reference ones.",
+        "operationId": "run_conformance_check_v1_conformance_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/propose-task": {
+      "post": {
+        "tags": [
+          "intelligence"
+        ],
+        "summary": "Propose Task",
+        "description": "Run the configured model and return what it *would* like to do.\n\nNothing executes. The response is the model's proposal set with each\ncall's authoritative action class attached from the capability\ncatalogue, so a reviewer sees the real review level rather than whatever\nthe model said about itself.",
+        "operationId": "propose_task_v1_propose_task_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposeTask"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/recovery/reconcile": {
+      "post": {
+        "tags": [
+          "recovery"
+        ],
+        "summary": "Reconcile",
+        "operationId": "reconcile_v1_recovery_reconcile_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Fssai-Role"
             }
           }
@@ -509,6 +1404,30 @@
           "evidence_version"
         ],
         "title": "ProposalCreate"
+      },
+      "ProposeTask": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Task"
+          },
+          "evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Evidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "ProposeTask",
+        "description": "Ask the configured model for tool-call proposals. Nothing executes."
       },
       "ResourceCreate": {
         "properties": {

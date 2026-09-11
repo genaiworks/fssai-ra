@@ -27,9 +27,16 @@ UNU–Springer proceedings.
 - [Results, with their limits](fssai-ra/evaluation/results/RESULTS.md)
 - [Assurance claims and evidence](fssai-ra/docs/ASSURANCE.md) — every claim, its test, and what it does not mean
 
+**If you are reviewing it**
+
+- [Check every claim in ten minutes](fssai-ra/docs/REVIEWERS.md) — offline, no Docker
+- [Responsible AI: risk → mitigation → test → result](fssai-ra/docs/RESPONSIBLE_AI.md)
+- [Who benefits, and how we would know](fssai-ra/docs/IMPACT.md)
+
 **If you want to use it**
 
 - [Authority Boundary Worksheet](fssai-ra/docs/worksheet/) — one capability, seven fields, fifteen minutes, in a browser
+- [The two-minute demonstration](fssai-ra/docs/DEMO.md) — `python scripts/demo.py`
 - [Adoption playbook](fssai-ra/docs/ADOPTION.md) — a 30/60/90-day path
 - [Procurement questions](fssai-ra/docs/PROCUREMENT.md) — the seven fields as a supplier questionnaire
 - [Project overview and architecture](fssai-ra/README.md)
@@ -43,7 +50,7 @@ cd fssai-ra/fssai-ra
 python -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
 
-pytest                                            # 149 deterministic tests, fully offline
+pytest                                            # 180 deterministic tests, fully offline
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # 240 states, 5 invariants, 0 violations
 fssaira evaluate profiles/student_support.yaml    # 30 adversarial + 6 benign + 8 ablations
@@ -76,6 +83,7 @@ to automate. That is the diagnostic, not an inconvenience.
 | Ablation-measured coverage | Is each control load-bearing, or decorative? | 8 of 8 restored their harm |
 | Portable conformance | Does it hold after you replace a component? | 25 checks, 2 backend profiles |
 | Utility baseline | Does legitimate work still complete? | 6 of 6, false-denial rate 0.0 |
+| Controlled comparison | Compared with how agents are built today? | 0% → 29% → 100% contained |
 
 Plus single-transaction execution on PostgreSQL, privilege invariance, real
 authentication, a React console, and a worksheet, playbook, and procurement

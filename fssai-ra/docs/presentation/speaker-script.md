@@ -5,20 +5,27 @@
 **Deck:** [`slides.html`](slides.html) — arrow keys or click to advance, `n` for these notes on screen, `g` for the slide grid, `⌘P` for a PDF.
 
 A panel opener is not a conference talk. The room has three or four other people
-who also have something to say, and the moderator is watching the clock. The
-deck runs **16 slides in about ten minutes**, with two backup slides that only
-appear if someone asks.
+who also have something to say, and the moderator is watching the clock. The deck
+runs **19 slides in about twelve minutes**, with two backup slides that appear
+only if someone asks.
 
 Three paths are built in. Pick one before you walk on stage.
 
-| You have | Run slides | Drop |
+| You have | Run slides | Cut |
 |---|---|---|
-| **10 minutes** | 1–16 | nothing |
-| **7 minutes** | 1, 2, 4, 5, 6, 7, 10, 12, 13, 15, 16 | sovereignty (3), counterfactual (8), method (9), atomicity (11), theme (14) |
-| **5 minutes** | 1, 2, 5, 7, 12, 13, 15, 16 | everything else — keep the contract, the demo, the numbers, the limits, the ask |
+| **12 minutes** | 1–19 | nothing |
+| **8 minutes** | 1, 2, 4, 5, 6, 7, 12, 14, 15, 16, 18, 19 | sovereignty (3), counterfactual (8), method (9), finding (10), atomicity (11), harms (13), theme (17) |
+| **5 minutes** | 1, 2, 5, 7, 12, 15, 16, 19 | everything else — the person, the contract, the demo, the comparison, the limits, who benefits, the rule |
 
-**Slide 13 is never dropped.** In a UN room, the credibility of everything before
-it depends on the limits being stated by you rather than extracted from you.
+**Two slides are never cut.** Slide 15, the limits: in a UN room the credibility
+of everything before it depends on those being stated by you rather than
+extracted from you. And slide 16, who this is for: without it this is a talk
+about software.
+
+The arc is deliberate. It opens on a person who cannot find out why a decision
+was made about her, spends the middle earning the right to be believed, and
+returns to her before the close. If you find yourself running long, cut from the
+middle — never from either end.
 
 ---
 
@@ -27,23 +34,26 @@ it depends on the limits being stated by you rather than extracted from you.
 | Time | Slide | The one thing this slide has to do |
 |---|---|---|
 | 0:00 | 1 · The rule | Say the sentence. Then stop for a beat. |
-| 0:35 | 2 · The question | Put a real workflow in the room before any architecture. |
-| 1:15 | 3 · Sovereignty | Reframe sovereignty as capabilities, not location. |
-| 1:50 | 4 · Architecture | The only diagram. Point at three things, then stop. |
-| 2:30 | 5 · The contract | Show a filled-in contract, never an empty template. |
-| 3:15 | 6 · Privilege invariance | The subtle leak most agent frameworks still have. |
-| 3:50 | 7 · Demonstration | A governance rule behaving as observable code. |
-| 4:10 | 8 · Counterfactual | Make the containment number believable. |
-| 4:50 | 9 · Three questions | State the research gap: demonstration, not design guidance. |
-| 5:30 | 10 · The finding | The method found a defect in our own work. |
-| 6:10 | 11 · Atomicity | A failure mode removed, and the residual named. |
-| 6:50 | 12 · Evidence | Numbers with denominators. |
-| 7:30 | 13 · Limits | **Never cut this.** |
-| 8:05 | 14 · Both directions | Earn the panel slot on the conference theme. |
-| 8:40 | 15 · The ask | Something the room can do — hand them the worksheet. |
-| 9:15 | 16 · Close | Return to the opening sentence. |
-| — | 17 · Backup | The five domains in detail, if the panel turns technical. |
-| — | 18 · Backup | The interface inventory, for “but you have a diode”. |
+| 0:40 | 2 · The stake | Put **her** in the room. Three questions she is entitled to ask. |
+| 1:25 | 3 · Sovereignty | Reframe sovereignty as capabilities, not location. |
+| 2:00 | 4 · Architecture | The only diagram. Point at three things, then stop. |
+| 2:40 | 5 · The contract | Show a filled-in contract, never an empty template. |
+| 3:25 | 6 · Privilege invariance | The subtle leak most agent frameworks still have. |
+| 4:00 | 7 · Demonstration | A governance rule behaving as observable code. |
+| 4:40 | 8 · Counterfactual | Make the containment number believable. |
+| 5:20 | 9 · Three questions | The research gap: demonstration, not design guidance. |
+| 6:00 | 10 · The finding | The method found a defect in our own work. |
+| 6:40 | 11 · Atomicity | A failure mode removed, and the residual named. |
+| 7:15 | 12 · The experiment | Compared to what? Three architectures, same attacks. |
+| 7:55 | 13 · Harms delivered | Count what reached the asset, not what was refused. |
+| 8:25 | 14 · Evidence | Numbers with denominators. |
+| 9:00 | 15 · Limits | **Never cut this.** |
+| 9:40 | 16 · Who this is for | **Never cut this.** Return to her. |
+| 10:20 | 17 · Both directions | Earn the panel slot on the conference theme. |
+| 10:55 | 18 · The ask | Something the room can do — hand them the worksheet. |
+| 11:30 | 19 · Close | The rule, then the stake. Then stop. |
+| — | 20 · Backup | The five domains, if the panel turns technical. |
+| — | 21 · Backup | The interface inventory, for "but you have a diode". |
 
 ---
 
@@ -53,6 +63,24 @@ it depends on the limits being stated by you rather than extracted from you.
 authority to execute it." Read it once, slowly, and let the room sit with it
 before you start explaining. Everything after is about making that testable
 rather than asserted.
+
+**Her three questions (slide 2).** "Who decided this, and were they allowed to.
+What did they see when they decided. How do I contest it." Then: *in most
+agentic systems shipping today there is no answer to any of the three — not
+because anyone intended that, but because nothing was built to produce one.*
+This is the moral core of the talk. Everything technical exists to make those
+three answerable.
+
+**The line that makes the humanitarian claim honest (slide 16).** "A perfectly
+governed agent enforcing an unjust policy produces well-documented injustice,
+faster. This makes harm attributable. It does not make a rule fair." Say it out
+loud. An advocate in the room will otherwise raise it for you, and owning it is
+what makes everything else credible.
+
+**The close.** "We are about to hand consequential decisions about people to
+systems that cannot yet say who decided, what they saw, or how to contest it.
+That is a choice, not a trajectory — and it is still open." Slowly. Then stop;
+do not add a thank-you slide.
 
 **On sovereignty.** "Sovereignty is not a postcode." Six capabilities: govern
 access, deploy and replace the model, hold the keys, change the policy, produce
@@ -128,67 +156,135 @@ point — and it scores 0 of 7. That lands harder than any argument.
 
 ## Questions you should expect
 
-**"Isn't this just a testing framework?"**
+Sixteen, in the order they are most likely to come. Each has a short answer, a
+deeper one if pressed, and the thing in the repository that backs it.
+
+---
+
+**1 · "Isn't this just a testing framework?"**
 No. A test suite proves the attacks I imagined are contained. Two of our three
 artifacts answer questions I structurally cannot answer by writing more tests:
 what about the combination nobody imagined, and does it still hold after you
 replace my components with yours.
+*Deeper:* the bounded model checker found a defect in our own suite — four
+adversarial variants were being caught one check early, leaving the expiry,
+audience, and role checks unexercised. A green test run would never have said so.
+*Backed by:* `fssaira verify`, `fssaira conformance`, slide 10.
 
-**"You have a data diode, so the system is secure?"**
-A diode governs exactly one link. Slide 16 is the interface inventory — the
+**2 · "Compared to what? Any locked door stops burglars."**
+That is the right question, and it is why the comparison exists. The same seven
+attacks go to three architectures: unguarded, prompt-guarded, and this one. The
+prompt-guarded arm is deliberately fair — an allowlist is a real control and it
+stops two of seven — and it still lets eight harmful actions through.
+*Backed by:* `python scripts/demo.py --act 6`, slides 12–13.
+
+**3 · "Your baseline is a strawman."**
+Push back politely and concretely. Arm B has a safety system prompt *and* a
+per-agent tool allowlist, which is what most deployed agents have. It contains
+29% of attacks, not 0%. If it were a strawman it would contain nothing.
+*Deeper:* we also assert this in a test — `test_the_baseline_is_not_a_strawman`
+fails the build if Arm B stops nothing.
+
+**4 · "What about prompt injection?"**
+We strip mechanically recognisable active content and we explicitly do not rely
+on it. The load-bearing controls are downstream: retrieved text is never promoted
+to an instruction, egress is denied by default, and a consequential action needs
+an approval bound to one exact proposal. We claim no detection rate, because we
+have not measured one for a named model.
+*Deeper:* every containment figure is measured with the model assumed already
+compromised — injection succeeding is the premise, not the failure.
+
+**5 · "Has this been deployed?"**
+No. No institutional deployment, no independent audit, no penetration test, no
+certification. Slide 15 says so. What we offer is a method and an implementation
+whose results reproduce offline in under two seconds.
+
+**6 · "Does human approval actually help, or is it rubber-stamping?"**
+Honestly: we have not measured reviewer accuracy or workload, and it is on the
+not-yet-evidenced list. What we can say is that an approval binds to one exact
+proposal, so a reviewer who approves a specific change cannot have that approval
+reused for a different one. Whether they read carefully is a human-factors
+question we have not studied, and I would rather say that than imply we have.
+*Backed by:* `docs/RESPONSIBLE_AI.md` §4, which marks this row **open**.
+
+**7 · "You have a data diode, so it's secure?"**
+A diode governs exactly one link. Slide 20 is the interface inventory — the
 administrative shell, telemetry export, backup, model updates, removable media.
-Until that list is complete with a named control and owner for each line, the
+Until that list is complete with a named control and owner per line, the
 directionality claim is about a link nobody attacks.
 
-**"What about prompt injection?"**
-We strip mechanically recognisable active content and we do not rely on it. The
-load-bearing controls are downstream: retrieved text is never promoted to an
-instruction, egress is denied by default, and a consequential action needs an
-approval bound to one exact proposal. We do not claim a detection rate, because
-we have not measured one for a named model.
+**8 · "Why not a commercial model?"**
+You can — one line of configuration points it at any OpenAI-compatible endpoint.
+What changes is the claim: the deployment records a sovereignty warning saying
+prompts and retrieved evidence leave the boundary, and the data-residency claim
+no longer holds. The architecture does not stop you; it stops you doing it
+silently.
 
-**"Has this been deployed?"**
-No. No institutional deployment, no independent audit, no penetration test, no
-certification. Slide 11 says so. What we offer is a method and a reference
-implementation whose results reproduce offline.
+**9 · "What does this cost to run?"**
+The governance layer is close to free: the full suite, the model check, and the
+evaluation run offline in under two seconds with no GPU. Inference cost is a
+property of whichever model you choose and we do not measure it. We make no
+energy claim in either direction — constraining an agent's authority does not by
+itself reduce the cost of running it.
 
-**"Does the human approval actually help, or is it rubber-stamping?"**
-An honest answer: we have not measured reviewer accuracy or workload, and that
-is on the not-yet-evidenced list. What we can say is that the approval binds to
-one exact proposal, so a reviewer who approves a specific change cannot have that
-approval reused for a different one. Whether the reviewer reads carefully is a
-human-factors question we have not studied, and I would rather say that than
-imply we have.
+**10 · "Will this scale beyond a toy?"**
+The durability profile scales in three steps, and the deployment reports which
+one is in force: in-memory for teaching, Redis for durable multi-process, and a
+single transaction on PostgreSQL where the register and the evidence ledger share
+a database. SQLite is a first-class transactional profile, not a toy — it is what
+proves the atomicity property in CI.
+*Limit:* concurrency and distributed failure modes are not evaluated. The model
+checker is single-threaded and says so in its own bounds field.
 
-**"Why not a commercial model?"**
-You can — the backend is pluggable, and one line of configuration points it at
-any OpenAI-compatible endpoint. What changes is the claim: the deployment then
-records a sovereignty warning saying prompts and retrieved evidence leave the
-boundary, and the data-residency claim no longer holds. The architecture does
-not stop you; it stops you doing it silently.
+**11 · "What about privacy and data protection?"**
+Records never leave by default: egress is denied, the model is local, and the
+metrics exporter publishes counters only — never payloads or identifiers. The
+evidence ledger is the exception worth naming, because it deliberately retains
+decision records; retention must outlive the appeal window, which makes it a
+governance setting rather than an operational default.
 
-**"What would it take to run this at my institution?"**
+**12 · "Could this entrench bias rather than reduce it?"**
+Yes, and that is the risk I would want a policy audience to hold onto. A
+perfectly governed agent enforcing an unjust policy produces well-documented
+injustice, faster. Our contribution is that the injustice becomes
+*attributable* — a named person authorized it, against a recorded evidence
+version. That is real and it is modest. It does not make the rule fair.
+*Backed by:* `docs/IMPACT.md`, which marks fairness **out of scope** rather than
+claiming it.
+
+**13 · "Who actually benefits?"**
+The person the decision is about, first: they get a decision that cannot happen
+without a named authorizer, and a record the operator cannot silently edit. Then
+the caseworker, who gets assistance that cannot decide. Then the institution,
+which can replace a vendor without losing its assurance argument.
+*Backed by:* `docs/IMPACT.md`, with every line labelled demonstrated, reasoned,
+hypothesis, or out of scope.
+
+**14 · "What would it take to run this at my institution?"**
 One bounded workflow, a named service owner, and a manual fallback that person
-owns. `fssaira init` scaffolds the profile, the contract, and a deliberately
-failing test you replace with the attack you actually fear. Two to four weeks
-for a pilot on synthetic data. Do not start with the workflow that matters most.
+owns. The worksheet does the first capability in about fifteen minutes; the
+playbook is 30/60/90 days to a pilot on synthetic data. Do not start with the
+workflow that matters most.
 
-**"How does this relate to the EU AI Act / national AI rules?"**
-Deliberately, it does not claim compliance with any of them. It produces the
-artifacts a compliance conversation needs — a named enforcement point, an
-executable failure test, an evidence record, and an accountable owner per
-capability. Mapping those to a specific instrument is work an institution's
-counsel does, and we would rather supply the evidence than assert the conclusion.
+**15 · "How does this relate to the EU AI Act, or our national rules?"**
+Deliberately, it claims compliance with none of them. It produces the artifacts a
+compliance conversation needs — a named enforcement point, an executable failure
+test, an evidence record, and an accountable owner per capability. Mapping those
+to an instrument is work your counsel does, and I would rather supply evidence
+than assert a conclusion.
 
-**"What is genuinely novel here?"**
+**16 · "What is genuinely novel here?"**
 Three things. Bounded model checking of a governance profile's whole declared
 authority space rather than a hand-picked attack list. An authority coverage
-figure computed by ablation, so a control that is decorative is visible as
-decorative. And a portable conformance suite, so replacing a component does not
-quietly void the assurance argument. The individual controls are not new; making
-the argument survive substitution is.
+figure computed by ablation, so a decorative control is visible as decorative.
+And a portable conformance suite, so replacing a component does not quietly void
+the assurance argument. The individual controls are not new; making the argument
+survive substitution is.
 
----
+**If you are asked something you have not measured** — reviewer accuracy, field
+injection rates, cost, fairness, energy — say so, name where it is written down,
+and offer the experiment you would run. In this room, that answer is worth more
+than an estimate.
 
 ## If the panel turns to policy
 

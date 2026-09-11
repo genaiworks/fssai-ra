@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-11T05:46:15.836040+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-11T05:59:30.298179+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -18,7 +18,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Attacks contained — this architecture | `100%` | 0 harmful actions, at no cost to benign completion |
 | Conformance checks | `25` | passed on 2 independent backend profiles |
 | Control-contract requirements | `25` | 7 fields each |
-| Deterministic tests | `160` | no network, no model weights |
+| Deterministic tests | `182` | no network, no model weights |
 
 ## Verdicts
 
@@ -29,7 +29,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 
 ## Cost of reproduction
 
-The adversarial suite runs in 0.02s and the bounded model check in 0.01s on the machine above, with no network access and no model weights. A second institution can therefore check these numbers rather than trust them.
+The adversarial suite runs in 0.02s and the bounded model check in 0.0s on the machine above, with no network access and no model weights. A second institution can therefore check these numbers rather than trust them.
 
 ## Limits
 

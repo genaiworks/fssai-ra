@@ -3,7 +3,7 @@
   "kind": "paper-figures",
   "tag": "v1.0.0",
   "software_version": "1.0.0",
-  "generated_at": "2026-09-11T05:46:15.836040+00:00",
+  "generated_at": "2026-09-11T05:59:30.298179+00:00",
   "environment": {
     "python_version": "3.14.6",
     "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
@@ -34,11 +34,12 @@
     "benign_completion_all_arms": 1.0,
     "conformance_checks": 25,
     "conformance_backends_verified": 2,
+    "property_test_cases": 6800,
     "contract_requirements": 25,
     "control_contract_fields": 7,
-    "test_count": 160,
+    "test_count": 182,
     "evaluation_seconds": 0.02,
-    "verification_seconds": 0.01
+    "verification_seconds": 0.0
   },
   "verdicts": {
     "all_scenarios_contained": true,
