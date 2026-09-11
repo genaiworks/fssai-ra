@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "kind": "paper-figures",
+  "tag": "v1.0.0",
+  "software_version": "1.0.0",
+  "generated_at": "2026-09-11T01:37:45.634163+00:00",
+  "environment": {
+    "python_version": "3.14.6",
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
+  },
+  "note": "Every figure the paper quotes is produced here. A number in the paper that this file does not contain is a drift bug, and the alignment test fails the build for it.",
+  "figures": {
+    "adversarial_scenarios_total": 30,
+    "adversarial_scenarios_contained": 30,
+    "containment_rate": 1.0,
+    "unauthorized_mutations": 0,
+    "benign_tasks_total": 6,
+    "benign_tasks_completed": 6,
+    "false_denial_rate": 0.0,
+    "controls_ablated": 8,
+    "controls_load_bearing": 8,
+    "authority_coverage": 1.0,
+    "states_explored": 240,
+    "model_check_violations": 0,
+    "invariants_checked": 5,
+    "distinct_denial_codes": 11,
+    "conformance_checks": 25,
+    "conformance_backends_verified": 2,
+    "contract_requirements": 25,
+    "control_contract_fields": 7,
+    "test_count": 137,
+    "evaluation_seconds": 0.02,
+    "verification_seconds": 0.01
+  },
+  "verdicts": {
+    "all_scenarios_contained": true,
+    "model_check_holds": true,
+    "memory_profile_conformant": true,
+    "sql_profile_conformant": true
+  },
+  "limits": [
+    "synthetic fixtures in a declared environment; not a security certification",
+    "deterministic backends; no stochastic model-behaviour rates are claimed",
+    "single process; concurrent interleavings are not evaluated here",
+    "containment of sampled risk classes, not coverage of any threat catalogue"
+  ]
+}

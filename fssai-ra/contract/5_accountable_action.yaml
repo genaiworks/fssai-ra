@@ -16,7 +16,7 @@ requirements:
     owner: Platform Security
     test: Have the agent request an access increase; confirm denial
     evidence_artifact: Denied-call log
-    failure_response: Deny and alert
+    failure_response: Deny the call, alert Platform Security, and review the grant that made the request possible
 
   - id: AA-3
     protected_asset: The decision and evidence record

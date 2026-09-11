@@ -1,0 +1,260 @@
+{
+  "schema_version": "1.0",
+  "kind": "conformance",
+  "generated_at": "2026-09-11T01:37:45.624823+00:00",
+  "profile_id": "student-support",
+  "backends": {
+    "register": "CaseRegister",
+    "evidence": "EvidenceLedger",
+    "objects": "MemoryObjectStore",
+    "events": "EventLog",
+    "snapshots": "SnapshotStore",
+    "inward": "OneWayChannel",
+    "model": "deterministic",
+    "executor": "default"
+  },
+  "environment": {
+    "python_version": "3.14.6",
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
+  },
+  "summary": {
+    "checks_total": 25,
+    "checks_executed": 25,
+    "checks_skipped": 0,
+    "checks_passed": 25,
+    "checks_failed": 0,
+    "conformant": true
+  },
+  "checks": [
+    {
+      "id": "CF-PORT-01",
+      "domain": "register",
+      "requirement": "AA-4",
+      "title": "register adapter satisfies its port",
+      "passed": true,
+      "detail": "CaseRegister against RegisterPort",
+      "skipped": false
+    },
+    {
+      "id": "CF-PORT-02",
+      "domain": "evidence",
+      "requirement": "AA-3",
+      "title": "evidence adapter satisfies its port",
+      "passed": true,
+      "detail": "EvidenceLedger against EvidencePort",
+      "skipped": false
+    },
+    {
+      "id": "CF-PORT-03",
+      "domain": "objects",
+      "requirement": "AA-4",
+      "title": "objects adapter satisfies its port",
+      "passed": true,
+      "detail": "MemoryObjectStore against ObjectStorePort",
+      "skipped": false
+    },
+    {
+      "id": "CF-PORT-04",
+      "domain": "events",
+      "requirement": "ET-1",
+      "title": "events adapter satisfies its port",
+      "passed": true,
+      "detail": "EventLog against EventBus",
+      "skipped": false
+    },
+    {
+      "id": "CF-PORT-05",
+      "domain": "snapshots",
+      "requirement": "RD-1",
+      "title": "snapshots adapter satisfies its port",
+      "passed": true,
+      "detail": "SnapshotStore against SnapshotStoreLike",
+      "skipped": false
+    },
+    {
+      "id": "CF-PORT-06",
+      "domain": "inward",
+      "requirement": "IB-1",
+      "title": "inward adapter satisfies its port",
+      "passed": true,
+      "detail": "OneWayChannel against InwardChannel",
+      "skipped": false
+    },
+    {
+      "id": "CF-PORT-07",
+      "domain": "model",
+      "requirement": "BI-1",
+      "title": "model adapter satisfies its port",
+      "passed": true,
+      "detail": "DeterministicModel against ModelBackendPort",
+      "skipped": false
+    },
+    {
+      "id": "CF-IB-01",
+      "domain": "import",
+      "requirement": "IB-1",
+      "title": "inward channel exposes no return path",
+      "passed": true,
+      "detail": "no read, reply, or acknowledgement method",
+      "skipped": false
+    },
+    {
+      "id": "CF-IB-02",
+      "domain": "import",
+      "requirement": "IB-2",
+      "title": "inward channel accepts a validated item",
+      "passed": true,
+      "detail": "delivered in-process",
+      "skipped": false
+    },
+    {
+      "id": "CF-ET-01",
+      "domain": "events",
+      "requirement": "ET-1",
+      "title": "offsets are monotonic and ordered",
+      "passed": true,
+      "detail": "offsets [0, 1, 2]",
+      "skipped": false
+    },
+    {
+      "id": "CF-ET-02",
+      "domain": "events",
+      "requirement": "ET-1",
+      "title": "the log can be read back from an offset",
+      "passed": true,
+      "detail": "read() reflects the new append",
+      "skipped": false
+    },
+    {
+      "id": "CF-RD-01",
+      "domain": "snapshots",
+      "requirement": "RD-1",
+      "title": "snapshots round-trip and roll back",
+      "passed": true,
+      "detail": "rollback restored the approved rows exactly",
+      "skipped": false
+    },
+    {
+      "id": "CF-RD-02",
+      "domain": "snapshots",
+      "requirement": "RD-1",
+      "title": "manifests identify content, not commit order",
+      "passed": true,
+      "detail": "manifest is a content hash, stable and discriminating",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-01",
+      "domain": "evidence",
+      "requirement": "AA-3",
+      "title": "evidence writes require the credential",
+      "passed": true,
+      "detail": "a wrong credential is refused",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-02",
+      "domain": "evidence",
+      "requirement": "AA-3",
+      "title": "the hash chain verifies after appends",
+      "passed": true,
+      "detail": "hash chain verified after appends",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-03",
+      "domain": "evidence",
+      "requirement": "AA-3",
+      "title": "records are retrievable by kind and request",
+      "passed": true,
+      "detail": "1 matching record(s)",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-10",
+      "domain": "action",
+      "requirement": "AA-4",
+      "title": "an approved exact proposal executes once",
+      "passed": true,
+      "detail": "resource now {'status': 'ready_for_officer_review', 'version': 2}",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-11",
+      "domain": "action",
+      "requirement": "AA-4",
+      "title": "a retry returns the stored receipt",
+      "passed": true,
+      "detail": "the retry returned the stored receipt without a second mutation",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-12",
+      "domain": "action",
+      "requirement": "AA-4",
+      "title": "a changed proposal requires renewed review",
+      "passed": true,
+      "detail": "denied with APPROVAL_PAYLOAD_MISMATCH; resource untouched",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-13",
+      "domain": "action",
+      "requirement": "AA-4",
+      "title": "an expired approval is denied",
+      "passed": true,
+      "detail": "denied with APPROVAL_EXPIRED",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-14",
+      "domain": "action",
+      "requirement": "AA-4",
+      "title": "a stale resource version is denied",
+      "passed": true,
+      "detail": "denied with CASE_VERSION_CONFLICT",
+      "skipped": false
+    },
+    {
+      "id": "CF-AA-15",
+      "domain": "action",
+      "requirement": "AA-4",
+      "title": "a requester cannot approve its own proposal",
+      "passed": true,
+      "detail": "refused with SEPARATION_OF_DUTIES",
+      "skipped": false
+    },
+    {
+      "id": "CF-BI-01",
+      "domain": "model",
+      "requirement": "BI-1",
+      "title": "the model proposes, it does not execute",
+      "passed": true,
+      "detail": "2 proposal(s); no execution method on the backend",
+      "skipped": false
+    },
+    {
+      "id": "CF-BI-02",
+      "domain": "model",
+      "requirement": "BI-2",
+      "title": "retrieved text is treated as data",
+      "passed": true,
+      "detail": "retrieved text did not become an instruction",
+      "skipped": false
+    },
+    {
+      "id": "CF-MC-01",
+      "domain": "verification",
+      "requirement": "AA-4",
+      "title": "the profile's authority invariants hold under bounded model checking",
+      "passed": true,
+      "detail": "240 states explored, 0 violation(s)",
+      "skipped": false
+    }
+  ],
+  "limits": [
+    "behavioural conformance for the supplied fixtures in this environment",
+    "not a penetration test, an audit, or a certification",
+    "single-process; concurrent and distributed failure modes need their own evidence"
+  ]
+}

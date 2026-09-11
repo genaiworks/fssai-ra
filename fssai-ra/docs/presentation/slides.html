@@ -1,0 +1,801 @@
+<title>Trust by Construction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+
+<style>
+/* ───────────────────────────────────────────────────────────────────────────
+   Trust by Construction — UNU Macau AI Conference 2026, panel opener.
+
+   Visual identity: a filed institutional record crossed with a control room.
+   The oxide red is a stamp colour and is spent on exactly one thing — refusal —
+   because refusal is what this architecture is for. Nothing else uses it.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+
+  --ground:      #e9edf1;   /* cool archival grey, not cream */
+  --stage:       #f8fafb;
+  --panel:       #eff3f6;
+  --ink:         #111a22;   /* blue-black */
+  --ink-soft:    #46545f;
+  --ink-faint:   #7e8b96;
+  --rule:        #c9d2da;
+  --rule-strong: #a8b5c0;
+
+  --refuse:      #a8322a;   /* stamp oxide — denials only */
+  --refuse-wash: #f3e3e1;
+  --authorize:   #1f6b5c;   /* deep viridian — authorised outcomes only */
+  --authorize-wash: #dfeae7;
+  --mark:        #8a6a1f;   /* ochre — findings and caveats */
+
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Newsreader", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --gutter: clamp(20px, 4vw, 68px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground:      #0b1117;
+    --stage:       #111a21;
+    --panel:       #16212a;
+    --ink:         #e8eef3;
+    --ink-soft:    #a4b2bd;
+    --ink-faint:   #73838f;
+    --rule:        #26343f;
+    --rule-strong: #3a4b58;
+    --refuse:      #e2776c;
+    --refuse-wash: #2c1a19;
+    --authorize:   #52b79f;
+    --authorize-wash: #14241f;
+    --mark:        #d3a94a;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground:      #0b1117;
+  --stage:       #111a21;
+  --panel:       #16212a;
+  --ink:         #e8eef3;
+  --ink-soft:    #a4b2bd;
+  --ink-faint:   #73838f;
+  --rule:        #26343f;
+  --rule-strong: #3a4b58;
+  --refuse:      #e2776c;
+  --refuse-wash: #2c1a19;
+  --authorize:   #52b79f;
+  --authorize-wash: #14241f;
+  --mark:        #d3a94a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─────────────────────────────────────────────────────────── chrome */
+
+.rail {
+  position: fixed; inset: auto 0 0 0; height: 3px;
+  background: var(--rule); z-index: 40;
+}
+.rail > i { display: block; height: 100%; background: var(--ink); transition: width .28s ease; }
+
+.hud {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px var(--gutter);
+  font-family: var(--display); font-size: 11px;
+  letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink-faint);
+  background: linear-gradient(to bottom, var(--ground) 62%, transparent);
+  pointer-events: none;
+}
+.hud b { font-weight: 600; color: var(--ink-soft); }
+.hud .grow { flex: 1; }
+.hud button {
+  pointer-events: auto;
+  font: inherit; letter-spacing: .13em; text-transform: uppercase;
+  background: none; border: 1px solid var(--rule); color: var(--ink-faint);
+  border-radius: 2px; padding: 3px 9px; cursor: pointer;
+}
+.hud button:hover { color: var(--ink); border-color: var(--rule-strong); }
+.hud button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ─────────────────────────────────────────────────────────── stage */
+
+.deck { display: grid; place-items: center; min-height: 100vh; padding: 46px var(--gutter) 34px; }
+
+.slide {
+  display: none;
+  width: min(1160px, 100%);
+  aspect-ratio: 16 / 9;
+  background: var(--stage);
+  border: 1px solid var(--rule);
+  padding: clamp(26px, 3.4vw, 54px);
+  overflow: hidden;
+  position: relative;
+  container-type: inline-size;
+}
+.slide.here { display: grid; grid-template-rows: auto 1fr auto; gap: clamp(12px, 1.6vw, 22px); }
+
+/* Registration marks: a filed-document detail, cheap and specific. */
+.slide::before, .slide::after {
+  content: ""; position: absolute; width: 13px; height: 13px; pointer-events: none;
+  border: 1px solid var(--rule-strong);
+}
+.slide::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.slide::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+.eyebrow {
+  font-family: var(--display); font-size: clamp(10px, .95cqw, 12px); font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint);
+  display: flex; align-items: baseline; gap: 12px;
+}
+.eyebrow span::before { content: "— "; }
+
+h1 {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(30px, 4.6cqw, 62px); line-height: 1.02;
+  letter-spacing: -.022em; margin: 0; text-wrap: balance;
+}
+h2 {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(24px, 3.5cqw, 46px); line-height: 1.06;
+  letter-spacing: -.018em; margin: 0; text-wrap: balance;
+}
+h3 {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(14px, 1.45cqw, 19px); letter-spacing: -.005em; margin: 0;
+}
+p { margin: 0; max-width: 62ch; font-size: clamp(14px, 1.42cqw, 19px); }
+p.lead { font-size: clamp(16px, 1.85cqw, 25px); line-height: 1.38; color: var(--ink-soft); }
+.dim { color: var(--ink-soft); }
+.faint { color: var(--ink-faint); }
+strong { font-weight: 500; color: var(--ink); }
+em { font-style: italic; }
+
+.foot {
+  font-family: var(--display); font-size: clamp(10px, .95cqw, 12px);
+  letter-spacing: .05em; color: var(--ink-faint);
+  border-top: 1px solid var(--rule); padding-top: 10px;
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: baseline;
+}
+
+.body { display: flex; flex-direction: column; gap: clamp(10px, 1.5cqw, 20px); min-height: 0; }
+.cols { display: grid; gap: clamp(14px, 2cqw, 30px); grid-template-columns: 1fr 1fr; align-items: start; }
+.cols.wide-left { grid-template-columns: 1.25fr 1fr; }
+.cols.three { grid-template-columns: repeat(3, 1fr); }
+
+/* ─────────────────────────────────────────────────── subject devices */
+
+code, .mono { font-family: var(--mono); font-size: .88em; letter-spacing: -.01em; }
+
+/* The stamp. Reserved for refusal. */
+.stamp {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--mono); font-weight: 600;
+  font-size: clamp(12px, 1.35cqw, 18px); letter-spacing: .02em;
+  color: var(--refuse); background: var(--refuse-wash);
+  border: 1.5px solid var(--refuse); border-radius: 2px;
+  padding: 7px 13px; transform: rotate(-1.1deg);
+}
+.stamp::before { content: "✕"; font-size: .9em; }
+
+.allow {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--mono); font-weight: 600;
+  font-size: clamp(12px, 1.35cqw, 18px);
+  color: var(--authorize); background: var(--authorize-wash);
+  border: 1.5px solid var(--authorize); border-radius: 2px; padding: 7px 13px;
+}
+.allow::before { content: "✓"; }
+
+/* The seven-field contract card: the paper's actual contribution, shown filled in. */
+.contract { border: 1px solid var(--rule-strong); background: var(--panel); }
+.contract .row {
+  display: grid; grid-template-columns: 13ch 1fr; gap: 12px;
+  padding: 6px clamp(10px, 1.3cqw, 16px); border-bottom: 1px solid var(--rule);
+  font-size: clamp(11px, 1.14cqw, 15px);
+}
+.contract .row:last-child { border-bottom: 0; }
+.contract .row > b {
+  font-family: var(--display); font-weight: 600; font-size: .82em;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint);
+  padding-top: .25em;
+}
+.contract .head {
+  background: var(--ink); color: var(--stage);
+  font-family: var(--mono); font-weight: 600; letter-spacing: .04em;
+  padding: 7px clamp(10px, 1.3cqw, 16px); font-size: clamp(11px, 1.1cqw, 14px);
+  display: flex; justify-content: space-between; gap: 12px;
+}
+
+/* Numbered steps encode a real sequence: the three-step protocol. */
+.steps { display: grid; gap: 9px; }
+.step { display: grid; grid-template-columns: 26px 1fr; gap: 13px; align-items: start; }
+.step .n {
+  font-family: var(--mono); font-size: clamp(11px, 1.1cqw, 14px); font-weight: 600;
+  color: var(--ink-faint); border: 1px solid var(--rule-strong);
+  width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%;
+}
+.step.no .n { color: var(--refuse); border-color: var(--refuse); }
+.step p { font-size: clamp(12px, 1.25cqw, 17px); }
+
+/* Ledger: monospace record lines, the evidence chain made visible. */
+.ledger { border: 1px solid var(--rule); background: var(--panel); font-family: var(--mono); }
+.ledger div {
+  display: grid; grid-template-columns: 3.4ch 1fr auto; gap: 12px;
+  padding: 6px clamp(9px, 1.2cqw, 14px); border-bottom: 1px solid var(--rule);
+  font-size: clamp(10px, 1.06cqw, 13.5px); align-items: baseline;
+}
+.ledger div:last-child { border-bottom: 0; }
+.ledger .seq { color: var(--ink-faint); }
+.ledger .hash { color: var(--ink-faint); font-size: .86em; }
+
+/* Figures: used only where the number is the point of the slide. */
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.fig { background: var(--stage); padding: clamp(11px, 1.5cqw, 19px); display: grid; gap: 3px; align-content: start; }
+.fig b {
+  font-family: var(--display); font-weight: 700; font-size: clamp(26px, 3.4cqw, 44px);
+  line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+}
+.fig .k { font-family: var(--display); font-size: clamp(10px, .95cqw, 12px); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+.fig .note { font-size: clamp(11px, 1.08cqw, 14px); color: var(--ink-soft); line-height: 1.32; }
+.fig.hero b { color: var(--authorize); }
+
+/* Plain list with hanging rules — a form, not a bullet list. */
+.entries { display: grid; gap: 0; }
+.entry { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: clamp(7px, .95cqw, 12px) 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.entry:last-child { border-bottom: 0; }
+.entry .k { font-family: var(--mono); font-size: clamp(10px, 1.02cqw, 13px); color: var(--ink-faint); white-space: nowrap; padding-top: .15em; }
+.entry p { font-size: clamp(12px, 1.25cqw, 17px); }
+
+.callout { border-left: 3px solid var(--mark); padding: 2px 0 2px 16px; }
+.callout.refuse { border-left-color: var(--refuse); }
+
+.pill {
+  display: inline-block; font-family: var(--mono); font-size: clamp(10px, .98cqw, 12.5px);
+  border: 1px solid var(--rule-strong); border-radius: 999px; padding: 2px 9px; color: var(--ink-soft);
+}
+
+.rule-h { height: 1px; background: var(--rule); }
+
+/* ─────────────────────────────────────────────────────────── notes */
+
+.notes {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+  max-height: 42vh; overflow-y: auto;
+  background: var(--panel); border-top: 2px solid var(--ink);
+  padding: 16px var(--gutter) 22px;
+  font-size: 15px; line-height: 1.55;
+  display: none;
+}
+body.notes-open .notes { display: block; }
+.notes h4 { font-family: var(--display); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 6px; }
+.notes p { max-width: 78ch; margin: 0 0 8px; }
+.notes .time { font-family: var(--mono); color: var(--ink-faint); font-size: 13px; }
+
+/* ──────────────────────────────────────────────────────── overview */
+
+body.grid-open .deck { display: none; }
+.overview { display: none; padding: 56px var(--gutter) 48px; }
+body.grid-open .overview { display: block; }
+.overview .tiles { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(216px, 1fr)); }
+.tile {
+  text-align: left; background: var(--stage); border: 1px solid var(--rule);
+  padding: 13px 15px; cursor: pointer; display: grid; gap: 5px; align-content: start;
+  min-height: 108px; font: inherit; color: inherit;
+}
+.tile:hover { border-color: var(--ink); }
+.tile:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tile .n { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+.tile .t { font-family: var(--display); font-weight: 600; font-size: 15px; line-height: 1.22; }
+.tile .e { font-family: var(--display); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-faint); }
+.tile[aria-current="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+
+/* ─────────────────────────────────────────────── narrow: read as a document */
+
+@media (max-width: 820px) {
+  .deck { display: block; padding: 58px var(--gutter) 40px; }
+  .slide { display: block !important; aspect-ratio: auto; width: 100%; margin-bottom: 16px; }
+  .slide.here { display: block; }
+  .slide::before, .slide::after { display: none; }
+  .cols, .cols.wide-left, .cols.three { grid-template-columns: 1fr; }
+  .contract .row { grid-template-columns: 1fr; gap: 2px; }
+  .hud .desktop-only { display: none; }
+  h1, h2, p, p.lead, .fig b { font-size: revert; }
+  h1 { font-size: 30px; } h2 { font-size: 25px; }
+  p { font-size: 16px; } p.lead { font-size: 18px; }
+  .fig b { font-size: 30px; }
+  .rail { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ─────────────────────────────────────────────────────────── print */
+
+@media print {
+  .hud, .rail, .notes, .overview { display: none !important; }
+  body { background: #fff; }
+  .deck { display: block; padding: 0; min-height: 0; }
+  .slide { display: block !important; page-break-after: always; border: 0; aspect-ratio: 16/9; width: 100%; }
+}
+</style>
+
+<div class="hud">
+  <b>Trust by Construction</b>
+  <span class="desktop-only">UNU Macau AI Conference 2026 · Panel opener</span>
+  <span class="grow"></span>
+  <span class="mono" id="counter">1 / 16</span>
+  <button id="notesBtn" aria-pressed="false">Notes</button>
+  <button id="gridBtn" aria-pressed="false">Slides</button>
+</div>
+
+<div class="deck" id="deck"></div>
+<div class="overview" id="overview"><div class="tiles" id="tiles"></div></div>
+<div class="notes" id="notes" aria-live="polite"></div>
+<div class="rail"><i id="railFill"></i></div>
+
+<script>
+/* Slides are data. One object per slide keeps the argument's structure visible
+   and lets the overview, the notes panel and the deck read from one source. */
+const SLIDES = [
+{
+  eyebrow: ["Opening", "R. Srivastava"],
+  time: "0:00",
+  html: `
+    <h1>A model may propose an action.<br>It cannot manufacture the authority to&nbsp;execute&nbsp;it.</h1>
+    <div class="body">
+      <p class="lead">Trust by Construction: a testable architecture for sovereign AI agents in education.</p>
+      <div class="cols">
+        <p class="faint">UNU Macau AI Conference 2026 · <em>AI × Education: AI for Learning, Learning for AI</em> · Panel: Agentic AI in the Loop.</p>
+        <p class="faint">Reference implementation, Apache-2.0 · <code>github.com/genaiworks/fssai-ra</code> · release <code>v1.0.0</code></p>
+      </div>
+    </div>`,
+  notes: `Open on the rule, not on me. Read it once, slowly, then stop talking for a beat.
+  <p>That sentence is the whole argument. Everything that follows is about making it something you can <em>test</em> rather than something we assert.</p>`
+},
+{
+  eyebrow: ["The question", "Why this, why now"],
+  time: "0:35",
+  html: `
+    <h2>A university deploys an agent to process student-support applications.</h2>
+    <div class="body">
+      <p class="lead">It reads confidential records. It interprets eligibility guidance. It drafts recommendations. It calls administrative tools.</p>
+      <div class="callout">
+        <p><strong>A sentence inside an uploaded document can redirect that workflow.</strong> So can an ordinary mistake, with no attacker present at all.</p>
+      </div>
+      <p>The useful institutional question is narrower than “is the AI safe?”. It is: <strong>when the agent is wrong or compromised, what stops its proposal from becoming an unauthorized decision — and what evidence lets a student challenge the outcome?</strong></p>
+    </div>
+    <div class="foot"><span>Education is where agentic AI touches people soonest, and where a wrong decision is felt as an unexplained one.</span></div>`,
+  notes: `Ground it in a real workflow before any architecture. Most rooms have someone who runs this process.
+  <p>The two failure modes are deliberately paired: the attacker and the honest mistake. A control that only handles the attacker is half a control.</p>`
+},
+{
+  eyebrow: ["Framing", "The move this talk makes"],
+  time: "1:15",
+  html: `
+    <h2>Sovereignty is not a postcode.</h2>
+    <div class="body">
+      <p class="lead">Local hosting is necessary and nowhere near sufficient. Sovereignty is a set of capabilities an institution can <em>exercise and demonstrate</em>.</p>
+      <div class="cols">
+        <div class="entries">
+          <div class="entry"><span class="k">01</span><p>Govern who reads which record</p></div>
+          <div class="entry"><span class="k">02</span><p>Deploy — and replace — the model</p></div>
+          <div class="entry"><span class="k">03</span><p>Hold the cryptographic keys</p></div>
+        </div>
+        <div class="entries">
+          <div class="entry"><span class="k">04</span><p>Change the policy without a vendor</p></div>
+          <div class="entry"><span class="k">05</span><p>Produce evidence a person can challenge</p></div>
+          <div class="entry"><span class="k">06</span><p>Leave</p></div>
+        </div>
+      </div>
+      <p class="faint">Each one is testable. None is established by a data-centre location, a policy document, or a vendor assurance.</p>
+    </div>`,
+  notes: `This is the reframe the room should remember even if they forget the architecture.
+  <p>Capability six — <em>leave</em> — usually gets a reaction. Exit is the capability procurement forgets to buy.</p>`
+},
+{
+  eyebrow: ["Contribution", "The control contract"],
+  time: "2:00",
+  html: `
+    <h2>Seven fields, per consequential capability.</h2>
+    <div class="body">
+      <div class="cols wide-left">
+        <div class="contract">
+          <div class="head"><span>AA-4</span><span>accountable_action</span></div>
+          <div class="row"><b>Asset</b><span>Consequential student-support case transitions</span></div>
+          <div class="row"><b>Operation</b><span>An authorized officer may approve <em>one exact</em> proposed transition for a current resource version</span></div>
+          <div class="row"><b>Enforcement</b><span>Executor verifies signature, proposal digest, operation allowlist, profiled transition, approver role, audience, expiry, single use, and version — before any mutation</span></div>
+          <div class="row"><b>Owner</b><span>Student Support Service Owner</span></div>
+          <div class="row"><b>Failure test</b><span>Alter the target after review; replay the approval; present a genuine approval for another proposal</span></div>
+          <div class="row"><b>Evidence</b><span>Intent and outcome receipts, linked by request id and proposal digest</span></div>
+          <div class="row"><b>Response</b><span>Deny; preserve manual review and reconciliation</span></div>
+        </div>
+        <div class="body">
+          <p>Not a documentation convention — a <strong>diagnostic</strong>.</p>
+          <div class="callout refuse">
+            <p>A capability whose seven fields cannot be filled is a capability nobody is ready to automate.</p>
+          </div>
+          <p class="faint">It is also a procurement instrument. Put the seven fields to a supplier as seven questions. One who cannot name the enforcement point or the recovery owner has answered the question that matters.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>25 requirements across five domains plus cross-cutting controls, as machine-readable YAML.</span></div>`,
+  notes: `Show a filled-in contract, never an empty template. The specificity is the point.
+  <p>If the panel goes toward procurement, this is the slide to return to — the seven fields work as an RFP section with no modification.</p>`
+},
+{
+  eyebrow: ["Mechanism", "Where the claim leaks"],
+  time: "2:50",
+  html: `
+    <h2>The model proposes. The policy disposes. Watch where that leaks.</h2>
+    <div class="body">
+      <div class="cols">
+        <div class="body">
+          <h3>What the agent submits</h3>
+          <div class="ledger">
+            <div><span class="seq">→</span><span>tool: <strong>approve_award</strong></span><span class="hash">target S-104</span></div>
+            <div><span class="seq">→</span><span>class: <strong>reversible</strong></span><span class="hash">claimed</span></div>
+            <div><span class="seq">→</span><span>“routine, pre-approved maintenance”</span><span class="hash">rationale</span></div>
+          </div>
+          <p class="faint">A compromised agent labels its own action low-risk.</p>
+        </div>
+        <div class="body">
+          <h3>What the enforcement point uses</h3>
+          <div class="ledger">
+            <div><span class="seq">✓</span><span>class: <strong>high_impact</strong></span><span class="hash">from the catalogue</span></div>
+            <div><span class="seq">✓</span><span>downgrade attempt recorded</span><span class="hash">evidence</span></div>
+          </div>
+          <div class="stamp">NO_APPROVER_AVAILABLE</div>
+        </div>
+      </div>
+      <div class="callout">
+        <p><strong>The action class is deployment configuration, never model output.</strong> Otherwise the proposer sets its own oversight requirement — and “the model only proposes” is no longer true.</p>
+      </div>
+    </div>`,
+  notes: `This is the most technically interesting slide for a sceptical engineer, and it is a subtle bug most agent frameworks still have.
+  <p>The phrase to land: <em>the proposer must not be allowed to set its own review level.</em></p>`
+},
+{
+  eyebrow: ["Demonstration", "Ninety seconds"],
+  time: "3:30",
+  html: `
+    <h2>A changed proposal requires renewed review.</h2>
+    <div class="body">
+      <div class="cols wide-left">
+        <div class="steps">
+          <div class="step"><span class="n">1</span><p>An agent proposes moving case <code>S-104</code> from <code>draft</code> to <code>ready_for_officer_review</code>, against version 7 and evidence snapshot 1.</p></div>
+          <div class="step"><span class="n">2</span><p>A named officer approves the canonical digest of <em>that exact</em> proposal. The role comes from their authenticated identity, not from the request.</p></div>
+          <div class="step no"><span class="n">3</span><p>Change one field — the target, the destination state, the evidence version — and execute.</p></div>
+          <div class="step"><span class="n">4</span><p>Execute the reviewed proposal. Retry it. The same receipt returns, with no second mutation.</p></div>
+        </div>
+        <div class="body">
+          <div class="stamp">APPROVAL_PAYLOAD_MISMATCH</div>
+          <p class="faint">Zero mutations. The register is untouched.</p>
+          <div class="rule-h"></div>
+          <div class="allow">version 7 → 8</div>
+          <p class="faint">One mutation, one receipt, two evidence records, and a retry that changes nothing.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="mono">fssaira evaluate profiles/student_support.yaml</span><span>— runs offline, in about a fiftieth of a second</span></div>`,
+  notes: `<span class="time">Live demo here if the room and the wifi allow — otherwise this slide stands alone.</span>
+  <p>The line to say while the denial is on screen: “that is a governance rule behaving as observable code.”</p>`
+},
+{
+  eyebrow: ["Method", "The part that is new"],
+  time: "4:20",
+  html: `
+    <h2>Three questions a hand-written test suite cannot answer.</h2>
+    <div class="body">
+      <div class="cols three">
+        <div class="body">
+          <h3>What about the combination nobody imagined?</h3>
+          <p class="faint">A bounded model checker enumerates the profile’s entire declared authority space and runs the real enforcement code against every configuration.</p>
+          <p><strong>240 states. 0 violations. 5 invariants.</strong></p>
+        </div>
+        <div class="body">
+          <h3>Is each control load-bearing?</h3>
+          <p class="faint">Remove one control at a time; measure whether the harm returns. A control whose removal changes nothing was decorative.</p>
+          <p><strong>8 of 8 restored their harm.</strong></p>
+        </div>
+        <div class="body">
+          <h3>Does it hold after you replace a component?</h3>
+          <p class="faint">A portable conformance suite runs the properties against <em>your</em> database, bus, and model, naming the governance claim each check defends.</p>
+          <p><strong>25 checks, 2 backend profiles.</strong></p>
+        </div>
+      </div>
+      <div class="callout">
+        <p>Existing guidance — NIST SP 800-207, NIST AI 600-1, OWASP’s agentic work, ISO/IEC 42001 — tells you what to build. None of it lets an institution <em>demonstrate</em> that a named boundary held in its own deployment, after it swapped the vendor’s parts for its own.</p>
+      </div>
+    </div>`,
+  notes: `This is the research contribution. Say plainly that the gap is demonstration, not design guidance.
+  <p>If asked “isn’t this just testing?” — no: a test suite proves the attacks I imagined are contained. Two of these three answer questions I structurally cannot answer by writing more tests.</p>`
+},
+{
+  eyebrow: ["Finding", "What the checker caught in our own work"],
+  time: "5:10",
+  html: `
+    <h2>Our attack suite was measuring less than it claimed.</h2>
+    <div class="body">
+      <p class="lead">The approval signature covers the expiry, audience, and role fields. So every attack that <em>tampered</em> with them was caught one check early.</p>
+      <div class="ledger">
+        <div><span class="seq">✗</span><span>tamper with <code>expires_at</code></span><span class="hash">APPROVAL_SIGNATURE_INVALID</span></div>
+        <div><span class="seq">✗</span><span>tamper with <code>audience</code></span><span class="hash">APPROVAL_SIGNATURE_INVALID</span></div>
+        <div><span class="seq">✗</span><span>tamper with <code>approver_role</code></span><span class="hash">APPROVAL_SIGNATURE_INVALID</span></div>
+      </div>
+      <div class="callout refuse">
+        <p><strong>The expiry check, the audience check, and the role check were never reached.</strong> Defence in depth had quietly become defence in breadth-of-one.</p>
+      </div>
+      <p>The repair needed adversaries carrying <em>genuine</em> signatures: a real reviewer’s real approval, pointed at the wrong proposal, the wrong executor, or a transition their role does not cover. 11 denial controls are now each reached by at least one configuration.</p>
+    </div>`,
+  notes: `Do not skip this slide to save time. It is the strongest credibility move in the deck — it shows the method found a defect in the authors' own work, which is what a method is for.
+  <p>The general lesson is transferable: any layered check can mask the layers behind it, and you will not notice from a green test suite.</p>`
+},
+{
+  eyebrow: ["Result", "A failure mode removed, not just detected"],
+  time: "5:50",
+  html: `
+    <h2>“The case moved. Nothing says who moved it.”</h2>
+    <div class="body">
+      <div class="cols">
+        <div class="body">
+          <h3>Two stores</h3>
+          <p class="faint">Write intent → mutate → write outcome. A crash between step two and three leaves a record of a decision nobody authorized.</p>
+          <div class="stamp">OUTCOME_EVIDENCE_PENDING</div>
+          <p class="faint">Honest: report uncertainty, retain the outcome, reconcile exactly once. Never retry blindly.</p>
+        </div>
+        <div class="body">
+          <h3>One store</h3>
+          <p class="faint">When the register and the evidence ledger share a database, the mutation, the receipt, the intent and the outcome commit in a single transaction.</p>
+          <div class="allow">the window is closed</div>
+          <p class="faint">The state becomes <em>unreachable</em> rather than merely detectable.</p>
+        </div>
+      </div>
+      <div class="callout">
+        <p><strong>The residual is named, not hidden.</strong> No transaction can include a foreign system. An email, a payment, a vendor student-record write still needs the outbox, an idempotency key, and reconciliation. Both paths ship; the deployment reports on its own health endpoint which guarantee is in force.</p>
+      </div>
+    </div>`,
+  notes: `Technical, but it is the clearest example of the method producing an engineering improvement rather than a document.
+  <p>If time is short, compress to: “we closed the one gap the previous release could only document, and we say exactly where it still applies.”</p>`
+},
+{
+  eyebrow: ["Evidence", "With denominators"],
+  time: "6:30",
+  html: `
+    <h2>What we can show, and what the numbers are worth.</h2>
+    <div class="body">
+      <div class="figures">
+        <div class="fig"><span class="k">Adversarial</span><b>30/30</b><span class="note">scenarios contained, <strong>0</strong> unauthorized mutations</span></div>
+        <div class="fig"><span class="k">Model check</span><b>240</b><span class="note">states explored, 0 invariant violations</span></div>
+        <div class="fig"><span class="k">Attribution</span><b>1.0</b><span class="note">authority coverage — every control load-bearing</span></div>
+        <div class="fig hero"><span class="k">False denials</span><b>0.0</b><span class="note">6 of 6 benign tasks still completed</span></div>
+      </div>
+      <div class="callout">
+        <p><strong>That last figure matters more than the first.</strong> A system that denies everything scores perfectly on containment and is useless. Reporting the two together is what stops either being optimised alone — and a previous version of this work listed the utility baseline as future work, which meant its headline number had no denominator.</p>
+      </div>
+      <p class="faint">137 deterministic tests. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under two seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
+    </div>`,
+  notes: `Lead with the false-denial rate if the panel is policy-heavy. It is the figure that shows we are not optimising for a security theatre metric.
+  <p>“Reproduces on a disconnected laptop” is the sentence that matters for capacity building — it means an institution with no budget can verify us.</p>`
+},
+{
+  eyebrow: ["Limits", "Read this before citing us"],
+  time: "7:10",
+  html: `
+    <h2>What is <em>not</em> evidenced.</h2>
+    <div class="body">
+      <div class="entries">
+        <div class="entry"><span class="k">host</span><p>Resistance to a compromised host administrator, a subverted signing authority, or colluding control owners. Separate containers on one host are <strong>logical separation, not independent administrative trust</strong>.</p></div>
+        <div class="entry"><span class="k">model</span><p>Stochastic prompt-injection rates for any named model. Stripping removes mechanical injection, not instructions in ordinary language — and nothing downstream relies on it.</p></div>
+        <div class="entry"><span class="k">people</span><p>Reviewer accuracy, workload, appeal quality, fairness, accessibility, cost, or energy. Synthetic cases cannot establish real-world equity.</p></div>
+        <div class="entry"><span class="k">audit</span><p>No institutional deployment, independent audit, penetration test, or certification.</p></div>
+      </div>
+      <div class="callout refuse">
+        <p>These are fixture observations in a declared environment. <strong>Not security probabilities. Not a certification. Not evidence of production readiness.</strong></p>
+      </div>
+    </div>
+    <div class="foot"><span>Every public claim maps to its test, its evidence artifact, and its limit in <code>docs/ASSURANCE.md</code>.</span></div>`,
+  notes: `Never cut this slide. In a UN room, the credibility of everything before it depends on it being here and being specific.
+  <p>If a panellist pushes on over-claiming, this slide is the answer, and it is better delivered before the question than after.</p>`
+},
+{
+  eyebrow: ["Theme", "Both directions"],
+  time: "7:45",
+  html: `
+    <h2>AI for Learning. Learning for AI.</h2>
+    <div class="body">
+      <div class="cols">
+        <div class="body">
+          <h3>AI for Learning</h3>
+          <p>Educational administration is where agentic AI reaches students first, and where a wrong decision arrives as an unexplained outcome with no route to correction.</p>
+          <p class="faint">The architecture keeps a person accountable for every consequential transition, and produces a record that person can be challenged on.</p>
+        </div>
+        <div class="body">
+          <h3>Learning for AI</h3>
+          <p>The same testbed is a teaching environment. A participant identifies a trust boundary, attempts a violation, watches a named control refuse it, inspects the evidence, and recovers the workflow.</p>
+          <p class="faint">A concrete complement to UNESCO’s AI competency frameworks, which ask for practical judgement rather than vocabulary.</p>
+        </div>
+      </div>
+      <div class="callout">
+        <p><strong>Shared capacity, concretely.</strong> Not shared infrastructure — few institutions can pool that. Shared <em>tests</em>, shared failure cases, and a shared vocabulary for refusing a capability nobody can evidence. Institutions can exchange all three without exchanging a single student record.</p>
+      </div>
+    </div>`,
+  notes: `This is the slide that earns the panel slot — it answers both halves of the conference theme rather than one.
+  <p>The digital-public-goods link to the Global Digital Compact belongs here if the moderator opens that door.</p>`
+},
+{
+  eyebrow: ["The ask", "Monday morning"],
+  time: "8:20",
+  html: `
+    <h2>Three things to publish, for one capability.</h2>
+    <div class="body">
+      <div class="steps">
+        <div class="step"><span class="n">1</span><p><strong>A named authorization boundary.</strong> Who or what may perform this operation, on what, under whose authority.</p></div>
+        <div class="step"><span class="n">2</span><p><strong>An executable failure test.</strong> The adversarial attempt that must fail — written so it can be run, not described.</p></div>
+        <div class="step"><span class="n">3</span><p><strong>A recovery owner.</strong> A person, by role, who serves the applicant when automation refuses.</p></div>
+      </div>
+      <div class="cols">
+        <p>Start with <em>one</em> bounded workflow. <code>fssaira init</code> scaffolds a new domain — health, courts, benefits, licensing — with a profile, a contract, and a deliberately failing test you must replace with the attack you actually fear.</p>
+        <p class="faint">The scaffold ships an <strong>empty</strong> assurance file on purpose. A new domain inherits the structure and none of the evidence. Borrowing another domain’s results is how a method becomes a vocabulary.</p>
+      </div>
+      <p>Publishing those three together gives an institution a concrete basis for deciding which powers to delegate, which evidence to demand, and when automation must stop.</p>
+    </div>`,
+  notes: `End on something the audience can do, not on a summary of what I said.
+  <p>Hand-off line to the moderator: “I would rather be asked which of our limits matters most in your institution than which of our results is largest.”</p>`
+},
+{
+  eyebrow: ["Close", ""],
+  time: "8:50",
+  html: `
+    <h1>A model may propose an action.<br>It cannot manufacture the authority to&nbsp;execute&nbsp;it.</h1>
+    <div class="body">
+      <div class="cols">
+        <p class="lead">Every consequential capability needs a named boundary, an executable failure test, and a recovery owner.</p>
+        <div class="body">
+          <p class="faint"><code>github.com/genaiworks/fssai-ra</code> — Apache-2.0, release <code>v1.0.0</code></p>
+          <p class="faint">Control contract · bounded model checker · adversarial and utility evaluation · portable conformance suite · one-way import path · React operator console</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>R. Srivastava</span><span>UNU Macau AI Conference 2026</span><span>Proceedings: UNU–Springer Book Series on AI and Sustainable Development</span></div>`,
+  notes: `Return to the opening sentence. The repetition is the point — it is the one thing worth carrying out of the room.`
+},
+{
+  eyebrow: ["Backup", "Architecture"],
+  time: "—",
+  html: `
+    <h2>Five domains, one narrow waist.</h2>
+    <div class="body">
+      <div class="entries">
+        <div class="entry"><span class="k">1 · import</span><p>Type, size, schema and source-signature checks; active content stripped; a protocol break. The inward channel exposes <strong>no read, reply, or acknowledgement method</strong> — verified by inspection and by a working unidirectional transport.</p></div>
+        <div class="entry"><span class="k">2 · transport</span><p>Durable, ordered, replayable. Delivery is described as at-least-once and never as exactly-once. Retention is a governance setting that must outlive the appeal window.</p></div>
+        <div class="entry"><span class="k">3 · data</span><p>Lineage-logged transforms; versioned snapshots with content manifests; rollback to the last approved state.</p></div>
+        <div class="entry"><span class="k">4 · intelligence</span><p>A local model proposes. Retrieved text is fenced as data. The action class comes from the capability catalogue.</p></div>
+        <div class="entry"><span class="k">5 · action</span><p>An approval bound to one exact proposal. Idempotent execution. Append-only, hash-chained evidence with a separate write credential.</p></div>
+      </div>
+      <p class="faint">Identity, key management, policy administration, and evidence custody are cross-cutting and must be administered <em>separately from the agent runtime</em>. If the team that runs the agent also holds the approval signing key, “independent enforcement” is a diagram.</p>
+    </div>`,
+  notes: `Backup slide. Use if someone asks for the architecture, or if the panel turns technical.`
+},
+{
+  eyebrow: ["Backup", "The diode question"],
+  time: "—",
+  html: `
+    <h2>A hardware diode governs one link. That is the smaller half of the claim.</h2>
+    <div class="body">
+      <p class="lead">The interface inventory is the artifact a directionality claim is worthless without.</p>
+      <div class="entries">
+        <div class="entry"><span class="k">→ inward</span><p>The import link — the only path this architecture claims to make directional.</p></div>
+        <div class="entry"><span class="k">↔ both</span><p>Operator ingress, and the administrative shell — <strong>the path most likely to defeat every other control</strong>.</p></div>
+        <div class="entry"><span class="k">← outward</span><p>Monitoring and telemetry export. A metrics exporter is an egress channel.</p></div>
+        <div class="entry"><span class="k">← outward</span><p>Backup and restore; model artifact updates; removable media and console access.</p></div>
+      </div>
+      <div class="callout refuse">
+        <p>An undeclared interface is an unreviewed change. Until the inventory is complete, the directionality claim is about a link nobody attacks.</p>
+      </div>
+    </div>`,
+  notes: `Backup. This is the honest answer to “but you have a data diode, so you're secure?” — no: we govern one link, and here is the list of everything else.`
+}
+];
+
+const deck = document.getElementById("deck");
+const tiles = document.getElementById("tiles");
+const notes = document.getElementById("notes");
+const counter = document.getElementById("counter");
+const railFill = document.getElementById("railFill");
+const notesBtn = document.getElementById("notesBtn");
+const gridBtn = document.getElementById("gridBtn");
+
+SLIDES.forEach((slide, index) => {
+  const el = document.createElement("section");
+  el.className = "slide";
+  el.id = "s" + (index + 1);
+  el.innerHTML =
+    `<div class="eyebrow"><b>${slide.eyebrow[0]}</b>${slide.eyebrow[1] ? `<span>${slide.eyebrow[1]}</span>` : ""}</div>` +
+    slide.html;
+  deck.append(el);
+
+  const tile = document.createElement("button");
+  tile.className = "tile";
+  tile.type = "button";
+  const heading = slide.html.match(/<h[12][^>]*>([\s\S]*?)<\/h[12]>/);
+  tile.innerHTML =
+    `<span class="n">${String(index + 1).padStart(2, "0")}</span>` +
+    `<span class="e">${slide.eyebrow[0]}</span>` +
+    `<span class="t">${(heading ? heading[1] : "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").slice(0, 96)}</span>`;
+  tile.addEventListener("click", () => { show(index); setGrid(false); });
+  tiles.append(tile);
+});
+
+const slideEls = [...deck.children];
+const tileEls = [...tiles.children];
+let current = 0;
+
+function show(index) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, index));
+  slideEls.forEach((el, i) => el.classList.toggle("here", i === current));
+  tileEls.forEach((el, i) => el.setAttribute("aria-current", String(i === current)));
+  counter.textContent = `${current + 1} / ${SLIDES.length}`;
+  railFill.style.width = `${((current + 1) / SLIDES.length) * 100}%`;
+  notes.innerHTML =
+    `<h4>Speaker notes — slide ${current + 1}` +
+    (SLIDES[current].time !== "—" ? ` · target ${SLIDES[current].time}` : "") +
+    `</h4>${SLIDES[current].notes}`;
+  if (history.replaceState) history.replaceState(null, "", "#" + (current + 1));
+  if (window.matchMedia("(max-width: 820px)").matches) return;
+  window.scrollTo({ top: 0 });
+}
+
+function setGrid(open) {
+  document.body.classList.toggle("grid-open", open);
+  gridBtn.setAttribute("aria-pressed", String(open));
+}
+
+function setNotes(open) {
+  document.body.classList.toggle("notes-open", open);
+  notesBtn.setAttribute("aria-pressed", String(open));
+}
+
+gridBtn.addEventListener("click", () => setGrid(!document.body.classList.contains("grid-open")));
+notesBtn.addEventListener("click", () => setNotes(!document.body.classList.contains("notes-open")));
+
+document.addEventListener("keydown", (event) => {
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  switch (event.key) {
+    case "ArrowRight": case "PageDown": case " ": show(current + 1); event.preventDefault(); break;
+    case "ArrowLeft": case "PageUp": show(current - 1); event.preventDefault(); break;
+    case "Home": show(0); break;
+    case "End": show(SLIDES.length - 1); break;
+    case "g": case "G": setGrid(!document.body.classList.contains("grid-open")); break;
+    case "n": case "N": setNotes(!document.body.classList.contains("notes-open")); break;
+    case "Escape": setGrid(false); setNotes(false); break;
+  }
+});
+
+deck.addEventListener("click", (event) => {
+  if (window.matchMedia("(max-width: 820px)").matches) return;
+  if (event.target.closest("a, button")) return;
+  const rect = deck.getBoundingClientRect();
+  show(event.clientX - rect.left < rect.width * 0.22 ? current - 1 : current + 1);
+});
+
+const fromHash = parseInt((location.hash || "").slice(1), 10);
+show(Number.isFinite(fromHash) && fromHash > 0 ? fromHash - 1 : 0);
+</script>
