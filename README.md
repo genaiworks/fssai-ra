@@ -3,7 +3,7 @@
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](LICENSE)
-[![Release v0.3.0](https://img.shields.io/badge/release-v0.3.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.3.0)
+[![Release v0.4.0](https://img.shields.io/badge/release-v0.4.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.4.0)
 
 **Fail-Secure Sovereign AI Reference Architecture** is a runnable teaching-profile
 implementation for testing the authority boundaries of agentic AI. Its synthetic
@@ -32,9 +32,11 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 pytest -q
 python examples/demo_student_support.py
+fssaira evaluate profiles/student_support.yaml --output evaluation-report.json
 ```
 
-Release `v0.3.0` contains 23 deterministic tests. These tests establish specified
+Release `v0.4.0` contains 32 deterministic tests and a versioned eight-scenario
+machine-readable evaluation result. These tests establish specified
 properties in a synthetic in-memory environment; they are not a security
 certification or evidence of production readiness.
 
