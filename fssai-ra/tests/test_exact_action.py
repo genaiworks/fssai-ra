@@ -9,6 +9,8 @@ from fssaira import (
     CaseRegister,
     EvidenceLedger,
     ExecutionDenied,
+    ExecutionUncertain,
+    PendingOutcomeStore,
 )
 
 TOKEN = "evidence-writer"
@@ -151,3 +153,61 @@ def test_empty_trusted_key_set_fails_closed():
 def test_approval_authority_rejects_empty_signing_material():
     with pytest.raises(ValueError, match="signing_key"):
         ApprovalAuthority(signing_key="")
+
+
+def test_domain_transition_rule_denies_an_approved_invalid_transition():
+    register, ledger, authority, _, proposal = setup_workflow()
+    executor = AccountableExecutor(
+        register,
+        ledger,
+        TOKEN,
+        transition_rules={"prepare_case_for_review": {("draft", "ready_for_officer_review")}},
+    )
+    invalid = replace(proposal, to_status="award_approved")
+    approval = authority.approve(invalid, approver="officer-17", now=1000)
+    assert_denied(
+        "TRANSITION_NOT_ALLOWED",
+        lambda: executor.execute(invalid, approval, now=1001),
+    )
+    assert register.mutation_count == 0
+
+
+class FailsFirstOutcomeLedger(EvidenceLedger):
+    def __init__(self, token):
+        super().__init__(token)
+        self.failed = False
+
+    def append(self, kind, payload, *, token):
+        if kind == "action_outcome" and not self.failed:
+            self.failed = True
+            raise RuntimeError("simulated outage")
+        return super().append(kind, payload, token=token)
+
+
+def test_completed_mutation_is_marked_uncertain_then_reconciled_once():
+    register = CaseRegister({"S-104": {"status": "draft", "version": 7}})
+    ledger = FailsFirstOutcomeLedger(TOKEN)
+    authority = ApprovalAuthority()
+    outcomes = PendingOutcomeStore()
+    executor = AccountableExecutor(register, ledger, TOKEN, outcome_store=outcomes)
+    proposal = ActionProposal(
+        "req-recovery", "agent", "prepare_case_for_review", "S-104", 7,
+        "draft", "ready_for_officer_review", "snapshot-1",
+    )
+    approval = authority.approve(proposal, approver="officer", now=1000)
+
+    with pytest.raises(ExecutionUncertain) as exc:
+        executor.execute(proposal, approval, now=1001)
+    assert exc.value.code == "OUTCOME_EVIDENCE_PENDING"
+    assert register.mutation_count == 1
+    assert executor.pending_outcome_count == 1
+
+    with pytest.raises(ExecutionUncertain):
+        executor.execute(proposal, approval, now=1002)
+    assert register.mutation_count == 1
+
+    assert executor.reconcile_pending() == 1
+    assert executor.reconcile_pending() == 0
+    assert executor.pending_outcome_count == 0
+    assert len(ledger.find("action_outcome", request_id="req-recovery")) == 1
+    assert ledger.verify()

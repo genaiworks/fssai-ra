@@ -3,7 +3,7 @@
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](../LICENSE)
-[![Release v0.3.0](https://img.shields.io/badge/release-v0.3.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.3.0)
+[![Release v0.4.0](https://img.shields.io/badge/release-v0.4.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.4.0)
 
 A **runnable teaching-profile reference implementation** for specifying and testing
 the authority boundaries of agentic AI. The synthetic student-support workflow runs
@@ -58,10 +58,18 @@ cd fssai-ra/fssai-ra
 pip install -e ".[dev]"      # or: pip install pyyaml pytest
 pytest -q                    # contract, attack, ablation, and exact-action tests
 python examples/demo_student_support.py
+fssaira validate-profile profiles/student_support.yaml
+fssaira evaluate profiles/student_support.yaml --output evaluation-report.json
 ```
 
-Expected test result for release `v0.3.0`: `23 passed`. The demo uses synthetic
+Expected test result for release `v0.4.0`: `32 passed`. The demo uses synthetic
 records and performs no network calls or external mutations.
+
+The evaluation command executes eight declared scenarios—including altered
+approved payloads, expired and forged approvals, operations and transitions outside
+the profile, idempotent retry, and interrupted outcome evidence—and emits a
+machine-readable JSON report. The release result is committed at
+[`evaluation/results/v0.4.0-student-support.json`](evaluation/results/v0.4.0-student-support.json).
 
 ## Read this first
 
@@ -83,13 +91,21 @@ records and performs no network calls or external mutations.
 | Reproducible data | `src/fssaira/reproducible_data.py` | `contract/3_reproducible_data.yaml` (RD-1) |
 | Bounded intelligence | `src/fssaira/bounded_intelligence.py` | `contract/4_bounded_intelligence.yaml` (BI-1, BI-2) |
 | Accountable action | `src/fssaira/accountable_action.py`, `exact_action.py`, `evidence.py` | `contract/5_accountable_action.yaml` (AA-1..4) |
+| Domain adaptation | `src/fssaira/profiles.py`, `profiles/*.yaml` | validated operation and transition rules |
+| Evaluation | `src/fssaira/evaluation.py`, `src/fssaira/cli.py` | machine-readable scenario results |
 
 The accountable-action domain also includes `src/fssaira/exact_action.py`. It
 authenticates approval fields with a teaching-profile HMAC, accepts only trusted
-approval keys and allowlisted operations, and binds approval to the exact target,
+approval keys, profiled reviewer roles, operations, and state transitions, and binds approval to the exact target,
 arguments, evidence version, and case version. Successful retries return the stored
 receipt without a second mutation or duplicate evidence. See
 `tests/test_exact_action.py`.
+
+If the authoritative transition succeeds while outcome-evidence append is
+interrupted, the executor raises `OUTCOME_EVIDENCE_PENDING`, retains a pending
+outcome, and exposes an idempotent reconciliation method. The included store is an
+in-memory teaching model; deployments must use a durable outbox committed atomically
+with the authoritative mutation.
 
 The **control contract** (`contract/*.yaml`) records, for every requirement, the
 seven fields from the paper — protected asset, permitted operation, enforcement
@@ -130,8 +146,9 @@ requires renewed review**.
   local LLM). Each seam is chosen so a backend is acceptable only if the domain's
   contract test still passes.
 - **Add a new application** (health, courts, benefits) by reusing the five
-  domains: register tools, define a least-privilege agent, and add contract
-  entries + tests for the new consequential actions. Start with
+  domains: copy [`profiles/template.yaml`](profiles/template.yaml), name every
+  permitted transition and approval role, register least-privilege tools, and add
+  contract entries + tests for each consequential action. Start with
   [`docs/EXTENDING.md`](docs/EXTENDING.md) and `CONTRIBUTING.md`.
 
 ## Security & limitations
@@ -153,7 +170,7 @@ NIST SP 800-207 · NIST AI 600-1 · OWASP Top 10 for LLM Applications · MITRE A
 > Sovereign Agentic AI* (UNU Macau AI Conference 2026, Panel 2). Reference
 > implementation: this repository.
 
-For stable citation, use release `v0.3.0`. Machine-readable
+For stable citation, use release `v0.4.0`. Machine-readable
 citation metadata is available in [`CITATION.cff`](CITATION.cff).
 
 ## License

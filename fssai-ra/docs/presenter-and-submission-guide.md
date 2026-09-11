@@ -22,7 +22,7 @@ Sources: [UNU conference announcement](https://unu.edu/macau/news/unu-macau-ai-c
 
 Before sending, add the actual author name, affiliation, corresponding email, and professional title. The form separately requires confirmation that the author respected each word limit and that the work is original. References have no displayed word limit. The repository should be public and verified in a signed-out browser before its URL is included in the submitted text.
 
-The teaching-profile implementation now passes 23 deterministic tests locally, including authenticated exact-action approval, untrusted-key and altered-approval denial, fail-closed empty trust configuration, operation allowlisting, altered-payload denial, expiry, stale-state denial, separation of duties, and idempotent retry without duplicate evidence. Describe these as tested software properties in a synthetic in-memory environment, not as a benchmark, deployment, or security certification. The broader attack, fault, reviewer, cost, and energy evaluation remains planned work.
+The teaching-profile implementation now passes 32 deterministic tests locally. A versioned JSON evaluation reports eight of eight declared exact-action scenarios contained, including altered-payload, expiry, forged identity, operation and transition allowlists, retry, and outcome-evidence recovery. Describe these as tested software properties in a synthetic in-memory environment, not as a benchmark, deployment, or security certification. Broader stochastic attacks, durable crash recovery, reviewer, cost, and energy evaluation remain planned work.
 
 ## What changed and why
 
@@ -35,7 +35,7 @@ The teaching-profile implementation now passes 23 deterministic tests locally, i
 | Human approval is a general safeguard | Approval binds to the exact operation and evidence version | Gives builders an implementable rule and the audience a memorable test |
 | Append-only evidence sounds sufficient | Separate custody, continuity checking, pre-action receipt, and reconciliation | Addresses deletion, truncation, shared credentials, and uncertain outcomes |
 | Snapshot rollback implies recovery | Retain actual data and distinguish record restoration from compensation | A manifest cannot restore deleted inputs; a sent message cannot be unsent |
-| Five cases sound like completed evaluation | Explicit planned protocol with benign controls and ablations | Prevents unsupported empirical claims |
+| Eight fixtures sound like comprehensive evaluation | Report the exact denominator and synthetic boundary; retain the broader protocol | Prevents unsupported empirical claims |
 | Open source appears as a future promise | Concrete release contents and acceptance gates | Makes the public contribution reviewable |
 
 OWASP's [Agent Control Standard page](https://genai.owasp.org/resource/agent-control-standard-acs/) was published on 1 September 2026. The [2026 LLM Top 10 resource](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/) also exists, while the general LLM archive still displays the 2025 list. Use edition-specific links and verify exact ranking statements before citing them. The revised abstract uses the agentic edition without unnecessary ranking claims.
@@ -111,7 +111,7 @@ We aim to reconstruct the evidence and recorded action. Exact regeneration of mo
 The teaching profile should support a deterministic stub and, optionally, a suitably sized local model. Actual hardware requirements must come from measurement. Energy comparisons must include utilization, hardware, and operational conditions; no environmental advantage has yet been established.
 
 **What evidence do you have today?**  
-At submission, the artifact is an architecture proposal and a specified evaluation protocol. No benchmark results are claimed. As implementation matures, we will publish versioned configurations, attack inputs, observed outcomes, and limitations.
+At submission, the artifact is an architecture proposal, a specified evaluation protocol, and deterministic fixture evidence. We claim 32 passing tests and eight of eight declared exact-action scenarios in the teaching profile, not a benchmark rate or production result. The repository publishes the versioned configuration, observed outcomes, and limitations.
 
 ## Recommended preparation schedule
 

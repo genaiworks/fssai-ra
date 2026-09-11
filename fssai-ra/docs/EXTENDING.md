@@ -14,6 +14,16 @@ Write one sentence in this form:
 Choose a narrow, synthetic workflow before connecting records or real tools. Define
 a manual service path so fail-secure automation does not become denial of service.
 
+Copy `profiles/template.yaml`, replace its domain language, and enumerate only the
+state transitions that the executor may perform. Validate it before writing code:
+
+```bash
+fssaira validate-profile profiles/your_profile.yaml
+```
+
+The profile is an executable allowlist, not descriptive metadata. An approved
+transition outside it is denied independently by the executor.
+
 ## Add a complete control-contract entry
 
 Add YAML under `contract/` with these fields:
@@ -48,6 +58,28 @@ For every consequential capability, test at least:
 Assert the real side effect, not only a policy function's return value. Count writes,
 inspect controlled sinks, reconstruct the evidence bundle, and disclose the test
 boundary and denominator.
+
+Run the reusable exact-action scenarios and retain the JSON result with the commit:
+
+```bash
+fssaira evaluate profiles/your_profile.yaml --output evaluation-report.json
+```
+
+The built-in runner checks one profile transition. Domain-specific extensions must
+add misuse, equity, appeal, accessibility, and benign-task cases relevant to the
+people and decisions involved; eight generic scenarios are a floor, not coverage.
+
+## Replace teaching components deliberately
+
+Keep the interfaces and observable invariants while replacing in-memory stores:
+
+- use an institutional identity and signing service instead of the public HMAC key;
+- make idempotency records durable and transactional with the target system;
+- back `PendingOutcomeStore` with a durable outbox committed atomically with the
+  authoritative mutation;
+- checkpoint evidence independently and monitor missing sequence numbers;
+- test crash points before commit, after commit, and during reconciliation;
+- preserve a staffed manual path with a named owner and service-level objective.
 
 ## Preserve profile labels
 

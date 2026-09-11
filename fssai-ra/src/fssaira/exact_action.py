@@ -17,6 +17,7 @@ import json
 import time
 import uuid
 from dataclasses import asdict, dataclass
+from typing import Iterable
 
 from .evidence import EvidenceLedger
 
@@ -51,6 +52,7 @@ class Approval:
     approval_id: str
     proposal_digest: str
     approver: str
+    approver_role: str
     audience: str
     expires_at: float
     key_id: str
@@ -73,6 +75,48 @@ class ExecutionDenied(RuntimeError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(f"{code}: {message}")
         self.code = code
+
+
+class ExecutionUncertain(RuntimeError):
+    """The mutation completed but its outcome evidence still needs reconciliation."""
+
+    def __init__(self, result: ExecutionResult) -> None:
+        super().__init__(
+            "OUTCOME_EVIDENCE_PENDING: the authoritative mutation completed; "
+            "do not repeat it blindly"
+        )
+        self.code = "OUTCOME_EVIDENCE_PENDING"
+        self.result = result
+
+
+@dataclass(frozen=True)
+class PendingOutcome:
+    """Durable-outbox-shaped representation of an outcome awaiting evidence append."""
+
+    request_id: str
+    payload: dict
+
+
+class PendingOutcomeStore:
+    """In-memory teaching stand-in for a durable transactional outbox."""
+
+    def __init__(self) -> None:
+        self._pending: dict[str, PendingOutcome] = {}
+
+    def put(self, outcome: PendingOutcome) -> None:
+        self._pending[outcome.request_id] = outcome
+
+    def remove(self, request_id: str) -> None:
+        self._pending.pop(request_id, None)
+
+    def get(self, request_id: str) -> PendingOutcome | None:
+        return self._pending.get(request_id)
+
+    def values(self) -> tuple[PendingOutcome, ...]:
+        return tuple(self._pending.values())
+
+    def __len__(self) -> int:
+        return len(self._pending)
 
 
 class CaseRegister:
@@ -143,6 +187,7 @@ class ApprovalAuthority:
         proposal: ActionProposal,
         *,
         approver: str,
+        approver_role: str = "authorized_reviewer",
         ttl_seconds: int = 300,
         now: float | None = None,
     ) -> Approval:
@@ -153,6 +198,7 @@ class ApprovalAuthority:
             approval_id=str(uuid.uuid4()),
             proposal_digest=proposal.digest,
             approver=approver,
+            approver_role=approver_role,
             audience=self.audience,
             expires_at=issued_at + ttl_seconds,
             key_id=self.key_id,
@@ -174,6 +220,7 @@ def _approval_signing_payload(approval: Approval) -> str:
             "approval_id": approval.approval_id,
             "proposal_digest": approval.proposal_digest,
             "approver": approval.approver,
+            "approver_role": approval.approver_role,
             "audience": approval.audience,
             "expires_at": approval.expires_at,
             "key_id": approval.key_id,
@@ -195,6 +242,9 @@ class AccountableExecutor:
         audience: str = "case-register-executor",
         approval_keys: dict[str, str] | None = None,
         allowed_operations: set[str] | None = None,
+        transition_rules: dict[str, Iterable[tuple[str, str]]] | None = None,
+        required_approval_roles: dict[tuple[str, str, str], Iterable[str]] | None = None,
+        outcome_store: PendingOutcomeStore | None = None,
     ) -> None:
         self._register = register
         self._evidence = evidence
@@ -210,6 +260,15 @@ class AccountableExecutor:
             if allowed_operations is None
             else allowed_operations
         )
+        self._transition_rules = {
+            operation: frozenset(transitions)
+            for operation, transitions in (transition_rules or {}).items()
+        }
+        self._required_approval_roles = {
+            transition: frozenset(roles)
+            for transition, roles in (required_approval_roles or {}).items()
+        }
+        self._outcomes = PendingOutcomeStore() if outcome_store is None else outcome_store
         self._approval_uses: dict[str, str] = {}
 
     def execute(
@@ -236,6 +295,23 @@ class AccountableExecutor:
             raise ExecutionDenied("APPROVAL_AUDIENCE_MISMATCH", "approval targets another executor")
         if approval.proposal_digest != proposal.digest:
             raise ExecutionDenied("APPROVAL_PAYLOAD_MISMATCH", "proposal changed after review")
+        required_roles = self._required_approval_roles.get(
+            (proposal.operation, proposal.from_status, proposal.to_status)
+        )
+        if required_roles is not None and approval.approver_role not in required_roles:
+            raise ExecutionDenied(
+                "APPROVER_ROLE_NOT_ALLOWED",
+                "the authenticated approver role is not permitted for this transition",
+            )
+        valid_transitions = self._transition_rules.get(proposal.operation)
+        if valid_transitions is not None and (
+            proposal.from_status,
+            proposal.to_status,
+        ) not in valid_transitions:
+            raise ExecutionDenied(
+                "TRANSITION_NOT_ALLOWED",
+                "the domain profile does not permit this state transition",
+            )
 
         used_by = self._approval_uses.get(approval.approval_id)
         if used_by is not None and used_by != proposal.request_id:
@@ -247,6 +323,8 @@ class AccountableExecutor:
                     "EXECUTION_STATE_INCONSISTENT",
                     "approval use exists without a stored execution result",
                 )
+            if self._outcomes.get(proposal.request_id) is not None:
+                raise ExecutionUncertain(prior)
             return ExecutionResult(**{**asdict(prior), "replayed": True})
         if approval.expires_at <= checked_at:
             raise ExecutionDenied("APPROVAL_EXPIRED", "approval is no longer valid")
@@ -265,8 +343,8 @@ class AccountableExecutor:
         )
         self._approval_uses[approval.approval_id] = proposal.request_id
         result = self._register.transition(proposal)
-        self._evidence.append(
-            "action_outcome",
+        outcome = PendingOutcome(
+            result.request_id,
             {
                 "request_id": result.request_id,
                 "case_id": result.case_id,
@@ -275,6 +353,35 @@ class AccountableExecutor:
                 "receipt_hash": result.receipt_hash,
                 "replayed": result.replayed,
             },
-            token=self._token,
         )
+        self._outcomes.put(outcome)
+        try:
+            self._append_outcome(outcome)
+        except Exception as exc:
+            raise ExecutionUncertain(result) from exc
         return result
+
+    def reconcile_pending(self) -> int:
+        """Append pending outcomes and return the number successfully reconciled.
+
+        A production adapter should back ``PendingOutcomeStore`` with storage that
+        commits atomically with the authoritative mutation. This in-memory version
+        exposes and tests the recovery protocol without claiming that guarantee.
+        """
+        reconciled = 0
+        for outcome in self._outcomes.values():
+            if self._evidence.find("action_outcome", request_id=outcome.request_id):
+                self._outcomes.remove(outcome.request_id)
+                reconciled += 1
+                continue
+            self._append_outcome(outcome)
+            reconciled += 1
+        return reconciled
+
+    @property
+    def pending_outcome_count(self) -> int:
+        return len(self._outcomes)
+
+    def _append_outcome(self, outcome: PendingOutcome) -> None:
+        self._evidence.append("action_outcome", outcome.payload, token=self._token)
+        self._outcomes.remove(outcome.request_id)

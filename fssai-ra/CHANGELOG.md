@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0 2026-09-10
+
+- Add validated YAML application profiles and an extensible profile template.
+- Enforce profile-specific operation and state-transition allowlists.
+- Add `fssaira` CLI commands for profile/contract validation and adversarial evaluation.
+- Add a machine-readable eight-scenario evaluation report.
+- Add outcome-evidence interruption signaling and idempotent reconciliation through
+  a teaching-profile pending-outcome store.
+- Expand the suite to 32 tests.
+
 ## 0.3.0 2026-09-10
 
 - Authenticated every approval field with a trusted-key teaching-profile HMAC.

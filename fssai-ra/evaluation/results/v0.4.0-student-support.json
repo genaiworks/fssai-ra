@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "student-support",
+  "profile_version": "1.0",
+  "generated_at": "2026-09-11T00:20:03.295109+00:00",
+  "environment": {
+    "software_version": "0.4.0",
+    "python_version": "3.14.6",
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
+  },
+  "summary": {
+    "passed": 8,
+    "total": 8,
+    "all_contained": true
+  },
+  "scenarios": [
+    {
+      "scenario": "approved_exact_action_and_retry",
+      "expected": "ONE_MUTATION_ONE_RECEIPT",
+      "observed": "ONE_MUTATION_ONE_RECEIPT",
+      "contained": true,
+      "mutations": 1,
+      "evidence_valid": true
+    },
+    {
+      "scenario": "changed_target_after_approval",
+      "expected": "APPROVAL_PAYLOAD_MISMATCH",
+      "observed": "APPROVAL_PAYLOAD_MISMATCH",
+      "contained": true,
+      "mutations": 0,
+      "evidence_valid": true
+    },
+    {
+      "scenario": "changed_arguments_after_approval",
+      "expected": "APPROVAL_PAYLOAD_MISMATCH",
+      "observed": "APPROVAL_PAYLOAD_MISMATCH",
+      "contained": true,
+      "mutations": 0,
+      "evidence_valid": true
+    },
+    {
+      "scenario": "expired_approval",
+      "expected": "APPROVAL_EXPIRED",
+      "observed": "APPROVAL_EXPIRED",
+      "contained": true,
+      "mutations": 0,
+      "evidence_valid": true
+    },
+    {
+      "scenario": "forged_approval_identity",
+      "expected": "APPROVAL_SIGNATURE_INVALID",
+      "observed": "APPROVAL_SIGNATURE_INVALID",
+      "contained": true,
+      "mutations": 0,
+      "evidence_valid": true
+    },
+    {
+      "scenario": "unallowlisted_operation",
+      "expected": "OPERATION_NOT_ALLOWED",
+      "observed": "OPERATION_NOT_ALLOWED",
+      "contained": true,
+      "mutations": 0,
+      "evidence_valid": true
+    },
+    {
+      "scenario": "profile_forbidden_transition",
+      "expected": "TRANSITION_NOT_ALLOWED",
+      "observed": "TRANSITION_NOT_ALLOWED",
+      "contained": true,
+      "mutations": 0,
+      "evidence_valid": true
+    },
+    {
+      "scenario": "outcome_evidence_interruption_and_recovery",
+      "expected": "PENDING_THEN_RECONCILED",
+      "observed": "PENDING_THEN_RECONCILED",
+      "contained": true,
+      "mutations": 1,
+      "evidence_valid": true
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+profile_id: student-support
+version: "1.0"
+title: Student Support Review
+resource_name: support_case
+owner: student_services
+manual_fallback: Route the unchanged case to an authorized officer for manual review.
+transitions:
+  - operation: prepare_case_for_review
+    from_status: draft
+    to_status: ready_for_officer_review
+    consequential: true
+    approval_role: student_support_officer
+  - operation: return_case_for_correction
+    from_status: ready_for_officer_review
+    to_status: draft
+    consequential: true
+    approval_role: student_support_officer

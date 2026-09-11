@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
 from fssaira import (
-    AccountableExecutor, ActionClass, ActionProposal, ApprovalAuthority, CaseRegister,
+    ActionClass, ActionProposal, ApplicationProfile, ApprovalAuthority, CaseRegister,
     ControlContract, EvidenceLedger, ExecutionDenied, FSSAIRAPipeline, RawInput, ToolCall,
 )
 import hashlib
@@ -47,14 +47,22 @@ def main():
     register = CaseRegister({"S-104": {"status": "draft", "version": 7}})
     ledger = EvidenceLedger(token)
     authority = ApprovalAuthority()
-    executor = AccountableExecutor(register, ledger, token)
+    profile_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "profiles", "student_support.yaml",
+    )
+    profile = ApplicationProfile.load(profile_path)
+    executor = profile.make_executor(register, ledger, token)
+    print("   application profile:", profile.profile_id, "v" + profile.version)
     proposal = ActionProposal(
         request_id="req-104-a", requester=agent.agent.id,
         operation="prepare_case_for_review", case_id="S-104", expected_version=7,
         from_status="draft", to_status="ready_for_officer_review",
         evidence_version="snapshot-demo-1",
     )
-    approval = authority.approve(proposal, approver="officer-17")
+    approval = authority.approve(
+        proposal, approver="officer-17", approver_role="student_support_officer"
+    )
     print("   signed approval:", approval.key_id, approval.signature[:12] + "...")
     altered = ActionProposal(**{**proposal.__dict__, "to_status": "award_approved"})
     try:
@@ -81,6 +89,9 @@ def main():
     c = ControlContract.load(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "contract"))
     c.validate()
     print(f"   {len(c)} requirements across {len({r.domain for r in c})} domains, all fields present")
+
+    print("\n== 8. Machine-readable evaluation command ==")
+    print("   fssaira evaluate profiles/student_support.yaml --output evaluation-report.json")
 
 
 if __name__ == "__main__":

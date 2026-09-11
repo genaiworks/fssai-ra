@@ -15,7 +15,7 @@ pytest -q
 python examples/demo_student_support.py
 ```
 
-Release `v0.3.0` should report `23 passed` before the demonstration starts.
+Release `v0.4.0` should report `32 passed` before the demonstration starts.
 
 ## Narrate the boundary
 
@@ -47,5 +47,5 @@ For the next consequential agent capability in your institution:
 
 Do not call the recognizable-line filter a general prompt-injection defense. Do not
 describe the simulated diode as hardware. Do not imply that a hash chain prevents a
-privileged insider from replacing an entire unchecked history. Do not equate twenty-three
+privileged insider from replacing an entire unchecked history. Do not equate thirty-two
 passing deterministic tests with a benchmark, audit, or certification.

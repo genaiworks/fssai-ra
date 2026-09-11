@@ -1,0 +1,13 @@
+# Copy this file, use domain language, and add a test for every transition.
+profile_id: replace-me
+version: "1.0"
+title: Replace Me
+resource_name: governed_resource
+owner: accountable_service_owner
+manual_fallback: Describe the safe service path used when automation is denied.
+transitions:
+  - operation: prepare_for_human_review
+    from_status: draft
+    to_status: ready_for_review
+    consequential: true
+    approval_role: authorized_reviewer

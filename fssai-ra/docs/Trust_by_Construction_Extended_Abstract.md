@@ -1,7 +1,7 @@
 # Trust by Construction: A Fail-Secure Reference Architecture for Sovereign Agentic AI
 
 > Superseded draft. For the current bounded claims, tested implementation status,
-> and conference submission text, use `extended-abstract.md` and release `v0.3.0`.
+> and conference submission text, use `extended-abstract.md` and release `v0.4.0`.
 
 **Panel 2 — Agentic AI in the Loop: From Autonomous Tools to Shared Capacity**
 

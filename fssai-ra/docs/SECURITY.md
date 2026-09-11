@@ -34,6 +34,11 @@ non-repudiation, or production identity assurance.
   approval to the canonical proposal, evidence and case versions; altered fields,
   untrusted keys, expired payloads, and unallowlisted operations are denied. Retries
   create neither a second mutation nor duplicate intent and outcome evidence.
+- Domain drift - a validated application profile constrains the executor to named
+  operations and state transitions. An approved action outside that profile is denied.
+- Outcome-evidence interruption - a completed mutation is reported as uncertain,
+  retained in a pending-outcome store, and reconciled without a duplicate transition.
+  The teaching store is not durable or transactionally coupled to the target system.
 
 **Residual risks (not covered by structure alone).**
 - Compromise of a shared host administrator, the signing authority, or multiple
@@ -44,6 +49,8 @@ non-repudiation, or production identity assurance.
   remote tools, removable media, wireless, power, staff) needs its own control.
 - Tamper-evidence detects, it does not prevent; pair it with separation of
   duties and independent monitoring.
+- A process crash can lose the in-memory idempotency and pending-outcome stores. A
+  production deployment needs durable, transactional equivalents and crash testing.
 
 **Standards alignment (not a claim of certification).** NIST SP 800-207
 (zero trust), NIST AI 600-1 (GenAI profile), OWASP Top 10 for LLM Applications
