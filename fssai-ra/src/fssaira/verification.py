@@ -37,9 +37,9 @@ replaces is the weaker sentence "we tested some attacks".
 from __future__ import annotations
 
 import itertools
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
-from typing import Callable, Iterable
 
 from .evidence import EvidenceLedger
 from .exact_action import (

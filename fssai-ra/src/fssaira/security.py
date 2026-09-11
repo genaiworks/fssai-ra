@@ -86,7 +86,7 @@ class AuthConfig:
             self.using_development_credentials = True
 
     @classmethod
-    def from_env(cls) -> "AuthConfig":
+    def from_env(cls) -> AuthConfig:
         mode = os.getenv("FSSAI_AUTH_MODE", "token").lower()
         raw = os.getenv("FSSAI_AUTH_TOKENS_JSON", "")
         development = False

@@ -23,8 +23,9 @@ import hashlib
 import json
 import threading
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Any, Iterator
+from typing import Any
 
 GENESIS_HASH = "0" * 64
 

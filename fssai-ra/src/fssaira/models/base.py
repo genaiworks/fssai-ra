@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 from ..accountable_action import ActionClass, ToolCall
 
@@ -61,11 +61,11 @@ class CapabilityCatalogue:
     capabilities: dict[str, Capability] = field(default_factory=dict)
 
     @classmethod
-    def from_iterable(cls, items: Iterable[Capability]) -> "CapabilityCatalogue":
+    def from_iterable(cls, items: Iterable[Capability]) -> CapabilityCatalogue:
         return cls({item.tool: item for item in items})
 
     @classmethod
-    def default(cls) -> "CapabilityCatalogue":
+    def default(cls) -> CapabilityCatalogue:
         return cls.from_iterable([
             Capability("read_case", "read_case", ActionClass.REVERSIBLE,
                        "Read one assigned case record.", ("target",)),

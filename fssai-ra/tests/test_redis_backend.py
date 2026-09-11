@@ -1,12 +1,16 @@
 import fakeredis
 
 from fssaira import (
-    ActionProposal, ApplicationProfile, ApprovalAuthority, ExecutionUncertain,
+    ActionProposal,
+    ApplicationProfile,
 )
 from fssaira.control_plane import ControlPlane
 from fssaira.redis_backend import (
-    RedisApprovalUseStore, RedisCaseRegister, RedisEvidenceLedger,
-    RedisObjectStore, RedisPendingOutcomeStore,
+    RedisApprovalUseStore,
+    RedisCaseRegister,
+    RedisEvidenceLedger,
+    RedisObjectStore,
+    RedisPendingOutcomeStore,
 )
 
 

@@ -25,8 +25,8 @@ both are kept, and why ``docs/ASSURANCE.md`` states the boundary per profile.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import asdict
-from typing import Iterable
 
 from .exact_action import (
     AccountableExecutor,

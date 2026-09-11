@@ -1,6 +1,6 @@
 """Export the deterministic FastAPI schema for review and client generation."""
-from pathlib import Path
 import json
+from pathlib import Path
 
 from fssaira import ApplicationProfile, ControlPlane
 from fssaira.api import create_app

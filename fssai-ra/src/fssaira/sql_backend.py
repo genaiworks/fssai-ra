@@ -29,16 +29,23 @@ version of the problem.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import threading
 import time
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Iterator
+from typing import Any
 
 from .evidence import GENESIS_HASH, EvidenceError, EvidenceRecord, _digest
-from .exact_action import ActionProposal, ExecutionDenied, ExecutionResult, PendingOutcome, _canonical_digest
-
+from .exact_action import (
+    ActionProposal,
+    ExecutionDenied,
+    ExecutionResult,
+    PendingOutcome,
+    _canonical_digest,
+)
 
 # ---------------------------------------------------------------------------
 # Dialects
@@ -189,7 +196,7 @@ class SqlDatabase:
                 connection.close()
 
     @contextmanager
-    def transaction(self) -> Iterator["SqlUnitOfWork"]:
+    def transaction(self) -> Iterator[SqlUnitOfWork]:
         """One database transaction exposing every port bound to it.
 
         Everything written inside the block commits together or not at all.
@@ -207,10 +214,8 @@ class SqlDatabase:
             yield unit
             connection.commit()
         except BaseException:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 connection.rollback()
-            except Exception:  # pragma: no cover - connection already dead
-                pass
             raise
         finally:
             if self.dialect is not SQLITE:

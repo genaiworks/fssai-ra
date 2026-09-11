@@ -1,7 +1,7 @@
 """Create a git-ignored development environment with random local credentials."""
-from pathlib import Path
 import json
 import secrets
+from pathlib import Path
 
 destination = Path("deploy/.env")
 if destination.exists():

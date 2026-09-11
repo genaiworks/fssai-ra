@@ -7,8 +7,8 @@ from typing import Any
 
 import yaml
 
-from .exact_action import AccountableExecutor, CaseRegister, PendingOutcomeStore
 from .evidence import EvidenceLedger
+from .exact_action import AccountableExecutor, CaseRegister, PendingOutcomeStore
 
 
 class ProfileError(ValueError):
@@ -78,7 +78,7 @@ class ApplicationProfile:
         )
 
     @classmethod
-    def load(cls, path: str | Path) -> "ApplicationProfile":
+    def load(cls, path: str | Path) -> ApplicationProfile:
         source = Path(path)
         try:
             raw = yaml.safe_load(source.read_text(encoding="utf-8"))
@@ -87,7 +87,7 @@ class ApplicationProfile:
         return cls.from_dict(raw)
 
     @classmethod
-    def from_dict(cls, raw: Any) -> "ApplicationProfile":
+    def from_dict(cls, raw: Any) -> ApplicationProfile:
         if not isinstance(raw, dict):
             raise ProfileError("profile must be a mapping")
         required = (

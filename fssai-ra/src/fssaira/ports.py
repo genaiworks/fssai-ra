@@ -14,7 +14,8 @@ of the agent runtime.
 """
 from __future__ import annotations
 
-from typing import Any, Iterable, Iterator, Protocol, runtime_checkable
+from collections.abc import Iterable, Iterator
+from typing import Any, Protocol, runtime_checkable
 
 # --------------------------------------------------------------------------
 # Domain 1 - import boundary

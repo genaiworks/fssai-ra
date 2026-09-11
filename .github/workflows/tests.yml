@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Python ${{ matrix.python-version }}
@@ -20,38 +24,123 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: fssai-ra/pyproject.toml
 
-      - name: Install teaching profile
+      - name: Install
         working-directory: fssai-ra
         run: python -m pip install -e ".[dev]"
 
-      - name: Compile package
+      - name: Compile
         working-directory: fssai-ra
-        run: python -m compileall -q src tests examples
+        run: python -m compileall -q src tests examples jobs scripts
 
-      - name: Run deterministic tests
+      - name: Deterministic test suite
         working-directory: fssai-ra
-        run: python -m pytest -q
+        run: python -m pytest
 
-      - name: Validate citation metadata
+  assurance:
+    name: Assurance artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
+
+      - name: Install
+        working-directory: fssai-ra
+        run: python -m pip install -e ".[dev]"
+
+      # These four are the repository's own claims, checked on every commit.
+      # A failure here means a public claim has stopped being true.
+      - name: Control contract is complete
+        working-directory: fssai-ra
+        run: python -m fssaira.cli validate-contract contract
+
+      - name: Authority invariants hold under bounded model checking
+        working-directory: fssai-ra
+        run: python -m fssaira.cli verify profiles/student_support.yaml
+
+      - name: Adversarial, utility, and ablation suite
+        working-directory: fssai-ra
+        run: python -m fssaira.cli evaluate profiles/student_support.yaml
+
+      - name: Conformance on both backend profiles
+        working-directory: fssai-ra
+        run: |
+          python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
+          python -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
+
+      - name: Committed results have not drifted
+        working-directory: fssai-ra
+        run: python scripts/generate_results.py --check
+
+      - name: Upload assurance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: assurance-results
+          path: fssai-ra/evaluation/results/
+          retention-days: 30
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: python -m pip install ruff
+      - name: Ruff
+        working-directory: fssai-ra
+        run: ruff check src tests scripts jobs
+
+  console:
+    name: Console
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: fssai-ra/console/package.json }
+      - name: Install
+        working-directory: fssai-ra/console
+        run: npm install --no-audit --no-fund
+      - name: Typecheck and build
+        working-directory: fssai-ra/console
+        run: npm run build
+      - name: Render smoke check
+        working-directory: fssai-ra/console
+        run: npm run smoke
+
+  metadata:
+    name: Citation and release metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: python -m pip install pyyaml tomli
+      - name: Versions agree across the repository
         run: |
           python - <<'PY'
+          import re, tomllib
           from pathlib import Path
           import yaml
 
+          pyproject = tomllib.loads(Path("fssai-ra/pyproject.toml").read_text())
+          version = pyproject["project"]["version"]
+          source = Path("fssai-ra/src/fssaira/__init__.py").read_text()
+          assert f'__version__ = "{version}"' in source, "__init__.py version disagrees with pyproject"
+
           for path in (Path("CITATION.cff"), Path("fssai-ra/CITATION.cff")):
               citation = yaml.safe_load(path.read_text(encoding="utf-8"))
-              assert citation["cff-version"] == "1.2.0"
-              assert citation["version"] == "0.5.0"
-              assert citation["license"] == "Apache-2.0"
-              print(f"{path} is valid YAML and matches the release")
+              assert citation["cff-version"] == "1.2.0", path
+              assert citation["version"] == version, f"{path} says {citation['version']}, expected {version}"
+              assert citation["license"] == "Apache-2.0", path
+              print(f"{path} ✓ {version}")
+          print(f"all metadata agrees on {version}")
           PY

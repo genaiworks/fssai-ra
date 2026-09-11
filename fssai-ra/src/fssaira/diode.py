@@ -20,7 +20,7 @@ channel a deployment has configured, including third-party ones.
 from __future__ import annotations
 
 import inspect
-from typing import Callable
+from collections.abc import Callable
 
 #: Method names that would constitute a return path if an inward channel had them.
 RETURN_PATH_NAMES = (

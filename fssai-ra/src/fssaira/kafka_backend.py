@@ -15,12 +15,13 @@ architecture exists to avoid.
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import signal
 import time
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from typing import Callable, Iterator
 
 DEFAULT_TOPIC = "fssaira.events"
 IMPORT_TOPIC = "fssaira.imports"
@@ -194,19 +195,16 @@ class KafkaEventConsumer:
         self.dead_lettered += 1
         if self._dead_letter is None:
             return
-        try:
+        # The dead-letter path must never be able to stop the stream it protects.
+        with contextlib.suppress(Exception):  # pragma: no cover
             self._dead_letter.append({"reason": reason, **payload}, key="dlq")
-        except Exception:  # pragma: no cover - the DLQ must never stop the stream
-            pass
 
     def stop(self) -> None:
         self._running = False
 
     def close(self) -> None:
-        try:
+        with contextlib.suppress(Exception):  # pragma: no cover
             self.consumer.close()
-        except Exception:  # pragma: no cover
-            pass
 
 
 class EvidenceProjector:

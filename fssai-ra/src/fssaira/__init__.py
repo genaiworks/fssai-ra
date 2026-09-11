@@ -32,38 +32,75 @@ from __future__ import annotations
 __version__ = "1.0.0"
 
 from .accountable_action import (
-    ActionClass, Decision, DenyCode, PolicyEnforcementPoint, Tool, ToolCall,
+    ActionClass,
+    Decision,
+    DenyCode,
+    PolicyEnforcementPoint,
+    Tool,
+    ToolCall,
 )
 from .atomic_execution import AtomicExecutor
 from .bounded_intelligence import (
-    Agent, BoundedAgent, ModelBackend, Route, RuleBasedLocalModel, TaskRouter,
-    ToolRegistry, UntrustedEvidence,
+    Agent,
+    BoundedAgent,
+    ModelBackend,
+    Route,
+    RuleBasedLocalModel,
+    TaskRouter,
+    ToolRegistry,
+    UntrustedEvidence,
 )
 from .conformance import Bundle, ConformanceReport, run_conformance
 from .contract import ControlContract, Requirement
 from .control_plane import ControlPlane, MemoryObjectStore
 from .diode import (
-    DiodeBreachError, OneWayChannel, ReturnPathError, assert_no_return_path, describe_channel,
+    DiodeBreachError,
+    OneWayChannel,
+    ReturnPathError,
+    assert_no_return_path,
+    describe_channel,
 )
 from .diode_transport import (
-    Interface, InterfaceInventory, UdpDiodeReceiver, UdpDiodeSender,
+    Interface,
+    InterfaceInventory,
+    UdpDiodeReceiver,
+    UdpDiodeSender,
 )
 from .evaluation import (
-    AblationResult, CoverageSummary, EvaluationReport, EvaluationRunner,
-    ScenarioResult, UtilityResult,
+    AblationResult,
+    CoverageSummary,
+    EvaluationReport,
+    EvaluationRunner,
+    ScenarioResult,
+    UtilityResult,
 )
 from .event_transport import Event, EventLog, KafkaLike
 from .evidence import EvidenceError, EvidenceLedger, EvidenceRecord
 from .exact_action import (
-    AccountableExecutor, ActionProposal, Approval, ApprovalAuthority, ApprovalUseStore,
-    CaseRegister, ExecutionDenied, ExecutionResult, ExecutionUncertain, PendingOutcome,
-    PendingOutcomeStore, TEACHING_APPROVAL_KEY_ID,
+    TEACHING_APPROVAL_KEY_ID,
+    AccountableExecutor,
+    ActionProposal,
+    Approval,
+    ApprovalAuthority,
+    ApprovalUseStore,
+    CaseRegister,
+    ExecutionDenied,
+    ExecutionResult,
+    ExecutionUncertain,
+    PendingOutcome,
+    PendingOutcomeStore,
 )
 from .import_boundary import ImportBoundary, IngestReport, QuarantineError, RawInput
 from .metrics import Metrics
 from .models import (
-    Capability, CapabilityCatalogue, DeterministicModel, ModelSelection,
-    OllamaModel, OpenAICompatibleModel, build_model, select_model,
+    Capability,
+    CapabilityCatalogue,
+    DeterministicModel,
+    ModelSelection,
+    OllamaModel,
+    OpenAICompatibleModel,
+    build_model,
+    select_model,
 )
 from .pipeline import FSSAIRAPipeline
 from .plugins import PluginError, PluginInfo, available, create, register

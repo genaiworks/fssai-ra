@@ -5,7 +5,6 @@ A warning in a document is not a control, and a demonstration in which anyone ca
 approve their own award by editing a header does not demonstrate accountable
 action. These tests hold the replacement to being real.
 """
-import os
 
 import pytest
 
@@ -18,7 +17,6 @@ from fssaira.security import (
     require_role,
 )
 from fssaira.telemetry import Telemetry, render_prometheus, samples_from
-
 
 # ------------------------------------------------------------ authentication
 

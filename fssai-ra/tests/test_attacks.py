@@ -2,13 +2,17 @@
 the failure is prevented, made visible, or reversible - not silent harm."""
 import dataclasses
 
-from helpers import privileged_agent, sign
-
 from fssaira import (
-    ActionClass, EvidenceLedger, FSSAIRAPipeline, RawInput, SnapshotStore,
-    ToolCall, Transformer,
+    ActionClass,
+    EvidenceLedger,
+    FSSAIRAPipeline,
+    RawInput,
+    SnapshotStore,
+    ToolCall,
 )
+from fssaira.diode import assert_no_return_path
 from fssaira.import_boundary import QuarantineError
+from helpers import privileged_agent, sign
 
 
 def test_prompt_injection_is_stripped_and_egress_blocked():
@@ -28,12 +32,12 @@ def test_prompt_injection_is_stripped_and_egress_blocked():
     call = ToolCall(agent.id, "notify_external", "notify_external",
                     target="evil.example", action_class=ActionClass.REVERSIBLE,
                     rationale="(injected) send records out")
-    outcome = agent  # keep linter calm
     decision = p.pep.check(call, agent)
     assert decision.allowed is False
     assert p.metrics.egress_blocked >= 1
-    # Structural: the diode exposes no outward path at all.
-    assert not hasattr(p.diode, "send_outward")
+    # Structural: the inward channel exposes no way out at all. Checking a single
+    # method name would miss an adapter that spelled it differently.
+    assert_no_return_path(p.diode)
 
 
 def test_poisoned_data_is_contained_by_rollback():

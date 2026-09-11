@@ -29,7 +29,6 @@ from fssaira.models.base import (
 from fssaira.models.ollama import OllamaModel
 from fssaira.models.openai_compat import OpenAICompatibleModel
 
-
 # ------------------------------------------------------------------- registry
 
 
@@ -219,3 +218,53 @@ def test_routing_selects_a_model_without_changing_what_it_may_do():
     # Routing returns a backend. It returns no grant, no catalogue, and no
     # approval, which is the whole point.
     assert not hasattr(router, "allowed_tools")
+
+
+# ------------------------------------------------------------- model resolution
+
+
+@pytest.mark.parametrize(
+    "reference,installed,expected",
+    [
+        ("llama3.2:3b", ["llama3.2:3b", "qwen3:8b"], True),
+        ("llama3.2", ["llama3.2:latest"], True),
+        # The case that matters: a base name with only sized tags installed does
+        # NOT resolve, and Ollama answers 404 at inference time.
+        ("llama3.2", ["llama3.2:1b", "llama3.2:3b"], False),
+        ("llama3.2", [], False),
+        ("llama3.2:7b", ["llama3.2:3b"], False),
+    ],
+)
+def test_a_model_reference_resolves_only_the_way_ollama_resolves_it(reference, installed, expected):
+    """A health check that says "installed" and then 404s at inference is worse
+    than no health check: it moves the failure to the worst possible moment."""
+    assert OllamaModel.resolves(reference, installed) is expected
+
+
+def test_an_unresolvable_model_is_reported_as_unreachable_with_the_fix(monkeypatch):
+    monkeypatch.setattr(
+        OllamaModel, "resolves", staticmethod(lambda reference, installed: False)
+    )
+
+    def fake_urlopen(url, timeout=None):
+        class Response:
+            def read(self):
+                return json.dumps({"models": [{"name": "llama3.2:3b"}]}).encode()
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        return Response()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    status = OllamaModel(model="llama3.2").health()
+
+    assert status["reachable"] is False
+    assert status["server_running"] is True, "the server is up; only the model is missing"
+    # The remedy must be in the message. An operator reading "unreachable" for a
+    # running server debugs the wrong thing.
+    assert "llama3.2:3b" in status["detail"]
+    assert "FSSAI_OLLAMA_MODEL" in status["detail"]

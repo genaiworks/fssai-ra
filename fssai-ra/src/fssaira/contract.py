@@ -37,7 +37,7 @@ class ControlContract:
     requirements: list = field(default_factory=list)
 
     @classmethod
-    def load(cls, directory: str) -> "ControlContract":
+    def load(cls, directory: str) -> ControlContract:
         reqs = []
         for path in sorted(glob.glob(os.path.join(directory, "*.yaml"))):
             with open(path) as fh:

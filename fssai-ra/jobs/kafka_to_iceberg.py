@@ -1,11 +1,9 @@
 """Structured Streaming job from inward Kafka events to an Iceberg evidence table."""
 import os
 
+from bootstrap_iceberg import CATALOG, NAMESPACE, build_spark
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType, StringType, StructField, StructType
-
-from bootstrap_iceberg import CATALOG, NAMESPACE, build_spark
-
 
 ENVELOPE_SCHEMA = StructType([
     StructField("trace_id", StringType(), False),

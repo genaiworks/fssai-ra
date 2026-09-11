@@ -6,9 +6,8 @@ point, owner, failure test, evidence artifact, and failure response cannot all
 be named is a capability nobody is ready to automate. These tests make an
 incomplete entry a build failure rather than a reviewer's problem.
 """
-from helpers import CONTRACT_DIR
-
 from fssaira import ControlContract
+from helpers import CONTRACT_DIR
 
 REQUIRED = ("protected_asset", "permitted_operation", "enforcement_point",
             "owner", "test", "evidence_artifact", "failure_response")
@@ -35,7 +34,7 @@ def test_every_requirement_is_complete():
 
 def test_all_five_domains_are_present():
     domains = {requirement.domain for requirement in ControlContract.load(CONTRACT_DIR)}
-    assert FIVE_DOMAINS <= domains
+    assert domains >= FIVE_DOMAINS
 
 
 def test_cross_cutting_controls_are_declared_separately():

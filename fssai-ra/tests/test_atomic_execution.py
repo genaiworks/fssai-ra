@@ -12,7 +12,8 @@ happens to have Postgres.
 """
 import pytest
 
-from fssaira.atomic_execution import AtomicExecutor, sql_evidence, sql_register
+from fssaira.atomic_execution import AtomicExecutor
+from fssaira.evidence import EvidenceError
 from fssaira.exact_action import (
     ActionProposal,
     ApprovalAuthority,
@@ -142,9 +143,9 @@ def test_an_approval_bound_to_another_request_is_denied(executor):
 
 
 def test_the_evidence_write_credential_is_enforced_by_the_store(database):
-    with database.transaction() as unit:
-        with pytest.raises(Exception):
-            unit.evidence.append("forged", {"by": "an agent"}, token="guessed")
+    """An agent that guesses the credential is refused by the store itself."""
+    with database.transaction() as unit, pytest.raises(EvidenceError, match="write authority"):
+        unit.evidence.append("forged", {"by": "an agent"}, token="guessed")
 
 
 def test_both_executors_apply_identical_authorization_rules(profile, database):

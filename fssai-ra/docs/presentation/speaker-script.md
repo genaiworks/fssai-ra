@@ -6,11 +6,19 @@
 
 A panel opener is not a conference talk. The room has three or four other people
 who also have something to say, and the moderator is watching the clock. The
-deck runs **14 slides in about nine minutes**, with two backup slides that only
-appear if someone asks. Slides 15–16 are for questions, not for the opener.
+deck runs **16 slides in about ten minutes**, with two backup slides that only
+appear if someone asks.
 
-If the moderator cuts the opening to five minutes, drop slides 3, 9, and 12 —
-in that order. Never drop slide 11.
+Three paths are built in. Pick one before you walk on stage.
+
+| You have | Run slides | Drop |
+|---|---|---|
+| **10 minutes** | 1–16 | nothing |
+| **7 minutes** | 1, 2, 4, 5, 6, 7, 10, 12, 13, 15, 16 | sovereignty (3), counterfactual (8), method (9), atomicity (11), theme (14) |
+| **5 minutes** | 1, 2, 5, 7, 12, 13, 15, 16 | everything else — keep the contract, the demo, the numbers, the limits, the ask |
+
+**Slide 13 is never dropped.** In a UN room, the credibility of everything before
+it depends on the limits being stated by you rather than extracted from you.
 
 ---
 
@@ -21,17 +29,21 @@ in that order. Never drop slide 11.
 | 0:00 | 1 · The rule | Say the sentence. Then stop for a beat. |
 | 0:35 | 2 · The question | Put a real workflow in the room before any architecture. |
 | 1:15 | 3 · Sovereignty | Reframe sovereignty as capabilities, not location. |
-| 2:00 | 4 · The contract | Show a filled-in contract, never an empty template. |
-| 2:50 | 5 · Privilege invariance | The subtle leak most agent frameworks still have. |
-| 3:30 | 6 · Demonstration | A governance rule behaving as observable code. |
-| 4:20 | 7 · Three questions | State the research gap: demonstration, not design guidance. |
-| 5:10 | 8 · The finding | The method found a defect in our own work. |
-| 5:50 | 9 · Atomicity | A failure mode removed, and the residual named. |
-| 6:30 | 10 · Evidence | Numbers with denominators. |
-| 7:10 | 11 · Limits | **Never cut this.** |
-| 7:45 | 12 · Both directions | Earn the panel slot on the conference theme. |
-| 8:20 | 13 · The ask | Something the room can do on Monday. |
-| 8:50 | 14 · Close | Return to the opening sentence. |
+| 1:50 | 4 · Architecture | The only diagram. Point at three things, then stop. |
+| 2:30 | 5 · The contract | Show a filled-in contract, never an empty template. |
+| 3:15 | 6 · Privilege invariance | The subtle leak most agent frameworks still have. |
+| 3:50 | 7 · Demonstration | A governance rule behaving as observable code. |
+| 4:10 | 8 · Counterfactual | Make the containment number believable. |
+| 4:50 | 9 · Three questions | State the research gap: demonstration, not design guidance. |
+| 5:30 | 10 · The finding | The method found a defect in our own work. |
+| 6:10 | 11 · Atomicity | A failure mode removed, and the residual named. |
+| 6:50 | 12 · Evidence | Numbers with denominators. |
+| 7:30 | 13 · Limits | **Never cut this.** |
+| 8:05 | 14 · Both directions | Earn the panel slot on the conference theme. |
+| 8:40 | 15 · The ask | Something the room can do — hand them the worksheet. |
+| 9:15 | 16 · Close | Return to the opening sentence. |
+| — | 17 · Backup | The five domains in detail, if the panel turns technical. |
+| — | 18 · Backup | The interface inventory, for “but you have a diode”. |
 
 ---
 
@@ -98,6 +110,19 @@ For the console (browser, one tab, pre-warmed):
 Pre-flight: `docker compose --env-file deploy/.env -f deploy/compose.yaml up -d`,
 then open `http://localhost:8088`, run one full cycle, and **leave the tab
 open**. Do not demo from a cold start.
+
+### The takeaway (slide 15)
+
+Have `docs/worksheet/` open in a third tab. If the moderator allows it, invite
+the room to fill in one capability *during* the panel — it takes about fifteen
+minutes, runs entirely in their browser, and emits configuration they can run.
+A room that leaves having written one control contract has adopted something; a
+room that leaves having heard about one has not.
+
+The weak-draft example is worth thirty seconds if there is time. It is the same
+worksheet filled in the way most organisations would fill it in today —
+"the IT team" as owner, "the system prompt instructs the model" as enforcement
+point — and it scores 0 of 7. That lands harder than any argument.
 
 ---
 

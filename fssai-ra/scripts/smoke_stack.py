@@ -5,11 +5,10 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-from pathlib import Path
 import urllib.error
 import urllib.request
 import uuid
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 

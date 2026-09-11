@@ -20,9 +20,10 @@ suite* to show the control properties still hold.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from importlib import import_module
-from typing import Any, Callable, Iterable
+from typing import Any
 
 PORTS = (
     "model",        # fssaira.ports.ModelBackendPort

@@ -1,24 +1,42 @@
 cff-version: 1.2.0
-message: "If you use or extend this reference architecture, cite the paper and software."
 title: "FSSAI-RA: Fail-Secure Sovereign AI Reference Architecture"
+message: "If you use this software or its method, please cite both the software and the paper."
 type: software
 authors:
-  - family-names: "Srivastava"
-    given-names: "R."
-version: 0.5.0
-date-released: 2026-09-10
-url: "https://github.com/genaiworks/fssai-ra"
+  - family-names: Srivastava
+    given-names: R.
 repository-code: "https://github.com/genaiworks/fssai-ra"
-license: Apache-2.0
+url: "https://github.com/genaiworks/fssai-ra"
 abstract: >-
-  A teaching-profile reference implementation for connecting agentic-AI governance
-  requirements to enforcement checks, failure tests, evidence, and recovery owners.
+  An extensible, runnable reference platform for specifying and testing the
+  authority boundaries of agentic AI. It implements a seven-field control
+  contract, bounded model checking of a governance profile's declared authority
+  space, ablation-measured authority coverage, and a portable conformance suite
+  so that replacing a backend does not silently void the assurance argument.
+version: "1.0.0"
+date-released: "2026-09-11"
+license: Apache-2.0
+keywords:
+  - agentic AI
+  - AI governance
+  - zero trust
+  - fail-secure architecture
+  - human oversight
+  - data diode
+  - sovereign AI
+  - digital public goods
+  - education
 preferred-citation:
   type: conference-paper
   title: "Trust by Construction: A Testable Architecture for Sovereign AI Agents in Education"
   authors:
-    - family-names: "Srivastava"
-      given-names: "R."
-  year: 2026
+    - family-names: Srivastava
+      given-names: R.
+  collection-title: "UNU Macau AI Conference 2026 — AI × Education: AI for Learning, Learning for AI"
   conference:
     name: "UNU Macau AI Conference 2026"
+    city: "Macau SAR"
+    country: CN
+    date-start: "2026-11-25"
+    date-end: "2026-11-26"
+  year: 2026

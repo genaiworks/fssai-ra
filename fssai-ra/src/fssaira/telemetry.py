@@ -19,7 +19,7 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8"
 
@@ -155,7 +155,7 @@ class Timer:
     def __init__(self) -> None:
         self.elapsed = 0.0
 
-    def __enter__(self) -> "Timer":
+    def __enter__(self) -> Timer:
         self._start = time.perf_counter()
         return self
 

@@ -14,10 +14,11 @@ holds it to that.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Protocol
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Protocol
 
-from .accountable_action import ActionClass, Decision, PolicyEnforcementPoint, Tool, ToolCall
+from .accountable_action import PolicyEnforcementPoint, Tool, ToolCall
 from .evidence import EvidenceLedger
 from .metrics import Metrics
 

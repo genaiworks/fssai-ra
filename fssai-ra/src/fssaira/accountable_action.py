@@ -28,9 +28,9 @@ non-egress-classified tool being handed an outward destination.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable
 
 from .evidence import EvidenceLedger
 from .metrics import Metrics

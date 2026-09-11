@@ -244,6 +244,7 @@ code, .mono { font-family: var(--mono); font-size: .88em; letter-spacing: -.01em
 .ledger div:last-child { border-bottom: 0; }
 .ledger .seq { color: var(--ink-faint); }
 .ledger .hash { color: var(--ink-faint); font-size: .86em; }
+.ledger .hash b.bad { color: var(--refuse); font-weight: 600; }
 
 /* Figures: used only where the number is the point of the slide. */
 .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
@@ -272,6 +273,34 @@ code, .mono { font-family: var(--mono); font-size: .88em; letter-spacing: -.01em
 }
 
 .rule-h { height: 1px; background: var(--rule); }
+
+
+/* Architecture diagram. Every shape has an explicit fill; text takes its colour
+   from theme tokens so it reads on either ground. */
+.figure { display: grid; }
+.arch { width: 100%; height: auto; max-width: 100%; display: block; }
+.arch text { font-family: var(--display); fill: var(--ink); }
+.arch .band { font-size: 10px; font-weight: 600; letter-spacing: .14em; fill: var(--ink-soft); }
+.arch .bandsub { font-size: 9px; letter-spacing: .02em; fill: var(--ink-faint); font-family: var(--body); }
+.arch .num { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--ink-faint); }
+.arch .num text { fill: var(--ink-faint); }
+.arch .dname text, .arch .dname { font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.arch .dbody text { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-soft); }
+.arch .flow path { stroke: var(--ink); stroke-width: 1.4; fill: none; }
+.arch .arrowhead path { fill: var(--ink); stroke: none; }
+.arch .noreturn { stroke: var(--refuse); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.arch .nomark line { stroke: var(--refuse); stroke-width: 2.4; }
+.arch .nolabel { font-size: 10px; font-weight: 700; letter-spacing: .12em; fill: var(--refuse); }
+.arch .propose { stroke: var(--authorize); stroke-width: 1.4; fill: none; }
+.arch .proposehead { fill: var(--authorize); stroke: none; }
+.arch .proposelabel { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; fill: var(--authorize); }
+
+/* The takeaway block: one thing to do, and where to get it. */
+.takeaway { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(14px, 2cqw, 28px); border: 1px solid var(--rule-strong); background: var(--panel); padding: clamp(12px, 1.7cqw, 20px); align-items: center; }
+.takeaway .link { display: grid; gap: 3px; border-left: 2px solid var(--authorize); padding-left: 14px; }
+.takeaway .link .mono { font-size: clamp(9px, .9cqw, 11px); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
+.takeaway .link b { font-family: var(--mono); font-weight: 600; font-size: clamp(13px, 1.5cqw, 20px); color: var(--authorize); word-break: break-word; }
+@container (max-width: 700px) { .takeaway { grid-template-columns: 1fr; } }
 
 /* ─────────────────────────────────────────────────────────── notes */
 
@@ -411,6 +440,104 @@ const SLIDES = [
   <p>Capability six — <em>leave</em> — usually gets a reaction. Exit is the capability procurement forgets to buy.</p>`
 },
 {
+  eyebrow: ["Architecture", "Where authority is checked"],
+  time: "1:50",
+  html: `
+    <h2>Five domains. One narrow waist.</h2>
+    <div class="body">
+    <div class="figure">
+      <svg viewBox="0 0 1000 330" role="img" aria-labelledby="archTitle archDesc" class="arch">
+        <title id="archTitle">The five domains and where authority is checked</title>
+        <desc id="archDesc">External artifacts enter through a one-way import boundary with no
+        return path, pass through durable event transport and versioned data, reach a local model
+        that may only propose, and end at an execution service that checks the actual operation
+        against policy before any change. Identity, keys, policy administration and evidence
+        custody sit above all five and are administered separately. An append-only evidence chain
+        runs beneath all five.</desc>
+
+        <!-- cross-cutting band -->
+        <rect x="8" y="8" width="984" height="40" fill="var(--panel)" stroke="var(--rule-strong)" stroke-width="1"/>
+        <text x="500" y="27" text-anchor="middle" class="band">IDENTITY · KEY MANAGEMENT · POLICY ADMINISTRATION · EVIDENCE CUSTODY</text>
+        <text x="500" y="41" text-anchor="middle" class="bandsub">administered separately from the agent runtime — or “independent enforcement” is a diagram</text>
+
+        <!-- five domains -->
+        <g class="dom">
+          <rect x="8"   y="96" width="180" height="118" fill="var(--stage)" stroke="var(--ink)" stroke-width="1.5"/>
+          <rect x="212" y="96" width="160" height="118" fill="var(--stage)" stroke="var(--rule-strong)" stroke-width="1"/>
+          <rect x="396" y="96" width="160" height="118" fill="var(--stage)" stroke="var(--rule-strong)" stroke-width="1"/>
+          <rect x="580" y="96" width="176" height="118" fill="var(--stage)" stroke="var(--rule-strong)" stroke-width="1"/>
+          <rect x="780" y="96" width="212" height="118" fill="var(--stage)" stroke="var(--ink)" stroke-width="1.5"/>
+        </g>
+
+        <g class="num">
+          <text x="22"  y="118">1</text><text x="226" y="118">2</text>
+          <text x="410" y="118">3</text><text x="594" y="118">4</text>
+          <text x="794" y="118">5</text>
+        </g>
+        <g class="dname">
+          <text x="40"  y="118">IMPORT BOUNDARY</text>
+          <text x="244" y="118">TRANSPORT</text>
+          <text x="428" y="118">DATA</text>
+          <text x="612" y="118">BOUNDED INTELLIGENCE</text>
+          <text x="812" y="118">ACCOUNTABLE ACTION</text>
+        </g>
+        <g class="dbody">
+          <text x="22"  y="142">type · size · schema</text>
+          <text x="22"  y="160">source signature</text>
+          <text x="22"  y="178">active content stripped</text>
+          <text x="226" y="142">durable · ordered</text>
+          <text x="226" y="160">replayable</text>
+          <text x="226" y="178">at-least-once</text>
+          <text x="410" y="142">lineage per job</text>
+          <text x="410" y="160">versioned snapshots</text>
+          <text x="410" y="178">rollback</text>
+          <text x="594" y="142">local model (Ollama)</text>
+          <text x="594" y="160">least-privilege agents</text>
+          <text x="594" y="178">retrieved text is DATA</text>
+          <text x="794" y="142">verifies the ACTUAL operation</text>
+          <text x="794" y="160">approval bound to one proposal</text>
+          <text x="794" y="178">idempotent · one transaction</text>
+        </g>
+
+        <!-- forward arrows -->
+        <g class="flow">
+          <path d="M188 155 H206"/><path d="M372 155 H390"/>
+          <path d="M556 155 H574"/><path d="M756 155 H774"/>
+        </g>
+        <g class="arrowhead">
+          <path d="M206 155 l-8 -4 v8 z"/><path d="M390 155 l-8 -4 v8 z"/>
+          <path d="M574 155 l-8 -4 v8 z"/><path d="M774 155 l-8 -4 v8 z"/>
+        </g>
+
+        <!-- the refused return path -->
+        <path d="M770 232 C 620 268, 300 268, 196 232" class="noreturn"/>
+        <g class="nomark">
+          <line x1="470" y1="240" x2="494" y2="264"/>
+          <line x1="494" y1="240" x2="470" y2="264"/>
+        </g>
+        <text x="482" y="286" text-anchor="middle" class="nolabel">NO ORDINARY PATH BACK OUT</text>
+
+        <!-- proposal vs authority -->
+        <path d="M668 96 V 72 H 866 V 92" class="propose"/>
+        <path d="M866 92 l-4 -8 h8 z" class="proposehead"/>
+        <text x="767" y="66" text-anchor="middle" class="proposelabel">the model PROPOSES — it never executes</text>
+
+        <!-- evidence band -->
+        <rect x="8" y="298" width="984" height="26" fill="var(--panel)" stroke="var(--rule-strong)" stroke-width="1"/>
+        <text x="500" y="315" text-anchor="middle" class="band">APPEND-ONLY, HASH-CHAINED EVIDENCE · SEPARATE WRITE CREDENTIAL · AGENTS NEVER HOLD IT</text>
+      </svg>
+    </div>
+      <p class="faint">Every route to a governed resource passes the same three checks, whether the
+        caller is an agent, a console, a script, or a person. There is no second path that skips a
+        step — which is what makes the evidence record complete rather than well-intentioned.</p>
+    </div>`,
+  notes: `The only diagram in the deck. Give it a beat, then point at three things and nothing else:
+  <p><strong>Left</strong> — the dashed red curve: data comes in and there is no ordinary way back out.
+  <strong>Middle</strong> — the green line: the model proposes into domain five and never executes.
+  <strong>Right</strong> — domain five checks the <em>actual</em> operation, not the model's account of it.</p>
+  <p>Then stop. Do not narrate all five boxes; the audience can read.</p>`
+},
+{
   eyebrow: ["Contribution", "The control contract"],
   time: "2:00",
   html: `
@@ -497,6 +624,29 @@ const SLIDES = [
     <div class="foot"><span class="mono">fssaira evaluate profiles/student_support.yaml</span><span>— runs offline, in about a fiftieth of a second</span></div>`,
   notes: `<span class="time">Live demo here if the room and the wifi allow — otherwise this slide stands alone.</span>
   <p>The line to say while the denial is on screen: “that is a governance rule behaving as observable code.”</p>`
+},
+{
+  eyebrow: ["Counterfactual", "What each control is actually holding"],
+  time: "4:10",
+  html: `
+    <h2>Remove one control. Watch the harm come back.</h2>
+    <div class="body">
+      <p class="lead">A control whose removal changes nothing was decorative, and the assurance matrix should stop claiming credit for it.</p>
+      <div class="ledger">
+        <div><span class="seq">1</span><span>egress default-deny <em>removed</em></span><span class="hash">EGRESS_BLOCKED → <b class="bad">records leave the boundary</b></span></div>
+        <div><span class="seq">2</span><span>named human for consequential actions <em>removed</em></span><span class="hash">NO_APPROVER_AVAILABLE → <b class="bad">the agent decides alone</b></span></div>
+        <div><span class="seq">3</span><span>least-privilege tool grant <em>removed</em></span><span class="hash">TOOL_NOT_GRANTED → <b class="bad">unilateral authority</b></span></div>
+        <div><span class="seq">4</span><span>capability catalogue <em>removed</em></span><span class="hash">NO_APPROVER_AVAILABLE → <b class="bad">the caller sets its own review level</b></span></div>
+        <div><span class="seq">5</span><span>approval role requirement <em>removed</em></span><span class="hash">APPROVER_ROLE_NOT_ALLOWED → <b class="bad">anyone authenticated may approve anything</b></span></div>
+        <div><span class="seq">6</span><span>profile transition allowlist <em>removed</em></span><span class="hash">TRANSITION_NOT_ALLOWED → <b class="bad">the record moves anywhere it is told</b></span></div>
+        <div><span class="seq">7</span><span>import source signature <em>removed</em></span><span class="hash">QUARANTINED → <b class="bad">anyone who can reach the endpoint publishes</b></span></div>
+        <div><span class="seq">8</span><span>evidence write credential <em>removed</em></span><span class="hash">REFUSED → <b class="bad">the agent writes its own record</b></span></div>
+      </div>
+      <p><strong>8 of 8 restored their harm.</strong> We report that as an <em>authority coverage</em> figure of 1.0 — measured by ablation, not asserted in a table.</p>
+    </div>`,
+  notes: `The counterfactual the audience needs in order to believe the containment number. Read two rows aloud — four and eight are the most surprising.
+  <p>Row four is the one to dwell on: without the catalogue, the thing making the request decides how much scrutiny the request gets.</p>
+  <p>If someone asks how this differs from a test suite: a test proves the control works. This proves the control is <em>necessary</em>.</p>`
 },
 {
   eyebrow: ["Method", "The part that is new"],
@@ -590,7 +740,7 @@ const SLIDES = [
       <div class="callout">
         <p><strong>That last figure matters more than the first.</strong> A system that denies everything scores perfectly on containment and is useless. Reporting the two together is what stops either being optimised alone — and a previous version of this work listed the utility baseline as future work, which meant its headline number had no denominator.</p>
       </div>
-      <p class="faint">137 deterministic tests. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under two seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
+      <p class="faint">149 deterministic tests. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under two seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
     </div>`,
   notes: `Lead with the false-denial rate if the panel is policy-heavy. It is the figure that shows we are not optimising for a security theatre metric.
   <p>“Reproduces on a disconnected laptop” is the sentence that matters for capacity building — it means an institution with no budget can verify us.</p>`
@@ -651,13 +801,21 @@ const SLIDES = [
         <div class="step"><span class="n">2</span><p><strong>An executable failure test.</strong> The adversarial attempt that must fail — written so it can be run, not described.</p></div>
         <div class="step"><span class="n">3</span><p><strong>A recovery owner.</strong> A person, by role, who serves the applicant when automation refuses.</p></div>
       </div>
-      <div class="cols">
-        <p>Start with <em>one</em> bounded workflow. <code>fssaira init</code> scaffolds a new domain — health, courts, benefits, licensing — with a profile, a contract, and a deliberately failing test you must replace with the attack you actually fear.</p>
-        <p class="faint">The scaffold ships an <strong>empty</strong> assurance file on purpose. A new domain inherits the structure and none of the evidence. Borrowing another domain’s results is how a method becomes a vocabulary.</p>
+      <div class="takeaway">
+        <div>
+          <h3>Do it before you leave the room</h3>
+          <p class="faint">A worksheet for one capability. It flags the answers a reviewer would reject — an owner that is a team, an enforcement point that is the model itself, a test written as an aspiration — and emits <strong>valid, runnable configuration</strong>, not a PDF.</p>
+        </div>
+        <div class="link">
+          <span class="mono">worksheet</span>
+          <b>fssai-ra.dev/worksheet</b>
+          <span class="faint">also in the repository at <code>docs/worksheet/</code></span>
+        </div>
       </div>
-      <p>Publishing those three together gives an institution a concrete basis for deciding which powers to delegate, which evidence to demand, and when automation must stop.</p>
+      <p class="faint">Then <code>fssaira init</code> scaffolds the domain — health, courts, benefits, licensing — with a profile, a contract, and a deliberately failing test you replace with the attack you actually fear. The scaffold ships an <strong>empty</strong> assurance file on purpose: a new domain inherits the structure and none of the evidence.</p>
     </div>`,
-  notes: `End on something the audience can do, not on a summary of what I said.
+  notes: `End on something the audience can do, not on a summary of what I said. Point at the worksheet link and say it takes about fifteen minutes for one capability.
+  <p>If the moderator allows it, invite them to open it during the panel — a room that fills in one capability while listening is a room that has adopted something.</p>
   <p>Hand-off line to the moderator: “I would rather be asked which of our limits matters most in your institution than which of our results is largest.”</p>`
 },
 {

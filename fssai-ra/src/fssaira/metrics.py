@@ -30,7 +30,7 @@ class Metrics:
     def snapshot(self) -> dict:
         return asdict(self)
 
-    def merge(self, other: "Metrics") -> "Metrics":
+    def merge(self, other: Metrics) -> Metrics:
         """Sum two snapshots -- used when several runs feed one result table."""
         return Metrics(**{
             f.name: getattr(self, f.name) + getattr(other, f.name) for f in fields(self)

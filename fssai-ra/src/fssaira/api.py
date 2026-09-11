@@ -41,7 +41,6 @@ from .runtime_factory import build_control_plane, configuration_warnings, readin
 from .security import AuthenticationError, Authenticator, Principal
 from .telemetry import CONTENT_TYPE, render_prometheus, samples_from
 
-
 # ---------------------------------------------------------------------------
 # Request models
 # ---------------------------------------------------------------------------

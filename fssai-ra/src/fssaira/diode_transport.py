@@ -35,14 +35,15 @@ crosses in order, with a per-item hash checked after the last chunk arrives.
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import hmac
 import json
 import socket
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 MAGIC = b"FSSAI1"
 DEFAULT_PORT = 51820
@@ -77,7 +78,7 @@ class Frame:
         return MAGIC + header + HEADER_SEPARATOR + self.payload
 
     @classmethod
-    def decode(cls, datagram: bytes) -> "Frame":
+    def decode(cls, datagram: bytes) -> Frame:
         if not datagram.startswith(MAGIC):
             raise ValueError("not an FSSAI diode frame")
         body = datagram[len(MAGIC):]
@@ -137,10 +138,10 @@ class UdpDiodeSender:
         self.frames_sent = 0
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1 << 20)
-        try:
+        # Best effort: some platforms refuse this on an unconnected datagram
+        # socket. The absence of any read method is the property that matters.
+        with contextlib.suppress(OSError):
             self._socket.shutdown(socket.SHUT_RD)
-        except OSError:
-            pass  # platform does not permit it on an unconnected datagram socket
 
     # The only direction. There is intentionally no receive/read/poll method.
     def send_inward(self, item: dict) -> str:
@@ -178,7 +179,7 @@ class UdpDiodeSender:
     def close(self) -> None:
         self._socket.close()
 
-    def __enter__(self) -> "UdpDiodeSender":
+    def __enter__(self) -> UdpDiodeSender:
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -250,17 +251,16 @@ class UdpDiodeReceiver:
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1 << 20)
         self._socket.bind((host, int(port)))
         self._socket.settimeout(0.25)
-        try:
+        # A receiver that could transmit would be a covert return path.
+        with contextlib.suppress(OSError):
             self._socket.shutdown(socket.SHUT_WR)
-        except OSError:
-            pass
 
     @property
     def port(self) -> int:
         return self._socket.getsockname()[1]
 
     # -- lifecycle ---------------------------------------------------------
-    def start(self) -> "UdpDiodeReceiver":
+    def start(self) -> UdpDiodeReceiver:
         self._thread = threading.Thread(target=self._loop, name="diode-receiver", daemon=True)
         self._thread.start()
         return self
@@ -271,7 +271,7 @@ class UdpDiodeReceiver:
             self._thread.join(timeout=3)
         self._socket.close()
 
-    def __enter__(self) -> "UdpDiodeReceiver":
+    def __enter__(self) -> UdpDiodeReceiver:
         return self.start()
 
     def __exit__(self, *exc: object) -> None:
@@ -282,7 +282,7 @@ class UdpDiodeReceiver:
         while not self._stop.is_set():
             try:
                 datagram, _sender = self._socket.recvfrom(65535)
-            except (TimeoutError, socket.timeout):
+            except TimeoutError:
                 self._expire()
                 continue
             except OSError:
@@ -399,7 +399,7 @@ class InterfaceInventory:
         }
 
     @classmethod
-    def reference(cls) -> "InterfaceInventory":
+    def reference(cls) -> InterfaceInventory:
         """The interfaces a reader should expect in *any* real deployment."""
         return cls([
             Interface("import link", "inward", "one-way diode or gateway", "Platform Security",

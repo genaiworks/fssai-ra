@@ -16,11 +16,11 @@ import hmac
 import json
 import time
 import uuid
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
-from typing import Iterable, Protocol
+from typing import Protocol
 
 from .evidence import EvidenceLedger
-
 
 TEACHING_APPROVAL_KEY_ID = "teaching-approval-key-1"
 TEACHING_APPROVAL_SIGNING_KEY = "non-secret-demo-key-replace-in-production"

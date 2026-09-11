@@ -1,8 +1,7 @@
 """Remove one control at a time and show the attack now succeeds - evidence
 that each control is load-bearing, not decorative."""
-from helpers import privileged_agent
-
 from fssaira import ActionClass, FSSAIRAPipeline, ToolCall
+from helpers import privileged_agent
 
 
 def test_removing_egress_control_enables_exfiltration():

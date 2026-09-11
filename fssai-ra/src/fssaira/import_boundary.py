@@ -25,7 +25,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from .bounded_intelligence import UntrustedEvidence
 from .diode import OneWayChannel

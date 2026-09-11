@@ -1,12 +1,12 @@
 """Redis-backed ports for a multi-process FSSAI-RA control plane."""
 from __future__ import annotations
 
-from dataclasses import asdict
 import json
 import time
+from dataclasses import asdict
 
 from .control_plane import ObjectStore
-from .evidence import EvidenceRecord, GENESIS_HASH, _digest
+from .evidence import GENESIS_HASH, EvidenceRecord, _digest
 from .exact_action import ActionProposal, ExecutionDenied, ExecutionResult, PendingOutcome
 
 
@@ -96,6 +96,7 @@ class RedisCaseRegister:
 
     def transition(self, proposal: ActionProposal) -> ExecutionResult:
         import hashlib
+
         import redis
         result = ExecutionResult(
             request_id=proposal.request_id,
