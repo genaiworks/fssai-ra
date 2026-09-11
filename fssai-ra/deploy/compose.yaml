@@ -51,7 +51,10 @@ services:
       redis: {condition: service_healthy}
       kafka: {condition: service_healthy}
     ports: ["127.0.0.1:8080:8080"]
-    networks: [control, data]
+    # operator-side exists only so the localhost development port is reachable.
+    # Production deployments should terminate authenticated ingress in a
+    # separately governed reverse proxy and keep the service networks internal.
+    networks: [operator-side, control, data]
     read_only: true
     tmpfs: [/tmp]
 
@@ -110,6 +113,7 @@ services:
     networks: [data, catalog]
 
 networks:
+  operator-side: {}
   low-side: {}
   control:
     internal: true

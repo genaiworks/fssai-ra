@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+from typing import Protocol
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -22,12 +23,26 @@ class ImportRequest(BaseModel):
     signature: str = Field(min_length=64, max_length=128)
 
 
-def create_import_app() -> FastAPI:
-    bootstrap = os.environ["FSSAI_KAFKA_BOOTSTRAP"]
+class InwardPublisher(Protocol):
+    def append(self, value: dict, key: str = "", trace_id: str = "") -> int: ...
+
+
+def create_import_app(
+    *, publisher: InwardPublisher | None = None, trusted_keys: dict[str, str] | None = None
+) -> FastAPI:
+    """Build the low-side gateway.
+
+    Injection points make the boundary independently testable. The production
+    factory still constructs its Kafka publisher and keys from the environment.
+    """
     topic = os.getenv("FSSAI_IMPORT_TOPIC", "fssaira.imports")
-    keys = json.loads(os.environ["FSSAI_IMPORT_SOURCE_KEYS_JSON"])
+    if publisher is None:
+        bootstrap = os.environ["FSSAI_KAFKA_BOOTSTRAP"]
+        publisher = KafkaEventPublisher(bootstrap, topic)
+    keys = trusted_keys
+    if keys is None:
+        keys = json.loads(os.environ["FSSAI_IMPORT_SOURCE_KEYS_JSON"])
     token = os.getenv("FSSAI_EVIDENCE_TOKEN", "teaching-evidence-writer")
-    publisher = KafkaEventPublisher(bootstrap, topic)
     diode = OneWayChannel()
     last_offset = {"value": None}
 

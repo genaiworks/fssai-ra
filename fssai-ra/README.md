@@ -3,12 +3,13 @@
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](../LICENSE)
-[![Tag v0.4.0](https://img.shields.io/badge/tag-v0.4.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/tree/v0.4.0)
+[![Tag v0.5.0](https://img.shields.io/badge/tag-v0.5.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/tree/v0.5.0)
 
-A **runnable teaching-profile reference implementation** for specifying and testing
-the authority boundaries of agentic AI. The synthetic student-support workflow runs
-in memory; adapter seams show where Kafka, Spark, Iceberg, and a local model can be
-evaluated without pretending those production systems are included in the demo.
+An **extensible, runnable reference platform** for specifying and testing the
+authority boundaries of agentic AI. It includes a dependency-free teaching mode
+and a distributed reference mode built with FastAPI, Redis, Apache Kafka, PySpark,
+Apache Iceberg, and S3-compatible storage. A low-side gateway models the software
+seam that can be replaced by a certified one-way data diode.
 
 **Companion paper:** *Trust by Construction: A Testable Architecture for Sovereign
 AI Agents in Education*
@@ -55,21 +56,37 @@ evidence artifact, and failure response. The code makes that contract inspectabl
 ```bash
 git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
-pip install -e ".[dev]"      # or: pip install pyyaml pytest
+pip install -e ".[dev]"
 pytest -q                    # contract, attack, ablation, and exact-action tests
 python examples/demo_student_support.py
 fssaira validate-profile profiles/student_support.yaml
 fssaira evaluate profiles/student_support.yaml --output evaluation-report.json
 ```
 
-Expected test result for release `v0.4.0`: `32 passed`. The demo uses synthetic
+Expected test result for release `v0.5.0`: `42 passed`. The demo uses synthetic
 records and performs no network calls or external mutations.
 
 The evaluation command executes eight declared scenarios—including altered
 approved payloads, expired and forged approvals, operations and transitions outside
 the profile, idempotent retry, and interrupted outcome evidence—and emits a
 machine-readable JSON report. The release result is committed at
-[`evaluation/results/v0.4.0-student-support.json`](evaluation/results/v0.4.0-student-support.json).
+[`evaluation/results/v0.5.0-student-support.json`](evaluation/results/v0.5.0-student-support.json).
+
+## Run the distributed reference stack
+
+```bash
+python scripts/bootstrap_dev_env.py
+docker compose --env-file deploy/.env -f deploy/compose.yaml up --build -d \
+  redis kafka control-api import-gateway
+python scripts/smoke_stack.py
+```
+
+The smoke test exercises resource registration, exact-action proposal, independent
+human approval, execution, idempotent retry, evidence lookup, HMAC-authenticated
+inward import, and Kafka publication. See [`docs/PLATFORM.md`](docs/PLATFORM.md) for
+the full API and Spark/Iceberg path, [`docs/DIODE_DEPLOYMENT.md`](docs/DIODE_DEPLOYMENT.md)
+for the physical-diode claim boundary, and [`docs/OPERATIONS.md`](docs/OPERATIONS.md)
+for failure and recovery procedures.
 
 ## Read this first
 
@@ -78,6 +95,8 @@ machine-readable JSON report. The release result is committed at
 - [`docs/DEMO.md`](docs/DEMO.md) provides a reproducible five-minute walkthrough.
 - [`docs/EXTENDING.md`](docs/EXTENDING.md) shows how to add a domain without
   inheriting unsupported assurance claims.
+- [`docs/PLATFORM.md`](docs/PLATFORM.md) covers the FastAPI, Redis, Kafka, Spark,
+  Iceberg, and object-storage reference deployment.
 - [`docs/SECURITY.md`](docs/SECURITY.md) defines the threat model and residual risk.
 - [`docs/extended-abstract.md`](docs/extended-abstract.md) contains the conference
   paper narrative and evaluation plan.
@@ -91,6 +110,8 @@ machine-readable JSON report. The release result is committed at
 | Reproducible data | `src/fssaira/reproducible_data.py` | `contract/3_reproducible_data.yaml` (RD-1) |
 | Bounded intelligence | `src/fssaira/bounded_intelligence.py` | `contract/4_bounded_intelligence.yaml` (BI-1, BI-2) |
 | Accountable action | `src/fssaira/accountable_action.py`, `exact_action.py`, `evidence.py` | `contract/5_accountable_action.yaml` (AA-1..4) |
+| Control API and durable state | `src/fssaira/api.py`, `control_plane.py`, `redis_backend.py` | profile rules plus API/integration tests |
+| Distributed event and evidence path | `src/fssaira/kafka_backend.py`, `jobs/*.py` | idempotent producer, checkpointed Kafka-to-Iceberg job |
 | Domain adaptation | `src/fssaira/profiles.py`, `profiles/*.yaml` | validated operation and transition rules |
 | Evaluation | `src/fssaira/evaluation.py`, `src/fssaira/cli.py` | machine-readable scenario results |
 
@@ -141,10 +162,10 @@ requires renewed review**.
 
 ## Extending it into your own framework
 
-- **Swap in production backends** via `adapters/`: `kafka_adapter.py`,
-  `iceberg_adapter.py`, `spark_adapter.py`, and `local_model_ollama.py` (a real
-  local LLM). Each seam is chosen so a backend is acceptable only if the domain's
-  contract test still passes.
+- **Use or replace reference backends:** the base platform includes Redis state,
+  Kafka event publication, and a checkpointed PySpark-to-Iceberg evidence path;
+  `adapters/` retains smaller teaching and local-model examples. A replacement is
+  acceptable only when the same contract tests still pass.
 - **Add a new application** (health, courts, benefits) by reusing the five
   domains: copy [`profiles/template.yaml`](profiles/template.yaml), name every
   permitted transition and approval role, register least-privilege tools, and add
@@ -170,7 +191,7 @@ NIST SP 800-207 · NIST AI 600-1 · OWASP Top 10 for LLM Applications · MITRE A
 > Sovereign Agentic AI* (UNU Macau AI Conference 2026, Panel 2). Reference
 > implementation: this repository.
 
-For stable citation, use release `v0.4.0`. Machine-readable
+For stable citation, use release `v0.5.0`. Machine-readable
 citation metadata is available in [`CITATION.cff`](CITATION.cff).
 
 ## License

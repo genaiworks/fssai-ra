@@ -1,6 +1,6 @@
 # Assurance claims and evidence
 
-This document is the claim boundary for release `v0.4.0`. A passing test means the
+This document is the claim boundary for release `v0.5.0`. A passing test means the
 specified property held for the synthetic fixture and implementation exercised by
 that test. It does not establish comprehensive security, fairness, educational
 benefit, or production readiness.
@@ -25,13 +25,17 @@ benefit, or production readiness.
 | Generic exact-action scenarios produce a reviewable result | Eight-scenario evaluation runner and JSON schema | `test_evaluation_runner_contains_every_declared_scenario`; `test_cli_writes_machine_readable_report` | Eight deterministic fixtures do not establish broad attack coverage or real-world rates |
 | The requester cannot approve its own proposal | Separation-of-duties check in the approval authority | `test_requester_cannot_approve_own_proposal` | Identity administration and collusion are outside the teaching profile |
 | Removing selected controls restores the demonstrated harm | Egress, human-approval, and least-privilege ablations | `tests/test_ablations.py` | A small ablation suite does not prove universal causality |
+| Redis retains exact-action state and prevents duplicate execution | Redis optimistic transactions, durable object and replay records | `tests/test_redis_backend.py`; `scripts/smoke_stack.py` | A single local Redis instance is not a high-availability or cross-system atomicity proof |
+| The low-side HTTP interface is inward-only | POST-only import route, HMAC check, quarantine, and Kafka publisher | `tests/test_import_api.py`; `scripts/smoke_stack.py` | Software topology is not physical directionality; alternate host and management paths remain |
+| The reference HTTP workflow is interoperable | FastAPI OpenAPI schema and end-to-end Compose smoke test | `tests/test_api.py`; `docs/openapi.json`; `scripts/smoke_stack.py` | Demonstration headers are not authenticated identity and must be replaced |
 
 ## What is not yet evidenced
 
 - resistance to a shared host administrator or compromised signing authority;
 - physical one-way transfer or a complete interface inventory;
 - stochastic prompt-injection rates for a named model and configuration;
-- real Kafka, Spark, Iceberg, or local-model conformance;
+- completed Spark/Iceberg analytics-profile conformance, retention testing, or a
+  real local-model benchmark (Kafka publication is exercised by the stack smoke test);
 - policy outages and crashes around a real external side effect or durable database;
 - reviewer accuracy, workload, appeal quality, fairness, accessibility, cost, or energy;
 - institutional deployment, independent audit, penetration test, or certification.
@@ -39,8 +43,8 @@ benefit, or production readiness.
 These are planned evaluation areas. New evidence should be versioned with its test
 inputs, environment, denominators, results, failures, and exclusions.
 
-Release `v0.4.0` includes the machine-readable teaching-profile result at
-`evaluation/results/v0.4.0-student-support.json`: eight of eight declared scenarios
+Release `v0.5.0` includes the machine-readable teaching-profile result at
+`evaluation/results/v0.5.0-student-support.json`: eight of eight declared scenarios
 were contained, with valid evidence chains. This is a fixture result, not a security
 probability or production claim.
 

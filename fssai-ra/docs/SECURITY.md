@@ -10,9 +10,10 @@ automated action is denied and a defined manual path preserves service.
 process. Requires functioning enforcement services and protected administrative
 credentials.
 
-**Assurance profile.** The included implementation is a teaching profile with
-in-memory components and synthetic cases. Its tests demonstrate specified software
-properties in that environment. They do not establish production isolation,
+**Assurance profiles.** The included implementation has an in-memory teaching mode
+and a distributed reference mode with Redis, Kafka, FastAPI, Spark, and Iceberg.
+Its tests demonstrate specified software properties; the Compose smoke test also
+exercises Redis persistence and Kafka publication. They do not establish production isolation,
 comprehensive threat coverage, educational benefit, fairness, or certification.
 The HMAC approval key included in source is intentionally public test material. It
 demonstrates authenticated fields and trusted-key selection, not secret management,
@@ -38,7 +39,10 @@ non-repudiation, or production identity assurance.
   operations and state transitions. An approved action outside that profile is denied.
 - Outcome-evidence interruption - a completed mutation is reported as uncertain,
   retained in a pending-outcome store, and reconciled without a duplicate transition.
-  The teaching store is not durable or transactionally coupled to the target system.
+  Redis provides a durable reference store, but it is not transactionally coupled
+  to an external target system.
+- Inward import - authenticated source data is normalized and published to Kafka;
+  invalid input is quarantined, and the gateway exposes no read-back HTTP route.
 
 **Residual risks (not covered by structure alone).**
 - Compromise of a shared host administrator, the signing authority, or multiple
@@ -49,8 +53,11 @@ non-repudiation, or production identity assurance.
   remote tools, removable media, wireless, power, staff) needs its own control.
 - Tamper-evidence detects, it does not prevent; pair it with separation of
   duties and independent monitoring.
-- A process crash can lose the in-memory idempotency and pending-outcome stores. A
-  production deployment needs durable, transactional equivalents and crash testing.
+- Teaching mode loses in-memory state on restart. Distributed mode persists state in
+  Redis, but production still needs HA, backup/restore tests, protected credentials,
+  and a transactional relationship or reconciliation protocol with the real target.
+- The demonstration `X-FSSAI-*` headers are spoofable. A production ingress must
+  authenticate people and workloads and overwrite—not trust—caller-supplied headers.
 
 **Standards alignment (not a claim of certification).** NIST SP 800-207
 (zero trust), NIST AI 600-1 (GenAI profile), OWASP Top 10 for LLM Applications

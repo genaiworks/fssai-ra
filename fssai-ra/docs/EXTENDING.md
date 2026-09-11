@@ -81,6 +81,12 @@ Keep the interfaces and observable invariants while replacing in-memory stores:
 - test crash points before commit, after commit, and during reconciliation;
 - preserve a staffed manual path with a named owner and service-level objective.
 
+The repository already supplies reference implementations for the first engineering
+step: `RedisCaseRegister`, `RedisApprovalUseStore`, `RedisPendingOutcomeStore`,
+`RedisEvidenceLedger`, `KafkaEventPublisher`, the FastAPI control plane, and the
+Kafka-to-Iceberg Spark job. Extend their interfaces or replace them; do not bypass
+the invariants they enforce. Run `scripts/smoke_stack.py` after every backend change.
+
 ## Preserve profile labels
 
 - **Teaching profile:** synthetic data, in-memory services, shared-host limitations.

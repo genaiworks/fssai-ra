@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 2026-09-10
+
+- Add an application-neutral FastAPI control plane and generated OpenAPI contract.
+- Add Redis-backed resources, proposals, approvals, replay protection, pending
+  outcomes, and hash-chained evidence using optimistic transactions.
+- Add an idempotent Kafka event publisher and inward-only import gateway with
+  HMAC verification, quarantine, sanitization, and no read-back route.
+- Add a checkpointed PySpark Structured Streaming job that preserves Kafka lineage
+  while appending normalized events to Apache Iceberg v2 tables.
+- Add a Docker Compose reference stack, random local-secret bootstrapper, full-stack
+  smoke test, operations runbook, and physical data-diode integration guide.
+- Expand the deterministic suite to 42 tests and publish the v0.5.0 evaluation result.
+
 ## 0.4.0 2026-09-10
 
 - Add validated YAML application profiles and an extensible profile template.
