@@ -1,0 +1,12 @@
+{
+  "callers": 32,
+  "executions_returned": 32,
+  "replayed": 31,
+  "mutations": 1,
+  "distinct_receipts": 1,
+  "intent_records": 1,
+  "outcome_records": 1,
+  "evidence_valid": true,
+  "passed": true,
+  "bounds": "one process, one transactional SQLite backend, one approved request; not a distributed linearizability proof"
+}

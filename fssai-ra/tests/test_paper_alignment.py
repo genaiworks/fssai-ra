@@ -49,6 +49,7 @@ CLAIMS = [
     ("conformance checks", "{conformance_checks} conformance checks passing on {conformance_backends_verified} backend profiles"),
     ("conformance checks, restated", "{conformance_checks} checks pass on {conformance_backends_verified} independent backend profiles"),
     ("utility baseline", "{benign_tasks_completed} of {benign_tasks_total} benign tasks completed, false-denial rate {false_denial_rate}"),
+    ("concurrent replay", "{concurrent_callers}-caller race produced {concurrent_mutations} mutation and {concurrent_distinct_receipts} receipt"),
     ("contract fields", "seven fields"),
 ]
 

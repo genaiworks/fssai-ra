@@ -14,7 +14,7 @@ The strongest part of the contribution is the connection between a governance re
 
 ## Conference and submission context
 
-The invitation requests an extended abstract by **21 September 2026**. It describes shortlisting for consideration as a panelist and proceedings development, rather than final acceptance. The official Microsoft Form requires four separately pasted fields: Introduction, strictly 200–250 words; Development Section 1, 550–650 words; Development Section 2, 550–650 words; and Conclusion, strictly 200–250 words. References are entered separately. The form warns that it will reject submissions outside these section limits. The form-ready revision uses 217, 583, 576, and 217 whitespace-delimited words respectively (1,593 total), excluding references.
+The invitation requests an extended abstract by **21 September 2026**. It describes shortlisting for consideration as a panelist and proceedings development, rather than final acceptance. The official Microsoft Form requires four separately pasted fields: Introduction, strictly 200–250 words; Development Section 1, 550–650 words; Development Section 2, 550–650 words; and Conclusion, strictly 200–250 words. References are entered separately. Its text boxes also expose character caps of 1,500, 3,900, 3,900, and 1,500. The form-ready revision fits both sets of constraints. Run `python scripts/check_submission.py` immediately before pasting.
 
 UNU's published conference announcement confirms **25–26 November 2026** and the theme **“AI × Education: AI for Learning, Learning for AI.”** The supplied draft identifies Panel 2 as “Agentic AI in the Loop: From Autonomous Tools to Shared Capacity.” That panel title comes from your material; the linked conference landing page could not be retrieved during this review. The public book-series page confirms the series' scope but does not independently establish acceptance or publication of this particular contribution.
 
@@ -22,7 +22,7 @@ Sources: [UNU conference announcement](https://unu.edu/macau/news/unu-macau-ai-c
 
 Before sending, add the actual author name, affiliation, corresponding email, and professional title. The form separately requires confirmation that the author respected each word limit and that the work is original. References have no displayed word limit. The repository should be public and verified in a signed-out browser before its URL is included in the submitted text.
 
-The teaching-profile implementation now passes 32 deterministic tests locally. A versioned JSON evaluation reports eight of eight declared exact-action scenarios contained, including altered-payload, expiry, forged identity, operation and transition allowlists, retry, and outcome-evidence recovery. Describe these as tested software properties in a synthetic in-memory environment, not as a benchmark, deployment, or security certification. Broader stochastic attacks, durable crash recovery, reviewer, cost, and energy evaluation remain planned work.
+The implementation now passes 187 deterministic tests locally. Versioned JSON reports cover adversarial containment, benign utility, ablations, bounded model checking, backend conformance, and a 32-caller single-process replay race. Describe these as fixture observations under declared local bounds, not as a benchmark, deployment, certification, or distributed-linearizability result. Broader stochastic attacks, durable crash recovery, reviewer, cost, and energy evaluation remain open work.
 
 ## What changed and why
 
@@ -54,13 +54,13 @@ The deck assumes an **eight-minute contribution**, because the invitation does n
 
 | Allocation | Slides | Delivery |
 |---|---|---|
-| 3 minutes | 1, 2, 5, 6, 11 | One case, one authority rule, one planned test, one adoption request |
+| 3 minutes | 1, 2, 5, 6, 11 | One case, one authority rule, one observed fixture result, one adoption request |
 | 5 minutes | 1, 2, 3, 5, 6, 9, 11 | Add the bounded claim and credible evaluation design |
 | 8 minutes | 1–11 | Complete narrative, including continuity, evidence, and shared capacity |
 
 For a discussion-only panel, use the opening above and three concrete examples: a changed action invalidates approval; an evidence outage pauses consequential automation; a student can request a correction. Avoid naming Kafka, Spark, or Iceberg unless the moderator asks about implementation.
 
-## Planned demonstration: approval applies to an exact action
+## Demonstration: approval applies to an exact action
 
 Use synthetic student S-104 and a fictional support unit, “Campus Support.” The mock tool writes only to a sandbox case register. A legitimate proposal changes the case status from `draft` to `ready_for_officer_review`; the agent may draft it but the demo policy requires officer approval to commit this change. A later award decision would be a distinct, separately authorized operation.
 
@@ -71,9 +71,9 @@ Use synthetic student S-104 and a fictional support unit, “Campus Support.” 
 5. Retry the same request. The expected result is the original execution result, with no second mutation. Reusing the approval under a different request identifier must fail.
 6. Open the evidence bundle: exact proposal, policy version, reviewed record version, approval, execution receipt, and resulting state.
 
-These are **expected behaviors**, not observed results. Replace them with real captured output only after the implementation and tests run. An independently scripted malicious tool request is useful for testing the boundary reliably, but it is not proof that a live model succumbed to prompt injection. Report that distinction.
+These behaviors are implemented and tested against synthetic records. A scripted malicious tool request tests the boundary reliably, but it does not prove that a live model succumbed to prompt injection. Report that distinction.
 
-Keep the live segment below one minute. Rehearse on an offline machine. Carry a recording of an actual successful run and its commit identifier. If no working implementation exists by the talk, present the protocol as a walkthrough and retain the “planned demonstration” label. Do not create a fake terminal transcript or synthetic benchmark chart that resembles a measured result.
+Keep the live segment below one minute. Rehearse on an offline machine and carry a recording of an actual run plus its release tag. Use the fixture denominators shown in the versioned result files; do not imply that they are field benchmarks.
 
 ## Questions to prepare for
 

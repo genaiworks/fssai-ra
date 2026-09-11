@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-11T05:59:30.298179+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-11T14:39:11.374622+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -17,8 +17,9 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Attacks contained — prompt-guarded arm | `29%` | 8 harmful actions; an allowlist is a real control |
 | Attacks contained — this architecture | `100%` | 0 harmful actions, at no cost to benign completion |
 | Conformance checks | `25` | passed on 2 independent backend profiles |
+| Concurrent replay race | `1 mutation from 32 callers` | 31 replay responses, 1 distinct receipt; bounded to one process |
 | Control-contract requirements | `25` | 7 fields each |
-| Deterministic tests | `182` | no network, no model weights |
+| Deterministic tests | `187` | no network, no model weights |
 
 ## Verdicts
 
@@ -29,13 +30,13 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 
 ## Cost of reproduction
 
-The adversarial suite runs in 0.02s and the bounded model check in 0.0s on the machine above, with no network access and no model weights. A second institution can therefore check these numbers rather than trust them.
+The adversarial suite runs in 0.02s and the bounded model check in 0.01s on the machine above, with no network access and no model weights. A second institution can therefore check these numbers rather than trust them.
 
 ## Limits
 
 - synthetic fixtures in a declared environment; not a security certification
 - deterministic backends; no stochastic model-behaviour rates are claimed
-- single process; concurrent interleavings are not evaluated here
+- one 32-caller replay race is evaluated in one process; arbitrary concurrent interleavings and distributed failure modes remain out of scope
 - containment of sampled risk classes, not coverage of any threat catalogue
 
 These are fixture observations in a declared environment. They are not security probabilities, not a certification, and not evidence of production readiness. See [`docs/ASSURANCE.md`](../docs/ASSURANCE.md) for the claim-by-claim boundary.

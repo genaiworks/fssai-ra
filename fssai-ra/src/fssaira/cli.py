@@ -232,6 +232,26 @@ def cmd_conformance(args) -> int:
     return 0 if report.passed else 1
 
 
+def cmd_race_test(args) -> int:
+    """Run a bounded many-caller replay race against the atomic executor."""
+    from .profiles import ApplicationProfile
+    from .race import run_replay_race
+
+    profile = ApplicationProfile.load(args.profile)
+    report = run_replay_race(profile, callers=args.callers)
+    heading(f"Concurrent replay race — {report.callers} callers")
+    print(f"  executions returned  {report.executions_returned}")
+    print(f"  replay responses     {report.replayed}")
+    print(f"  mutations            {report.mutations}")
+    print(f"  distinct receipts    {report.distinct_receipts}")
+    print(f"  evidence records     {report.intent_records} intent, {report.outcome_records} outcome")
+    print("\n  " + verdict(report.passed, "one mutation and one complete record",
+                              "concurrent replay invariant failed"))
+    print(dim(f"  Bounds: {report.bounds}"))
+    emit(report.to_dict(), args.output)
+    return 0 if report.passed else 1
+
+
 def cmd_doctor(args) -> int:
     from .runtime_factory import configuration_warnings, readiness
     from .security import AuthConfig
@@ -541,6 +561,12 @@ def build_parser() -> argparse.ArgumentParser:
     conformance.add_argument("--profile", type=Path, default=None)
     conformance.add_argument("--database-url", default=None)
     conformance.set_defaults(func=cmd_conformance)
+
+    race = add_output(sub.add_parser(
+        "race-test", help="race many callers against one approved exact action"))
+    race.add_argument("profile", type=Path)
+    race.add_argument("--callers", type=int, default=32)
+    race.set_defaults(func=cmd_race_test)
 
     plugins_cmd = sub.add_parser("plugins", help="list registered backends for every port")
     plugins_cmd.add_argument("--port", default=None)

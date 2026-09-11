@@ -12,3 +12,5 @@ deploy/.env
 dist/
 evaluation/results/local.json
 node_modules/
+/work/
+/.chart-data-*/

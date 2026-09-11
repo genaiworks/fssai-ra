@@ -105,6 +105,7 @@ from .models import (
 from .pipeline import FSSAIRAPipeline
 from .plugins import PluginError, PluginInfo, available, create, register
 from .profiles import ApplicationProfile, ProfileError, TransitionRule
+from .race import RaceReport, run_replay_race
 from .reproducible_data import Snapshot, SnapshotStore, Transformer
 from .security import AuthConfig, Authenticator, Principal
 from .verification import ProfileVerifier, VerificationReport, verify_profile
@@ -139,4 +140,5 @@ __all__ = [
     "ControlPlane", "MemoryObjectStore", "FSSAIRAPipeline", "Metrics",
     "AuthConfig", "Authenticator", "Principal",
     "PluginError", "PluginInfo", "available", "create", "register",
+    "RaceReport", "run_replay_race",
 ]

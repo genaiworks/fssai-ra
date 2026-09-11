@@ -21,13 +21,14 @@ python -m pip install -e ".[dev]"
 | # | Command | What it settles | Expect |
 |---|---|---|---|
 | 1 | `python scripts/demo.py --fast` | Whether the system does what the paper says | Six acts: quarantine, denial, execution, refusal, tamper detection, comparison |
-| 2 | `pytest` | Whether the code works at all | `180 passed` in under 3 seconds |
+| 2 | `pytest` | Whether the code works at all | `187 passed` in under 3 seconds |
 | 3 | `fssaira verify profiles/student_support.yaml` | Whether the authority invariants hold across the whole declared space | 240 states, 5 invariants, **0 violations** |
 | 4 | `fssaira evaluate profiles/student_support.yaml` | Containment **and** its cost | 30/30 contained, 0 unauthorized mutations, false-denial rate **0.0** |
 | 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 25/25, conformant |
 | 6 | `python scripts/generate_results.py --check` | Whether the committed numbers match a fresh run | `committed results match a fresh run` |
 | 7 | `pytest tests/test_paper_alignment.py` | Whether the paper and the deck quote real figures | 29 passed |
 | 8 | `python scripts/benchmark.py` | What the governance costs | ~7 µs per decision; ~66 µs per full execution |
+| 9 | `fssaira race-test profiles/student_support.yaml` | Whether simultaneous retries duplicate the action | 32 callers, **1 mutation**, **1 receipt** |
 
 If any of these disagrees with the paper, **the paper is wrong** and we would like
 to know. That is the point of building alignment as a test.

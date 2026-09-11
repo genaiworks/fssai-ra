@@ -20,9 +20,11 @@ Sovereign AI Agents in Education* — extended abstract in
 **UNU Macau AI Conference 2026** (*AI × Education: AI for Learning, Learning for
 AI*) and its UNU–Springer proceedings.
 
-**Conference deck:** [`docs/presentation/slides.html`](docs/presentation/slides.html)
-with a timed script and question preparation in
-[`docs/presentation/speaker-script.md`](docs/presentation/speaker-script.md).
+**Submission and presentation:** the form-safe paste fields are in
+[`paper/form-ready-abstract.md`](paper/form-ready-abstract.md), validated by
+`python scripts/check_submission.py`. The current PowerPoint is
+[`docs/trust-by-construction-final.pptx`](docs/trust-by-construction-final.pptx);
+the browser deck and timed script remain under [`docs/presentation/`](docs/presentation/).
 
 > **Bounded claim: testable containment in a declared environment.** The teaching
 > profile demonstrates independent checks for specified failure paths. It is not a
@@ -38,11 +40,12 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # 180 deterministic tests, fully offline
+pytest                                            # 187 deterministic tests, fully offline
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
 fssaira conformance --backend sql                 # does it still hold on another backend?
+fssaira race-test profiles/student_support.yaml   # 32 callers, 1 mutation, 1 receipt
 ```
 
 No network, no model weights, no GPU. The whole suite reproduces on a
@@ -60,6 +63,7 @@ argument survive contact with another institution.
 | **Bounded model checking** | What about the combination nobody imagined? | 240 configurations, 5 invariants, 0 violations |
 | **Ablation-measured coverage** | Is each control load-bearing, or decorative? | 8 of 8 controls restored their harm |
 | **Portable conformance** | Does it still hold after you replace a component? | 25 checks, 2 independent backend profiles |
+| **Concurrent replay race** | Can simultaneous retries duplicate an approved action? | 32 callers, 1 mutation, 1 receipt |
 
 Plus: **single-transaction execution** on PostgreSQL, which removes — rather than
 merely detects — the one failure mode the previous release could only document;

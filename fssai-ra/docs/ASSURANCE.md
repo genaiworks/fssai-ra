@@ -126,8 +126,9 @@ rather than about any individual control.
 - completed Spark/Iceberg analytics-profile conformance, retention testing, or a
   real local-model benchmark;
 - policy-service outages or process crashes around a real external side effect;
-- concurrent and distributed failure modes: the model checker is single-threaded
-  and the suite is single-process;
+- distributed failure modes and linearizability across processes or nodes. The
+  bounded 32-caller replay race covers one process and one transactional SQLite
+  database; the model checker remains single-threaded;
 - reviewer accuracy, workload, appeal quality, fairness, accessibility, cost, or
   energy;
 - institutional deployment, independent audit, penetration test, or certification.

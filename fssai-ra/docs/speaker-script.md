@@ -5,7 +5,7 @@ Eight-minute working allocation; confirm the actual panel slot. Main talk: slide
 ## 1. Trust by Construction
 
 Timing: 20 seconds.
-Trust by Construction asks a practical institutional question: what powers should we give an AI agent, and what happens when it gets something wrong? I will use one student-support case to explain a testable architecture and an open teaching-profile implementation with 32 deterministic tests plus an eight-scenario machine-readable evaluation.
+Trust by Construction asks a practical institutional question: what powers should we give an AI agent, and what happens when it gets something wrong? I will use one student-support case to explain a testable architecture and an open reference implementation with 187 deterministic tests, adversarial and utility fixtures, ablations, bounded model checking, backend conformance, and a single-process replay race.
 Source: proposed contribution based on the supplied draft. Conference theme and dates: https://unu.edu/macau/news/unu-macau-ai-conference-2026-become-sponsor . The illustration is conceptual and does not depict a real installation.
 
 ## 2. A document can influence a decision

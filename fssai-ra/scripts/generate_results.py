@@ -29,6 +29,7 @@ from fssaira.conformance import memory_bundle, run_conformance, sql_bundle  # no
 from fssaira.evaluation import EvaluationRunner  # noqa: E402
 from fssaira.experiment import run_comparison  # noqa: E402
 from fssaira.profiles import ApplicationProfile  # noqa: E402
+from fssaira.race import run_replay_race  # noqa: E402
 from fssaira.verification import verify_profile  # noqa: E402
 
 PROFILE_PATH = ROOT / "profiles" / "student_support.yaml"
@@ -51,6 +52,7 @@ def generate(output_dir: Path, tag: str) -> dict:
     memory_conformance = run_conformance(memory_bundle(profile))
     sql_conformance = run_conformance(sql_bundle(profile=profile))
     comparison = run_comparison()
+    race = run_replay_race(profile, callers=32)
     by_arm = {arm["arm"][0]: arm for arm in comparison["arms"]}  # "A", "B", "C"
 
     evaluation.write_json(output_dir / f"{tag}-student-support.json")
@@ -60,6 +62,8 @@ def generate(output_dir: Path, tag: str) -> dict:
     sql_conformance.write_json(output_dir / f"{tag}-conformance-sql.json")
     (output_dir / f"{tag}-architecture-comparison.json").write_text(
         json.dumps(comparison, indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-race.json").write_text(
+        json.dumps(race.to_dict(), indent=2) + "\n", encoding="utf-8")
 
     payload = evaluation.to_dict()
     summary = {
@@ -112,6 +116,10 @@ def generate(output_dir: Path, tag: str) -> dict:
             "conformance_backends_verified": 2,
             # randomised property testing: attacks nobody wrote down
             "property_test_cases": _property_case_count(),
+            "concurrent_callers": race.callers,
+            "concurrent_replay_responses": race.replayed,
+            "concurrent_mutations": race.mutations,
+            "concurrent_distinct_receipts": race.distinct_receipts,
             # contract and tests
             "contract_requirements": _contract_count(),
             "control_contract_fields": 7,
@@ -129,8 +137,17 @@ def generate(output_dir: Path, tag: str) -> dict:
             "containment_costs_no_utility": (
                 by_arm["C"]["benign_completion_rate"] >= by_arm["B"]["benign_completion_rate"]
             ),
+            "bounded_concurrent_replay_holds": race.passed,
         },
-        "limits": payload["limits"],
+        "limits": [
+            (
+                "one 32-caller replay race is evaluated in one process; arbitrary concurrent "
+                "interleavings and distributed failure modes remain out of scope"
+                if limit == "single process; concurrent interleavings are not evaluated here"
+                else limit
+            )
+            for limit in payload["limits"]
+        ],
     }
     (output_dir / f"{tag}-summary.json").write_text(
         json.dumps(summary, indent=2) + "\n", encoding="utf-8")
@@ -207,6 +224,10 @@ def render_markdown(summary: dict) -> str:
          f"{figures['arm_c_harms']} harmful actions, at no cost to benign completion"),
         ("Conformance checks", str(figures["conformance_checks"]),
          f"passed on {figures['conformance_backends_verified']} independent backend profiles"),
+        ("Concurrent replay race",
+         f"{figures['concurrent_mutations']} mutation from {figures['concurrent_callers']} callers",
+         f"{figures['concurrent_replay_responses']} replay responses, "
+         f"{figures['concurrent_distinct_receipts']} distinct receipt; bounded to one process"),
         ("Control-contract requirements", str(figures["contract_requirements"]),
          f"{figures['control_contract_fields']} fields each"),
         ("Deterministic tests", str(figures["test_count"]), "no network, no model weights"),

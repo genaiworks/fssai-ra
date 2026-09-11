@@ -3,7 +3,7 @@
   "kind": "paper-figures",
   "tag": "v1.0.0",
   "software_version": "1.0.0",
-  "generated_at": "2026-09-11T05:59:30.298179+00:00",
+  "generated_at": "2026-09-11T14:39:11.374622+00:00",
   "environment": {
     "python_version": "3.14.6",
     "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
@@ -35,11 +35,15 @@
     "conformance_checks": 25,
     "conformance_backends_verified": 2,
     "property_test_cases": 6800,
+    "concurrent_callers": 32,
+    "concurrent_replay_responses": 31,
+    "concurrent_mutations": 1,
+    "concurrent_distinct_receipts": 1,
     "contract_requirements": 25,
     "control_contract_fields": 7,
-    "test_count": 182,
+    "test_count": 187,
     "evaluation_seconds": 0.02,
-    "verification_seconds": 0.0
+    "verification_seconds": 0.01
   },
   "verdicts": {
     "all_scenarios_contained": true,
@@ -47,12 +51,13 @@
     "memory_profile_conformant": true,
     "sql_profile_conformant": true,
     "comparison_contains_every_attack": true,
-    "containment_costs_no_utility": true
+    "containment_costs_no_utility": true,
+    "bounded_concurrent_replay_holds": true
   },
   "limits": [
     "synthetic fixtures in a declared environment; not a security certification",
     "deterministic backends; no stochastic model-behaviour rates are claimed",
-    "single process; concurrent interleavings are not evaluated here",
+    "one 32-caller replay race is evaluated in one process; arbitrary concurrent interleavings and distributed failure modes remain out of scope",
     "containment of sampled risk classes, not coverage of any threat catalogue"
   ]
 }
