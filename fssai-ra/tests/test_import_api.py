@@ -36,11 +36,14 @@ def test_import_gateway_accepts_authentic_input_and_publishes_inward():
 
     assert response.status_code == 202
     assert response.json() == {"status": "accepted", "broker_offset": 0}
-    assert publisher.items == [("research-partner", {
-        "source": "research-partner",
-        "text": "A safely imported observation.",
-        "stripped": [],
-    })]
+    key, value = publisher.items[0]
+    assert key == "research-partner"
+    assert value["source"] == "research-partner"
+    assert value["text"] == "A safely imported observation."
+    assert value["stripped"] == []
+    # The inward record carries a content hash so a downstream decision can be
+    # bound to the exact bytes that crossed the boundary.
+    assert value["content_hash"] == hashlib.sha256(value["text"].encode()).hexdigest()
 
 
 def test_import_gateway_quarantines_bad_signature_without_publishing():

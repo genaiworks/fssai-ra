@@ -297,13 +297,21 @@ class AccountableExecutor:
         self._outcomes = PendingOutcomeStore() if outcome_store is None else outcome_store
         self._approval_uses = ApprovalUseStore() if approval_use_store is None else approval_use_store
 
-    def execute(
+    # -- authorization -----------------------------------------------------
+    def validate_authorization(
         self,
         proposal: ActionProposal,
         approval: Approval,
         *,
         now: float | None = None,
-    ) -> ExecutionResult:
+    ) -> None:
+        """Every check that must pass before any state is touched.
+
+        Extracted so that the in-memory executor and the transactional SQL
+        executor apply *identical* rules. A second copy of this logic would be
+        the easiest place for the two profiles to silently diverge, which is
+        exactly the kind of drift the control contract exists to prevent.
+        """
         checked_at = time.time() if now is None else now
         if proposal.operation not in self._allowed_operations:
             raise ExecutionDenied("OPERATION_NOT_ALLOWED", "executor does not permit this operation")
@@ -341,6 +349,16 @@ class AccountableExecutor:
 
         if approval.expires_at <= checked_at:
             raise ExecutionDenied("APPROVAL_EXPIRED", "approval is no longer valid")
+
+    # -- execution ---------------------------------------------------------
+    def execute(
+        self,
+        proposal: ActionProposal,
+        approval: Approval,
+        *,
+        now: float | None = None,
+    ) -> ExecutionResult:
+        self.validate_authorization(proposal, approval, now=now)
 
         used_by, newly_bound = self._approval_uses.bind(
             approval.approval_id, proposal.request_id

@@ -70,10 +70,30 @@ def test_invalid_profiles_fail_closed(raw, phrase):
 
 def test_evaluation_runner_contains_every_declared_scenario():
     report = EvaluationRunner(ApplicationProfile.load("profiles/student_support.yaml")).run()
-    assert report.total == 8
-    assert report.passed == 8
+    assert report.total >= 30
+    assert report.passed == report.total
     assert report.all_contained
-    assert all(item.evidence_valid for item in report.scenarios)
+    assert report.unauthorized_mutations == 0
+    # One scenario deliberately breaks a chain to prove detection works; every
+    # other scenario must leave its evidence verifiable.
+    unverifiable = [item.scenario for item in report.scenarios if not item.evidence_valid]
+    assert unverifiable == ["insider_record_tampering_detected"]
+
+
+def test_evaluation_reports_utility_beside_containment():
+    """A containment rate with no denominator for benign work is not a result."""
+    report = EvaluationRunner(ApplicationProfile.load("profiles/student_support.yaml")).run()
+    assert report.utility, "the suite must measure benign task completion"
+    assert report.false_denial_rate == 0.0
+    assert report.benign_completed == len(report.utility)
+
+
+def test_every_declared_control_is_load_bearing():
+    """Ablation, not assertion: removing a control must restore its harm."""
+    report = EvaluationRunner(ApplicationProfile.load("profiles/student_support.yaml")).run()
+    decorative = [item.control for item in report.ablations if not item.load_bearing]
+    assert decorative == [], f"controls claiming credit without effect: {decorative}"
+    assert report.coverage.authority_coverage == 1.0
 
 
 def test_cli_writes_machine_readable_report(tmp_path):
@@ -82,7 +102,11 @@ def test_cli_writes_machine_readable_report(tmp_path):
         "evaluate", "profiles/student_support.yaml", "--output", str(destination)
     ]) == 0
     report = json.loads(destination.read_text())
-    assert report["summary"] == {"passed": 8, "total": 8, "all_contained": True}
+    assert report["summary"]["all_contained"] is True
+    assert report["summary"]["passed"] == report["summary"]["total"] >= 30
+    assert report["containment"]["unauthorized_mutations"] == 0
+    assert report["attribution"]["authority_coverage"] == 1.0
+    assert report["utility"]["false_denial_rate"] == 0.0
 
 
 def test_cli_validates_profile_and_control_contract(capsys):
