@@ -11,6 +11,8 @@ A university deploys an agent to help process student-support applications. It r
 
 The institutional question is narrower and more useful than "is the AI safe?". It is: **when the agent is wrong or compromised, what stops its proposal from becoming an unauthorized decision, and what evidence lets a student challenge the outcome?**
 
+The architecture's central rule is one sentence: **a model may propose an action; it cannot manufacture the authority to execute it.** Everything below exists to make that rule testable rather than asserted.
+
 Most answers today are about *where the model runs*. Local hosting is necessary for sovereignty and nowhere near sufficient. Sovereignty is better understood as a set of capabilities an institution can exercise and demonstrate: governing data access, deploying and replacing models, holding cryptographic keys, changing policy, producing evidence, and leaving a vendor. Each is testable. None is established by a data-centre postcode.
 
 This contribution proposes that authority boundaries should be **specified, exercised, failed, and independently evidenced** — and it supplies a runnable, extensible reference implementation that does so, with results a second institution can reproduce on a disconnected laptop.
