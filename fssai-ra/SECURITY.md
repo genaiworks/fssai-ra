@@ -5,6 +5,9 @@
 Security corrections are applied to the latest tagged release and the `main` branch.
 The project is a teaching reference and is not production-certified.
 
+The exact-action module contains an intentionally public demonstration HMAC key.
+It must never be treated as a secret or used outside synthetic teaching tests.
+
 ## Reporting a vulnerability
 
 Do not disclose an unpatched vulnerability, secret, or personal record in a public

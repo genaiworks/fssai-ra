@@ -51,7 +51,7 @@ jobs:
           for path in (Path("CITATION.cff"), Path("fssai-ra/CITATION.cff")):
               citation = yaml.safe_load(path.read_text(encoding="utf-8"))
               assert citation["cff-version"] == "1.2.0"
-              assert citation["version"] == "0.2.0"
+              assert citation["version"] == "0.3.0"
               assert citation["license"] == "Apache-2.0"
               print(f"{path} is valid YAML and matches the release")
           PY

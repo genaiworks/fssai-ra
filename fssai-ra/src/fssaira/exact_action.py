@@ -12,12 +12,17 @@ the same observable contract and tests.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import time
 import uuid
 from dataclasses import asdict, dataclass
 
 from .evidence import EvidenceLedger
+
+
+TEACHING_APPROVAL_KEY_ID = "teaching-approval-key-1"
+TEACHING_APPROVAL_SIGNING_KEY = "non-secret-demo-key-replace-in-production"
 
 
 def _canonical_digest(value: dict) -> str:
@@ -48,6 +53,8 @@ class Approval:
     approver: str
     audience: str
     expires_at: float
+    key_id: str
+    signature: str
 
 
 @dataclass(frozen=True)
@@ -78,6 +85,11 @@ class CaseRegister:
 
     def get(self, case_id: str) -> dict:
         return dict(self._cases[case_id])
+
+    def result_for(self, request_id: str) -> ExecutionResult | None:
+        """Return a prior result without exposing the mutable internal store."""
+        result = self._results.get(request_id)
+        return None if result is None else ExecutionResult(**asdict(result))
 
     def transition(self, proposal: ActionProposal) -> ExecutionResult:
         if proposal.request_id in self._results:
@@ -111,8 +123,20 @@ class CaseRegister:
 class ApprovalAuthority:
     """Teaching-profile stand-in for an authenticated human approval service."""
 
-    def __init__(self, audience: str = "case-register-executor") -> None:
+    def __init__(
+        self,
+        audience: str = "case-register-executor",
+        *,
+        key_id: str = TEACHING_APPROVAL_KEY_ID,
+        signing_key: str = TEACHING_APPROVAL_SIGNING_KEY,
+    ) -> None:
+        if not key_id:
+            raise ValueError("key_id must be non-empty")
+        if not signing_key:
+            raise ValueError("signing_key must be non-empty")
         self.audience = audience
+        self.key_id = key_id
+        self._signing_key = signing_key
 
     def approve(
         self,
@@ -125,13 +149,38 @@ class ApprovalAuthority:
         if approver == proposal.requester:
             raise ExecutionDenied("SEPARATION_OF_DUTIES", "requester cannot approve their own proposal")
         issued_at = time.time() if now is None else now
-        return Approval(
+        unsigned = Approval(
             approval_id=str(uuid.uuid4()),
             proposal_digest=proposal.digest,
             approver=approver,
             audience=self.audience,
             expires_at=issued_at + ttl_seconds,
+            key_id=self.key_id,
+            signature="",
         )
+        return Approval(**{**asdict(unsigned), "signature": self._sign(unsigned)})
+
+    def _sign(self, approval: Approval) -> str:
+        payload = _approval_signing_payload(approval)
+        return hmac.new(
+            self._signing_key.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+
+
+def _approval_signing_payload(approval: Approval) -> str:
+    """Canonical payload authenticated by the teaching approval authority."""
+    return json.dumps(
+        {
+            "approval_id": approval.approval_id,
+            "proposal_digest": approval.proposal_digest,
+            "approver": approval.approver,
+            "audience": approval.audience,
+            "expires_at": approval.expires_at,
+            "key_id": approval.key_id,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
 
 
 class AccountableExecutor:
@@ -144,11 +193,23 @@ class AccountableExecutor:
         evidence_token: str,
         *,
         audience: str = "case-register-executor",
+        approval_keys: dict[str, str] | None = None,
+        allowed_operations: set[str] | None = None,
     ) -> None:
         self._register = register
         self._evidence = evidence
         self._token = evidence_token
         self._audience = audience
+        self._approval_keys = dict(
+            {TEACHING_APPROVAL_KEY_ID: TEACHING_APPROVAL_SIGNING_KEY}
+            if approval_keys is None
+            else approval_keys
+        )
+        self._allowed_operations = frozenset(
+            {"prepare_case_for_review"}
+            if allowed_operations is None
+            else allowed_operations
+        )
         self._approval_uses: dict[str, str] = {}
 
     def execute(
@@ -159,16 +220,36 @@ class AccountableExecutor:
         now: float | None = None,
     ) -> ExecutionResult:
         checked_at = time.time() if now is None else now
+        if proposal.operation not in self._allowed_operations:
+            raise ExecutionDenied("OPERATION_NOT_ALLOWED", "executor does not permit this operation")
+        signing_key = self._approval_keys.get(approval.key_id)
+        if signing_key is None:
+            raise ExecutionDenied("APPROVAL_KEY_UNTRUSTED", "approval key is not trusted by executor")
+        expected_signature = hmac.new(
+            signing_key.encode("utf-8"),
+            _approval_signing_payload(approval).encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(approval.signature, expected_signature):
+            raise ExecutionDenied("APPROVAL_SIGNATURE_INVALID", "approval fields were not authenticated")
         if approval.audience != self._audience:
             raise ExecutionDenied("APPROVAL_AUDIENCE_MISMATCH", "approval targets another executor")
-        if approval.expires_at < checked_at:
-            raise ExecutionDenied("APPROVAL_EXPIRED", "approval is no longer valid")
         if approval.proposal_digest != proposal.digest:
             raise ExecutionDenied("APPROVAL_PAYLOAD_MISMATCH", "proposal changed after review")
 
         used_by = self._approval_uses.get(approval.approval_id)
         if used_by is not None and used_by != proposal.request_id:
             raise ExecutionDenied("APPROVAL_REUSED", "approval was already bound to another request")
+        if used_by == proposal.request_id:
+            prior = self._register.result_for(proposal.request_id)
+            if prior is None:
+                raise ExecutionDenied(
+                    "EXECUTION_STATE_INCONSISTENT",
+                    "approval use exists without a stored execution result",
+                )
+            return ExecutionResult(**{**asdict(prior), "replayed": True})
+        if approval.expires_at <= checked_at:
+            raise ExecutionDenied("APPROVAL_EXPIRED", "approval is no longer valid")
 
         self._evidence.append(
             "action_intent",
@@ -177,6 +258,7 @@ class AccountableExecutor:
                 "proposal_digest": proposal.digest,
                 "approval_id": approval.approval_id,
                 "approver": approval.approver,
+                "approval_key_id": approval.key_id,
                 "evidence_version": proposal.evidence_version,
             },
             token=self._token,

@@ -5,7 +5,7 @@ Eight-minute working allocation; confirm the actual panel slot. Main talk: slide
 ## 1. Trust by Construction
 
 Timing: 20 seconds.
-Trust by Construction asks a practical institutional question: what powers should we give an AI agent, and what happens when it gets something wrong? I will use one student-support case to explain a proposed architecture and the tests we intend to release openly.
+Trust by Construction asks a practical institutional question: what powers should we give an AI agent, and what happens when it gets something wrong? I will use one student-support case to explain a testable architecture and an open teaching-profile implementation with 23 deterministic tests.
 Source: proposed contribution based on the supplied draft. Conference theme and dates: https://unu.edu/macau/news/unu-macau-ai-conference-2026-become-sponsor . The illustration is conceptual and does not depict a real installation.
 
 ## 2. A document can influence a decision
@@ -59,7 +59,7 @@ Sources: proposed evaluation design; risk context https://doi.org/10.6028/NIST.A
 ## 10. An open testbed for shared capacity
 
 Timing: 55 seconds.
-The planned GitHub release joins the contract, synthetic workflow, executable tests, and recovery instructions. Institutions can start with one service and one accountable owner. The laptop profile teaches the boundaries; a pilot needs stronger administrative separation and local operational review. Students and staff can learn to identify a trust boundary, test it, and inspect the evidence. That connects AI for Learning with Learning for AI. Institutions can share test cases and improvements without sharing student records. Costs, reviewer burden, and energy use must be measured locally.
+The public GitHub release joins the contract, synthetic workflow, executable tests, assurance matrix, and extension instructions. Its exact-action path authenticates the approval fields, accepts only trusted teaching keys and allowlisted operations, and returns the original receipt on retry without duplicating evidence. Institutions can start with one service and one accountable owner. The laptop profile teaches the boundaries; a pilot needs stronger administrative separation and local operational review. Students and staff can learn to identify a trust boundary, test it, and inspect the evidence. That connects AI for Learning with Learning for AI. Institutions can share test cases and improvements without sharing student records. Costs, reviewer burden, and energy use must be measured locally.
 Sources: proposed release plan; conference theme https://unu.edu/macau/news/unu-macau-ai-conference-2026-become-sponsor ; capacity context https://www.unesco.org/en/articles/ai-competency-framework-teachers and https://www.un.org/pact-for-the-future/en/annex-i-global-digital-compact
 
 ## 11. A concrete request for your next AI pilot

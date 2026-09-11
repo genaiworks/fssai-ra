@@ -14,6 +14,9 @@ credentials.
 in-memory components and synthetic cases. Its tests demonstrate specified software
 properties in that environment. They do not establish production isolation,
 comprehensive threat coverage, educational benefit, fairness, or certification.
+The HMAC approval key included in source is intentionally public test material. It
+demonstrates authenticated fields and trusted-key selection, not secret management,
+non-repudiation, or production identity assurance.
 
 **What is contained (see `tests/test_attacks.py`).**
 - Prompt injection specimen - a recognizable malicious line is removed in the
@@ -27,9 +30,10 @@ comprehensive threat coverage, educational benefit, fairness, or certification.
 - Compromised model or update - signature-checked ingestion + quarantine; agents
   cannot self-escalate or edit policy.
 - Insider record tampering - append-only hash chain makes silent edits detectable.
-- Approval substitution and replay - a human approval is bound to the canonical
-  proposal, evidence and case versions; altered or expired payloads are denied and
-  retries do not create a second mutation.
+- Approval substitution and replay - a teaching-profile signature binds a human
+  approval to the canonical proposal, evidence and case versions; altered fields,
+  untrusted keys, expired payloads, and unallowlisted operations are denied. Retries
+  create neither a second mutation nor duplicate intent and outcome evidence.
 
 **Residual risks (not covered by structure alone).**
 - Compromise of a shared host administrator, the signing authority, or multiple

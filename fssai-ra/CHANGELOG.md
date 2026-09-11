@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 2026-09-10
+
+- Authenticated every approval field with a trusted-key teaching-profile HMAC.
+- Rejected unknown approval keys, modified approvals, and unallowlisted operations.
+- Made successful retries return the stored receipt without duplicate evidence.
+- Expanded the deterministic suite from 18 to 23 tests.
+
 ## 0.2.0 2026-09-10
 
 - Added exact-action approval bound to target, arguments, evidence, and case version.

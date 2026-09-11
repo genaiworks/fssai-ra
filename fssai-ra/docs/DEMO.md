@@ -15,7 +15,7 @@ pytest -q
 python examples/demo_student_support.py
 ```
 
-Release `v0.2.0` should report `18 passed` before the demonstration starts.
+Release `v0.3.0` should report `23 passed` before the demonstration starts.
 
 ## Narrate the boundary
 
@@ -24,11 +24,13 @@ Release `v0.2.0` should report `18 passed` before the demonstration starts.
 2. The student-support agent may read its assigned case and prepare a recommendation.
 3. The agent cannot approve an award because it lacks both the tool grant and the
    institutional authority.
-4. A separate officer approves the canonical digest of one proposal for case S-104.
+4. A separate officer creates an authenticated approval for the canonical digest of
+   one proposal for case S-104. The executor accepts only its trusted teaching key.
 5. Changing the proposed status after review produces
    `APPROVAL_PAYLOAD_MISMATCH`, with zero register mutations.
 6. Executing the unchanged proposal creates intent and outcome evidence. Retrying
-   returns the same receipt and leaves the mutation count at one.
+   returns the same receipt, leaves the mutation count at one, and does not append
+   duplicate intent or outcome records.
 7. Both evidence ledgers verify their hash linkage, and the machine-readable control
    contract loads across all five domains.
 
@@ -45,5 +47,5 @@ For the next consequential agent capability in your institution:
 
 Do not call the recognizable-line filter a general prompt-injection defense. Do not
 describe the simulated diode as hardware. Do not imply that a hash chain prevents a
-privileged insider from replacing an entire unchecked history. Do not equate eighteen
+privileged insider from replacing an entire unchecked history. Do not equate twenty-three
 passing deterministic tests with a benchmark, audit, or certification.

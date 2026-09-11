@@ -55,6 +55,7 @@ def main():
         evidence_version="snapshot-demo-1",
     )
     approval = authority.approve(proposal, approver="officer-17")
+    print("   signed approval:", approval.key_id, approval.signature[:12] + "...")
     altered = ActionProposal(**{**proposal.__dict__, "to_status": "award_approved"})
     try:
         executor.execute(altered, approval)
@@ -68,7 +69,8 @@ def main():
 
     print("\n== 5. Evidence ledgers are tamper-evident ==")
     print("   pipeline records:", len(p.evidence), " verify():", p.evidence.verify())
-    print("   exact-action records:", len(ledger), " verify():", ledger.verify())
+    print("   exact-action records:", len(ledger), " verify():", ledger.verify(),
+          "(one intent + one outcome; retry adds no duplicate)")
 
     print("\n== 6. Metrics ==")
     for k, v in p.metrics.snapshot().items():

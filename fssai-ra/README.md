@@ -3,7 +3,7 @@
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](../LICENSE)
-[![Release v0.2.0](https://img.shields.io/badge/release-v0.2.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.2.0)
+[![Release v0.3.0](https://img.shields.io/badge/release-v0.3.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.3.0)
 
 A **runnable teaching-profile reference implementation** for specifying and testing
 the authority boundaries of agentic AI. The synthetic student-support workflow runs
@@ -60,7 +60,7 @@ pytest -q                    # contract, attack, ablation, and exact-action test
 python examples/demo_student_support.py
 ```
 
-Expected test result for release `v0.2.0`: `18 passed`. The demo uses synthetic
+Expected test result for release `v0.3.0`: `23 passed`. The demo uses synthetic
 records and performs no network calls or external mutations.
 
 ## Read this first
@@ -84,10 +84,12 @@ records and performs no network calls or external mutations.
 | Bounded intelligence | `src/fssaira/bounded_intelligence.py` | `contract/4_bounded_intelligence.yaml` (BI-1, BI-2) |
 | Accountable action | `src/fssaira/accountable_action.py`, `exact_action.py`, `evidence.py` | `contract/5_accountable_action.yaml` (AA-1..4) |
 
-The accountable-action domain also includes `src/fssaira/exact_action.py`. It binds
-a human approval to the exact target, arguments, evidence version, and case version;
-records intent before execution; rejects changed or expired approvals; and makes
-retries idempotent. See `tests/test_exact_action.py`.
+The accountable-action domain also includes `src/fssaira/exact_action.py`. It
+authenticates approval fields with a teaching-profile HMAC, accepts only trusted
+approval keys and allowlisted operations, and binds approval to the exact target,
+arguments, evidence version, and case version. Successful retries return the stored
+receipt without a second mutation or duplicate evidence. See
+`tests/test_exact_action.py`.
 
 The **control contract** (`contract/*.yaml`) records, for every requirement, the
 seven fields from the paper — protected asset, permitted operation, enforcement
@@ -151,7 +153,7 @@ NIST SP 800-207 · NIST AI 600-1 · OWASP Top 10 for LLM Applications · MITRE A
 > Sovereign Agentic AI* (UNU Macau AI Conference 2026, Panel 2). Reference
 > implementation: this repository.
 
-For stable citation, use release `v0.2.0` or commit `1392ff1`. Machine-readable
+For stable citation, use release `v0.3.0`. Machine-readable
 citation metadata is available in [`CITATION.cff`](CITATION.cff).
 
 ## License

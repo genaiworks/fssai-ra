@@ -22,7 +22,7 @@ Sources: [UNU conference announcement](https://unu.edu/macau/news/unu-macau-ai-c
 
 Before sending, add the actual author name, affiliation, corresponding email, and professional title. The form separately requires confirmation that the author respected each word limit and that the work is original. References have no displayed word limit. The repository should be public and verified in a signed-out browser before its URL is included in the submitted text.
 
-The teaching-profile implementation now passes 18 deterministic tests locally, including exact-action approval, altered-payload denial, expiry, stale-state denial, separation of duties, and idempotent retry. Describe these as tested software properties in a synthetic in-memory environment, not as a benchmark, deployment, or security certification. The broader attack, fault, reviewer, cost, and energy evaluation remains planned work.
+The teaching-profile implementation now passes 23 deterministic tests locally, including authenticated exact-action approval, untrusted-key and altered-approval denial, fail-closed empty trust configuration, operation allowlisting, altered-payload denial, expiry, stale-state denial, separation of duties, and idempotent retry without duplicate evidence. Describe these as tested software properties in a synthetic in-memory environment, not as a benchmark, deployment, or security certification. The broader attack, fault, reviewer, cost, and energy evaluation remains planned work.
 
 ## What changed and why
 

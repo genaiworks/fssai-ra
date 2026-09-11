@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: "Srivastava"
     given-names: "R."
-version: 0.2.0
+version: 0.3.0
 date-released: 2026-09-10
 url: "https://github.com/genaiworks/fssai-ra"
 repository-code: "https://github.com/genaiworks/fssai-ra"
