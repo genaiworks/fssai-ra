@@ -3,7 +3,7 @@
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](../LICENSE)
-[![Release v0.4.0](https://img.shields.io/badge/release-v0.4.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/releases/tag/v0.4.0)
+[![Tag v0.4.0](https://img.shields.io/badge/tag-v0.4.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/tree/v0.4.0)
 
 A **runnable teaching-profile reference implementation** for specifying and testing
 the authority boundaries of agentic AI. The synthetic student-support workflow runs
