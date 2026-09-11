@@ -68,6 +68,33 @@ def test_invalid_profiles_fail_closed(raw, phrase):
         ApplicationProfile.from_dict(raw)
 
 
+@pytest.mark.parametrize("field,value", [
+    ("owner", ["a", "b"]), ("manual_fallback", "   "), ("version", 1.0),
+])
+def test_profile_metadata_requires_explicit_strings(field, value):
+    import yaml
+
+    with open("profiles/template.yaml") as source:
+        raw = yaml.safe_load(source)
+    raw[field] = value
+    with pytest.raises(ProfileError, match="non-empty string"):
+        ApplicationProfile.from_dict(raw)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("operation", ["approve"]), ("from_status", {"unexpected": "mapping"}),
+    ("to_status", True), ("approval_role", "  "),
+])
+def test_profile_transition_rejects_unusable_yaml_scalar_types(field, value):
+    import yaml
+
+    with open("profiles/template.yaml") as source:
+        raw = yaml.safe_load(source)
+    raw["transitions"][0][field] = value
+    with pytest.raises(ProfileError, match="non-empty string"):
+        ApplicationProfile.from_dict(raw)
+
+
 def test_evaluation_runner_contains_every_declared_scenario():
     report = EvaluationRunner(ApplicationProfile.load("profiles/student_support.yaml")).run()
     assert report.total >= 30

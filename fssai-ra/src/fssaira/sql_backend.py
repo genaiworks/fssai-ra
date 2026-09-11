@@ -18,8 +18,9 @@ two dialects:
 
 * **SQLite** -- no infrastructure, so continuous integration can prove the
   atomicity property on every commit rather than asserting it in prose.
-* **PostgreSQL** -- the same code with ``SELECT ... FOR UPDATE`` row locking and
-  ``SERIALIZABLE``-safe retry, for a deployment.
+* **PostgreSQL** -- the same code with ``SELECT ... FOR UPDATE`` row locking.
+  Multi-writer qualification and serialization-failure retry are not implemented
+  by this module. The SQLite fixtures do not qualify PostgreSQL concurrency.
 
 The claim boundary is unchanged for anything outside the database. If the real
 side effect is in a third system (a payment, an email, a student record in a
@@ -45,6 +46,7 @@ from .exact_action import (
     ExecutionResult,
     PendingOutcome,
     _canonical_digest,
+    validate_replay,
 )
 
 # ---------------------------------------------------------------------------
@@ -185,14 +187,15 @@ class SqlDatabase:
         return name if self.dialect is SQLITE else f"{self.schema}.{name}"
 
     def create_schema(self) -> None:
-        connection = self.connection()
+        connection = None
         try:
+            connection = self.connection()
             cursor = connection.cursor()
             for statement in schema_statements(self.dialect, self.schema):
                 cursor.execute(statement)
             connection.commit()
         finally:
-            if self.dialect is not SQLITE:
+            if connection is not None and self.dialect is not SQLITE:
                 connection.close()
 
     @contextmanager
@@ -205,8 +208,9 @@ class SqlDatabase:
         acquired = self.dialect is SQLITE
         if acquired:
             self._lock.acquire()
-        connection = self.connection()
+        connection = None
         try:
+            connection = self.connection()
             cursor = connection.cursor()
             if self.dialect is SQLITE:
                 cursor.execute("BEGIN IMMEDIATE")
@@ -214,14 +218,28 @@ class SqlDatabase:
             yield unit
             connection.commit()
         except BaseException:
-            with contextlib.suppress(Exception):  # pragma: no cover
-                connection.rollback()
+            if connection is not None:
+                with contextlib.suppress(Exception):  # pragma: no cover
+                    connection.rollback()
             raise
         finally:
-            if self.dialect is not SQLITE:
-                connection.close()
-            if acquired:
-                self._lock.release()
+            try:
+                if connection is not None and self.dialect is not SQLITE:
+                    connection.close()
+            finally:
+                if acquired:
+                    self._lock.release()
+
+    def close(self) -> None:
+        """Release the cached SQLite connection once no transaction is active.
+
+        PostgreSQL connections are already closed at the end of each transaction.
+        A subsequent SQLite operation lazily opens a fresh connection.
+        """
+        with self._lock:
+            if self._shared is not None:
+                self._shared.close()
+                self._shared = None
 
     @contextmanager
     def _auto(self) -> Iterator[tuple[Any, Any]]:
@@ -360,7 +378,11 @@ class _TxRegister:
         )
         if row is None:
             return None
-        return ExecutionResult(row[0], row[1], int(row[2]), row[3], row[4])
+        identity = self._u.objects.get("execution-digest", request_id)
+        return ExecutionResult(
+            row[0], row[1], int(row[2]), row[3], row[4],
+            proposal_digest=identity["proposal_digest"] if identity else "",
+        )
 
     @property
     def mutation_count(self) -> int:
@@ -369,6 +391,7 @@ class _TxRegister:
     def transition(self, proposal: ActionProposal) -> ExecutionResult:
         prior = self.result_for(proposal.request_id)
         if prior is not None:
+            validate_replay(proposal, prior)
             return ExecutionResult(**{**asdict(prior), "replayed": True})
 
         lock = self._u.database.dialect.for_update
@@ -405,8 +428,10 @@ class _TxRegister:
              proposal.to_status, receipt, time.time()),
         )
         self._u.bump("mutations")
+        self._u.objects.put("execution-digest", proposal.request_id, {"proposal_digest": proposal.digest})
         return ExecutionResult(
-            proposal.request_id, proposal.case_id, new_version, proposal.to_status, receipt
+            proposal.request_id, proposal.case_id, new_version, proposal.to_status, receipt,
+            proposal_digest=proposal.digest,
         )
 
 

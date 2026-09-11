@@ -252,6 +252,21 @@ def cmd_race_test(args) -> int:
     return 0 if report.passed else 1
 
 
+def cmd_resilience(args) -> int:
+    from .profiles import ApplicationProfile
+    from .resilience import run_resilience
+
+    report = run_resilience(ApplicationProfile.load(args.profile), callers=args.callers)
+    heading("Process isolation and crash recovery")
+    for item in (*report.process_races, *report.crash_recovery):
+        name = item.get("scenario", item.get("checkpoint"))
+        print("  " + verdict(item["passed"], name, name + " failed"))
+    for bound in report.bounds:
+        print(dim("  " + bound))
+    emit(report.to_dict(), args.output)
+    return 0 if report.passed else 1
+
+
 def cmd_doctor(args) -> int:
     from .runtime_factory import configuration_warnings, readiness
     from .security import AuthConfig
@@ -567,6 +582,12 @@ def build_parser() -> argparse.ArgumentParser:
     race.add_argument("profile", type=Path)
     race.add_argument("--callers", type=int, default=32)
     race.set_defaults(func=cmd_race_test)
+
+    resilience = add_output(sub.add_parser(
+        "resilience", help="independent-process races and abrupt-exit recovery on synthetic SQLite data"))
+    resilience.add_argument("profile", type=Path)
+    resilience.add_argument("--callers", type=int, choices=range(2, 33), default=8, metavar="2..32")
+    resilience.set_defaults(func=cmd_resilience)
 
     plugins_cmd = sub.add_parser("plugins", help="list registered backends for every port")
     plugins_cmd.add_argument("--port", default=None)

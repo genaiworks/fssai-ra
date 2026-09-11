@@ -40,17 +40,31 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # 187 deterministic tests, fully offline
+pytest                                            # current regression suite; 187 tests at v1.0.0
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
 fssaira conformance --backend sql                 # does it still hold on another backend?
 fssaira race-test profiles/student_support.yaml   # 32 callers, 1 mutation, 1 receipt
+fssaira resilience profiles/student_support.yaml  # process races and abrupt-exit recovery
 ```
 
-No network, no model weights, no GPU. The whole suite reproduces on a
-disconnected laptop in under two seconds, which is the point: a second
-institution can **check** these numbers rather than trust them.
+After installation, these checks need no network, model weights or GPU.
+Execution time depends on the machine and worker count. A second institution can
+reproduce the observations on a disconnected laptop.
+
+## Current-source enhancements after v1.0.0
+
+- Independent-process duplicate-request and competing-version races on SQLite.
+- Four abrupt-exit recovery checkpoints, with safe retry after reopening.
+- Full proposal-digest binding for replay receipts, including conflict rejection.
+- Strict profile field validation and profile-derived race fixtures.
+- Source-fingerprinted supplemental evidence with a CI reproduction check.
+
+See [resilience and upgrade guidance](docs/RESILIENCE.md). Existing digest-less
+receipts require reconciliation before automated replay. These additions are
+on the current branch, not in the immutable `v1.0.0` tag. Baseline paper results
+remain release-specific; the new evidence is published separately.
 
 ## What is new in v1.0.0
 

@@ -1,0 +1,231 @@
+{
+  "profile_id": "student-support",
+  "profile_sha256": "556345218d1ddc4c1fe50d2ef51ead648f9072ddfc6eafb81b947b84412ba3f7",
+  "implementation_sha256": "ef818cfc147bc6f746ef928dd3b9664c56279c8909ef757e952bb9494929ec7e",
+  "transition": {
+    "operation": "prepare_case_for_review",
+    "from_status": "draft",
+    "to_status": "ready_for_officer_review",
+    "consequential": true,
+    "approval_role": "student_support_officer"
+  },
+  "process_races": [
+    {
+      "scenario": "duplicate_request",
+      "callers": 8,
+      "independent_processes": 8,
+      "executions_returned": 8,
+      "replayed": 7,
+      "version_conflicts": 0,
+      "distinct_receipts": 1,
+      "unexpected_codes": [],
+      "exit_codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "snapshot": {
+        "state": {
+          "status": "ready_for_officer_review",
+          "version": 2
+        },
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
+        "evidence_valid": true,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
+        "pending_outcomes": 0
+      },
+      "passed": true
+    },
+    {
+      "scenario": "competing_versions",
+      "callers": 8,
+      "independent_processes": 8,
+      "executions_returned": 1,
+      "replayed": 0,
+      "version_conflicts": 7,
+      "distinct_receipts": 1,
+      "unexpected_codes": [],
+      "exit_codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "snapshot": {
+        "state": {
+          "status": "ready_for_officer_review",
+          "version": 2
+        },
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
+        "evidence_valid": true,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
+        "pending_outcomes": 0
+      },
+      "passed": true
+    }
+  ],
+  "crash_recovery": [
+    {
+      "checkpoint": "after_intent",
+      "exit_code": 86,
+      "before_retry": {
+        "state": {
+          "status": "draft",
+          "version": 1
+        },
+        "mutations": 0,
+        "intent_records": 0,
+        "outcome_records": 0,
+        "evidence_valid": true,
+        "complete_receipt_pair": false,
+        "approval_uses": 0,
+        "execution_results": 0,
+        "pending_outcomes": 0
+      },
+      "after_retry": {
+        "state": {
+          "status": "ready_for_officer_review",
+          "version": 2
+        },
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
+        "evidence_valid": true,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
+        "pending_outcomes": 0
+      },
+      "retry_replayed": false,
+      "passed": true
+    },
+    {
+      "checkpoint": "after_mutation",
+      "exit_code": 86,
+      "before_retry": {
+        "state": {
+          "status": "draft",
+          "version": 1
+        },
+        "mutations": 0,
+        "intent_records": 0,
+        "outcome_records": 0,
+        "evidence_valid": true,
+        "complete_receipt_pair": false,
+        "approval_uses": 0,
+        "execution_results": 0,
+        "pending_outcomes": 0
+      },
+      "after_retry": {
+        "state": {
+          "status": "ready_for_officer_review",
+          "version": 2
+        },
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
+        "evidence_valid": true,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
+        "pending_outcomes": 0
+      },
+      "retry_replayed": false,
+      "passed": true
+    },
+    {
+      "checkpoint": "after_outcome",
+      "exit_code": 86,
+      "before_retry": {
+        "state": {
+          "status": "draft",
+          "version": 1
+        },
+        "mutations": 0,
+        "intent_records": 0,
+        "outcome_records": 0,
+        "evidence_valid": true,
+        "complete_receipt_pair": false,
+        "approval_uses": 0,
+        "execution_results": 0,
+        "pending_outcomes": 0
+      },
+      "after_retry": {
+        "state": {
+          "status": "ready_for_officer_review",
+          "version": 2
+        },
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
+        "evidence_valid": true,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
+        "pending_outcomes": 0
+      },
+      "retry_replayed": false,
+      "passed": true
+    },
+    {
+      "checkpoint": "after_commit",
+      "exit_code": 86,
+      "before_retry": {
+        "state": {
+          "status": "ready_for_officer_review",
+          "version": 2
+        },
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
+        "evidence_valid": true,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
+        "pending_outcomes": 0
+      },
+      "after_retry": {
+        "state": {
+          "status": "ready_for_officer_review",
+          "version": 2
+        },
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
+        "evidence_valid": true,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
+        "pending_outcomes": 0
+      },
+      "retry_replayed": true,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "schema_version": "1.0",
+  "bounds": [
+    "Synthetic fixtures using one transition from the supplied profile and teaching keys.",
+    "Independent spawned processes and connections on one local SQLite WAL database.",
+    "Abrupt process exit skips cleanup; power loss, filesystem corruption and host failure are not tested.",
+    "No PostgreSQL, Redis, Kafka, Spark, Iceberg or external side-effect qualification.",
+    "Finite schedules are not a distributed linearizability proof or a security probability."
+  ]
+}

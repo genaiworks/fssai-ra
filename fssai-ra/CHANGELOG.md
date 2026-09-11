@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — reviewer-driven resilience and identity checks
+
+- Added `fssaira resilience` with independent spawned-process races and four
+  abrupt-exit recovery checkpoints on synthetic local SQLite data.
+- Added source- and profile-fingerprinted supplemental evidence and CI checks.
+- Bound replay receipts to the complete proposal digest in memory, SQL and Redis.
+  Conflicting request reuse now denies with `REQUEST_ID_CONFLICT`; legacy receipts
+  without a digest require reconciliation (`REPLAY_IDENTITY_UNVERIFIABLE`).
+- Fixed the SQLite transaction lock remaining held when connection creation fails.
+- Added explicit SQLite connection cleanup and strict profile string validation.
+- Removed hardcoded student-support transitions from the replay-race harness.
+- Corrected the unimplemented PostgreSQL serialization-retry claim.
+- Updated the PowerPoint recovery evidence, source links and matching speaker guide.
+
+Upgrade note: read `docs/RESILIENCE.md` before retrying historical operations.
+The new `proposal_digest` receipt field is additive. The published v1.0.0 tag and
+its result files are unchanged.
+
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.

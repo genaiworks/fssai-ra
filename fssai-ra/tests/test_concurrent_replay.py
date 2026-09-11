@@ -23,3 +23,8 @@ def test_race_report_states_its_narrow_bounds():
 
     assert "one process" in report.bounds
     assert "not a distributed" in report.bounds
+
+
+def test_replay_race_uses_the_supplied_domain_transition():
+    report = run_replay_race(ApplicationProfile.load("profiles/template.yaml"), callers=4)
+    assert report.passed

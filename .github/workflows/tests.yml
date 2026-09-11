@@ -80,6 +80,10 @@ jobs:
         working-directory: fssai-ra
         run: python scripts/generate_results.py --check
 
+      - name: Independent-process races and abrupt-exit recovery
+        working-directory: fssai-ra
+        run: python scripts/check_resilience.py
+
       - name: Upload assurance artifacts
         uses: actions/upload-artifact@v4
         with:

@@ -22,7 +22,7 @@ Sources: [UNU conference announcement](https://unu.edu/macau/news/unu-macau-ai-c
 
 Before sending, add the actual author name, affiliation, corresponding email, and professional title. The form separately requires confirmation that the author respected each word limit and that the work is original. References have no displayed word limit. The repository should be public and verified in a signed-out browser before its URL is included in the submitted text.
 
-The implementation now passes 187 deterministic tests locally. Versioned JSON reports cover adversarial containment, benign utility, ablations, bounded model checking, backend conformance, and a 32-caller single-process replay race. Describe these as fixture observations under declared local bounds, not as a benchmark, deployment, certification, or distributed-linearizability result. Broader stochastic attacks, durable crash recovery, reviewer, cost, and energy evaluation remain open work.
+The v1.0.0 baseline records 187 collected tests. Its JSON reports cover adversarial containment, benign utility, ablations, bounded model checking, backend conformance, and a 32-caller single-process replay race. Current-source enhancements add two independent-process races, four abrupt-exit recovery fixtures, and proposal-digest checks for replay identity. They are published separately in `evaluation/results/resilience-student-support.json` and documented in `docs/RESILIENCE.md`. Do not attribute these enhancements to the unchanged v1.0.0 tag. Broader stochastic attacks, power-loss and distributed recovery, reviewer burden, cost and energy evaluation remain open work.
 
 ## What changed and why
 
@@ -50,13 +50,13 @@ This is an illustrative scenario. Do not describe it as an observed breach or an
 
 ## Talk lengths
 
-The deck assumes an **eight-minute contribution**, because the invitation does not state a speaking allocation. Slides 1–11 form the main talk. Slides 12–14 are technical backup. The slide notes contain the spoken script and source links.
+The current 14-slide PowerPoint assumes an **eight-minute contribution**, because the invitation does not state a speaking allocation. All 14 slides form its narrative; slide 14 is the closing slide. The matching timed script is `docs/speaker-script.md`. The HTML deck under `docs/presentation/` has a different sequence and its own script. Use one deck and its matching script when rehearsing.
 
 | Allocation | Slides | Delivery |
 |---|---|---|
-| 3 minutes | 1, 2, 5, 6, 11 | One case, one authority rule, one observed fixture result, one adoption request |
-| 5 minutes | 1, 2, 3, 5, 6, 9, 11 | Add the bounded claim and credible evaluation design |
-| 8 minutes | 1–11 | Complete narrative, including continuity, evidence, and shared capacity |
+| 3 minutes | 1, 2, 6, 8, 14 | One case, one authority rule, bounded evidence, one adoption request |
+| 5 minutes | 1, 2, 4, 5, 6, 8, 11, 14 | Add the architecture and recovery evidence |
+| 8 minutes | 1–14 | Complete narrative, including contribution, limitations and shared capacity |
 
 For a discussion-only panel, use the opening above and three concrete examples: a changed action invalidates approval; an evidence outage pauses consequential automation; a student can request a correction. Avoid naming Kafka, Spark, or Iceberg unless the moderator asks about implementation.
 
@@ -111,7 +111,11 @@ We aim to reconstruct the evidence and recorded action. Exact regeneration of mo
 The teaching profile should support a deterministic stub and, optionally, a suitably sized local model. Actual hardware requirements must come from measurement. Energy comparisons must include utilization, hardware, and operational conditions; no environmental advantage has yet been established.
 
 **What evidence do you have today?**  
-At submission, the artifact is an architecture proposal, a specified evaluation protocol, and deterministic fixture evidence. We claim 32 passing tests and eight of eight declared exact-action scenarios in the teaching profile, not a benchmark rate or production result. The repository publishes the versioned configuration, observed outcomes, and limitations.
+The fixed v1.0.0 baseline contains 30 of 30 adversarial fixtures and completes six of six benign tasks, with eight control ablations, 240 bounded configurations, 25 conformance checks on two backend profiles and a single-process replay race. The current-source supplement adds independent-process races and abrupt-exit recovery. These are synthetic fixture observations. The repository publishes denominators, source fingerprints and limits. It does not demonstrate learner benefit or production readiness.
+
+**What changed after v1.0.0, and which code should adopters use?**
+
+The enhanced source binds every stored receipt to its full proposal digest, rejects conflicting request-ID reuse, and adds process/recovery checks. Use a reviewed source commit containing these changes rather than assuming the old tag includes them. Historical receipts without the digest require authorized reconciliation before automated replay. Preserve the baseline tag for reproducing the original figures.
 
 ## Recommended preparation schedule
 
@@ -122,8 +126,8 @@ These are proposed work milestones, not assertions that the work is underway or 
 | 9–14 September | Finalize use case, author information, scope, threat assumptions, and references |
 | 15–18 September | Technical and education-domain review of the abstract; resolve comments |
 | 19–20 September | Final word count and submission-format check; submit before the 21 September deadline |
-| 22 September–11 October | Implement the synthetic workflow and deterministic authority tests |
-| 12–31 October | Add isolation, attack/fault tests, evidence reconstruction, and recorded evaluations |
+| 22 September–11 October | Recruit independent reproduction and education-domain reviewers; run adapter qualification |
+| 12–31 October | Evaluate realistic model attacks, human review, manual continuity and distributed failure modes |
 | 1–15 November | Independent reproduction, reviewer exercise, documentation, and GitHub release candidate |
 | 16–22 November | Freeze the demonstration, record the fallback, rehearse the confirmed speaking allocation |
 | 25–26 November | Deliver the contribution with release status and results labeled accurately |

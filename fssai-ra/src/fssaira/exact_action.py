@@ -67,6 +67,7 @@ class ExecutionResult:
     status: str
     receipt_hash: str
     replayed: bool = False
+    proposal_digest: str = ""
 
 
 class ExecutionDenied(RuntimeError):
@@ -75,6 +76,18 @@ class ExecutionDenied(RuntimeError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(f"{code}: {message}")
         self.code = code
+
+
+def validate_replay(proposal: ActionProposal, prior: ExecutionResult) -> None:
+    """Never substitute another action's receipt for a reused request ID.
+
+    Legacy receipts without an authenticated proposal binding require explicit
+    reconciliation. Guessing their identity from a subset of fields is unsafe.
+    """
+    if not prior.proposal_digest:
+        raise ExecutionDenied("REPLAY_IDENTITY_UNVERIFIABLE", "stored receipt lacks its proposal digest")
+    if prior.proposal_digest != proposal.digest:
+        raise ExecutionDenied("REQUEST_ID_CONFLICT", "request ID already belongs to another proposal")
 
 
 class ExecutionUncertain(RuntimeError):
@@ -163,6 +176,7 @@ class CaseRegister:
     def transition(self, proposal: ActionProposal) -> ExecutionResult:
         if proposal.request_id in self._results:
             prior = self._results[proposal.request_id]
+            validate_replay(proposal, prior)
             return ExecutionResult(**{**asdict(prior), "replayed": True})
 
         case = self._cases.get(proposal.case_id)
@@ -183,7 +197,8 @@ class CaseRegister:
             "status": case["status"],
         })
         result = ExecutionResult(
-            proposal.request_id, proposal.case_id, case["version"], case["status"], receipt
+            proposal.request_id, proposal.case_id, case["version"], case["status"], receipt,
+            proposal_digest=proposal.digest,
         )
         self._results[proposal.request_id] = result
         return result
@@ -360,6 +375,13 @@ class AccountableExecutor:
     ) -> ExecutionResult:
         self.validate_authorization(proposal, approval, now=now)
 
+        prior = self._register.result_for(proposal.request_id)
+        if prior is not None:
+            validate_replay(proposal, prior)
+            if self._outcomes.get(proposal.request_id) is not None:
+                raise ExecutionUncertain(prior)
+            return ExecutionResult(**{**asdict(prior), "replayed": True})
+
         used_by, newly_bound = self._approval_uses.bind(
             approval.approval_id, proposal.request_id
         )
@@ -372,6 +394,7 @@ class AccountableExecutor:
                     "EXECUTION_STATE_INCONSISTENT",
                     "approval use exists without a stored execution result",
                 )
+            validate_replay(proposal, prior)
             if self._outcomes.get(proposal.request_id) is not None:
                 raise ExecutionUncertain(prior)
             return ExecutionResult(**{**asdict(prior), "replayed": True})

@@ -35,6 +35,7 @@ from .exact_action import (
     ExecutionDenied,
     ExecutionResult,
     PendingOutcome,
+    validate_replay,
 )
 from .sql_backend import SqlDatabase
 
@@ -83,6 +84,10 @@ class AtomicExecutor(AccountableExecutor):
         self.validate_authorization(proposal, approval, now=now)
 
         with self.database.transaction() as unit:
+            prior = unit.register.result_for(proposal.request_id)
+            if prior is not None:
+                validate_replay(proposal, prior)
+                return ExecutionResult(**{**asdict(prior), "replayed": True})
             used_by, newly_bound = unit.approvals.bind(approval.approval_id, proposal.request_id)
             if used_by != proposal.request_id:
                 raise ExecutionDenied("APPROVAL_REUSED", "approval was already bound to another request")
@@ -93,6 +98,7 @@ class AtomicExecutor(AccountableExecutor):
                         "EXECUTION_STATE_INCONSISTENT",
                         "approval use exists without a stored execution result",
                     )
+                validate_replay(proposal, prior)
                 return ExecutionResult(**{**asdict(prior), "replayed": True})
 
             unit.evidence.append(

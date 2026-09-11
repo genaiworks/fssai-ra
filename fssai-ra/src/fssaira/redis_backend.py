@@ -7,7 +7,13 @@ from dataclasses import asdict
 
 from .control_plane import ObjectStore
 from .evidence import GENESIS_HASH, EvidenceRecord, _digest
-from .exact_action import ActionProposal, ExecutionDenied, ExecutionResult, PendingOutcome
+from .exact_action import (
+    ActionProposal,
+    ExecutionDenied,
+    ExecutionResult,
+    PendingOutcome,
+    validate_replay,
+)
 
 
 def connect_redis(url: str):
@@ -107,6 +113,7 @@ class RedisCaseRegister:
                 "case_id": proposal.case_id, "request_id": proposal.request_id,
                 "status": proposal.to_status, "version": proposal.expected_version + 1,
             }, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            proposal_digest=proposal.digest,
         )
         case_key = self._case_key(proposal.case_id)
         result_key = self._result_key(proposal.request_id)
@@ -117,7 +124,9 @@ class RedisCaseRegister:
                     prior = pipe.get(result_key)
                     if prior is not None:
                         pipe.unwatch()
-                        return ExecutionResult(**{**json.loads(prior), "replayed": True})
+                        stored = ExecutionResult(**{**json.loads(prior), "replayed": True})
+                        validate_replay(proposal, stored)
+                        return stored
                     raw = pipe.get(case_key)
                     if raw is None:
                         pipe.unwatch()

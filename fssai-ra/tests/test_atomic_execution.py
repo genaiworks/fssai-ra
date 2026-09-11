@@ -182,3 +182,36 @@ def test_both_executors_apply_identical_authorization_rules(profile, database):
             except (ExecutionDenied, ExecutionUncertain) as exc:
                 codes.append(exc.code)
         assert codes[0] == codes[1], f"executors disagree on {proposal.request_id}: {codes}"
+
+
+def test_connection_failure_does_not_leave_sqlite_lock_owned():
+    from concurrent.futures import ThreadPoolExecutor
+
+    from fssaira.sql_backend import SQLITE, SqlDatabase
+
+    def unavailable():
+        raise OSError("synthetic connection failure")
+
+    database = SqlDatabase(unavailable, SQLITE)
+    with pytest.raises(OSError, match="synthetic connection"), database.transaction():
+        pytest.fail("connection must fail before entering the transaction")
+
+    def another_thread_can_acquire():
+        acquired = database._lock.acquire(timeout=1)
+        if acquired:
+            database._lock.release()
+        return acquired
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        assert pool.submit(another_thread_can_acquire).result(timeout=3)
+
+
+def test_close_reopens_a_durable_database_without_losing_committed_state(tmp_path):
+    database = open_sqlite(str(tmp_path / "reopen.sqlite"), evidence_token=TOKEN)
+    with database.transaction() as unit:
+        unit.register.seed("restart-case", status="draft")
+    database.close()
+    database.close()
+    with database.transaction() as unit:
+        assert unit.register.get("restart-case") == {"status": "draft", "version": 1}
+    database.close()

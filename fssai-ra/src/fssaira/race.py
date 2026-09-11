@@ -43,11 +43,12 @@ class RaceReport:
 def run_replay_race(profile: ApplicationProfile, callers: int = 32) -> RaceReport:
     if callers < 2 or callers > 512:
         raise ValueError("callers must be between 2 and 512")
+    rule = profile.transitions[0]
     token = "race-evidence-writer"
     with tempfile.TemporaryDirectory(prefix="fssaira-race-") as directory:
         database = open_sqlite(str(Path(directory) / "race.sqlite"), evidence_token=token)
         with database.transaction() as unit:
-            unit.register.seed("RACE-1", status="draft", version=1)
+            unit.register.seed("RACE-1", status=rule.from_status, version=1)
         executor = AtomicExecutor(
             database,
             token,
@@ -58,18 +59,18 @@ def run_replay_race(profile: ApplicationProfile, callers: int = 32) -> RaceRepor
         proposal = ActionProposal(
             request_id="race-request-1",
             requester="bounded-agent",
-            operation="prepare_case_for_review",
+            operation=rule.operation,
             case_id="RACE-1",
             expected_version=1,
-            from_status="draft",
-            to_status="ready_for_officer_review",
+            from_status=rule.from_status,
+            to_status=rule.to_status,
             evidence_version="race-snapshot-1",
         )
         now = time.time()
         approval = ApprovalAuthority().approve(
             proposal,
             approver="race-reviewer",
-            approver_role="student_support_officer",
+            approver_role=rule.approval_role,
             now=now,
             ttl_seconds=300,
         )
@@ -90,6 +91,7 @@ def run_replay_race(profile: ApplicationProfile, callers: int = 32) -> RaceRepor
         outcomes = sum(record.kind == "action_outcome" for record in records)
         receipts = {result.receipt_hash for result in results}
         replayed = sum(result.replayed for result in results)
+        database.close()
         passed = (
             len(results) == callers
             and replayed == callers - 1

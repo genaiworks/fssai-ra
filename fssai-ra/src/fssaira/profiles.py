@@ -97,6 +97,9 @@ class ApplicationProfile:
         missing = [key for key in required if not raw.get(key)]
         if missing:
             raise ProfileError("missing required fields: " + ", ".join(missing))
+        for key in required[:-1]:
+            if not isinstance(raw[key], str) or not raw[key].strip():
+                raise ProfileError(f"{key} must be a non-empty string")
         if not isinstance(raw["transitions"], list):
             raise ProfileError("transitions must be a list")
 
@@ -114,6 +117,9 @@ class ApplicationProfile:
                 )
             if not isinstance(item["consequential"], bool):
                 raise ProfileError(f"transition {index} consequential must be boolean")
+            for key in fields:
+                if not isinstance(item[key], str) or not item[key].strip():
+                    raise ProfileError(f"transition {index} {key} must be a non-empty string")
             identity = (item["operation"], item["from_status"], item["to_status"])
             if identity in seen:
                 raise ProfileError(f"duplicate transition at index {index}")
