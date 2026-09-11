@@ -139,7 +139,7 @@ def test_committed_results_match_a_fresh_run():
 
 def test_the_word_count_fits_the_submission_guidance(prose):
     """The call asks for approximately 1,500 words. 'Approximately' is not 2,400."""
-    body = prose[prose.index("## 1."):prose.index("---\n\n*Full paper")]
+    body = prose[prose.index("## 1."):prose.index("## References")]
     words = len(re.findall(r"[A-Za-z0-9'’\-]+", body))
     assert 1_300 <= words <= 1_600, f"body is {words} words; the call asks for about 1,500"
 
