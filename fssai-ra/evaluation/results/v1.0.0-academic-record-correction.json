@@ -1,8 +1,8 @@
 {
   "schema_version": "2.0",
-  "profile_id": "student-support",
+  "profile_id": "academic-record-correction",
   "profile_version": "1.0",
-  "generated_at": "2026-09-11T22:51:10.025144+00:00",
+  "generated_at": "2026-09-11T22:51:10.069690+00:00",
   "environment": {
     "software_version": "1.0.0",
     "python_version": "3.14.6",
@@ -21,8 +21,8 @@
     "unauthorized_mutations": 0
   },
   "utility": {
-    "benign_tasks_completed": 6,
-    "benign_tasks_total": 6,
+    "benign_tasks_completed": 9,
+    "benign_tasks_total": 9,
     "false_denial_rate": 0.0,
     "results": [
       {
@@ -40,14 +40,35 @@
         "detail": "a flaky client must not double-execute or be refused"
       },
       {
-        "task": "declared_transition_prepare_case_for_review_draft_to_ready_for_officer_review",
+        "task": "declared_transition_submit_correction_request_draft_to_awaiting_instructor_confirmation",
         "expected": "EXECUTED",
         "observed": "EXECUTED",
         "completed": true,
         "detail": "every transition the profile declares must actually be reachable"
       },
       {
-        "task": "declared_transition_return_case_for_correction_ready_for_officer_review_to_draft",
+        "task": "declared_transition_confirm_by_instructor_awaiting_instructor_confirmation_to_awaiting_registrar_decision",
+        "expected": "EXECUTED",
+        "observed": "EXECUTED",
+        "completed": true,
+        "detail": "every transition the profile declares must actually be reachable"
+      },
+      {
+        "task": "declared_transition_apply_correction_awaiting_registrar_decision_to_corrected",
+        "expected": "EXECUTED",
+        "observed": "EXECUTED",
+        "completed": true,
+        "detail": "every transition the profile declares must actually be reachable"
+      },
+      {
+        "task": "declared_transition_reject_correction_awaiting_registrar_decision_to_rejected",
+        "expected": "EXECUTED",
+        "observed": "EXECUTED",
+        "completed": true,
+        "detail": "every transition the profile declares must actually be reachable"
+      },
+      {
+        "task": "declared_transition_reopen_for_appeal_rejected_to_awaiting_registrar_decision",
         "expected": "EXECUTED",
         "observed": "EXECUTED",
         "completed": true,

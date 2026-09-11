@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "extended-abstract.md"
 DECK = ROOT / "docs" / "presentation" / "slides.html"
 SUMMARY = ROOT / "evaluation" / "results" / "v1.0.0-summary.json"
+READMES = (ROOT / "README.md", ROOT.parent / "README.md")
 
 
 @pytest.fixture(scope="module")
@@ -43,14 +44,25 @@ def prose() -> str:
 CLAIMS = [
     ("adversarial containment", "{adversarial_scenarios_contained} of {adversarial_scenarios_total} adversarial scenarios contained"),
     ("model-checked states", "{states_explored} configurations with zero violations"),
-    ("model-checked states, restated", "{states_explored} model-checked states with zero invariant violations"),
     ("denial controls reached", "{distinct_denial_codes} distinct denial controls"),
     ("ablation coverage", "{controls_load_bearing} of {controls_ablated} ablated controls restored their harm when removed"),
     ("conformance checks", "{conformance_checks} conformance checks passing on {conformance_backends_verified} backend profiles"),
-    ("conformance checks, restated", "{conformance_checks} checks pass on {conformance_backends_verified} independent backend profiles"),
     ("utility baseline", "{benign_tasks_completed} of {benign_tasks_total} benign tasks completed, false-denial rate {false_denial_rate}"),
     ("concurrent replay", "{concurrent_callers}-caller race produced {concurrent_mutations} mutation and {concurrent_distinct_receipts} receipt"),
     ("contract fields", "seven fields"),
+    # Added with the oversight, generalization, and corpus contributions. A new
+    # claim in the paper without an entry here is a figure nothing checks.
+    ("oversight capacity", "a roster of {oversight_reviewer_roster} reviewers sustains "
+     "{oversight_sustainable_per_day_display} consequential actions per day"),
+    ("oversight queue trial", "Without load control, {oversight_harms_without_load_control} "
+     "such merit failures execute. With it, {oversight_harms_with_load_control} do, and "
+     "{oversight_deferred_to_manual} actions defer to manual review"),
+    ("second domain", "{second_domain_states_explored_display} configurations with zero "
+     "violations, {second_domain_scenarios_contained} of {second_domain_scenarios_total} "
+     "scenarios contained, {second_domain_benign_completed} of "
+     "{second_domain_benign_total} benign tasks, {second_domain_conformance_checks} "
+     "conformance checks"),
+    ("corpus provenance", "today that number is **{corpus_externally_contributed}**"),
 ]
 
 
@@ -241,3 +253,44 @@ def test_the_deck_opens_and_closes_on_the_central_rule(deck, prose):
 def test_the_deck_and_the_paper_agree_on_the_release(deck, prose):
     assert "v1.0.0" in deck and "v1.0.0" in prose
     assert "github.com/genaiworks/fssai-ra" in deck
+
+
+# ---------------------------------------------------------------------------
+# The READMEs are a claim surface too
+# ---------------------------------------------------------------------------
+#
+# Added after the two top-level READMEs were found quoting 180, 187, and 149
+# deterministic tests simultaneously, none of which was the current figure. The
+# paper was protected from that class of drift and the front door was not, which
+# is backwards: the README is what most readers see first.
+
+
+@pytest.mark.parametrize("path", READMES, ids=lambda p: p.parent.name + "/README.md")
+def test_no_readme_overstates_the_test_count(path, figures):
+    assert path.exists(), f"{path} is missing"
+    quoted = [
+        int(value.replace(",", ""))
+        for value in re.findall(r"(\d[\d,]*) deterministic tests", path.read_text(encoding="utf-8"))
+    ]
+    assert quoted, f"{path} should state how many deterministic tests back its claims"
+    for count in quoted:
+        assert count <= figures["test_count"], (
+            f"{path} claims {count} deterministic tests but the repository has "
+            f"{figures['test_count']}"
+        )
+
+
+@pytest.mark.parametrize("path", READMES, ids=lambda p: p.parent.name + "/README.md")
+def test_no_readme_quotes_a_stale_oversight_capacity(path, figures):
+    """Both READMEs lead with the oversight figure, so both are checked.
+
+    It is the most quotable number in the project and therefore the most likely
+    to be repeated somewhere and then left behind when the defaults change.
+    """
+    expected = (
+        f"{figures['oversight_reviewer_roster']} reviewers sustain "
+        f"{figures['oversight_sustainable_per_day']:,.0f} actions/day"
+    )
+    assert expected in path.read_text(encoding="utf-8"), (
+        f"{path} no longer states the generated oversight capacity figure: {expected!r}"
+    )

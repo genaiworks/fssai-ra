@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "kind": "conformance",
-  "generated_at": "2026-09-11T22:51:10.047388+00:00",
-  "profile_id": "student-support",
+  "generated_at": "2026-09-11T22:51:10.278684+00:00",
+  "profile_id": "academic-record-correction",
   "backends": {
     "register": "CaseRegister",
     "evidence": "EvidenceLedger",
@@ -176,7 +176,7 @@
       "requirement": "AA-4",
       "title": "an approved exact proposal executes once",
       "passed": true,
-      "detail": "resource now {'status': 'ready_for_officer_review', 'version': 2}",
+      "detail": "resource now {'status': 'awaiting_registrar_decision', 'version': 2}",
       "skipped": false
     },
     {
@@ -248,7 +248,7 @@
       "requirement": "AA-4",
       "title": "the profile's authority invariants hold under bounded model checking",
       "passed": true,
-      "detail": "240 states explored, 0 violation(s)",
+      "detail": "4800 states explored, 0 violation(s)",
       "skipped": false
     }
   ],

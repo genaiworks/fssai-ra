@@ -267,6 +267,100 @@ def cmd_resilience(args) -> int:
     return 0 if report.passed else 1
 
 
+def cmd_oversight(args) -> int:
+    """Measure whether human review capacity is a declared, bounded quantity."""
+    from .oversight import (
+        DeclaredReviewerModel,
+        ReviewLoadPolicy,
+        run_queue_pressure_trial,
+    )
+    from .profiles import ApplicationProfile
+
+    profile = ApplicationProfile.load(args.profile)
+    policy = ReviewLoadPolicy(
+        max_approvals_per_window=args.max_approvals,
+        min_deliberation_seconds=args.deliberation_floor,
+        second_reviewer_after=args.escalate_after,
+    )
+    reviewer = DeclaredReviewerModel(attentive_until=args.attentive_until)
+    report = run_queue_pressure_trial(
+        profile, arrivals=args.arrivals, policy=policy, reviewer=reviewer
+    )
+    summary = report["summary"]
+    capacity = policy.sustainable_actions_per_day(args.reviewers)
+
+    heading(f"Oversight capacity — {report['profile_id']}")
+    print(f"  declared ceiling     {policy.max_approvals_per_window} approvals / "
+          f"{int(policy.window_seconds)}s per reviewer")
+    print(f"  deliberation floor   {policy.min_deliberation_seconds:g}s")
+    print(f"  roster of {capacity['reviewers']:<10} sustains {capacity['sustainable_per_day']:g} "
+          f"consequential actions/day")
+    print(dim(f"  bound by the {capacity['binding_constraint'].replace('_', ' ')}"))
+
+    heading(f"Queue-pressure trial — {report['arrivals']} arrivals, one reviewer")
+    without = summary["harmful_executed_without_load_control"]
+    with_control = summary["harmful_executed_with_load_control"]
+    print(f"  merit failures executed, no load control     {red(str(without))}")
+    print(f"  merit failures executed, load control        {green(str(with_control))}")
+    print(f"  deferred to the manual fallback              {summary['deferred_to_manual_fallback']}")
+    ratio = summary["demand_to_declared_capacity"]
+    print(dim(f"  demand ran at {ratio['ratio']}x the declared attentive capacity "
+              f"({ratio['arrivals']} arrivals, {ratio['declared_attentive_capacity']} budgeted)"))
+    print("\n  " + verdict(
+        summary["load_control_is_load_bearing"],
+        "the load control is load-bearing: it contained harm the mechanisms cannot see",
+        "the load control changed nothing on this queue",
+    ))
+    print(dim("  The reviewer degradation curve is a declared parameter, not a measurement."))
+    emit(report, args.output)
+    return 0 if summary["harmful_executed_with_load_control"] == 0 else 1
+
+
+def cmd_challenge(args) -> int:
+    """Score the open adversary corpus against all three architectures."""
+    from .challenge import ChallengeError, run_corpus
+
+    try:
+        report = run_corpus(args.dir)
+    except ChallengeError as exc:
+        print(red(f"  challenge corpus error: {exc}"))
+        return 2
+
+    heading(f"Open adversary corpus — {report['corpus_size']} contributed attacks")
+    for item in report["challenges"]:
+        print(f"  {bold(item['challenge_id'])}  {item['title']}")
+        print(dim(f"    contributed by {item['submitted_by']} ({item['license']})"))
+        for arm, result in item["arms"].items():
+            mark = green("contained") if result["contained"] else red("HARM")
+            codes = ", ".join(result.get("denial_codes", []))
+            print(f"    {arm:22} {mark:<22}"
+                  + (dim(f"  {codes}") if codes else ""))
+        if not item["is_live"]:
+            print(yellow("    inert: no harm lands even unguarded; not scored"))
+        if not item["expectation_met"]:
+            print(yellow(f"    expected {item['expected_harms']}, "
+                         f"observed {item['harms_observed_unguarded']}"))
+
+    heading("Containment by architecture")
+    live = report["live_challenges"]
+    for arm, count in report["contained_by_arm"].items():
+        rate = report["containment_rate_by_arm"][arm]
+        print(f"  {arm:22} {count}/{live}   {rate:.0%}")
+
+    external = report["externally_contributed"]
+    heading("Provenance")
+    print(f"  contributors            {len(report['contributors'])}")
+    print(f"  externally contributed  {len(external)}"
+          + (dim("   — the figure that matters") if not external else ""))
+    if not external:
+        print(yellow("  Every attack here was written by the maintainers. Until that "
+                     "changes,"))
+        print(yellow("  this corpus samples the maintainers' imagination. "
+                     "See challenges/README.md."))
+    emit(report, args.output)
+    return 0 if not report["mismatched_expectations"] else 1
+
+
 def cmd_doctor(args) -> int:
     from .runtime_factory import configuration_warnings, readiness
     from .security import AuthConfig
@@ -597,6 +691,29 @@ def build_parser() -> argparse.ArgumentParser:
     resilience.add_argument("profile", type=Path)
     resilience.add_argument("--callers", type=int, choices=range(2, 33), default=8, metavar="2..32")
     resilience.set_defaults(func=cmd_resilience)
+
+    oversight = add_output(sub.add_parser(
+        "oversight", help="measure review capacity and run the queue-pressure trial"))
+    oversight.add_argument("profile", type=Path)
+    oversight.add_argument("--arrivals", type=int, default=40,
+                           help="consequential actions arriving in the queue")
+    oversight.add_argument("--reviewers", type=int, default=11,
+                           help="roster size, for the published capacity arithmetic")
+    oversight.add_argument("--max-approvals", type=int, default=20,
+                           help="declared per-reviewer ceiling per window")
+    oversight.add_argument("--deliberation-floor", type=float, default=45.0,
+                           help="minimum seconds between presentation and approval")
+    oversight.add_argument("--escalate-after", type=int, default=12,
+                           help="approvals in a window after which a second reviewer is required")
+    oversight.add_argument("--attentive-until", type=int, default=8,
+                           help="declared reviewer attention budget (a parameter, not a measurement)")
+    oversight.set_defaults(func=cmd_oversight)
+
+    challenge = add_output(sub.add_parser(
+        "challenge", help="score the open adversary corpus against all three architectures"))
+    challenge.add_argument("--dir", default="challenges",
+                           help="directory of contributed challenge YAML files")
+    challenge.set_defaults(func=cmd_challenge)
 
     plugins_cmd = sub.add_parser("plugins", help="list registered backends for every port")
     plugins_cmd.add_argument("--port", default=None)

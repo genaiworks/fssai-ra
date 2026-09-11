@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "kind": "bounded-model-check",
-  "profile_id": "student-support",
+  "profile_id": "academic-record-correction",
   "profile_version": "1.0",
-  "generated_at": "2026-09-11T22:51:10.041929+00:00",
+  "generated_at": "2026-09-11T22:51:10.173931+00:00",
   "summary": {
-    "states_explored": 240,
-    "mutations_observed": 2,
+    "states_explored": 4800,
+    "mutations_observed": 5,
     "invariants_checked": 5,
     "violations": 0,
     "holds": true
@@ -20,12 +20,18 @@
   ],
   "bounds": {
     "statuses": [
+      "awaiting_instructor_confirmation",
+      "awaiting_registrar_decision",
+      "corrected",
       "draft",
-      "ready_for_officer_review"
+      "rejected"
     ],
     "operations": [
-      "prepare_case_for_review",
-      "return_case_for_correction",
+      "apply_correction",
+      "confirm_by_instructor",
+      "reject_correction",
+      "reopen_for_appeal",
+      "submit_correction_request",
       "operation_not_in_profile"
     ],
     "approval_variants": [
@@ -53,18 +59,18 @@
     "note": "exhaustive within these bounds; not a proof for unbounded versions, arbitrary identities, concurrent execution, or infrastructure behaviour"
   },
   "outcome_histogram": {
-    "APPROVAL_AUDIENCE_MISMATCH": 16,
-    "APPROVAL_EXPIRED": 8,
-    "APPROVAL_KEY_UNTRUSTED": 16,
-    "APPROVAL_NOT_FOUND": 48,
-    "APPROVAL_PAYLOAD_MISMATCH": 16,
-    "APPROVAL_SIGNATURE_INVALID": 32,
-    "APPROVER_ROLE_NOT_ALLOWED": 8,
-    "CASE_NOT_FOUND": 4,
-    "CASE_VERSION_CONFLICT": 2,
-    "EXECUTED": 2,
-    "OPERATION_NOT_ALLOWED": 64,
-    "TRANSITION_NOT_ALLOWED": 24
+    "APPROVAL_AUDIENCE_MISMATCH": 400,
+    "APPROVAL_EXPIRED": 20,
+    "APPROVAL_KEY_UNTRUSTED": 400,
+    "APPROVAL_NOT_FOUND": 960,
+    "APPROVAL_PAYLOAD_MISMATCH": 400,
+    "APPROVAL_SIGNATURE_INVALID": 800,
+    "APPROVER_ROLE_NOT_ALLOWED": 20,
+    "CASE_NOT_FOUND": 10,
+    "CASE_VERSION_CONFLICT": 5,
+    "EXECUTED": 5,
+    "OPERATION_NOT_ALLOWED": 640,
+    "TRANSITION_NOT_ALLOWED": 1140
   },
   "violations": []
 }

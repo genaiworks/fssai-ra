@@ -40,13 +40,15 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # current regression suite; 187 tests at v1.0.0
+pytest                                            # 328 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
 fssaira conformance --backend sql                 # does it still hold on another backend?
 fssaira race-test profiles/student_support.yaml   # 32 callers, 1 mutation, 1 receipt
 fssaira resilience profiles/student_support.yaml  # process races and abrupt-exit recovery
+fssaira oversight profiles/student_support.yaml   # how much review can you actually supply?
+fssaira challenge                                 # the open adversary corpus, scored
 ```
 
 After installation, these checks need no network, model weights or GPU.
@@ -55,11 +57,39 @@ reproduce the observations on a disconnected laptop.
 
 ## Current-source enhancements after v1.0.0
 
-- Independent-process duplicate-request and competing-version races on SQLite.
-- Four abrupt-exit recovery checkpoints, with safe retry after reopening.
-- Full proposal-digest binding for replay receipts, including conflict rejection.
-- Strict profile field validation and profile-derived race fixtures.
-- Source-fingerprinted supplemental evidence with a CI reproduction check.
+**Oversight is a finite resource, and now it is a measured one.** Every control
+in `v1.0.0` routes a consequential action to a named human and then treats that
+human as unlimited. Push a queue past a reviewer's attention and every mechanism
+here still passes — digests bind, signatures verify, the chain is intact — while
+the oversight it all funnels into becomes a signature service. A system can be
+perfectly accountable and completely unreviewed.
+
+So review now has a declared capacity, a deliberation floor, mandatory escalation
+under load, and a published headroom figure. `fssaira oversight` computes what a
+roster can genuinely sustain and runs a queue-pressure trial against it. On a
+queue at five times declared capacity, 4 structurally valid but substantively
+wrong actions execute without the control and 0 with it, at a reported cost of 32
+deferrals to the manual fallback. **The reviewer degradation curve is a declared
+parameter, not a measurement of any human** — see [`docs/ASSURANCE.md`](docs/ASSURANCE.md) §7.
+
+**A second domain, because one proves nothing about a method.**
+[`profiles/academic_record_correction.yaml`](profiles/academic_record_correction.yaml)
+was added through the documented extension path and carries its own evidence: the
+identical suite holds with no library change — 4,800 configurations, 0 violations,
+30/30 contained, 9/9 benign, 25 conformance checks. It failed on its first run and
+the defect was real: a declared approval role on a routine transition was silently
+unenforced. One domain could not reach it; two did immediately.
+
+**An adversary who is not the author.** [`challenges/`](challenges/) is an open
+corpus: an attack is seven fields of YAML, scored against all three architecture
+arms and attributed to whoever contributed it. No student record, deployment
+detail, or vendor name is needed, and no contributor code runs. `fssaira challenge`
+prints how many attacks came from outside this project — **currently 0**, stated
+in the output rather than buried in a limitation.
+
+Plus: independent-process races and abrupt-exit recovery on SQLite, full
+proposal-digest binding for replay receipts, strict profile validation, and
+source-fingerprinted supplemental evidence with a CI reproduction check.
 
 See [resilience and upgrade guidance](docs/RESILIENCE.md). Existing digest-less
 receipts require reconciliation before automated replay. These additions are
@@ -78,6 +108,14 @@ argument survive contact with another institution.
 | **Ablation-measured coverage** | Is each control load-bearing, or decorative? | 8 of 8 controls restored their harm |
 | **Portable conformance** | Does it still hold after you replace a component? | 25 checks, 2 independent backend profiles |
 | **Concurrent replay race** | Can simultaneous retries duplicate an approved action? | 32 callers, 1 mutation, 1 receipt |
+
+And on current source, three questions `v1.0.0` could not answer at all:
+
+| | Question it answers | Result |
+|---|---|---|
+| **Oversight capacity** | How much review can this institution actually supply? | 11 reviewers sustain 3,520 actions/day; 4 → 0 merit failures under load |
+| **A second domain** | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
+| **Open adversary corpus** | Is the adversary ever someone other than the author? | 4 attacks scored across 3 arms; 0 contributed externally, and we say so |
 
 Plus: **single-transaction execution** on PostgreSQL, which removes — rather than
 merely detects — the one failure mode the previous release could only document;
@@ -189,6 +227,7 @@ a method decays into a vocabulary. Start at [`docs/EXTENDING.md`](docs/EXTENDING
 | Poisoned source data | lineage plus snapshot rollback to the last approved state | `poisoned_data_rolled_back_to_approved_snapshot` |
 | Insider record tampering | append-only hash chain; independent Spark re-verification catches truncation too | `insider_record_tampering_detected` |
 | Interrupted outcome evidence | single transaction where possible; otherwise reported uncertain and reconciled once | `outcome_evidence_interruption_and_recovery` |
+| A reviewer approving faster than anyone can read | declared review capacity, deliberation floor, escalation to a second reviewer — refused at issue, not flagged after | `test_load_control_contains_a_harm_no_other_control_can_see` |
 
 `fssaira evaluate` runs all 30, plus 6 benign tasks and 8 ablations.
 

@@ -156,7 +156,11 @@ def inspect_packet(packet, expected_sha256: str | None = None) -> dict:
                 matching.append(rule)
         if len(matching) != 1:
             errors.append("EXPORT_PROFILE_TRANSITION_MISMATCH")
-        elif matching[0]["consequential"] and matching[0]["approval_role"] != approval["approver_role"]:
+        elif matching[0]["approval_role"] != approval["approver_role"]:
+            # Checked on every transition, consequential or not. The executor
+            # enforces the declared role unconditionally; an offline checker that
+            # skipped routine steps would clear a packet the executor would have
+            # refused, which is the worst kind of disagreement between the two.
             errors.append("EXPORT_PROFILE_ROLE_MISMATCH")
         summary = {
             "request_id": proposal["request_id"], "resource_id": proposal["case_id"],

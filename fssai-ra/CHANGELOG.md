@@ -1,5 +1,81 @@
 # Changelog
 
+## Unreleased — oversight capacity, a second domain, and an open adversary corpus
+
+### Human review is a finite resource, and now a bounded one
+
+Every control this project shipped routed a consequential action to a named human
+and then treated that human as unlimited. Push a queue past a reviewer's attention
+and every mechanism here still passes its tests while the oversight it all funnels
+into becomes a signature service. A system can be perfectly accountable and
+completely unreviewed, and nothing in `v1.0.0` could tell the difference.
+
+- Added `fssaira.oversight`: a declared review capacity per reviewer per window, a
+  deliberation floor below which an approval is **refused at issue** rather than
+  flagged afterwards, mandatory escalation to a second distinct reviewer under
+  sustained load, and a publishable report of approvals, median deliberation,
+  escalations, refusals, and remaining headroom.
+- `ApprovalAuthority` takes an optional oversight monitor. With none configured
+  its behaviour is unchanged, and a test asserts that rather than assuming it.
+- Added `fssaira oversight`, which computes what a roster can genuinely sustain
+  (11 reviewers → 3,520 consequential actions/day with the shipped defaults, bound
+  by the deliberation floor) and runs a queue-pressure trial against it. At five
+  times declared capacity: 4 structurally valid but substantively wrong actions
+  execute without the control, 0 with it, at a reported cost of 32 deferrals.
+- Added control-contract requirements `AA-8` and `AA-9` for the two new controls.
+- **The reviewer degradation curve is a declared parameter, not a measurement of
+  any human.** No reviewer was observed. `docs/ASSURANCE.md` §7 names reviewer
+  behaviour under load as the largest open gap between this and a field claim.
+
+### A second domain, because one proves nothing about a method
+
+- Added `profiles/academic_record_correction.yaml`, structurally different from
+  the reference profile: a multi-role chain, a rejection an appeal can reopen, and
+  five transitions over six statuses.
+- The identical verifier, evaluator, and conformance suite hold on it with **no
+  change to library code**: 4,800 configurations, 0 violations, 30/30 contained,
+  9/9 benign, 25 conformance checks. Each domain carries its own evidence.
+- **Fixed a real defect the second domain exposed on its first run.**
+  `ApplicationProfile.required_approval_roles` was built only from *consequential*
+  transitions, so a routine transition that declared an `approval_role` had it
+  silently ignored — a mandatory schema field that did nothing at runtime. The
+  offline packet checker had the same gap and would have cleared a packet the
+  executor refuses. Both now enforce the declared role on every transition. This
+  was unreachable in the reference profile, where every transition is
+  consequential. Regression: `tests/test_generalization.py`.
+
+### An adversary who is not the author
+
+- Added `challenges/`, an open corpus in which an attack is seven fields of YAML —
+  the grant an agent holds and what a compromised model proposes — validated
+  strictly, executing no contributor code, and scored against all three
+  architecture arms with attribution.
+- Added `fssaira challenge`. It prints the externally contributed count, which is
+  **0**, in the output rather than in a limitations paragraph.
+- **Fixed a defect the corpus found in our own measurement.** Harm was counted by
+  tool name, so records leaving through a tool not classified as egress scored as
+  no harm at all: the enforcement point refused the attack while the instrument
+  measuring it reported the attack inert. Harm is now counted by effect. The
+  published comparison figures are unchanged — that attack set never reaches the
+  blind spot — and are pinned by
+  `test_correcting_the_harm_counter_did_not_move_the_published_figures`.
+- Added control-contract requirement `XC-5`.
+
+### Alignment, results, and the paper
+
+- `scripts/generate_results.py` now emits oversight, second-domain, and corpus
+  figures, four new verdicts, and four new limits, so the new claims cannot drift
+  from the code any more than the old ones could.
+- Rewrote `paper/extended-abstract.md` as a panel contribution rather than a
+  technical report: an explicit position, the oversight argument, the
+  generalization evidence, and three propositions. Body is ~1,580 words.
+- Rewrote `paper/form-ready-abstract.md` for the four capped submission fields and
+  restored the punctuation that earlier form-safety stripping had removed.
+- Added four slides to the conference deck and their speaker notes.
+- **Extended alignment testing to the READMEs**, which were simultaneously
+  claiming 180, 187, and 149 deterministic tests, none of them current. The paper
+  was protected from that drift and the front door was not.
+
 ## Unreleased — reviewer-driven resilience and identity checks
 
 - Added `fssaira resilience` with independent spawned-process races and four

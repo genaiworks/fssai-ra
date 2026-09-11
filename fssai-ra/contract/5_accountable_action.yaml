@@ -62,3 +62,25 @@ requirements:
     test: Run the conformance suite against the deployment's own register, evidence store, event bus, inward channel, and model; confirm every check passes or is explicitly skipped
     evidence_artifact: Machine-readable conformance report naming each backend and the requirement each check defends
     failure_response: Do not deploy the replacement; record which governance claim the failing check removed
+
+  # AA-8 and AA-9 exist because the architecture had a control it never named.
+  # Every requirement above routes a consequential action to a named human and
+  # then treats that human as an unlimited resource. These two say what the
+  # institution owes in return: a capacity it has declared, and a refusal when
+  # the queue exceeds it.
+  - id: AA-8
+    protected_asset: The meaning of a human approval
+    permitted_operation: A reviewer may issue at most the declared number of consequential approvals per window, no faster than the declared deliberation floor
+    enforcement_point: Oversight monitor consulted by the approval service before an approval is signed; a review beyond the declared capacity is refused at issue time, not flagged afterwards
+    owner: Student Support Service Owner
+    test: Drive a queue past the declared capacity with a reviewer model that stops reading, and confirm that approvals are refused, that no structurally valid but substantively wrong proposal executes, and that the excess is routed to the manual fallback
+    evidence_artifact: Oversight report naming approvals per reviewer, median deliberation interval, escalations required, refusals by code, and remaining capacity headroom
+    failure_response: Refuse to issue the approval, route the action to the declared manual fallback, and report the deferral count as a measurement of demand against declared capacity
+  - id: AA-9
+    protected_asset: The independence of sustained review
+    permitted_operation: Past the declared escalation threshold within a window, a consequential action requires a second, distinct reviewer
+    enforcement_point: Oversight monitor requires and checks a second reviewer identity that is not the primary reviewer
+    owner: Program Registrar
+    test: Exceed the escalation threshold and confirm refusal without a second reviewer; supply the primary reviewer as the second and confirm refusal
+    evidence_artifact: Review record marking the escalation and naming both reviewers
+    failure_response: Refuse the approval until a distinct second reviewer is available; if none is, take the manual fallback rather than proceeding on one signature

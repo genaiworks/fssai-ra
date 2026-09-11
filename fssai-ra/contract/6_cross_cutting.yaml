@@ -41,3 +41,12 @@ requirements:
     test: Confirm every profile declares a manual fallback and that the named owner is aware of it; measure the false-denial rate beside the containment rate
     evidence_artifact: Profile manual-fallback text plus the utility results from the evaluation report
     failure_response: Escalate to the service owner; a system that denies everything is fail-secure and useless
+
+  - id: XC-5
+    protected_asset: The credibility of the assurance evidence itself
+    permitted_operation: Anyone may contribute an adversarial test case as data, and the published results must state how much of the corpus came from outside the project
+    enforcement_point: Challenge runner validates a contributed case against a strict schema, executes no contributor code, and scores it against every architecture arm under identical conditions
+    owner: Audit and Assurance
+    test: Submit a malformed case and confirm refusal with an actionable message; submit a case whose harm does not land and confirm it is reported inert rather than counted as a containment; confirm the report states the externally contributed count
+    evidence_artifact: Machine-readable corpus report naming each contributor, each attack's per-arm outcome, and the externally contributed count
+    failure_response: Report the mismatch to the contributor rather than silently scoring it; never let an inert or unverified case inflate a containment rate

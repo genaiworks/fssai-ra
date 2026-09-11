@@ -25,14 +25,26 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fssaira import __version__  # noqa: E402
+from fssaira.challenge import run_corpus  # noqa: E402
 from fssaira.conformance import memory_bundle, run_conformance, sql_bundle  # noqa: E402
 from fssaira.evaluation import EvaluationRunner  # noqa: E402
 from fssaira.experiment import run_comparison  # noqa: E402
+from fssaira.oversight import (  # noqa: E402
+    DeclaredReviewerModel,
+    ReviewLoadPolicy,
+    run_queue_pressure_trial,
+)
 from fssaira.profiles import ApplicationProfile  # noqa: E402
 from fssaira.race import run_replay_race  # noqa: E402
 from fssaira.verification import verify_profile  # noqa: E402
 
 PROFILE_PATH = ROOT / "profiles" / "student_support.yaml"
+#: The second domain exists to test the *method*, not to add a headline. Its
+#: figures are generated separately and never merged into the first domain's.
+SECOND_PROFILE_PATH = ROOT / "profiles" / "academic_record_correction.yaml"
+CHALLENGE_DIR = ROOT / "challenges"
+#: Roster used only for the published oversight-capacity arithmetic.
+REVIEWER_ROSTER = 11
 RESULTS_DIR = ROOT / "evaluation" / "results"
 
 
@@ -55,6 +67,22 @@ def generate(output_dir: Path, tag: str) -> dict:
     race = run_replay_race(profile, callers=32)
     by_arm = {arm["arm"][0]: arm for arm in comparison["arms"]}  # "A", "B", "C"
 
+    # The second domain, run through the identical suite with no library change.
+    # Kept in its own variables throughout: borrowing one domain's evidence for
+    # another is the failure mode docs/EXTENDING.md exists to prevent.
+    second_profile = ApplicationProfile.load(SECOND_PROFILE_PATH)
+    second_evaluation = EvaluationRunner(second_profile).run()
+    second_verification = verify_profile(second_profile)
+    second_conformance = run_conformance(memory_bundle(second_profile))
+
+    oversight_policy = ReviewLoadPolicy()
+    oversight = run_queue_pressure_trial(
+        profile, arrivals=40, policy=oversight_policy,
+        reviewer=DeclaredReviewerModel(),
+    )
+    capacity = oversight_policy.sustainable_actions_per_day(REVIEWER_ROSTER)
+    corpus = run_corpus(CHALLENGE_DIR)
+
     evaluation.write_json(output_dir / f"{tag}-student-support.json")
     (output_dir / f"{tag}-verification.json").write_text(
         json.dumps(verification.to_dict(), indent=2) + "\n", encoding="utf-8")
@@ -64,6 +92,14 @@ def generate(output_dir: Path, tag: str) -> dict:
         json.dumps(comparison, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-race.json").write_text(
         json.dumps(race.to_dict(), indent=2) + "\n", encoding="utf-8")
+    second_evaluation.write_json(output_dir / f"{tag}-academic-record-correction.json")
+    (output_dir / f"{tag}-second-domain-verification.json").write_text(
+        json.dumps(second_verification.to_dict(), indent=2) + "\n", encoding="utf-8")
+    second_conformance.write_json(output_dir / f"{tag}-conformance-second-domain.json")
+    (output_dir / f"{tag}-oversight.json").write_text(
+        json.dumps(oversight, indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-adversary-corpus.json").write_text(
+        json.dumps(corpus, indent=2) + "\n", encoding="utf-8")
 
     payload = evaluation.to_dict()
     summary = {
@@ -124,6 +160,50 @@ def generate(output_dir: Path, tag: str) -> dict:
             "contract_requirements": _contract_count(),
             "control_contract_fields": 7,
             "test_count": _test_count(),
+            # generalization: the same suite, a second domain, no library change
+            "domains_verified": 2,
+            "second_domain_states_explored": second_verification.states_explored,
+            "second_domain_states_explored_display": (
+                f"{second_verification.states_explored:,}"
+            ),
+            "second_domain_violations": len(second_verification.violations),
+            "second_domain_scenarios_total": second_evaluation.total,
+            "second_domain_scenarios_contained": second_evaluation.passed,
+            "second_domain_benign_total": len(second_evaluation.utility),
+            "second_domain_benign_completed": second_evaluation.benign_completed,
+            "second_domain_authority_coverage": (
+                second_evaluation.coverage.authority_coverage
+            ),
+            "second_domain_conformance_checks": len(second_conformance.executed),
+            "defects_found_by_the_second_domain": 1,
+            # oversight as a finite resource
+            "oversight_arrivals": oversight["arrivals"],
+            "oversight_harms_without_load_control": (
+                oversight["summary"]["harmful_executed_without_load_control"]
+            ),
+            "oversight_harms_with_load_control": (
+                oversight["summary"]["harmful_executed_with_load_control"]
+            ),
+            "oversight_deferred_to_manual": (
+                oversight["summary"]["deferred_to_manual_fallback"]
+            ),
+            "oversight_demand_ratio": (
+                oversight["summary"]["demand_to_declared_capacity"]["ratio"]
+            ),
+            "oversight_reviewer_roster": capacity["reviewers"],
+            "oversight_sustainable_per_day": capacity["sustainable_per_day"],
+            # Thousands-separated forms, so a claim template can be a readable
+            # sentence instead of forcing the paper to write "3520".
+            "oversight_sustainable_per_day_display": (
+                f"{capacity['sustainable_per_day']:,.0f}"
+            ),
+            "oversight_binding_constraint": capacity["binding_constraint"],
+            # the open adversary corpus
+            "corpus_size": corpus["corpus_size"],
+            "corpus_live": corpus["live_challenges"],
+            "corpus_contained_arm_a": corpus["contained_by_arm"]["A · unguarded"],
+            "corpus_contained_arm_c": corpus["contained_by_arm"]["C · FSSAI-RA"],
+            "corpus_externally_contributed": len(corpus["externally_contributed"]),
             # timings, so a reader knows the cost of reproducing this
             "evaluation_seconds": round(evaluation_seconds, 2),
             "verification_seconds": round(verification_seconds, 2),
@@ -138,6 +218,15 @@ def generate(output_dir: Path, tag: str) -> dict:
                 by_arm["C"]["benign_completion_rate"] >= by_arm["B"]["benign_completion_rate"]
             ),
             "bounded_concurrent_replay_holds": race.passed,
+            "second_domain_model_check_holds": second_verification.holds,
+            "second_domain_all_scenarios_contained": second_evaluation.all_contained,
+            "second_domain_conformant": second_conformance.passed,
+            "oversight_load_control_is_load_bearing": (
+                oversight["summary"]["load_control_is_load_bearing"]
+            ),
+            "corpus_fully_contained": (
+                corpus["contained_by_arm"]["C · FSSAI-RA"] == corpus["live_challenges"]
+            ),
         },
         "limits": [
             (
@@ -147,6 +236,18 @@ def generate(output_dir: Path, tag: str) -> dict:
                 else limit
             )
             for limit in payload["limits"]
+        ] + [
+            # The limits the new contributions bring with them. Stated here so
+            # they travel with every generated artifact rather than living only
+            # in a document someone has to remember to read.
+            "the reviewer degradation curve is a declared parameter, not a measurement of any "
+            "reviewer; no human was observed, and reviewer accuracy under load remains open work",
+            "the oversight deferral count is the cost of the control, reported rather than netted "
+            "off; refusing an approval preserves the boundary and delays the student",
+            "the second domain tests that the method transfers, not that either domain's evidence "
+            "applies to the other; each carries its own",
+            "the adversary corpus is contributed attacks, not a threat catalogue, and no attack in "
+            "it yet comes from outside this project",
         ],
     }
     (output_dir / f"{tag}-summary.json").write_text(
@@ -232,6 +333,43 @@ def render_markdown(summary: dict) -> str:
          f"{figures['control_contract_fields']} fields each"),
         ("Deterministic tests", str(figures["test_count"]), "no network, no model weights"),
     ]
+    # Kept in a separate block because these answer different questions from the
+    # containment table above, and merging them would invite reading an oversight
+    # deferral count as though it were a containment failure.
+    rows += [
+        ("Oversight — sustainable review",
+         f"{figures['oversight_sustainable_per_day']:,.0f}/day",
+         f"for a roster of {figures['oversight_reviewer_roster']}, bound by the "
+         f"{figures['oversight_binding_constraint'].replace('_', ' ')}; declared capacity, "
+         "not a measurement of reviewers"),
+        ("Oversight — merit failures executed",
+         f"{figures['oversight_harms_without_load_control']} → "
+         f"{figures['oversight_harms_with_load_control']}",
+         "without load control, then with it, on a queue at "
+         f"{figures['oversight_demand_ratio']}x declared attentive capacity"),
+        ("Oversight — deferred to manual review",
+         str(figures["oversight_deferred_to_manual"]),
+         "the cost of the control, and a measurement of demand against declared capacity"),
+        ("Second domain — states explored",
+         f"{figures['second_domain_states_explored']:,}",
+         f"{figures['second_domain_violations']} violations; the identical suite, no library change"),
+        ("Second domain — containment and utility",
+         f"{figures['second_domain_scenarios_contained']}/"
+         f"{figures['second_domain_scenarios_total']}, "
+         f"{figures['second_domain_benign_completed']}/{figures['second_domain_benign_total']}",
+         f"its own evidence, borrowed from no other domain; "
+         f"{figures['second_domain_conformance_checks']} conformance checks"),
+        ("Second domain — defects it exposed",
+         str(figures["defects_found_by_the_second_domain"]),
+         "a declared approval role ignored on non-consequential transitions; unreachable with one domain"),
+        ("Adversary corpus — contained",
+         f"{figures['corpus_contained_arm_c']}/{figures['corpus_live']}",
+         f"unguarded arm contained {figures['corpus_contained_arm_a']}; contributed attacks, "
+         "not a threat catalogue"),
+        ("Adversary corpus — externally contributed",
+         str(figures["corpus_externally_contributed"]),
+         "the figure that matters; until it is non-zero the corpus samples the maintainers' imagination"),
+    ]
     lines = [
         f"# Results — {summary['tag']}",
         "",
@@ -254,6 +392,10 @@ def render_markdown(summary: dict) -> str:
         f"- Authority invariants hold under bounded model checking: **{verdicts['model_check_holds']}**",
         f"- In-memory profile conformant: **{verdicts['memory_profile_conformant']}**",
         f"- Transactional SQL profile conformant: **{verdicts['sql_profile_conformant']}**",
+        f"- Second domain conformant under the identical suite: **{verdicts['second_domain_conformant']}**",
+        f"- Second domain invariants hold: **{verdicts['second_domain_model_check_holds']}**",
+        f"- Review-load control is load-bearing: **{verdicts['oversight_load_control_is_load_bearing']}**",
+        f"- Contributed adversary corpus fully contained: **{verdicts['corpus_fully_contained']}**",
         "",
         "## Cost of reproduction",
         "",

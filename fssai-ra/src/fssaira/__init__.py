@@ -50,6 +50,13 @@ from .bounded_intelligence import (
     ToolRegistry,
     UntrustedEvidence,
 )
+from .challenge import (
+    Challenge,
+    ChallengeError,
+    load_corpus,
+    run_corpus,
+    score_challenge,
+)
 from .conformance import Bundle, ConformanceReport, run_conformance
 from .contract import ControlContract, Requirement
 from .control_plane import ControlPlane, MemoryObjectStore
@@ -102,6 +109,14 @@ from .models import (
     build_model,
     select_model,
 )
+from .oversight import (
+    DeclaredReviewerModel,
+    OversightCode,
+    OversightMonitor,
+    OversightReport,
+    ReviewLoadPolicy,
+    ReviewRecord,
+)
 from .pipeline import FSSAIRAPipeline
 from .plugins import PluginError, PluginInfo, available, create, register
 from .profiles import ApplicationProfile, ProfileError, TransitionRule
@@ -135,7 +150,10 @@ __all__ = [
     "AblationResult", "CoverageSummary", "EvaluationReport", "EvaluationRunner",
     "ScenarioResult", "UtilityResult",
     "ProfileVerifier", "VerificationReport", "verify_profile",
+    "DeclaredReviewerModel", "OversightCode", "OversightMonitor", "OversightReport",
+    "ReviewLoadPolicy", "ReviewRecord",
     "Bundle", "ConformanceReport", "run_conformance",
+    "Challenge", "ChallengeError", "load_corpus", "run_corpus", "score_challenge",
     # platform
     "ControlPlane", "MemoryObjectStore", "FSSAIRAPipeline", "Metrics",
     "AuthConfig", "Authenticator", "Principal",

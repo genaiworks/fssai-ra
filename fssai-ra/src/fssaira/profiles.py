@@ -49,10 +49,24 @@ class ApplicationProfile:
 
     @property
     def required_approval_roles(self) -> dict[tuple[str, str, str], set[str]]:
+        """The approver role the executor enforces for each declared transition.
+
+        Every transition, not only the consequential ones. Earlier releases built
+        this map from consequential rules alone, which was unreachable while the
+        only reference profile declared every transition consequential. Adding a
+        second domain with an ordinary routine step exposed it immediately: the
+        schema *requires* ``approval_role`` on every transition, so a rule that
+        declared one and had it ignored was a control that existed in review and
+        not at runtime — the exact failure this project exists to eliminate.
+
+        ``consequential`` answers a different question, and keeps answering it:
+        whether a *named human* must supply the approval at all. Whether the role
+        they hold is the declared one is not a question any transition gets to
+        opt out of.
+        """
         return {
             (rule.operation, rule.from_status, rule.to_status): {rule.approval_role}
             for rule in self.transitions
-            if rule.consequential
         }
 
     def make_executor(

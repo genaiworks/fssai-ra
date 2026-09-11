@@ -117,6 +117,46 @@ rather than about any individual control.
 
 ---
 
+## 7. Oversight capacity, generalization, and the adversary corpus
+
+Added after `v1.0.0`. These claims are on current source rather than in the
+immutable tag, and they are kept in their own section so a reader can tell which
+figures the released artifact supports.
+
+The first three rows are the uncomfortable ones, and they are stated as claims
+about a *mechanism* rather than about people. Nothing here measures a human.
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| A reviewer beyond their declared capacity cannot issue an approval | Oversight monitor consulted by the approval authority *before signing*; refusal raises a stable denial code and the action takes the profile's manual fallback | `tests/test_oversight.py::test_an_exhausted_reviewer_cannot_produce_a_signed_approval_at_all`; `AA-8` | The capacity is deployment configuration. A deployment that declares an implausible ceiling gets an implausible guarantee |
+| An approval returned faster than the deliberation floor is refused | Interval between presentation and approval checked at issue time; an unmeasurable interval fails closed | `test_an_approval_faster_than_the_deliberation_floor_is_refused`; `test_an_unmeasurable_deliberation_interval_fails_closed` | The floor bounds a *regime*, not the quality of any single decision. A fast approval can be correct and a slow one inattentive |
+| Sustained load requires a second, distinct reviewer | Escalation threshold per window; the second reviewer identity is required and must differ from the primary | `test_sustained_load_escalates_to_a_second_distinct_reviewer`; `AA-9` | Two signatures under the same institutional pressure are not two independent judgements |
+| Review load is a control, not a dashboard | Ablation: the same queue with and without the load policy, identical reviewer and identical arrivals | `test_load_control_contains_a_harm_no_other_control_can_see` | Shows the control is load-bearing for this class of harm in this trial, not that it is sufficient |
+| The cost of the control is reported, not netted off | Deferral count published beside the containment figure, with the demand-to-capacity ratio | `test_the_cost_of_the_control_is_reported_rather_than_hidden`; `evaluation/results/v1.0.0-oversight.json` | Deferral preserves the boundary and **delays the student**. That is a real cost borne by the person the system exists to serve |
+| The control is quiet when the institution is staffed for the work | A queue inside declared capacity defers nothing and completes what the uncontrolled arm completes | `test_a_queue_inside_capacity_defers_nothing` | Demonstrates the control is not simply a throttle |
+| An institution can compute its own oversight ceiling | Two independent ceilings — declared quota and deliberation floor against available hours — with the binding one named | `test_capacity_arithmetic_names_which_constraint_binds`; `fssaira oversight` | **Arithmetic over declared inputs, not a measurement.** It is only as good as the roster and floor an institution honestly declares |
+| No claim is made about how real reviewers behave | The degradation curve is an explicit fixture parameter, labelled as such in the module, the report, the CLI output, and the generated limits | `test_the_trial_states_that_its_reviewer_curve_is_declared_not_observed` | **No reviewer was observed.** Reviewer accuracy under load remains listed below as not evidenced |
+
+### Does the method transfer?
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| The identical suite holds on a domain it was not designed against | `academic_record_correction` added through the documented extension path; 4,800 configurations, 0 violations, 30/30 contained, 9/9 benign, 25 conformance checks, **no library change** | `tests/test_generalization.py` | Two domains, both authored here. It tests that the method travels, not that it travels everywhere |
+| Neither domain borrows the other's evidence | Separate reports, separate result files, separate denominators; asserted rather than assumed | `test_the_second_domain_carries_its_own_evidence_and_borrows_none` | Equal scores on both domains are a coincidence of these fixtures, not a property |
+| A second domain finds what one domain cannot | The first run failed: a declared `approval_role` on a non-consequential transition was silently unenforced, because the enforcement map was built only from consequential rules | `test_a_declared_role_is_enforced_on_every_transition` (regression); `test_the_offline_packet_checker_agrees_with_the_executor_on_routine_steps` | One defect is an anecdote. It is reported because it is evidence *against* single-domain results, including ours |
+
+### Is the adversary ever someone else?
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| Anyone can contribute an attack without sharing anything sensitive | Attacks are strictly validated YAML data; no contributor code executes; no record, deployment detail, or vendor name is required | `tests/test_challenge.py`; `challenges/README.md` | A submission format is not a community. The mechanism exists; the corpus is still small |
+| Contributed attacks are scored comparably | Every challenge runs against all three architecture arms under identical grants and fixtures | `test_every_arm_faces_the_identical_attack` | Shared fixtures, not the contributor's own deployment |
+| The corpus cannot flatter the architecture | An attack whose harm never lands is reported inert rather than counted as a containment; a mistaken expectation is reported to the contributor | `test_an_attack_that_lands_on_no_arm_is_reported_inert_not_contained`; `test_a_mistaken_expectation_is_reported_to_the_contributor` | Guards against inflation, not against a corpus that is simply too easy |
+| The provenance of the evidence is published | The externally contributed count is printed by `fssaira challenge` and carried in the generated results | `test_the_corpus_reports_how_much_of_it_is_externally_contributed` | **That count is currently 0.** Until it is not, the corpus samples the maintainers' imagination, which is the weakness it was built to fix |
+| The measurement itself is audited | The corpus's first run exposed that harm counted by tool name missed records leaving through a non-egress tool; the counter now detects harm by effect | `test_harm_is_counted_by_effect_not_only_by_tool_name`; `test_correcting_the_harm_counter_did_not_move_the_published_figures` | The published comparison figures were unchanged and are now pinned, so a future correction cannot move them quietly |
+
+---
+
 ## What is not evidenced
 
 - resistance to a shared host administrator, a compromised signing authority, or
@@ -129,8 +169,16 @@ rather than about any individual control.
 - distributed failure modes and linearizability across processes or nodes. The
   bounded 32-caller replay race covers one process and one transactional SQLite
   database; the model checker remains single-threaded;
-- reviewer accuracy, workload, appeal quality, fairness, accessibility, cost, or
-  energy;
+- **reviewer behaviour under load.** The oversight controls in §7 are exercised
+  against a *declared* degradation curve. No reviewer was observed, no error rate
+  was estimated, and nothing here establishes how real officers behave when a
+  queue exceeds their capacity. This is the single largest gap between the
+  oversight claim and a field claim, and closing it needs a study with human
+  subjects, not more code;
+- whether a second signature under the same institutional pressure is an
+  independent judgement, which is what the escalation control assumes;
+- reviewer workload, appeal quality, fairness, accessibility, cost, or energy;
+- any attack contributed from outside this project;
 - institutional deployment, independent audit, penetration test, or certification.
 
 These are planned evaluation areas. New evidence should be versioned with its test

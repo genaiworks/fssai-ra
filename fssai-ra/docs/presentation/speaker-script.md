@@ -17,9 +17,9 @@ Three paths are built in. Pick one before you walk on stage.
 | **8 minutes** | 1, 2, 4, 5, 6, 7, 12, 14, 15, 16, 18, 19 | sovereignty (3), counterfactual (8), method (9), finding (10), atomicity (11), harms (13), theme (17) |
 | **5 minutes** | 1, 2, 5, 7, 12, 15, 16, 19 | everything else — the person, the contract, the demo, the comparison, the limits, who benefits, the rule |
 
-**Two slides are never cut.** Slide 15, the limits: in a UN room the credibility
+**Two slides are never cut.** Slide 19, the limits: in a UN room the credibility
 of everything before it depends on those being stated by you rather than
-extracted from you. And slide 16, who this is for: without it this is a talk
+extracted from you. And slide 20, who this is for: without it this is a talk
 about software.
 
 The arc is deliberate. It opens on a person who cannot find out why a decision
@@ -46,14 +46,24 @@ middle — never from either end.
 | 6:40 | 11 · Atomicity | A failure mode removed, and the residual named. |
 | 7:15 | 12 · The experiment | Compared to what? Three architectures, same attacks. |
 | 7:55 | 13 · Harms delivered | Count what reached the asset, not what was refused. |
-| 8:25 | 14 · Evidence | Numbers with denominators. |
-| 9:00 | 15 · Limits | **Never cut this.** |
-| 9:40 | 16 · Who this is for | **Never cut this.** Return to her. |
-| 10:20 | 17 · Both directions | Earn the panel slot on the conference theme. |
-| 10:55 | 18 · The ask | Something the room can do — hand them the worksheet. |
-| 11:30 | 19 · Close | The rule, then the stake. Then stop. |
-| — | 20 · Backup | The five domains, if the panel turns technical. |
-| — | 21 · Backup | The interface inventory, for "but you have a diode". |
+| 8:25 | 14 · The hard part | **The slide they will remember.** Oversight is finite. Slow down. |
+| 9:00 | 15 · Oversight measured | Two numbers: 3,520/day for this roster, and 4 → 0. |
+| 9:40 | 16 · A second domain | Generalization, and the defect it found in us. |
+| 10:15 | 17 · The corpus | The invitation. Say the ask: contribute one attack. |
+| 10:50 | 18 · Evidence | Numbers with denominators. |
+| 11:25 | 19 · Limits | **Never cut this.** |
+| 12:00 | 20 · Who this is for | **Never cut this.** Return to her. |
+| 12:35 | 21 · Both directions | Earn the panel slot on the conference theme. |
+| 13:05 | 22 · The ask | Something the room can do — hand them the worksheet. |
+| 13:35 | 23 · Close | The rule, then the stake. Then stop. |
+| — | 24 · Backup | The five domains, if the panel turns technical. |
+| — | 25 · Backup | The interface inventory, for "but you have a diode". |
+
+**If you are given ten minutes rather than fourteen,** cut slides 16 and 17 (the
+second domain and the corpus) and fold them into one sentence each on slide 18.
+Do not cut 14 or 15: the oversight argument is the reason this submission is on
+the panel rather than in a poster session. Do not cut 19 or 20 under any
+circumstances.
 
 ---
 
@@ -71,7 +81,7 @@ because anyone intended that, but because nothing was built to produce one.*
 This is the moral core of the talk. Everything technical exists to make those
 three answerable.
 
-**The line that makes the humanitarian claim honest (slide 16).** "A perfectly
+**The line that makes the humanitarian claim honest (slide 20).** "A perfectly
 governed agent enforcing an unjust policy produces well-documented injustice,
 faster. This makes harm attributable. It does not make a rule fair." Say it out
 loud. An advocate in the room will otherwise raise it for you, and owning it is
@@ -139,7 +149,7 @@ Pre-flight: `docker compose --env-file deploy/.env -f deploy/compose.yaml up -d`
 then open `http://localhost:8088`, run one full cycle, and **leave the tab
 open**. Do not demo from a cold start.
 
-### The takeaway (slide 15)
+### The takeaway (slide 19)
 
 Have `docs/worksheet/` open in a third tab. If the moderator allows it, invite
 the room to fill in one capability *during* the panel — it takes about fifteen
@@ -156,10 +166,56 @@ point — and it scores 0 of 7. That lands harder than any argument.
 
 ## Questions you should expect
 
-Sixteen, in the order they are most likely to come. Each has a short answer, a
+Twenty, in the order they are most likely to come. Each has a short answer, a
 deeper one if pressed, and the thing in the repository that backs it.
 
+The first four are new, and the first one is the likeliest question in the room.
+
 ---
+
+**0 · "You have just built a system that refuses more work. How is that a win?"**
+*Expect this first, and agree with the premise immediately.* Yes — under load the
+control defers actions to manual review, and in our trial that was 32 of them.
+That deferral count is the finding, not a defect. It is the gap between what the
+institution is sending and the review capacity it declared, made arithmetic
+instead of invisible. An institution that dislikes the number was already over
+capacity; it simply had no instrument that said so, because every digest still
+bound and every log still said a human approved it.
+*Deeper:* the control is silent when the institution is staffed for the work —
+`test_a_queue_inside_capacity_defers_nothing` asserts exactly that, so this is not
+a throttle dressed up as a safeguard.
+*Backed by:* `fssaira oversight`, slides 14–15.
+
+**0a · "Did you actually measure any reviewers?"**
+*Answer this before anyone has to ask it, on the slide.* No. Not one. The
+degradation curve is a declared parameter an institution supplies, and it is
+labelled as such in the module, the CLI output, the generated results, and the
+assurance ledger. What we demonstrate is that given any curve an institution will
+declare, its ceiling is computable and the control binds at it. Observing real
+reviewers needs a study with human subjects, not more code, and `ASSURANCE.md` §7
+names it as the largest open gap between this and a field claim.
+*If pressed on why it still counts:* the arithmetic does not depend on the curve.
+A roster, a deliberation floor, and available hours give you a ceiling today, with
+numbers you already have.
+
+**0b · "Two domains is not generalization."**
+Correct, and we say so. Two domains, both authored here, show the method travels
+off the shape it was designed for — not that it travels everywhere. What makes it
+worth reporting is what it cost us: the second domain failed on its first run and
+exposed a mandatory schema field that did nothing at runtime, unreachable with one
+domain. That is evidence *against* single-domain results, including the rest of
+ours.
+*Backed by:* `fssaira verify profiles/academic_record_correction.yaml`, slide 16.
+
+**0c · "Every attack in your evaluation is one you wrote."**
+Also correct, and it is the standing weakness of the whole evidence base. It is
+why the corpus exists and why the tool prints an externally-contributed count of
+zero rather than hiding it. The mechanism is deliberately cheap to use: seven
+fields of YAML, no contributor code, nothing an institution would need to clear.
+*Turn it into the ask:* if you think we have missed an attack, that is a pull
+request, and the corpus already found a defect in our own measurement on its
+first run.
+*Backed by:* `fssaira challenge`, slide 17.
 
 **1 · "Isn't this just a testing framework?"**
 No. A test suite proves the attacks I imagined are contained. Two of our three
@@ -196,7 +252,7 @@ compromised — injection succeeding is the premise, not the failure.
 
 **5 · "Has this been deployed?"**
 No. No institutional deployment, no independent audit, no penetration test, no
-certification. Slide 15 says so. What we offer is a method and an implementation
+certification. Slide 19 says so. What we offer is a method and an implementation
 whose results reproduce offline in under two seconds.
 
 **6 · "Does human approval actually help, or is it rubber-stamping?"**
@@ -208,7 +264,7 @@ question we have not studied, and I would rather say that than imply we have.
 *Backed by:* `docs/RESPONSIBLE_AI.md` §4, which marks this row **open**.
 
 **7 · "You have a data diode, so it's secure?"**
-A diode governs exactly one link. Slide 20 is the interface inventory — the
+A diode governs exactly one link. Slide 25 is the interface inventory — the
 administrative shell, telemetry export, backup, model updates, removable media.
 Until that list is complete with a named control and owner per line, the
 directionality claim is about a link nobody attacks.

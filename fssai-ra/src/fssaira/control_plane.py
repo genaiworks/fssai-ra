@@ -67,6 +67,7 @@ class ControlPlane:
         evidence=None,
         evidence_token: str = "teaching-evidence-writer",
         authority: ApprovalAuthority | None = None,
+        oversight=None,
         objects: ObjectStore | None = None,
         events: KafkaLike | None = None,
         outcome_store=None,
@@ -80,7 +81,19 @@ class ControlPlane:
         self.profile = profile
         self.register = CaseRegister({}) if register is None else register
         self.evidence = EvidenceLedger(evidence_token) if evidence is None else evidence
-        self.authority = ApprovalAuthority() if authority is None else authority
+        #: Optional :class:`fssaira.oversight.OversightMonitor`. Supplied here it
+        #: is attached to the authority this plane builds, so the HTTP API and the
+        #: console enforce review capacity on the same path the CLI does. An
+        #: explicitly supplied ``authority`` carries its own; passing both is a
+        #: configuration error rather than a merge.
+        if authority is not None and oversight is not None:
+            raise ValueError(
+                "pass oversight to the ApprovalAuthority you supplied, not to the plane"
+            )
+        self.oversight = oversight
+        self.authority = (
+            ApprovalAuthority(oversight=oversight) if authority is None else authority
+        )
         self.objects = MemoryObjectStore() if objects is None else objects
         self.events = EventLog() if events is None else events
         self.metrics = metrics or Metrics()
@@ -148,13 +161,30 @@ class ControlPlane:
         approver: str,
         approver_role: str,
         ttl_seconds: int = 300,
+        presented_at: float | None = None,
+        second_approver: str | None = None,
     ) -> Approval:
+        """Issue an approval, subject to the review-load policy if one is configured.
+
+        ``presented_at`` is when this proposal was **put in front of this
+        reviewer**, and the caller must supply it because only the caller knows.
+        It is deliberately not inferred from the proposal's creation time: a
+        proposal that sat in a queue for an hour and was then approved in two
+        seconds has an hour of elapsed time and two seconds of deliberation, and
+        using the former would let exactly the behaviour the floor exists to catch
+        pass as careful review.
+
+        When a deliberation floor is configured and ``presented_at`` is absent,
+        the oversight monitor fails closed rather than assuming.
+        """
         proposal = self.get_proposal(request_id)
         approval = self.authority.approve(
             proposal,
             approver=approver,
             approver_role=approver_role,
             ttl_seconds=ttl_seconds,
+            presented_at=presented_at,
+            second_approver=second_approver,
         )
         self.objects.put("approval", request_id, asdict(approval))
         self._emit(

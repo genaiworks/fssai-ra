@@ -213,6 +213,7 @@ class ApprovalAuthority:
         *,
         key_id: str = TEACHING_APPROVAL_KEY_ID,
         signing_key: str = TEACHING_APPROVAL_SIGNING_KEY,
+        oversight=None,
     ) -> None:
         if not key_id:
             raise ValueError("key_id must be non-empty")
@@ -221,6 +222,12 @@ class ApprovalAuthority:
         self.audience = audience
         self.key_id = key_id
         self._signing_key = signing_key
+        #: Optional :class:`fssaira.oversight.OversightMonitor`. Duck-typed on
+        #: purpose: importing it here would make the approval authority depend on
+        #: the load policy, and the two must stay separately ablatable. ``None``
+        #: means review capacity is unbounded, which is the assumption every
+        #: release before this one made silently.
+        self._oversight = oversight
 
     def approve(
         self,
@@ -230,10 +237,22 @@ class ApprovalAuthority:
         approver_role: str = "authorized_reviewer",
         ttl_seconds: int = 300,
         now: float | None = None,
+        presented_at: float | None = None,
+        second_approver: str | None = None,
     ) -> Approval:
         if approver == proposal.requester:
             raise ExecutionDenied("SEPARATION_OF_DUTIES", "requester cannot approve their own proposal")
         issued_at = time.time() if now is None else now
+        if self._oversight is not None:
+            # Refuse to *issue* rather than flag afterwards: an approval the
+            # reviewer had no capacity to give must not exist to be verified.
+            self._oversight.admit(
+                reviewer=approver,
+                request_id=proposal.request_id,
+                now=issued_at,
+                presented_at=presented_at,
+                second_reviewer=second_approver,
+            )
         unsigned = Approval(
             approval_id=str(uuid.uuid4()),
             proposal_digest=proposal.digest,

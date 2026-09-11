@@ -841,6 +841,90 @@ const SLIDES = [
   <p>The evidence line is worth thirty seconds — in the first two arms there is no record an investigator could trust, because the thing under investigation wrote it.</p>`
 },
 {
+  eyebrow: ["The hard part", "The control none of that touches"],
+  time: "8:25",
+  html: `
+    <h2>Every one of those controls hands the decision to a person. Then what?</h2>
+    <div class="body">
+      <p class="lead">Four thousand cases. Eleven officers. Every consequential action needs a named approval. Nothing above has anything to say about that, and it is where “human in the loop” quietly stops being true.</p>
+      <div class="cols">
+        <p>Push the queue past a reviewer’s attention and <em>every mechanism in this talk still passes</em>. The digests bind. The signatures verify. The chain is intact. The evidence is complete.</p>
+        <p class="faint">And the oversight it all funnels into has become a signature service. A system can be <strong>perfectly accountable and completely unreviewed</strong>, and no test on the previous eight slides can tell the difference.</p>
+      </div>
+      <div class="callout">
+        <p>So we treat review as what it is: a scarce, safety-relevant resource with a <strong>declared capacity</strong>, a <strong>deliberation floor</strong>, <strong>mandatory escalation</strong> under load — and an enforcement point that <em>refuses to issue</em> the approval rather than flagging it afterwards.</p>
+      </div>
+    </div>`,
+  notes: `This is the slide the panel will remember. Slow down.
+  <p>Do not rush to the mechanism. Let the sentence "perfectly accountable and completely unreviewed" sit for a beat — it is the thesis of the whole contribution.</p>
+  <p>If a co-panelist is defending human-in-the-loop as sufficient, this is the exchange to invite.</p>`
+},
+{
+  eyebrow: ["The hard part", "Oversight, measured"],
+  time: "9:00",
+  html: `
+    <h2>Your oversight ceiling is arithmetic. Run it before your roadmap.</h2>
+    <div class="body">
+      <div class="figures">
+        <div class="fig"><span class="k">Roster</span><b>11</b><span class="note">reviewers, 4h/day on this queue</span></div>
+        <div class="fig"><span class="k">Sustains</span><b>3,520</b><span class="note">consequential actions/day — bound by the deliberation floor</span></div>
+        <div class="fig"><span class="k">Trial</span><b>5×</b><span class="note">demand against declared attentive capacity</span></div>
+      </div>
+      <div class="ledger">
+        <div><span class="seq">1</span><span>merit failures executed — <em>no load control</em></span><span class="hash"><b class="bad">4</b></span></div>
+        <div><span class="seq">2</span><span>merit failures executed — <em>load control</em></span><span class="hash"><b>0</b></span></div>
+        <div><span class="seq">3</span><span>actions deferred to the manual fallback</span><span class="hash"><b>32</b></span></div>
+      </div>
+      <p>These proposals were <em>structurally perfect and substantively wrong</em>: right operation, current version, authentic approval, ineligible applicant. No digest detects that. No invariant excludes it. The only control behind that entire class of harm is a person who is reading.</p>
+      <p class="faint"><strong>The 32 deferrals are the finding, not a defect to tune away.</strong> They are this institution’s over-capacity made arithmetic instead of invisible. One caveat, stated plainly: the reviewer degradation curve is a <em>declared parameter</em>, not a measurement of any officer. Observing real reviewers is open work.</p>
+    </div>`,
+  notes: `Two numbers to land: 3,520 per day for this roster, and 4 → 0 merit failures.
+  <p>Expect the objection "you have just made the system refuse more work". Agree immediately — that is the point. The deferral count is a measurement of demand against declared capacity, and an institution that does not like the number was already over capacity; it just could not see it.</p>
+  <p>Be scrupulous about the caveat. We did not measure reviewers. We measured whether the control binds given a curve the institution declares.</p>`
+},
+{
+  eyebrow: ["Generalization", "A second domain, and what it caught"],
+  time: "9:40",
+  html: `
+    <h2>Every number so far came from the one domain we designed for.</h2>
+    <div class="body">
+      <p class="lead">That is the weakest position from which to claim a <em>method</em>. So we added a second, structurally different education domain — academic record correction — through the documented extension path, carrying its own evidence and none of the first domain’s.</p>
+      <div class="figures">
+        <div class="fig"><span class="k">Model check</span><b>4,800</b><span class="note">configurations, 0 violations</span></div>
+        <div class="fig"><span class="k">Adversarial</span><b>30/30</b><span class="note">contained, 9/9 benign completed</span></div>
+        <div class="fig"><span class="k">Conformance</span><b>25</b><span class="note">checks, no library change</span></div>
+      </div>
+      <div class="callout">
+        <p><strong>It failed on the first run, and the defect was real.</strong> A declared approval role on a routine transition was silently ignored, because the enforcement map was built only from <em>consequential</em> rules. The field was mandatory in the schema, present in the profile, visible to any reviewer reading it — and absent at runtime.</p>
+      </div>
+      <p class="faint">One domain could not reach it. Two did, immediately. That is the argument against trusting any single-domain result, including the rest of ours.</p>
+    </div>`,
+  notes: `The honest version of a generalization claim: we ran the identical suite on a domain it was not designed against, and it found a bug in us.
+  <p>If asked why the defect matters: a mandatory field that does nothing in half its instances is worse than no field, because it reads as a control in review.</p>`
+},
+{
+  eyebrow: ["Shared capacity", "The adversary should not be the author"],
+  time: "10:15",
+  html: `
+    <h2>Every attack in this talk was written by the people who built the defence.</h2>
+    <div class="body">
+      <p class="lead">That is the standing weakness of all of it, and no amount of internal rigour repairs it. A suite written by the author of a defence samples the author’s imagination.</p>
+      <div class="cols">
+        <p>So an <strong>open adversary corpus</strong> ships. An attack is seven fields of YAML: the grant an agent holds, and what a compromised model proposes. It runs against all three architectures and is attributed to whoever contributed it.</p>
+        <p class="faint">No student record. No deployment detail. No vendor name. No contributor code executes — which is what lets an institution adopt the corpus without auditing it.</p>
+      </div>
+      <div class="ledger">
+        <div><span class="seq">1</span><span>attacks in the corpus</span><span class="hash"><b>4</b></span></div>
+        <div><span class="seq">2</span><span>contributed from outside this project</span><span class="hash"><b class="bad">0</b></span></div>
+        <div><span class="seq">3</span><span>defects it found on its first run — in our own <em>measurement</em></span><span class="hash"><b>1</b></span></div>
+      </div>
+      <p><strong>That zero is printed by the tool</strong>, not buried in a limitations paragraph. This is the panel’s “shared capacity” in its concrete form: institutions that cannot pool infrastructure, data, or budget can pool failure cases.</p>
+    </div>`,
+  notes: `The invitation slide. Say the ask out loud: contribute one attack.
+  <p>The defect it found is worth ten seconds — harm was counted by tool name, so records leaving through a tool not classified as egress scored as no harm at all. The enforcement point caught the attack; the instrument measuring it could not see what had been prevented.</p>
+  <p>Leave the URL on screen if you can.</p>`
+},
+{
   eyebrow: ["Evidence", "With denominators"],
   time: "8:25",
   html: `

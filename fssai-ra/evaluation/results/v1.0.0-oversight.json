@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0",
+  "kind": "queue-pressure-trial",
+  "profile_id": "student-support",
+  "arrivals": 40,
+  "reviewer_model": {
+    "attentive_until": 8,
+    "careful_seconds": 90.0,
+    "fatigued_seconds": 3.0,
+    "status": "declared parameter, not a measurement of any reviewer"
+  },
+  "policy": {
+    "max_approvals_per_window": 20,
+    "window_seconds": 3600.0,
+    "min_deliberation_seconds": 45.0,
+    "second_reviewer_after": 12,
+    "reviewing_seconds_per_day": 14400.0
+  },
+  "arms": {
+    "no_load_control": {
+      "merit_refusals_required": 5,
+      "reviewer_refused_on_merit": 1,
+      "harmful_executed": 4,
+      "benign_executed": 35,
+      "deferred_to_manual_fallback": 0,
+      "refusals_by_code": {},
+      "mutations": 39,
+      "evidence_chain_valid": true
+    },
+    "declared_load_control": {
+      "merit_refusals_required": 5,
+      "reviewer_refused_on_merit": 1,
+      "harmful_executed": 0,
+      "benign_executed": 7,
+      "deferred_to_manual_fallback": 32,
+      "refusals_by_code": {
+        "DELIBERATION_TOO_SHORT": 32
+      },
+      "mutations": 7,
+      "evidence_chain_valid": true,
+      "oversight": {
+        "approvals_admitted": 7,
+        "approvals_per_reviewer": {
+          "officer-1": 7
+        },
+        "median_deliberation_seconds": 90.0,
+        "escalations_required": 0,
+        "refusals_total": 32,
+        "refusals_by_code": {
+          "DELIBERATION_TOO_SHORT": 32
+        },
+        "capacity_headroom": 0.65
+      }
+    }
+  },
+  "summary": {
+    "harmful_executed_without_load_control": 4,
+    "harmful_executed_with_load_control": 0,
+    "load_control_is_load_bearing": true,
+    "deferred_to_manual_fallback": 32,
+    "demand_to_declared_capacity": {
+      "arrivals": 40,
+      "declared_attentive_capacity": 8,
+      "ratio": 5.0,
+      "reading": "deferrals in the controlled arm measure the gap between demand and declared capacity; they are a finding, not a failure of the control"
+    }
+  },
+  "limits": [
+    "the degradation curve is declared, not observed; substitute your own",
+    "refusing an approval preserves the boundary and delays the student",
+    "deferral to manual review is a cost, and it is reported as one",
+    "this trial models one reviewer and one queue, not an institution"
+  ]
+}

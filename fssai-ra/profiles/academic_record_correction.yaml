@@ -1,0 +1,53 @@
+# A second domain, added through the documented extension path and carrying its
+# own evidence. Nothing here inherits a result from the student-support profile.
+#
+# It is deliberately *structurally* different rather than a relabelling, because
+# a method that only works on the shape it was designed against has not been
+# shown to generalise. This profile has:
+#
+#   * a multi-role chain — an instructor confirms, a registrar decides, and an
+#     appeals officer may reopen — so an authentic approval from the wrong role
+#     is a live threat at every step rather than a corner case;
+#   * a terminal rejection that an appeal can reopen, so the state graph has a
+#     cycle and "already decided" is not the same as "finished";
+#   * five transitions over six statuses, which enlarges the declared authority
+#     space the bounded model checker must enumerate.
+profile_id: academic-record-correction
+version: "1.0"
+title: Academic Record Correction
+resource_name: grade_record
+owner: registrar
+manual_fallback: >-
+  Route the unchanged record to the registrar for manual correction under the
+  published appeals procedure, and notify the student that the request is being
+  handled outside the automated path.
+transitions:
+  - operation: submit_correction_request
+    from_status: draft
+    to_status: awaiting_instructor_confirmation
+    consequential: false
+    approval_role: records_clerk
+
+  - operation: confirm_by_instructor
+    from_status: awaiting_instructor_confirmation
+    to_status: awaiting_registrar_decision
+    consequential: true
+    approval_role: course_instructor
+
+  - operation: apply_correction
+    from_status: awaiting_registrar_decision
+    to_status: corrected
+    consequential: true
+    approval_role: registrar
+
+  - operation: reject_correction
+    from_status: awaiting_registrar_decision
+    to_status: rejected
+    consequential: true
+    approval_role: registrar
+
+  - operation: reopen_for_appeal
+    from_status: rejected
+    to_status: awaiting_registrar_decision
+    consequential: true
+    approval_role: academic_appeals_officer
