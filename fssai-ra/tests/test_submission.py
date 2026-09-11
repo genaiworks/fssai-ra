@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from scripts.check_submission import validate
 
 
 def test_form_ready_abstract_fits_every_form_limit():
-    text = open("paper/form-ready-abstract.md", encoding="utf-8").read()
+    text = Path("paper/form-ready-abstract.md").read_text(encoding="utf-8")
     report = validate(text)
     assert report["valid"], report
 

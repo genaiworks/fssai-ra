@@ -7,12 +7,22 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
-from fssaira import (
-    ActionClass, ActionProposal, ApplicationProfile, ApprovalAuthority, CaseRegister,
-    ControlContract, EvidenceLedger, ExecutionDenied, FSSAIRAPipeline, RawInput, ToolCall,
-)
 import hashlib
 import hmac
+
+from fssaira import (
+    ActionClass,
+    ActionProposal,
+    ApplicationProfile,
+    ApprovalAuthority,
+    CaseRegister,
+    ControlContract,
+    EvidenceLedger,
+    ExecutionDenied,
+    FSSAIRAPipeline,
+    RawInput,
+    ToolCall,
+)
 
 
 def sign(key, data):

@@ -23,6 +23,9 @@ class SparkTransformer:
     def run(self, records, fn, job="transform", rules=""):  # pragma: no cover - needs Spark
         rdd = self._spark.sparkContext.parallelize(list(records))
         rows = rdd.map(fn).collect()
-        h = lambda x: hashlib.sha256(json.dumps(x, sort_keys=True, default=str).encode()).hexdigest()
+        def h(value):
+            return hashlib.sha256(
+                json.dumps(value, sort_keys=True, default=str).encode()
+            ).hexdigest()
         return rows, {"job": job, "code_version": self.CODE_VERSION,
                       "input_hash": h(list(records)), "output_hash": h(rows), "rules": rules}

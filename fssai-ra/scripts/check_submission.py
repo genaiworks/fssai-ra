@@ -7,7 +7,6 @@ import argparse
 import json
 from pathlib import Path
 
-
 LIMITS = {
     "Introduction": (200, 250, 1500),
     "Development Section 1 Methodology Core Argument and Case Context": (550, 650, 3900),

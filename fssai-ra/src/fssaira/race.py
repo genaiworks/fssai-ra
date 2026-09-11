@@ -7,12 +7,12 @@ change exactly once and does one complete evidence pair survive?
 """
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass
-from pathlib import Path
 import tempfile
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass
+from pathlib import Path
 
 from .atomic_execution import AtomicExecutor
 from .exact_action import ActionProposal, ApprovalAuthority
