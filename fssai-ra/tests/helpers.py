@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import os
 import sys
 
@@ -13,7 +14,7 @@ from fssaira import Agent  # noqa: E402
 
 
 def sign(key: str, data: str) -> str:
-    return hashlib.sha256((key + data).encode()).hexdigest()
+    return hmac.new(key.encode(), data.encode(), hashlib.sha256).hexdigest()
 
 
 def privileged_agent(pipeline, agent_id: str = "broad-1") -> Agent:

@@ -12,10 +12,11 @@ from fssaira import (
     ControlContract, EvidenceLedger, ExecutionDenied, FSSAIRAPipeline, RawInput, ToolCall,
 )
 import hashlib
+import hmac
 
 
 def sign(key, data):
-    return hashlib.sha256((key + data).encode()).hexdigest()
+    return hmac.new(key.encode(), data.encode(), hashlib.sha256).hexdigest()
 
 
 def main():

@@ -17,7 +17,7 @@ import json
 import time
 import uuid
 from dataclasses import asdict, dataclass
-from typing import Iterable
+from typing import Iterable, Protocol
 
 from .evidence import EvidenceLedger
 
@@ -119,6 +119,24 @@ class PendingOutcomeStore:
         return len(self._pending)
 
 
+class ApprovalUseStoreLike(Protocol):
+    def bind(self, approval_id: str, request_id: str) -> tuple[str, bool]: ...
+
+
+class ApprovalUseStore:
+    """In-memory approval replay guard implementing first-writer binding."""
+
+    def __init__(self) -> None:
+        self._uses: dict[str, str] = {}
+
+    def bind(self, approval_id: str, request_id: str) -> tuple[str, bool]:
+        current = self._uses.get(approval_id)
+        if current is not None:
+            return current, False
+        self._uses[approval_id] = request_id
+        return request_id, True
+
+
 class CaseRegister:
     """Minimal authoritative register with version and idempotency checks."""
 
@@ -129,6 +147,13 @@ class CaseRegister:
 
     def get(self, case_id: str) -> dict:
         return dict(self._cases[case_id])
+
+    def seed(self, case_id: str, *, status: str, version: int = 1) -> bool:
+        """Create a synthetic resource once; return False when it already exists."""
+        if case_id in self._cases:
+            return False
+        self._cases[case_id] = {"status": status, "version": version}
+        return True
 
     def result_for(self, request_id: str) -> ExecutionResult | None:
         """Return a prior result without exposing the mutable internal store."""
@@ -245,6 +270,7 @@ class AccountableExecutor:
         transition_rules: dict[str, Iterable[tuple[str, str]]] | None = None,
         required_approval_roles: dict[tuple[str, str, str], Iterable[str]] | None = None,
         outcome_store: PendingOutcomeStore | None = None,
+        approval_use_store: ApprovalUseStoreLike | None = None,
     ) -> None:
         self._register = register
         self._evidence = evidence
@@ -269,7 +295,7 @@ class AccountableExecutor:
             for transition, roles in (required_approval_roles or {}).items()
         }
         self._outcomes = PendingOutcomeStore() if outcome_store is None else outcome_store
-        self._approval_uses: dict[str, str] = {}
+        self._approval_uses = ApprovalUseStore() if approval_use_store is None else approval_use_store
 
     def execute(
         self,
@@ -313,10 +339,15 @@ class AccountableExecutor:
                 "the domain profile does not permit this state transition",
             )
 
-        used_by = self._approval_uses.get(approval.approval_id)
-        if used_by is not None and used_by != proposal.request_id:
+        if approval.expires_at <= checked_at:
+            raise ExecutionDenied("APPROVAL_EXPIRED", "approval is no longer valid")
+
+        used_by, newly_bound = self._approval_uses.bind(
+            approval.approval_id, proposal.request_id
+        )
+        if used_by != proposal.request_id:
             raise ExecutionDenied("APPROVAL_REUSED", "approval was already bound to another request")
-        if used_by == proposal.request_id:
+        if not newly_bound:
             prior = self._register.result_for(proposal.request_id)
             if prior is None:
                 raise ExecutionDenied(
@@ -326,8 +357,6 @@ class AccountableExecutor:
             if self._outcomes.get(proposal.request_id) is not None:
                 raise ExecutionUncertain(prior)
             return ExecutionResult(**{**asdict(prior), "replayed": True})
-        if approval.expires_at <= checked_at:
-            raise ExecutionDenied("APPROVAL_EXPIRED", "approval is no longer valid")
 
         self._evidence.append(
             "action_intent",
@@ -341,7 +370,6 @@ class AccountableExecutor:
             },
             token=self._token,
         )
-        self._approval_uses[approval.approval_id] = proposal.request_id
         result = self._register.transition(proposal)
         outcome = PendingOutcome(
             result.request_id,

@@ -1,0 +1,125 @@
+name: fssaira
+
+services:
+  redis:
+    image: redis:8.2.9-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis-data:/data
+    networks: [control]
+
+  kafka:
+    image: apache/kafka:4.3.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://:29092,CONTROLLER://:29093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks: [data]
+
+  control-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      FSSAI_PROFILE: profiles/student_support.yaml
+      FSSAI_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      FSSAI_KAFKA_BOOTSTRAP: kafka:29092
+      FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
+      FSSAI_APPROVAL_SIGNING_KEY: ${FSSAI_APPROVAL_SIGNING_KEY}
+    depends_on:
+      redis: {condition: service_healthy}
+      kafka: {condition: service_healthy}
+    ports: ["127.0.0.1:8080:8080"]
+    networks: [control, data]
+    read_only: true
+    tmpfs: [/tmp]
+
+  import-gateway:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ["uvicorn", "fssaira.import_api:create_import_app", "--factory", "--host", "0.0.0.0", "--port", "8081"]
+    environment:
+      FSSAI_KAFKA_BOOTSTRAP: kafka:29092
+      FSSAI_IMPORT_SOURCE_KEYS_JSON: ${FSSAI_IMPORT_SOURCE_KEYS_JSON}
+      FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
+    depends_on:
+      kafka: {condition: service_healthy}
+    ports: ["127.0.0.1:8081:8081"]
+    networks: [low-side, data]
+    read_only: true
+    tmpfs: [/tmp]
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - object-data:/data
+    networks: [catalog]
+
+  iceberg-rest:
+    image: apache/iceberg-rest-fixture
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: us-east-1
+      CATALOG_WAREHOUSE: s3://warehouse/
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://minio:9000
+    depends_on: [minio]
+    networks: [catalog, data]
+
+  spark-iceberg:
+    image: tabulario/spark-iceberg
+    profiles: [analytics]
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: us-east-1
+      KAFKA_BOOTSTRAP: kafka:29092
+      ICEBERG_CATALOG_URI: http://iceberg-rest:8181
+      ICEBERG_WAREHOUSE: s3://warehouse/
+    volumes:
+      - ../jobs:/opt/fssaira/jobs:ro
+      - spark-checkpoints:/opt/fssaira/checkpoints
+    depends_on: [kafka, iceberg-rest]
+    networks: [data, catalog]
+
+networks:
+  low-side: {}
+  control:
+    internal: true
+  data:
+    internal: true
+  catalog:
+    internal: true
+
+volumes:
+  redis-data: {}
+  kafka-data: {}
+  object-data: {}
+  spark-checkpoints: {}

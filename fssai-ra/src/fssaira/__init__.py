@@ -8,7 +8,7 @@ human approval + tamper-evident evidence).
 """
 from __future__ import annotations
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 from .accountable_action import ActionClass, Decision, PolicyEnforcementPoint, Tool, ToolCall
 from .bounded_intelligence import (
@@ -19,7 +19,7 @@ from .diode import DiodeBreachError, OneWayChannel
 from .event_transport import Event, EventLog, KafkaLike
 from .evidence import EvidenceError, EvidenceLedger, EvidenceRecord
 from .exact_action import (
-    AccountableExecutor, ActionProposal, Approval, ApprovalAuthority, CaseRegister,
+    AccountableExecutor, ActionProposal, Approval, ApprovalAuthority, ApprovalUseStore, CaseRegister,
     ExecutionDenied, ExecutionResult, ExecutionUncertain, PendingOutcome,
     PendingOutcomeStore, TEACHING_APPROVAL_KEY_ID,
 )
@@ -29,6 +29,7 @@ from .pipeline import FSSAIRAPipeline
 from .reproducible_data import Snapshot, SnapshotStore, Transformer
 from .profiles import ApplicationProfile, ProfileError, TransitionRule
 from .evaluation import EvaluationReport, EvaluationRunner, ScenarioResult
+from .control_plane import ControlPlane, MemoryObjectStore
 
 __all__ = [
     "__version__",
@@ -38,7 +39,7 @@ __all__ = [
     "DiodeBreachError", "OneWayChannel",
     "Event", "EventLog", "KafkaLike",
     "EvidenceError", "EvidenceLedger", "EvidenceRecord",
-    "AccountableExecutor", "ActionProposal", "Approval", "ApprovalAuthority", "CaseRegister",
+    "AccountableExecutor", "ActionProposal", "Approval", "ApprovalAuthority", "ApprovalUseStore", "CaseRegister",
     "ExecutionDenied", "ExecutionResult", "ExecutionUncertain", "PendingOutcome",
     "PendingOutcomeStore", "TEACHING_APPROVAL_KEY_ID",
     "ImportBoundary", "QuarantineError", "RawInput",
@@ -47,4 +48,5 @@ __all__ = [
     "Snapshot", "SnapshotStore", "Transformer",
     "ApplicationProfile", "ProfileError", "TransitionRule",
     "EvaluationReport", "EvaluationRunner", "ScenarioResult",
+    "ControlPlane", "MemoryObjectStore",
 ]

@@ -63,6 +63,7 @@ class ApplicationProfile:
         *,
         approval_keys: dict[str, str] | None = None,
         outcome_store: PendingOutcomeStore | None = None,
+        approval_use_store=None,
     ) -> AccountableExecutor:
         return AccountableExecutor(
             register,
@@ -73,6 +74,7 @@ class ApplicationProfile:
             transition_rules=self.transition_rules,
             required_approval_roles=self.required_approval_roles,
             outcome_store=outcome_store,
+            approval_use_store=approval_use_store,
         )
 
     @classmethod

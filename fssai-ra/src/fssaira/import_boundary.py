@@ -9,6 +9,7 @@ data, not instructions.
 from __future__ import annotations
 
 import hashlib
+import hmac
 from dataclasses import dataclass
 
 from .bounded_intelligence import UntrustedEvidence
@@ -50,7 +51,7 @@ class ImportBoundary:
         key = self._keys.get(source)
         if key is None:
             return None
-        return hashlib.sha256((key + data).encode()).hexdigest()
+        return hmac.new(key.encode(), data.encode(), hashlib.sha256).hexdigest()
 
     def _sanitize(self, text: str) -> tuple[str, list[str]]:
         flags, clean = [], text
@@ -71,7 +72,7 @@ class ImportBoundary:
             reason = f"oversize {raw.size}>{self._max_size}"
         else:
             exp = self._expected_sig(raw.source, raw.data)
-            if exp is None or exp != raw.signature:
+            if exp is None or not hmac.compare_digest(exp, raw.signature):
                 reason = "bad or unknown signature"
         if reason is not None:
             self._m.quarantined += 1
