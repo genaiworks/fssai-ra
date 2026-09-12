@@ -1,4 +1,4 @@
-# Trust by Construction: A Testable Architecture for Sovereign AI Agents in Education
+# From Model Literacy to System Literacy: Teaching Trust by Construction for Agentic AI
 
 **Submission:** Extended abstract, UNU Macau AI Conference 2026 — *AI × Education: AI for Learning, Learning for AI*, 25–26 November 2026, Macau SAR, China.
 **Proposed panel:** Agentic AI in the Loop — From Autonomous Tools to Shared Capacity.
@@ -53,7 +53,7 @@ One figure matters more than the containment rate: **6 of 6 benign tasks complet
 
 Every attack above was written by the people who built the defence — a suite that samples its authors' imagination. So an **open adversary corpus** ships: an attack is seven fields of YAML naming the grant an agent holds and what a compromised model proposes, scored against all three arms and attributed to its contributor. No student record, deployment detail, or vendor name is required, and no contributor code executes. The tool prints how many attacks came from outside the project; today that number is **0**, reported in the output rather than buried in a limitations paragraph. Its first run found a defect in our own *measurement*.
 
-This is the panel's "shared capacity" in concrete form: institutions that cannot pool infrastructure, data, or budget can pool failure cases. For **AI for Learning**, this addresses educational administration, where agentic AI reaches students soonest. For **Learning for AI**, a ninety-minute offline lab ships with it: participants name a boundary, attempt a violation, watch a control refuse it, remove the control, watch the harm return, and compute their own institution's ceiling in a browser tool that sends nothing anywhere. That is the practical judgement UNESCO's competency frameworks ask for. No learning gain is claimed; none has been measured.
+This is the panel's "shared capacity" in concrete form: institutions that cannot pool infrastructure, data, or budget can pool failure cases. For **AI for Learning**, this addresses educational administration, where agentic AI reaches students soonest. For **Learning for AI**, a ninety-minute offline lab turns the architecture into five assessable literacies: trace data provenance; bound delegated authority; verify controls independently of the model; calculate escalation capacity; and reconstruct accountability through a correction route. Participants name a boundary, attempt a violation, watch a control refuse it, remove the control, and watch the harm return. This is practical judgement rather than vocabulary. No learning gain is claimed; none has been measured.
 
 ## 7. What this does not fix
 

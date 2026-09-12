@@ -18,6 +18,11 @@ judgement rather than vocabulary. A participant who has removed a control and
 watched an award approve itself has a different relationship to the phrase
 "human in the loop" than one who has read about it.
 
+The exercises instantiate the five-part [system-literacy framework](SYSTEM_LITERACY.md):
+data provenance, bounded delegation, independent verification, capacity-aware
+escalation, and accountable correction. For a self-directed tour of the code,
+use [`START_HERE.md`](START_HERE.md).
+
 ---
 
 ## Before the session

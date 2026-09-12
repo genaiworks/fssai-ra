@@ -2,6 +2,7 @@
 
 **Session:** Agentic AI in the Loop — From Autonomous Tools to Shared Capacity
 **Conference:** AI × Education: AI for Learning, Learning for AI · 25–26 November 2026 · Macau SAR
+**Talk:** From Model Literacy to System Literacy — Teaching Trust by Construction for Agentic AI
 **Deck:** [`slides.html`](slides.html) — arrow keys or click to advance, `n` for these notes on screen, `g` for the slide grid, `⌘P` for a PDF.
 
 A panel opener is not a conference talk. The room has three or four other people

@@ -14,8 +14,8 @@ Kafka, PySpark, Apache Iceberg, S3-compatible storage, a local model through
 Ollama, and a React operator console. A low-side gateway and a working
 unidirectional transport model the seam a certified one-way data diode occupies.
 
-**Companion paper:** *Trust by Construction: A Testable Architecture for
-Sovereign AI Agents in Education* — extended abstract in
+**Companion paper:** *From Model Literacy to System Literacy: Teaching Trust by
+Construction for Agentic AI* — extended abstract in
 [`paper/extended-abstract.md`](paper/extended-abstract.md), prepared for the
 **UNU Macau AI Conference 2026** (*AI × Education: AI for Learning, Learning for
 AI*) and its UNU–Springer proceedings.
@@ -281,6 +281,8 @@ if prose and code disagree. Alignment is a test here, not a promise.
 
 **If you are using it**
 
+- [`docs/START_HERE.md`](docs/START_HERE.md) — **understand the repository step by step**, then teach it back
+- [`docs/SYSTEM_LITERACY.md`](docs/SYSTEM_LITERACY.md) — the five-part learning framework and assessment rubric
 - [`docs/DEMO.md`](docs/DEMO.md) — the two-minute demonstration
 - [`docs/ADOPTION.md`](docs/ADOPTION.md) — a 30/60/90-day path to a pilot
 - [`docs/PROCUREMENT.md`](docs/PROCUREMENT.md) — the seven fields as supplier questions
@@ -307,8 +309,8 @@ UN Global Digital Compact.
 
 ## Citation
 
-> R. Srivastava, *Trust by Construction: A Testable Architecture for Sovereign AI
-> Agents in Education* (UNU Macau AI Conference 2026). Reference implementation:
+> R. Srivastava, *From Model Literacy to System Literacy: Teaching Trust by
+> Construction for Agentic AI* (UNU Macau AI Conference 2026). Reference implementation:
 > this repository, release `v1.0.0`.
 
 Machine-readable metadata in [`CITATION.cff`](CITATION.cff).

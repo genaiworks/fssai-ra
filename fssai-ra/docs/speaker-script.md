@@ -11,7 +11,7 @@ matches `docs/trust-by-construction-final.pptx`; the browser deck has a differen
 sequence. Baseline results come from v1.0.0. Slide 11 presents a separately
 identified current-source supplement. The deck notes contain source links.
 
-## 1. Trust by Construction
+## 1. From Model Literacy to System Literacy
 
 20 seconds. A model may propose an action. It cannot create the authority to
 execute it. Our contribution is a reference framework for expressing that rule,

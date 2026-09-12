@@ -2,9 +2,9 @@
 
 ## Recommended positioning
 
-**Paper title:** Trust by Construction: A Testable Architecture for Sovereign AI Agents in Education
+**Paper title:** From Model Literacy to System Literacy: Teaching Trust by Construction for Agentic AI
 
-**Spoken title:** Trust by Construction
+**Spoken title:** From Model Literacy to System Literacy
 
 **One-sentence contribution:** We propose a way for institutions to specify, test, and teach the boundaries of an AI agent's authority, using a student-support workflow and a reproducible open testbed.
 
