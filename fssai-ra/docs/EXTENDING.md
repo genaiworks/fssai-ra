@@ -1,5 +1,9 @@
 # Extending the reference architecture
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the engineering route → [`ASSURANCE.md`](ASSURANCE.md)
+
 This guide helps a university, public agency, researcher, or student adapt the
 teaching profile without inheriting claims that its environment has not tested.
 

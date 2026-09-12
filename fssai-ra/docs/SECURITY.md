@@ -1,5 +1,9 @@
 # Security model, assumptions, and residual risk
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Policy leader → [`ASSURANCE.md`](ASSURANCE.md) · engineer → [`DIODE_DEPLOYMENT.md`](DIODE_DEPLOYMENT.md)
+
 **Claim.** Containment, not invulnerability. No single compromised file, model,
 agent, user, or software layer should gain unchecked access, take a
 consequential action, or erase the record without meeting an independent

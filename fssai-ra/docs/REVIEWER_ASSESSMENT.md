@@ -1,5 +1,9 @@
 # Reviewer assessment and implemented improvements
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Return to current evidence → [`ASSURANCE.md`](ASSURANCE.md)
+
 > **A record of one editorial review round, not a current status page.** The
 > figures in the table below are the ones that round saw. The repository has
 > moved since: see [`../README.md`](../README.md) for current counts and

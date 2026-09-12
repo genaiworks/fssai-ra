@@ -1,5 +1,9 @@
 # For reviewers: check every claim in ten minutes
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** For historical review context → [`REVIEWER_ASSESSMENT.md`](REVIEWER_ASSESSMENT.md)
+
 You should not have to take our word for anything in this repository. This page
 is the shortest path from scepticism to a verdict.
 

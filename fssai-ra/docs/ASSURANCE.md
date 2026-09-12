@@ -1,5 +1,9 @@
 # Assurance claims and evidence
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Reproduce the claims → [`REVIEWERS.md`](REVIEWERS.md)
+
 This document is the claim boundary for release `v1.0.0`. A passing test means the
 specified property held for the synthetic fixture and implementation exercised by
 that test. It does not establish comprehensive security, fairness, educational

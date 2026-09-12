@@ -1,5 +1,9 @@
 # Operations and Recovery Runbook
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Policy leader → [`SECURITY.md`](SECURITY.md) · engineer → [`EXTENDING.md`](EXTENDING.md)
+
 ## Routine checks
 
 - `/health` reports the loaded profile, evidence-chain status, and unsafe teaching

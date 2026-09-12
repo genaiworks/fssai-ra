@@ -1,5 +1,9 @@
 # Responsible AI: risk, mitigation, test, result
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the policy route → [`IMPACT.md`](IMPACT.md)
+
 Ethics is not a closing slide here. Each row below names a risk, the concrete
 mitigation in the code, the test that exercises it, and what that test actually
 observed. Where a risk is not mitigated, the row says so — an honest gap is worth

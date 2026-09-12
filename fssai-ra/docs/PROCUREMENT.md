@@ -1,5 +1,9 @@
 # The seven fields as procurement questions
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the policy route → [`RESPONSIBLE_AI.md`](RESPONSIBLE_AI.md)
+
 The control contract works unmodified as a supplier questionnaire. Below is each
 field as a question, with what a strong answer looks like, what a weak answer
 looks like, and what the answer tells you when it does not arrive.

@@ -1,5 +1,9 @@
 # The demonstration
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Understand the concepts in [`START_HERE.md`](START_HERE.md), then choose the [policy or engineering route](README.md#the-shared-first-three-steps).
+
 Two minutes, fully offline. No network, no model weights, no GPU, no Docker.
 
 ```bash

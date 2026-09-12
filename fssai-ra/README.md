@@ -272,6 +272,10 @@ if prose and code disagree. Alignment is a test here, not a promise.
 
 ## Read this first
 
+**Documentation home:** [`docs/README.md`](docs/README.md) explains what this
+repository means, separates the policy, engineering, educator, reviewer, and
+conference routes, and links every maintained and historical document.
+
 **If you are reviewing this**
 
 - [`docs/REVIEWERS.md`](docs/REVIEWERS.md) — **check every claim in ten minutes**, offline

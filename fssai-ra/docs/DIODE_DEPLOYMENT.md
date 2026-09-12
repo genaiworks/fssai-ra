@@ -1,5 +1,9 @@
 # One Way Data Diode Integration Guide
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the engineering route → [`RESILIENCE.md`](RESILIENCE.md)
+
 ## Claim boundary
 
 `OneWayChannel` and the import-gateway container implement an inward-only software

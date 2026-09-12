@@ -1,5 +1,9 @@
 # Adoption playbook
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the policy route → [`OPERATIONS.md`](OPERATIONS.md)
+
 A 90-day path from "we read the paper" to "we have one governed capability with
 evidence we generated ourselves."
 

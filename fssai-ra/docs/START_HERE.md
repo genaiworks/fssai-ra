@@ -1,5 +1,9 @@
 # Understand this repository, step by step
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Policy leader → [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) · AI engineer → [`PLATFORM.md`](PLATFORM.md) · reviewer → [`REVIEWERS.md`](REVIEWERS.md)
+
 This is the shortest route from “I cloned it” to “I can explain, test, and
 extend it.” It takes about 75 minutes and stays offline after installation.
 

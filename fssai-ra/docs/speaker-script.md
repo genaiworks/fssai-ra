@@ -1,5 +1,9 @@
 # Speaker script for the superseded 14-slide PowerPoint
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Do not continue here; use the [maintained browser-deck script](presentation/speaker-script.md).
+
 > **Superseded. Do not rehearse from this.** The maintained deck is
 > [`presentation/slides.html`](presentation/slides.html) with
 > [its script](presentation/speaker-script.md). This script and the PowerPoint it

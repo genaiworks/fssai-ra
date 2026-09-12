@@ -1,5 +1,9 @@
 # GitHub implementation blueprint
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** This is historical; compare it with the implemented [`PLATFORM.md`](PLATFORM.md) and current [`ASSURANCE.md`](ASSURANCE.md).
+
 **Status:** proposed build specification, 9 September 2026. No implementation, completed test results, deployment, repository URL, or production certification is claimed by this document.
 
 ## Release objective

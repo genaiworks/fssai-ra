@@ -1,5 +1,9 @@
 # Who benefits, how, and how we would know
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the policy route → [`ADOPTION.md`](ADOPTION.md)
+
 A humanitarian claim that cannot name a beneficiary is a slogan. This document
 names them, says what each gets, and — where nothing has been measured — says
 that instead of estimating.

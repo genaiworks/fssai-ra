@@ -1,5 +1,9 @@
 # From model literacy to system literacy
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Policy leader → [`PROCUREMENT.md`](PROCUREMENT.md) · educator → [`LAB.md`](LAB.md) · engineer → [`PLATFORM.md`](PLATFORM.md)
+
 Knowing what a model can generate is not enough to govern what an agent can do.
 **System literacy** is the ability to trace a consequential action across data,
 delegation, verification, escalation, and accountability — and to test where

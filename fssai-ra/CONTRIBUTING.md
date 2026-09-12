@@ -9,6 +9,11 @@ Before editing code, read `docs/EXTENDING.md`. State whether the contribution
 targets the teaching, institutional-pilot, or hardware-isolated profile. Passing
 teaching-profile tests must not be presented as production assurance.
 
+Before adding or renaming documentation, read `docs/README.md`. Every artifact
+under `docs/` must be linked from that map. Every Markdown guide must carry the
+common navigation block and a recommended next step. The documentation-link
+tests fail if a file becomes orphaned or a local link breaks.
+
 ## Add a control
 1. Add a requirement to the relevant `contract/*.yaml` with all seven fields
    (protected asset, permitted operation, enforcement point, owner, test,
@@ -33,6 +38,7 @@ it.
 ```
 pip install -e ".[dev]"
 pytest -q
+python -m pytest tests/test_learning_paths.py -q
 ```
 
 Pull requests should disclose assumptions, excluded paths, synthetic-data or data

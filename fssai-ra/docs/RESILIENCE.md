@@ -1,5 +1,9 @@
 # Process isolation, recovery and request identity
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the engineering route → [`OPERATIONS.md`](OPERATIONS.md)
+
 This is supplemental evidence on the current source tree. The published `v1.0.0`
 tag and its baseline figures are unchanged. These additions are not included in
 that tag. Use a reviewed commit containing this document for the enhanced code.

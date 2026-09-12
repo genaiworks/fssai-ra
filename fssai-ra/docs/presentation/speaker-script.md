@@ -1,5 +1,9 @@
 # Panel script — UNU Macau AI Conference 2026
 
+> **Documentation navigation:** [Documentation map](../README.md) · [Start here](../START_HERE.md) · [Policy route](../README.md#policy-leader-route) · [Engineering route](../README.md#ai-engineer-route) · [Glossary](../GLOSSARY.md)
+>
+> **Recommended next:** Present with [`slides.html`](slides.html); return to the [conference route](../README.md#conference-author-and-presenter-route).
+
 **Session:** Agentic AI in the Loop — From Autonomous Tools to Shared Capacity
 **Conference:** AI × Education: AI for Learning, Learning for AI · 25–26 November 2026 · Macau SAR
 **Talk:** From Model Literacy to System Literacy — Teaching Trust by Construction for Agentic AI

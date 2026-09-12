@@ -1,5 +1,9 @@
 # FSSAI RA Extensible Platform Guide
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Continue the engineering route → [`SECURITY.md`](SECURITY.md)
+
 ## What this platform provides
 
 FSSAI-RA is a reference platform for institutions that want AI assistance without

@@ -1,5 +1,9 @@
 # The authority boundary lab
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Run the [worksheet](worksheet/) and [oversight calculator](oversight/), then contribute a failure case via [`../challenges/README.md`](../challenges/README.md).
+
 **Ninety minutes. Offline. No GPU, no model weights, no Docker, no accounts.**
 
 A lab for people who will be asked to approve, procure, or govern an agentic AI

@@ -1,5 +1,9 @@
 # Presenter and submission guide
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Open the [`../paper/form-ready-abstract.md`](../paper/form-ready-abstract.md), then rehearse with the [maintained deck](presentation/slides.html).
+
 ## Recommended positioning
 
 **Paper title:** From Model Literacy to System Literacy: Teaching Trust by Construction for Agentic AI

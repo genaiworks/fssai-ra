@@ -92,6 +92,7 @@ body {
   background: var(--rule); z-index: 40;
 }
 .rail > i { display: block; height: 100%; background: var(--ink); transition: width .28s ease; }
+.hud a { color: inherit; font-family: var(--mono); font-size: 11px; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 
 .hud {
   position: fixed; top: 0; left: 0; right: 0; z-index: 40;
@@ -385,6 +386,7 @@ body.grid-open .overview { display: block; }
   <b>Trust by Construction</b>
   <span class="desktop-only">UNU Macau AI Conference 2026 · Panel opener</span>
   <span class="grow"></span>
+  <a href="../README.md" title="Open the documentation map">Docs</a>
   <span class="mono" id="counter">1 / 16</span>
   <button id="notesBtn" aria-pressed="false">Notes</button>
   <button id="gridBtn" aria-pressed="false">Slides</button>
