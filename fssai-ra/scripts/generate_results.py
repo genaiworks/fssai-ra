@@ -462,7 +462,7 @@ def render_markdown(summary: dict) -> str:
         "",
         "These are fixture observations in a declared environment. They are not security "
         "probabilities, not a certification, and not evidence of production readiness. See "
-        "[`docs/ASSURANCE.md`](../docs/ASSURANCE.md) for the claim-by-claim boundary.",
+        "[`docs/ASSURANCE.md`](../../docs/ASSURANCE.md) for the claim-by-claim boundary.",
         "",
     ]
     return "\n".join(lines)

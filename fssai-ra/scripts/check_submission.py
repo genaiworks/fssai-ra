@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Validate the UNU Macau extended-abstract paste fields."""
+"""Validate the UNU Macau extended-abstract paste fields.
+
+Characters are counted as the browser submits them, not as the file stores
+them. An HTML textarea normalises its value to CRLF on submission, so every
+line break in a pasted field costs two characters rather than one. Counting
+``len(body)`` understates a four-paragraph field by six characters, which is
+the difference between a field that fits and a field the form silently
+truncates. The stricter count is the one that decides whether the paste
+survives, so it is the one that decides validity here.
+"""
 
 from __future__ import annotations
 
@@ -35,14 +44,16 @@ def validate(text: str) -> dict[str, object]:
     for name, (minimum, maximum, char_maximum) in LIMITS.items():
         body = sections.get(name, "")
         words = len(body.split())
-        chars = len(body)
+        chars = len(body.replace("\n", "\r\n"))
         ok = bool(body) and minimum <= words <= maximum and chars <= char_maximum
         report["sections"][name] = {
             "words": words,
             "word_minimum": minimum,
             "word_maximum": maximum,
             "characters": chars,
+            "characters_stored": len(body),
             "character_maximum": char_maximum,
+            "headroom": char_maximum - chars,
             "valid": ok,
         }
         report["valid"] = bool(report["valid"] and ok)

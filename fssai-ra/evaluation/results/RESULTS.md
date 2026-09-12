@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-11T23:13:04.064535+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-12T00:34:53.872106+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -19,7 +19,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Conformance checks | `25` | passed on 2 independent backend profiles |
 | Concurrent replay race | `1 mutation from 32 callers` | 31 replay responses, 1 distinct receipt; bounded to one process |
 | Control-contract requirements | `28` | 7 fields each |
-| Deterministic tests | `371` | no network, no model weights |
+| Deterministic tests | `390` | no network, no model weights |
 | Oversight — sustainable review | `2,640/day` | for a roster of 11, bound by the policy quota; declared capacity, not a measurement of reviewers |
 | Oversight — merit failures executed | `4 → 0` | without load control, then with it, on a queue at 5.0x declared attentive capacity |
 | Oversight — sensitivity sweep | `16/20` | cells where the control was load-bearing out of those where harm was possible; harm reached zero in 16; 4 did not bind (no deliberation floor configured); 5 had no harm to contain |
@@ -60,4 +60,4 @@ The adversarial suite runs in 0.02s and the bounded model check in 0.01s on the 
 - the second domain tests that the method transfers, not that either domain's evidence applies to the other; each carries its own
 - the adversary corpus is contributed attacks, not a threat catalogue, and no attack in it yet comes from outside this project
 
-These are fixture observations in a declared environment. They are not security probabilities, not a certification, and not evidence of production readiness. See [`docs/ASSURANCE.md`](../docs/ASSURANCE.md) for the claim-by-claim boundary.
+These are fixture observations in a declared environment. They are not security probabilities, not a certification, and not evidence of production readiness. See [`docs/ASSURANCE.md`](../../docs/ASSURANCE.md) for the claim-by-claim boundary.

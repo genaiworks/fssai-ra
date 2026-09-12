@@ -12,6 +12,7 @@ code now forces the sentence to change with it.
 
 Regenerate with ``python scripts/generate_results.py``.
 """
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -300,3 +301,154 @@ def test_no_readme_quotes_a_stale_oversight_capacity(path, figures):
     assert expected in path.read_text(encoding="utf-8"), (
         f"{path} no longer states the generated oversight capacity figure: {expected!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# The file that is actually submitted
+# ---------------------------------------------------------------------------
+#
+# Everything above guards ``paper/extended-abstract.md``, the proceedings-style
+# version. The version that is pasted into the UNU form is
+# ``paper/form-ready-abstract.md``, and until these tests existed it was the one
+# claim surface in the project with no guard at all. That is the wrong way
+# round: the extended abstract is what we would like reviewers to read, and the
+# form-ready abstract is what they actually receive.
+#
+# It restates the same results in different prose, so it cannot reuse the
+# templates above. It needs its own.
+
+SUBMITTED = ROOT / "paper" / "form-ready-abstract.md"
+
+# Spelled-out numbers are the drift a numeric search cannot see: regenerate the
+# figures, grep the abstract for "25", find nothing, and leave "Twenty-five"
+# behind. Each entry is (figure key, the word the abstract uses for it).
+NUMBER_WORDS = {
+    0: "zero",
+    4: "four",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+    25: "twenty-five",
+}
+
+
+@pytest.fixture(scope="module")
+def submitted() -> str:
+    assert SUBMITTED.exists(), f"{SUBMITTED} is missing"
+    return SUBMITTED.read_text(encoding="utf-8")
+
+
+SUBMITTED_CLAIMS = [
+    ("adversarial containment", "{adversarial_scenarios_contained} of {adversarial_scenarios_total} adversarial scenarios were contained"),
+    ("utility baseline", "{benign_tasks_completed} of {benign_tasks_total} benign tasks completed for a false-denial rate of {false_denial_rate}"),
+    ("model-checked states", "explored {states_explored} configurations with zero invariant violations, reaching {distinct_denial_codes} distinct denial controls"),
+    ("ablation coverage", "authority coverage {authority_coverage}"),
+    ("concurrent replay", "a {concurrent_callers}-caller replay race produced one mutation and one receipt"),
+    ("unguarded arm", "contained none and delivered {arm_a_harms} harmful actions"),
+    ("guarded arm harms", "and delivered {arm_b_harms}"),
+    ("oversight capacity", "a roster of {oversight_reviewer_roster} reviewers sustains {oversight_sustainable_per_day_display} consequential actions per day"),
+    ("oversight queue trial", "{oversight_arrivals} arrivals reach one reviewer"),
+    ("oversight deferral", "{oversight_deferred_to_manual} actions defer to manual review"),
+    ("second domain", "{second_domain_states_explored_display} configurations with zero violations, "
+     "{second_domain_scenarios_contained} of {second_domain_scenarios_total} scenarios contained, "
+     "{second_domain_benign_completed} of {second_domain_benign_total} benign tasks, "
+     "{second_domain_conformance_checks} conformance checks"),
+]
+
+
+@pytest.mark.parametrize(
+    "description,template", SUBMITTED_CLAIMS, ids=[c[0] for c in SUBMITTED_CLAIMS]
+)
+def test_every_figure_in_the_submitted_abstract_matches_a_generated_result(
+    description, template, figures, submitted
+):
+    expected = template.format(**figures)
+    assert expected in submitted, (
+        f"the submitted abstract no longer states the generated figure for {description}.\n"
+        f"  expected the phrase: {expected!r}\n"
+        f"  regenerate with: python scripts/generate_results.py, then update "
+        f"paper/form-ready-abstract.md"
+    )
+
+
+SPELLED_CLAIMS = [
+    ("conformance checks", "conformance_checks", "{word} conformance checks passed on two independent backends"),
+    ("ablated controls", "controls_ablated", "{word} of {word} ablated controls restored their harm when removed"),
+    ("comparison attacks", "comparison_attacks", "contained all {word} and delivered none"),
+    ("oversight harms uncontrolled", "oversight_harms_without_load_control", "Without load control, {word} such failures execute"),
+    ("corpus provenance", "corpus_externally_contributed", "today that number is {word}"),
+]
+
+
+@pytest.mark.parametrize(
+    "description,key,template", SPELLED_CLAIMS, ids=[c[0] for c in SPELLED_CLAIMS]
+)
+def test_every_spelled_out_figure_in_the_submitted_abstract_is_current(
+    description, key, template, figures, submitted
+):
+    value = figures[key]
+    assert value in NUMBER_WORDS, (
+        f"{key} is now {value}, which has no spelled-out form in NUMBER_WORDS; "
+        f"add it, then update the sentence in paper/form-ready-abstract.md"
+    )
+    expected = template.format(word=NUMBER_WORDS[value])
+    lowered = submitted.lower()
+    assert expected.lower() in lowered, (
+        f"the submitted abstract no longer spells out the generated figure for "
+        f"{description} ({key} = {value}).\n  expected the phrase: {expected!r}"
+    )
+
+
+def test_the_submitted_abstract_fits_every_form_field():
+    """The form truncates silently; a test is the only thing that will not.
+
+    ``scripts/check_submission.py`` counts characters the way the browser
+    submits them, with CRLF line endings, because that is the count the form
+    applies. Three of the four fields have already been over that limit while
+    reading as comfortably inside it.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "check_submission", ROOT / "scripts" / "check_submission.py"
+    )
+    check = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(check)
+
+    report = check.validate(SUBMITTED.read_text(encoding="utf-8"))
+    failed = {
+        name: field
+        for name, field in report["sections"].items()
+        if not field["valid"]
+    }
+    assert not failed, (
+        "the submitted abstract no longer fits the form's fields: "
+        + "; ".join(
+            f"{name} is {f['words']} words ({f['word_minimum']}-{f['word_maximum']}) "
+            f"and {f['characters']} characters (max {f['character_maximum']})"
+            for name, f in failed.items()
+        )
+    )
+
+
+def test_the_submitted_abstract_pastes_as_plain_ascii(submitted):
+    """A form field is not a typesetter.
+
+    Curly quotes, en dashes and non-breaking spaces survive a Markdown file and
+    then arrive in a Microsoft Form as mojibake or as extra characters against a
+    cap that three fields are already within twenty characters of. The extended
+    abstract may keep its typography; this file is paste payload.
+    """
+    offenders = sorted({ch for ch in submitted if ord(ch) > 127})
+    assert not offenders, (
+        "the submitted abstract contains non-ASCII characters that should be "
+        "replaced before pasting: "
+        + ", ".join(f"{ch!r} (U+{ord(ch):04X})" for ch in offenders)
+    )
+
+
+def test_the_submitted_abstract_states_its_limits(submitted):
+    """The same guard the extended abstract carries, on the version reviewers read."""
+    for phrase in ("fixture observations", "not security probabilities"):
+        assert phrase in submitted, (
+            f"the submitted abstract should still state its limits; {phrase!r} is missing"
+        )
