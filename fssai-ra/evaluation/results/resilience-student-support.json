@@ -1,7 +1,7 @@
 {
   "profile_id": "student-support",
   "profile_sha256": "556345218d1ddc4c1fe50d2ef51ead648f9072ddfc6eafb81b947b84412ba3f7",
-  "implementation_sha256": "ef818cfc147bc6f746ef928dd3b9664c56279c8909ef757e952bb9494929ec7e",
+  "implementation_sha256": "f939d02c8464872d50156066089ac930c76c9182aedb4825f3472a11e0f15a91",
   "transition": {
     "operation": "prepare_case_for_review",
     "from_status": "draft",
