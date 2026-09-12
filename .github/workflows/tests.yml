@@ -21,12 +21,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -48,8 +48,8 @@ jobs:
     name: Assurance artifacts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
 
       - name: Install
@@ -100,7 +100,7 @@ jobs:
         run: python scripts/check_resilience.py
 
       - name: Upload assurance artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: assurance-results
           path: fssai-ra/evaluation/results/
@@ -110,24 +110,59 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13" }
       - run: python -m pip install ruff
       - name: Ruff
         working-directory: fssai-ra
         run: ruff check src tests scripts jobs
 
+  package:
+    name: Build and install package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.14", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
+      - run: python -m pip install build
+      - name: Build source and wheel distributions
+        working-directory: fssai-ra
+        run: python -m build
+      - name: Install the wheel and exercise its entry point
+        working-directory: fssai-ra
+        run: |
+          python -m venv /tmp/fssaira-wheel
+          /tmp/fssaira-wheel/bin/python -m pip install dist/*.whl
+          /tmp/fssaira-wheel/bin/fssaira --help
+
+  python-audit:
+    name: Python dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.14", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
+      - name: Install the tested dependency surface
+        working-directory: fssai-ra
+        run: python -m pip install -e ".[dev]" pip-audit
+      - name: Audit published dependencies
+        working-directory: fssai-ra
+        run: python -m pip_audit
+
   console:
     name: Console
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
         with: { node-version: "22", cache: npm, cache-dependency-path: fssai-ra/console/package.json }
       - name: Install
         working-directory: fssai-ra/console
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+      - name: Dependency audit
+        working-directory: fssai-ra/console
+        run: npm audit --audit-level=high
       - name: Typecheck and build
         working-directory: fssai-ra/console
         run: npm run build
@@ -139,8 +174,8 @@ jobs:
     name: Citation and release metadata
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13" }
       - run: python -m pip install pyyaml tomli
       - name: Versions agree across the repository
@@ -161,5 +196,14 @@ jobs:
               assert citation["version"] == version, f"{path} says {citation['version']}, expected {version}"
               assert citation["license"] == "Apache-2.0", path
               print(f"{path} ✓ {version}")
+
+          paper_title = Path("fssai-ra/paper/form-ready-abstract.md").read_text(
+              encoding="utf-8"
+          ).splitlines()[0].removeprefix("# ")
+          for path in (Path("CITATION.cff"), Path("fssai-ra/CITATION.cff")):
+              citation = yaml.safe_load(path.read_text(encoding="utf-8"))
+              assert citation["preferred-citation"]["title"] == paper_title, (
+                  f"{path} preferred citation title disagrees with the paper"
+              )
           print(f"all metadata agrees on {version}")
           PY

@@ -49,14 +49,16 @@ service. No source-code reading is required.
    questions for one consequential capability.
 3. [`RESPONSIBLE_AI.md`](RESPONSIBLE_AI.md) — connect each risk to a mitigation,
    test, observed result, and remaining gap.
-4. [`IMPACT.md`](IMPACT.md) — distinguish demonstrated outcomes, reasoned
+4. [`GAPS.md`](GAPS.md) — turn every unresolved claim into a named evidence
+   obligation; software tests do not close field, human, or hardware gaps.
+5. [`IMPACT.md`](IMPACT.md) — distinguish demonstrated outcomes, reasoned
    benefits, hypotheses, and out-of-scope claims.
-5. [`ADOPTION.md`](ADOPTION.md) — use the 30/60/90-day route to a bounded pilot.
-6. [`OPERATIONS.md`](OPERATIONS.md) — decide who acts when automation refuses,
+6. [`ADOPTION.md`](ADOPTION.md) — use the 30/60/90-day route to a bounded pilot.
+7. [`OPERATIONS.md`](OPERATIONS.md) — decide who acts when automation refuses,
    fails, or leaves an outcome uncertain.
-7. [`SECURITY.md`](SECURITY.md) — approve the threat model and residual risks;
+8. [`SECURITY.md`](SECURITY.md) — approve the threat model and residual risks;
    do not delegate this reading only to the engineering team.
-8. [`ASSURANCE.md`](ASSURANCE.md) — inspect the final claim → mechanism → test →
+9. [`ASSURANCE.md`](ASSURANCE.md) — inspect the final claim → mechanism → test →
    evidence → limitation chain.
 
 **Policy outcome:** you should be able to publish one authorisation boundary,
@@ -112,9 +114,11 @@ domain. No learning gain is claimed until it is measured.
    ten minutes with `make reviewer`.
 2. [`ASSURANCE.md`](ASSURANCE.md) — inspect every claim and its boundary.
 3. [`RESPONSIBLE_AI.md`](RESPONSIBLE_AI.md) — check unresolved governance risks.
-4. [`REVIEWER_ASSESSMENT.md`](REVIEWER_ASSESSMENT.md) — read the dated editorial
+4. [`GAPS.md`](GAPS.md) — verify that every open claim names the evidence needed
+   to close it and remains open until that evidence exists.
+5. [`REVIEWER_ASSESSMENT.md`](REVIEWER_ASSESSMENT.md) — read the dated editorial
    review record; it is historical context, not current evidence.
-5. [`github-implementation-blueprint.md`](github-implementation-blueprint.md) —
+6. [`github-implementation-blueprint.md`](github-implementation-blueprint.md) —
    compare the original proposed build specification with the implemented
    repository; do not treat its proposed results as current results.
 
@@ -142,9 +146,10 @@ current Word abstract is [`extended-abstract.docx`](extended-abstract.docx).
 
 | Need | Command | Meaning |
 |---|---|---|
-| See the idea | `python scripts/demo.py --fast` | one synthetic walkthrough |
-| Check implementation | `pytest -q` | deterministic engineering tests |
-| Check public claims | `make reviewer` | evaluation, verification, transfer, oversight, resilience and result-drift checks |
+| Install from the repository root | `make setup` | creates the project environment with `python3` |
+| See the idea | `make demo` | one synthetic walkthrough |
+| Check implementation | `make test` | deterministic engineering tests |
+| Check public claims | `make reviewer` | evaluation, verification, transfer, oversight, delegation, assisted review, resilience, and result-drift checks |
 | Inspect deployment honesty | `fssaira doctor` | active defaults and readiness blockers; not certification |
 | Extend a domain | `fssaira init my_domain --output PATH` | new structure with intentionally empty assurance |
 
@@ -163,6 +168,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`LAB.md`](LAB.md) — facilitated lab.
 - [`PROCUREMENT.md`](PROCUREMENT.md) — supplier and procurement questions.
 - [`RESPONSIBLE_AI.md`](RESPONSIBLE_AI.md) — responsible-AI risk register.
+- [`GAPS.md`](GAPS.md) — open-evidence register and pilot evidence bundle.
 - [`IMPACT.md`](IMPACT.md) — impact claims and measurement agenda.
 - [`ADOPTION.md`](ADOPTION.md) — pilot adoption playbook.
 - [`PLATFORM.md`](PLATFORM.md) — platform and deployment guide.

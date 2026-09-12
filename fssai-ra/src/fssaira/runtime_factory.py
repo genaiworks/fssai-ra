@@ -6,11 +6,12 @@ matters as much as the first. A reference architecture that boots happily with
 public test keys, in-memory state, and spoofable headers is a reference
 architecture that will be deployed that way.
 
-So: the plane always starts -- refusing to boot would push operators toward
-forks -- but it reports its own shortcomings on ``/health``, in the CLI's
-``doctor`` command, and on the console's landing page, with a severity. The
-paper's claim is about testable boundaries; a boundary nobody can see the state
-of is not testable.
+So: teaching defaults are reported on ``/health``, in the CLI's ``doctor``
+command, and on the console's landing page, with a severity. Structurally
+inconsistent review-assistance declarations are the exception: they fail during
+assembly because the assistant-independence claim cannot be enforced later at
+runtime. The paper's claim is about testable boundaries; a boundary nobody can
+see the state of is not testable.
 
 Configuration
 -------------
@@ -33,9 +34,11 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from .assisted_review import AssistanceMode, AssistedReviewPolicy, ReviewAssistance
 from .control_plane import ControlPlane
 from .exact_action import ApprovalAuthority
 from .metrics import Metrics
+from .oversight import OversightMonitor, ReviewLoadPolicy
 from .profiles import ApplicationProfile
 
 TEACHING_KEY_PREFIX = "non-secret"
@@ -63,7 +66,35 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
     signing_key = os.getenv(
         "FSSAI_APPROVAL_SIGNING_KEY", "non-secret-demo-key-replace-in-production"
     )
-    authority = ApprovalAuthority(key_id=key_id, signing_key=signing_key)
+    # The oversight control is attached to the authority the *deployment* uses,
+    # not only to the one the CLI trial builds. Until this existed, an
+    # institution could run the whole platform with review capacity enforced
+    # nowhere, which is precisely the failure the contract exists to eliminate:
+    # a control that held in the evaluation and not at runtime.
+    #
+    # `from_env` returns None when nothing was declared, and that stays None.
+    # Inheriting our shipped quota would publish a capacity figure nobody at the
+    # institution agreed to; `configuration_warnings` reports the absence.
+    oversight = None
+    review_policy = ReviewLoadPolicy.from_env()
+    assistance = ReviewAssistance.from_env()
+    if assistance.mode is not AssistanceMode.UNAIDED:
+        # This failure is visible only in the declaration. At approval time an
+        # independent and a dependent assistant produce the same reviewer
+        # identity, interval, and signature, so waiting until runtime would make
+        # the advertised gate impossible. When no capacity has been declared,
+        # the unaided baseline validates ownership without inventing a floor.
+        declared_floor = (
+            review_policy.min_deliberation_seconds
+            if review_policy is not None
+            else AssistedReviewPolicy().unaided_floor_seconds
+        )
+        AssistedReviewPolicy().check(assistance, declared_floor)
+    if review_policy is not None:
+        oversight = OversightMonitor(review_policy)
+    authority = ApprovalAuthority(
+        key_id=key_id, signing_key=signing_key, oversight=oversight
+    )
     approval_keys = {key_id: signing_key}
     metrics = Metrics()
 
@@ -226,7 +257,114 @@ def configuration_warnings() -> list[Warning_]:
             f"the '{model}' backend is an evaluation fixture that behaves maliciously on purpose",
             "set FSSAI_MODEL to ollama or another real backend",
         ))
+    warnings.extend(_oversight_warnings())
     return warnings
+
+
+def _oversight_warnings() -> list[Warning_]:
+    """What this deployment has declared about review, assistance, and delegation.
+
+    Every one of these reports an *absent declaration* rather than a detected
+    fault, because that is what is actually knowable here. A deployment cannot
+    be inspected for how attentive its reviewers are, which model reviews its
+    model's work, or how many hands a permission passes through — but it can be
+    asked whether anyone wrote those numbers down, and an institution that has
+    not is running on assumptions it never agreed to.
+    """
+    from .assisted_review import AssistanceMode, AssistedReviewPolicy, ReviewAssistance
+    from .delegation import DelegationPolicy
+    from .exact_action import ExecutionDenied
+
+    findings: list[Warning_] = []
+
+    review_policy_invalid = False
+    try:
+        review_policy = ReviewLoadPolicy.from_env()
+    except ValueError as exc:
+        review_policy_invalid = True
+        review_policy = None
+        findings.append(Warning_(
+            "blocking", "INVALID_REVIEW_POLICY", str(exc),
+            "correct the FSSAI_REVIEW_* declaration; the deployment assembly fails closed",
+        ))
+    if review_policy is None and not review_policy_invalid:
+        findings.append(Warning_(
+            "high", "NO_DECLARED_REVIEW_CAPACITY",
+            "no review capacity is declared, so approvals are unlimited: this deployment "
+            "routes consequential actions to a named human and assumes that human has "
+            "infinite attention",
+            "set FSSAI_REVIEW_MAX_PER_WINDOW and FSSAI_REVIEW_DELIBERATION_FLOOR from a "
+            "roster you would defend; `fssaira oversight <profile> --sweep` computes the ceiling",
+        ))
+    elif review_policy is not None:
+        coherence = review_policy.declared_consistency()
+        if not coherence["consistent"]:
+            findings.append(Warning_(
+                "medium", "INCOHERENT_REVIEW_POLICY",
+                f"the declared quota and deliberation floor contradict each other: "
+                f"{coherence['note']}",
+                "raise the quota, or state plainly that the lower number is the capacity "
+                "you are willing to staff",
+            ))
+
+    assistance_invalid = False
+    try:
+        assistance = ReviewAssistance.from_env()
+    except ValueError as exc:
+        assistance_invalid = True
+        assistance = ReviewAssistance()
+        findings.append(Warning_(
+            "blocking", "INVALID_REVIEW_ASSISTANCE", str(exc),
+            "use the documented mode and explicit true/false declarations",
+        ))
+    if not assistance_invalid and assistance.mode is not AssistanceMode.UNAIDED:
+        if not assistance.declared_by:
+            findings.append(Warning_(
+                "blocking", "ASSISTANCE_NOT_DECLARED",
+                "review assistance is configured but no accountable owner declared its "
+                "independence properties",
+                "set FSSAI_REVIEW_ASSISTANCE_DECLARED_BY to the role answerable for it",
+            ))
+        if review_policy is not None:
+            gate = AssistedReviewPolicy()
+            try:
+                gate.check(assistance, review_policy.min_deliberation_seconds)
+            except ExecutionDenied as denial:
+                findings.append(Warning_(
+                    "blocking", denial.code,
+                    str(denial),
+                    "raise FSSAI_REVIEW_DELIBERATION_FLOOR, or establish and declare the "
+                    "independence that buys the throughput",
+                ))
+        if not assistance.is_independent:
+            findings.append(Warning_(
+                "high", "DEPENDENT_REVIEW_ASSISTANT",
+                f"the review assistant is {assistance.independence_score}/3 independent of the "
+                "proposing model; on the cases where a proposal is substantively wrong a "
+                "dependent assistant is wrong the same way, and no runtime signal distinguishes it",
+                "declare a different model, a different evidence path, and an adversarial "
+                "posture — or keep the unaided deliberation floor",
+            ))
+
+    delegation_invalid = False
+    try:
+        delegation = DelegationPolicy.from_env()
+    except ValueError as exc:
+        delegation_invalid = True
+        delegation = None
+        findings.append(Warning_(
+            "blocking", "INVALID_DELEGATION_POLICY", str(exc),
+            "correct the FSSAI_*DELEGATION* declaration; the chain verifier fails closed",
+        ))
+    if delegation is None and not delegation_invalid:
+        findings.append(Warning_(
+            "info", "NO_DECLARED_DELEGATION_BOUND",
+            "no delegation depth is declared. This is correct for a deployment where one "
+            "agent calls one tool, and wrong for one that calls a tool server, a plugin, or "
+            "a sub-agent it did not write",
+            "set FSSAI_MAX_DELEGATION_DEPTH if authority is passed onward at all",
+        ))
+    return findings
 
 
 def production_configuration_warnings() -> list[str]:

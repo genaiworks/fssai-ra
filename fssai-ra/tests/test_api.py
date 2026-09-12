@@ -159,3 +159,37 @@ def test_the_composition_endpoints_require_the_operator_role():
     client = build_client()
     for path in ("/v1/coverage", "/v1/delegation", "/v1/assisted-review"):
         assert client.get(path).status_code == 401, f"{path} is reachable unauthenticated"
+
+
+def test_health_publishes_what_this_deployment_has_declared():
+    """An unenforced oversight ceiling is invisible from every other observable.
+
+    A deployment with no declared capacity looks exactly like one running inside
+    its capacity, right up to the moment it is not. `/health` therefore states
+    the declarations — and states their absence explicitly, because `null` here
+    is a posture rather than an omission.
+    """
+    body = build_client().get("/health").json()
+    declared = body["declared_controls"]
+
+    assert declared["review_capacity"] is None
+    assert "unbounded" in declared["review_capacity_note"]
+    assert declared["review_assistance"]["mode"] == "unaided"
+    assert declared["delegation"] is None
+    assert declared["limits"], "declarations must not be mistaken for measurements"
+    assert any("not measurements" in line for line in declared["limits"])
+
+
+def test_health_reports_a_declared_capacity_once_one_is_configured(monkeypatch):
+    monkeypatch.setenv("FSSAI_REVIEW_MAX_PER_WINDOW", "30")
+    monkeypatch.setenv("FSSAI_REVIEW_DELIBERATION_FLOOR", "45")
+
+    from fssaira.oversight import OversightMonitor, ReviewLoadPolicy
+
+    profile = ApplicationProfile.load("profiles/student_support.yaml")
+    plane = ControlPlane(profile, oversight=OversightMonitor(ReviewLoadPolicy.from_env()))
+    client = TestClient(create_app(plane, authenticator=Authenticator(AuthConfig())))
+
+    declared = client.get("/health").json()["declared_controls"]
+    assert declared["review_capacity"]["max_approvals_per_window"] == 30
+    assert "enforced" in declared["review_capacity_note"]

@@ -53,7 +53,7 @@ directionality claim.
 ## Five minute teaching mode
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
 pytest -q

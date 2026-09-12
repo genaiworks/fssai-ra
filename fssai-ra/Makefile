@@ -1,3 +1,5 @@
+PYTHON ?= python3
+
 .PHONY: help install test lint results figures demo check api gateway console dev-env \
         stack-up stack-down verify evaluate conformance doctor openapi clean \
         reviewer oversight challenge second-domain lab
@@ -7,96 +9,97 @@ help:  ## Show this help
 	  awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 install:  ## Install the package with development extras
-	python -m pip install -e ".[dev]"
+	$(PYTHON) -m pip install -e ".[dev]"
 
 test:  ## Run the deterministic test suite
-	python -m pytest
+	$(PYTHON) -m pytest
 
 lint:  ## Lint the Python sources
-	ruff check src tests scripts jobs
+	$(PYTHON) -m ruff check src tests scripts jobs
 
 verify:  ## Bounded model check of the reference profile
-	python -m fssaira.cli verify profiles/student_support.yaml
+	$(PYTHON) -m fssaira.cli verify profiles/student_support.yaml
 
 evaluate:  ## Adversarial scenarios, utility baseline, and ablations
-	python -m fssaira.cli evaluate profiles/student_support.yaml
+	$(PYTHON) -m fssaira.cli evaluate profiles/student_support.yaml
 
 oversight:  ## What review can this roster actually supply, and does the control bind?
-	python -m fssaira.cli oversight profiles/student_support.yaml --sweep
+	$(PYTHON) -m fssaira.cli oversight profiles/student_support.yaml --sweep
 
 challenge:  ## Score the open adversary corpus against all three architectures
-	python -m fssaira.cli challenge --dir challenges
+	$(PYTHON) -m fssaira.cli challenge --dir challenges
 
 second-domain:  ## The identical suite against a domain it was not designed for
-	python -m fssaira.cli verify profiles/academic_record_correction.yaml
-	python -m fssaira.cli evaluate profiles/academic_record_correction.yaml
-	python -m fssaira.cli conformance --profile profiles/academic_record_correction.yaml
+	$(PYTHON) -m fssaira.cli verify profiles/academic_record_correction.yaml
+	$(PYTHON) -m fssaira.cli evaluate profiles/academic_record_correction.yaml
+	$(PYTHON) -m fssaira.cli conformance --profile profiles/academic_record_correction.yaml
 
 lab:  ## Open the two browser tools used by docs/LAB.md
 	@echo "  worksheet   docs/worksheet/index.html"
 	@echo "  calculator  docs/oversight/index.html"
-	@python -c "import pathlib,webbrowser; [webbrowser.open(pathlib.Path(p).resolve().as_uri()) for p in ('docs/worksheet/index.html','docs/oversight/index.html')]"
+	@$(PYTHON) -c "import pathlib,webbrowser; [webbrowser.open(pathlib.Path(p).resolve().as_uri()) for p in ('docs/worksheet/index.html','docs/oversight/index.html')]"
 
 reviewer:  ## Everything a reviewer should check, in one command
-	@echo "── 1/12  the suite ───────────────────────────────────────────────"
-	@python -m pytest -q
-	@echo "── 2/12  what this deployment really is ──────────────────────────"
-	-@python -m fssaira.cli doctor
-	@echo "── 3/12  is each contract requirement enforced, or written down? ─"
-	@python -m fssaira.cli coverage
-	@echo "── 4/12  bounded model check, reference domain ───────────────────"
-	@python -m fssaira.cli verify profiles/student_support.yaml
-	@echo "── 5/12  containment, utility, and ablation ──────────────────────"
-	@python -m fssaira.cli evaluate profiles/student_support.yaml
-	@echo "── 6/12  the same suite on a domain it was not designed for ──────"
-	@python -m fssaira.cli verify profiles/academic_record_correction.yaml
-	@echo "── 7/12  how much oversight can actually be supplied ─────────────"
-	@python -m fssaira.cli oversight profiles/student_support.yaml --sweep
-	@echo "── 8/12  what a review assistant does to that answer ─────────────"
-	@python -m fssaira.cli assisted-review profiles/student_support.yaml
-	@echo "── 9/12  authority that travels: delegation chains ───────────────"
-	@python -m fssaira.cli delegation
-	@echo "── 10/12  the open adversary corpus ──────────────────────────────"
-	@python -m fssaira.cli challenge --dir challenges
-	@echo "── 11/12  do process races and recovery match their source? ──────"
-	@python scripts/check_resilience.py
-	@echo "── 12/12  do the committed numbers match a fresh run? ────────────"
-	@python scripts/generate_results.py --check
+	@echo "── 1/13  the suite ───────────────────────────────────────────────"
+	@$(PYTHON) -m pytest -q
+	@echo "── 2/13  what this deployment really is ──────────────────────────"
+	@$(PYTHON) -m fssaira.cli doctor || true
+	@echo "── 3/13  is each contract requirement enforced, or written down? ─"
+	@$(PYTHON) -m fssaira.cli coverage
+	@echo "── 4/13  bounded model check, reference domain ───────────────────"
+	@$(PYTHON) -m fssaira.cli verify profiles/student_support.yaml
+	@echo "── 5/13  containment, utility, and ablation ──────────────────────"
+	@$(PYTHON) -m fssaira.cli evaluate profiles/student_support.yaml
+	@echo "── 6/13  the same suite on a domain it was not designed for ──────"
+	@$(MAKE) second-domain PYTHON="$(PYTHON)"
+	@echo "── 7/13  portable conformance on memory and SQL backends ─────────"
+	@$(MAKE) conformance PYTHON="$(PYTHON)"
+	@echo "── 8/13  how much oversight can actually be supplied ─────────────"
+	@$(PYTHON) -m fssaira.cli oversight profiles/student_support.yaml --sweep
+	@echo "── 9/13  what a review assistant does to that answer ─────────────"
+	@$(PYTHON) -m fssaira.cli assisted-review profiles/student_support.yaml
+	@echo "── 10/13  authority that travels: delegation chains ──────────────"
+	@$(PYTHON) -m fssaira.cli delegation
+	@echo "── 11/13  the open adversary corpus ──────────────────────────────"
+	@$(PYTHON) -m fssaira.cli challenge --dir challenges
+	@echo "── 12/13  do process races and recovery match their source? ──────"
+	@$(PYTHON) scripts/check_resilience.py
+	@echo "── 13/13  do the committed numbers match a fresh run? ────────────"
+	@$(PYTHON) scripts/generate_results.py --check
 	@echo ""
 	@echo "  Every figure above is regenerated, not typed. If any of it disagrees"
 	@echo "  with the paper, the paper is wrong and we would like to know."
 
 conformance:  ## Conformance on both backend profiles
-	python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
-	python -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
+	$(PYTHON) -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
+	$(PYTHON) -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
 
 doctor:  ## Report what this deployment actually is
-	python -m fssaira.cli doctor
+	$(PYTHON) -m fssaira.cli doctor
 
 demo:  ## The two-minute hero demonstration (fully offline)
-	python scripts/demo.py
+	$(PYTHON) scripts/demo.py
 
 results:  ## Regenerate every figure the paper and the deck quote
-	python scripts/generate_results.py
+	$(PYTHON) scripts/generate_results.py
 
 figures:  ## Regenerate the deck's charts from the experiment results
-	python scripts/generate_figures.py
+	$(PYTHON) scripts/generate_figures.py
 
-check: test lint verify evaluate conformance  ## Everything CI runs
-	python scripts/demo.py --fast > /dev/null
-	python scripts/generate_results.py --check
+check: lint reviewer  ## Run the complete local release-readiness suite
+	$(PYTHON) scripts/demo.py --fast > /dev/null
 
 api:  ## Serve the control plane on 127.0.0.1:8080
-	python -m fssaira.cli serve --host 127.0.0.1 --port 8080
+	$(PYTHON) -m fssaira.cli serve --host 127.0.0.1 --port 8080
 
 gateway:  ## Serve the low-side import gateway on 127.0.0.1:8081
-	python -m fssaira.cli serve --gateway --host 127.0.0.1 --port 8081
+	$(PYTHON) -m fssaira.cli serve --gateway --host 127.0.0.1 --port 8081
 
 console:  ## Run the React console against a local control plane
 	cd console && npm install --no-audit --no-fund && npm run dev
 
 dev-env:  ## Generate deploy/.env from the example
-	python scripts/bootstrap_dev_env.py
+	$(PYTHON) scripts/bootstrap_dev_env.py
 
 stack-up: dev-env  ## Bring up the reference deployment
 	docker compose --env-file deploy/.env -f deploy/compose.yaml up --build -d
@@ -105,7 +108,7 @@ stack-down:  ## Tear it down
 	docker compose --env-file deploy/.env -f deploy/compose.yaml down
 
 openapi:  ## Export the OpenAPI schema
-	python scripts/export_openapi.py
+	$(PYTHON) scripts/export_openapi.py
 
 clean:  ## Remove build and cache artifacts
 	find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true

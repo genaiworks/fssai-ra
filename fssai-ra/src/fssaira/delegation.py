@@ -38,7 +38,7 @@ rather than a convention.
 
 What is enforced
 ----------------
-Seven invariants, each with a stable denial code, each independently ablatable:
+Nine invariants, each with a stable denial code, each independently ablatable:
 
 ``D1`` **Attenuation** — every hop's scope is covered by its delegator's.
 ``D2`` **Rooted authority** — the chain's root is an institutional grant, never
@@ -54,11 +54,11 @@ executor verifies the whole chain rather than the caller's claim about it.
 ``D7`` **Non-delegable consequence** — authority that required a named human to
 grant may not be passed onward by a machine. A human approved *this agent*
 acting; they did not approve an unbounded population of its successors.
-``D8`` **Bearer binding and beneficiary attenuation** — a chain authorises the
-principal it names and no other, and work done *for* another principal executes
-under that principal's authority, not the actor's.
+``D8a`` **Bearer binding** — a chain authorises the principal it names and no
+other. ``D8b`` **Beneficiary attenuation** — work done *for* another principal
+executes under that principal's authority, not the actor's.
 
-``D8`` exists because the first run of this module's own suite admitted the
+``D8a`` exists because the first run of this module's own suite admitted the
 confused deputy. Every other invariant held; the chain presented was authentic,
 rooted, attenuated, unexpired, acyclic, and within depth. It simply was not the
 *requester's* chain. An authority object nobody is bound to is a bearer token,
@@ -69,7 +69,7 @@ worth reporting.
 What this does not establish
 ----------------------------
 This bounds authority, not competence or intent. A chain that satisfies all
-seven invariants can still carry a well-formed, fully authorized, substantively
+nine invariants can still carry a well-formed, fully authorized, substantively
 wrong action — that class is the oversight module's problem and stays there.
 Nothing here observes a real multi-agent deployment; these are the same kind of
 fixture observations the rest of the repository makes, and the same limits in
@@ -319,6 +319,62 @@ class DelegationPolicy:
             raise ValueError("max_depth must be at least 1")
         if self.human_approval_required_below_depth < 0:
             raise ValueError("human_approval_required_below_depth must not be negative")
+
+    @classmethod
+    def from_env(cls, env: dict | None = None) -> DelegationPolicy | None:
+        """Build the declared delegation bounds from the environment, or ``None``.
+
+        ``None`` means the institution has declared nothing, and like
+        :meth:`fssaira.oversight.ReviewLoadPolicy.from_env` it deliberately does
+        not fall back to ours. A depth bound is an accountability decision — how
+        many hands a permission may pass through before nobody can answer who
+        decided — and inheriting that number from a reference implementation
+        would make it nobody's decision.
+
+        Set ``FSSAI_MAX_DELEGATION_DEPTH`` to switch it on.
+        """
+        import os
+
+        source = os.environ if env is None else env
+        raw_depth = source.get("FSSAI_MAX_DELEGATION_DEPTH")
+        if not raw_depth:
+            return None
+        try:
+            depth = int(raw_depth)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"FSSAI_MAX_DELEGATION_DEPTH must be an integer, got {raw_depth!r}"
+            ) from exc
+
+        def flag(name: str, default: bool) -> bool:
+            raw = source.get(name)
+            if raw is None or raw == "":
+                return default
+            value = raw.strip().lower()
+            if value in ("1", "true", "yes", "on", "allow"):
+                return True
+            if value in ("0", "false", "no", "off", "deny"):
+                return False
+            raise ValueError(
+                f"{name} must be a boolean (true/false), got {raw!r}"
+            )
+
+        raw_threshold = source.get("FSSAI_HUMAN_APPROVAL_BELOW_DEPTH", "")
+        try:
+            threshold = int(raw_threshold) if raw_threshold.strip() else 1
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                "FSSAI_HUMAN_APPROVAL_BELOW_DEPTH must be an integer, "
+                f"got {raw_threshold!r}"
+            ) from exc
+
+        return cls(
+            max_depth=depth,
+            allow_machine_delegated_consequence=flag(
+                "FSSAI_ALLOW_MACHINE_DELEGATED_CONSEQUENCE", False
+            ),
+            human_approval_required_below_depth=threshold,
+        )
 
     def to_dict(self) -> dict:
         return {

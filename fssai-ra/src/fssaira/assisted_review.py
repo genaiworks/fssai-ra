@@ -164,6 +164,52 @@ class ReviewAssistance:
         best = 0.2 if self.mode is AssistanceMode.RECOMMENDED else 0.4
         return round(1.0 - (1.0 - best) * earned, 4)
 
+    @classmethod
+    def from_env(cls, env: dict | None = None) -> ReviewAssistance:
+        """Read the deployment's assistance declaration from the environment.
+
+        Unlike the other two policies this one always returns a value, because
+        *not declaring* assistance is itself a declaration: it says reviewers are
+        unaided, and the unaided deliberation floor then applies in full. A
+        deployment that quietly gives reviewers an assistant without saying so
+        has not escaped the control, it has mis-declared its configuration — and
+        ``configuration_warnings`` reports the shape of that risk rather than
+        pretending it can detect it.
+        """
+        import os
+
+        source = os.environ if env is None else env
+        raw_mode = (source.get("FSSAI_REVIEW_ASSISTANCE_MODE") or "unaided").strip().lower()
+        try:
+            mode = AssistanceMode(raw_mode)
+        except ValueError as exc:
+            valid = ", ".join(item.value for item in AssistanceMode)
+            raise ValueError(
+                f"FSSAI_REVIEW_ASSISTANCE_MODE must be one of {valid}; got {raw_mode!r}"
+            ) from exc
+
+        def flag(name: str) -> bool:
+            raw = source.get(name)
+            if raw is None or not raw.strip():
+                return False
+            value = raw.strip().lower()
+            if value in ("1", "true", "yes", "on"):
+                return True
+            if value in ("0", "false", "no", "off"):
+                return False
+            raise ValueError(
+                f"{name} must be a boolean (true/false), got {raw!r}"
+            )
+
+        return cls(
+            mode=mode,
+            independent_model=flag("FSSAI_REVIEW_ASSISTANT_INDEPENDENT_MODEL"),
+            independent_evidence=flag("FSSAI_REVIEW_ASSISTANT_INDEPENDENT_EVIDENCE"),
+            adversarial_posture=flag("FSSAI_REVIEW_ASSISTANT_ADVERSARIAL"),
+            declared_by=(source.get("FSSAI_REVIEW_ASSISTANCE_DECLARED_BY") or "").strip(),
+            assistant_name=(source.get("FSSAI_REVIEW_ASSISTANT_NAME") or "").strip(),
+        )
+
     def to_dict(self) -> dict:
         return {
             "mode": self.mode.value,

@@ -33,10 +33,10 @@ use [`START_HERE.md`](START_HERE.md).
 
 ```bash
 git clone https://github.com/genaiworks/fssai-ra.git
-cd fssai-ra/fssai-ra
-python -m venv .venv && source .venv/bin/activate
-python -m pip install -e ".[dev]"
-pytest -q          # everything green before anyone arrives
+cd fssai-ra
+make setup
+make test          # everything green before anyone arrives
+cd fssai-ra && source .venv/bin/activate
 ```
 
 Facilitators: do this once, then **carry it on a USB stick**. Conference wifi

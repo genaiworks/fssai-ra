@@ -226,6 +226,57 @@ class ReviewLoadPolicy:
             "note": note,
         }
 
+    @classmethod
+    def from_env(cls, env: dict | None = None) -> ReviewLoadPolicy | None:
+        """Build the declared review capacity from the environment, or ``None``.
+
+        ``None`` is the honest answer when an institution has declared nothing,
+        and it is deliberately not a default policy. A deployment that silently
+        acquired *our* shipped quota would be publishing a capacity figure
+        nobody at that institution ever agreed to, which is the opposite of the
+        point. ``configuration_warnings`` reports the absence instead.
+
+        Set ``FSSAI_REVIEW_MAX_PER_WINDOW`` to switch it on. Numeric values fall
+        back to the shipped defaults; escalation is disabled when its value is
+        absent, blank, or explicitly set to ``none``/``off``. This avoids an
+        unreachable default threshold when an institution declares a smaller
+        capacity ceiling.
+        """
+        import os
+
+        source = os.environ if env is None else env
+        if not source.get("FSSAI_REVIEW_MAX_PER_WINDOW"):
+            return None
+
+        def number(name: str, default: float, cast=float):
+            raw = source.get(name)
+            if raw is None or raw == "":
+                return default
+            try:
+                return cast(raw)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{name} must be a number, got {raw!r}") from exc
+
+        escalation_raw = source.get("FSSAI_REVIEW_SECOND_REVIEWER_AFTER", "")
+        if escalation_raw.strip().lower() in ("", "none", "off", "disabled"):
+            escalation = None
+        else:
+            try:
+                escalation = int(escalation_raw)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "FSSAI_REVIEW_SECOND_REVIEWER_AFTER must be an integer or "
+                    f"none, got {escalation_raw!r}"
+                ) from exc
+
+        return cls(
+            max_approvals_per_window=int(number("FSSAI_REVIEW_MAX_PER_WINDOW", 60, int)),
+            window_seconds=number("FSSAI_REVIEW_WINDOW_SECONDS", 3_600.0),
+            min_deliberation_seconds=number("FSSAI_REVIEW_DELIBERATION_FLOOR", 45.0),
+            second_reviewer_after=escalation,
+            reviewing_seconds_per_day=number("FSSAI_REVIEW_SECONDS_PER_DAY", 4 * 3_600.0),
+        )
+
     def to_dict(self) -> dict:
         return {
             "max_approvals_per_window": self.max_approvals_per_window,

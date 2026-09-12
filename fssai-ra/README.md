@@ -39,10 +39,13 @@ AI*) and its UNU–Springer proceedings.
 
 ```bash
 git clone https://github.com/genaiworks/fssai-ra.git
-cd fssai-ra/fssai-ra
-pip install -e ".[dev]"
+cd fssai-ra
+make setup                                        # invokes python3 and creates the venv
+make demo                                         # guided walkthrough
+make reviewer                                     # all assurance checks, one command
 
-pytest                                            # 478 deterministic tests (187 at the v1.0.0 tag)
+cd fssai-ra && source .venv/bin/activate          # optional: individual commands
+pytest                                            # 513 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
@@ -54,7 +57,6 @@ fssaira coverage                                  # is each contract requirement
 fssaira delegation                                # authority that travels: 10 chain risk classes, 3 architectures
 fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
-make reviewer                                     # all of the above, one command
 ```
 
 After installation, these checks need no network, model weights or GPU.
@@ -342,6 +344,7 @@ conference routes, and links every maintained and historical document.
 - [`docs/REVIEWERS.md`](docs/REVIEWERS.md) — **check every claim in ten minutes**, offline
 - [`docs/ASSURANCE.md`](docs/ASSURANCE.md) — every public claim, its mechanism, its test, and its limit
 - [`docs/RESPONSIBLE_AI.md`](docs/RESPONSIBLE_AI.md) — risk → mitigation → test → result, with the open rows marked open
+- [`docs/GAPS.md`](docs/GAPS.md) — open evidence obligations and what would actually close them
 - [`docs/IMPACT.md`](docs/IMPACT.md) — who benefits, labelled *demonstrated*, *reasoned*, *hypothesis*, or *out of scope*
 
 **If you are using it**

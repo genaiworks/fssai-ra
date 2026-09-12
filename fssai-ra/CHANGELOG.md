@@ -2,6 +2,92 @@
 
 ## Unreleased — composition: delegated authority, assisted review, and a contract that measures itself
 
+### The oversight control was not active in any real deployment
+
+The worst finding in this release, and it was ours.
+
+- **Fixed: `build_control_plane()` built its `ApprovalAuthority` with no
+  oversight monitor.** `ControlPlane` had accepted one since the oversight work
+  shipped, and the runtime factory — the thing that assembles every actual
+  deployment, including the HTTP API and the console — never passed it. Review
+  capacity was therefore enforced in the CLI trial and in the test suite, and
+  **nowhere a real institution would run the platform.** Every test that
+  exercised oversight constructed the monitor itself, which is exactly why three
+  releases went by without noticing: the suite was green and the control was
+  absent. This is the failure the control contract exists to eliminate, found in
+  the headline contribution.
+- **Fixed: none of the three declarable policies could be declared.**
+  `ReviewLoadPolicy`, `DelegationPolicy` and `ReviewAssistance` existed as
+  library objects with no path from a deployment's environment, so an
+  institution could read the paper, agree with it, and have no way to state its
+  own numbers. All three now have `from_env()`.
+- The two policies return **`None` when nothing is declared**, and deliberately
+  do not fall back to ours. A capacity figure inherited from a reference
+  implementation is one nobody at that institution agreed to; publishing "2,640
+  actions per day" on the strength of a number we chose would be worse than
+  publishing nothing. `ReviewAssistance` always returns a value, because *not*
+  declaring assistance is itself the strict declaration: reviewers are unaided
+  and the full deliberation floor applies.
+- `fssaira doctor` now reports the absences rather than letting them stay
+  invisible: `NO_DECLARED_REVIEW_CAPACITY` (high), `NO_DECLARED_DELEGATION_BOUND`
+  (info), `INCOHERENT_REVIEW_POLICY` (medium), `DEPENDENT_REVIEW_ASSISTANT`
+  (high), and two blocking findings — `ASSISTANCE_NOT_DECLARED` and
+  `FLOOR_BELOW_DECLARED_INDEPENDENCE`, the configuration gate surfaced where an
+  operator actually looks.
+- `/health` gained `declared_controls`. An unenforced ceiling is invisible from
+  every other observable: a deployment with no declared capacity looks identical
+  to one running inside its capacity, right up to the moment it is not.
+- `deploy/.env.example` documents all thirteen variables with the reasoning
+  inline, and `test_every_variable_the_example_documents_is_actually_read` fails
+  the build if it ever describes a variable no code reads — the same drift that
+  had `docs/REVIEWERS.md` promising `394 passed` against a suite of 477.
+
+### Reachability, hygiene, and the checks that were missing
+
+- Three assurance endpoints — `/v1/coverage`, `/v1/delegation`,
+  `/v1/assisted-review` — published like `/v1/conformance`, operator-role gated,
+  with the regenerated OpenAPI schema. The console's Assurance tab shows all
+  three.
+- **Fixed: `fssaira init` scaffolded new domains into this project's own worst
+  finding** — a contract entry with a failure test bound to nothing. It now
+  writes `bindings/core.yaml` pointing at the test file it also writes, so a new
+  domain starts at `0 unverified`.
+- CI's assurance job runs coverage, delegation and assisted review. Its comment
+  says a failure there means a public claim has stopped being true; three public
+  claims were not being checked.
+- **Fixed: `console/tsconfig.tsbuildinfo` was tracked.** Untracked and ignored.
+- **Fixed: the lab had quietly become 105 minutes** while every document still
+  said ninety. Added a timetable-consistency test, which immediately found a
+  second error — exercise 6 states 15 minutes and the timetable allotted 10. The
+  lab is now honestly two hours with a documented ninety-minute cut path.
+- **Fixed: `docs/REVIEWERS.md` told a sceptic to expect `394 passed`** against a
+  suite of 477. It was the one front-door document outside the READMEs quoting a
+  figure with nothing checking it; it is checked now.
+- `PROCUREMENT.md` gained §8 delegated authority and §9 review-assistant
+  independence with blocking-finding rows, because the paper claims independence
+  is procurement language and it was not in the questionnaire. `SECURITY.md`
+  names the two assumptions the threat model had been making silently and adds
+  six residual risks, including that **revocation is not pushed to already-issued
+  descendants**. `OPERATIONS.md` documents the declarations and eight new denial
+  codes. `GLOSSARY.md`, `RESPONSIBLE_AI.md`, `ADOPTION.md`, `EXTENDING.md`,
+  `SYSTEM_LITERACY.md`, `LAB.md`, `CITATION.cff` and both paper indexes updated.
+- Added a repository-root `Makefile` so a first-time user can run `make setup`,
+  `make demo`, `make test`, and `make reviewer` without knowing the nested Python
+  package layout. Every package recipe now uses configurable `PYTHON ?= python3`,
+  fixing modern macOS installations where the `python` command is absent.
+- Added a linked documentation map, a complete 90-minute source-reading route,
+  and `docs/GAPS.md`, an open-evidence register that names the field, human,
+  hardware, and independent-assurance work software tests cannot close.
+- CI now covers Python 3.10–3.14, uses Node 24-based action releases, builds and
+  installs the wheel, checks citation-title agreement, audits Python and console
+  dependencies, and runs the complete 13-gate reviewer path locally. Replaced
+  deprecated Starlette `httpx` test support with `httpx2`; upgraded Vite to the
+  first patched 6.x release and verified a zero-vulnerability console audit.
+- Modernized package licensing to an SPDX expression, removed the deprecated
+  license classifier, and pointed package metadata at the audience-specific
+  documentation map rather than the engineering README.
+
+
 ### The contract now checks whether it is enforced
 
 Seven fields per capability is this project's central claim, and one of the seven

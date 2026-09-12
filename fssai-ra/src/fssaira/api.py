@@ -113,6 +113,48 @@ def require(principal: Principal, role: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+def _declared_controls(plane) -> dict:
+    """The deployment's own declarations, or an explicit statement of absence.
+
+    ``null`` here is meaningful and is not the same as a default. It says the
+    institution has declared nothing, which is a posture rather than an omission
+    — and the matching entry in ``configuration_warnings`` says what that costs.
+    """
+    from .assisted_review import AssistanceMode, ReviewAssistance
+    from .delegation import DelegationPolicy
+
+    monitor = getattr(plane.authority, "_oversight", None)
+    assistance = ReviewAssistance.from_env()
+    delegation = DelegationPolicy.from_env()
+
+    return {
+        "review_capacity": (
+            monitor.policy.to_dict() if monitor is not None else None
+        ),
+        "review_capacity_note": (
+            "enforced on this deployment's approval path"
+            if monitor is not None
+            else "not declared: approvals are unlimited and the ceiling is unbounded"
+        ),
+        "review_assistance": (
+            assistance.to_dict()
+            if assistance.mode is not AssistanceMode.UNAIDED
+            else {"mode": "unaided", "note": "the full deliberation floor applies"}
+        ),
+        "delegation": delegation.to_dict() if delegation is not None else None,
+        "delegation_note": (
+            "declared"
+            if delegation is not None
+            else "not declared: correct for a single-agent deployment, wrong for one "
+                 "that calls a tool server, plugin, or sub-agent"
+        ),
+        "limits": [
+            "these are declarations, not measurements: nothing here inspects which "
+            "model reviews this deployment's work, or how attentive any reviewer is",
+        ],
+    }
+
+
 def create_app(
     runtime: ControlPlane | None = None,
     *,
@@ -185,6 +227,14 @@ def create_app(
             "pending_outcomes": plane.pending_outcomes,
             "model": model.to_dict() if hasattr(model, "to_dict") else None,
             "authentication": {"mode": auth.config.mode, "warnings": auth.warnings},
+            # What this deployment has declared about the three things only an
+            # institution can state: how much review it can supply, whether the
+            # reviewer's assistant is independent of the proposer, and how far
+            # authority may be passed on. Published on /health because an
+            # unenforced ceiling is not visible from any other observable — a
+            # deployment with no declared capacity looks identical to one inside
+            # its capacity right up to the moment it is not.
+            "declared_controls": _declared_controls(plane),
             "configuration_warnings": [item.message for item in configuration_warnings()],
         }
 

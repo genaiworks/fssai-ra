@@ -5,7 +5,8 @@
 > **Recommended next:** Policy leader → [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) · AI engineer → [`PLATFORM.md`](PLATFORM.md) · reviewer → [`REVIEWERS.md`](REVIEWERS.md)
 
 This is the shortest route from “I cloned it” to “I can explain, test, and
-extend it.” It takes about 75 minutes and stays offline after installation.
+extend it.” The complete route takes about 90 minutes and stays offline after
+installation; stop after Step 6 for a 45-minute conceptual tour.
 
 The one idea to keep in your head is:
 
@@ -33,11 +34,10 @@ state.
 From the outer repository directory:
 
 ```bash
+make setup
+make test
 cd fssai-ra
-python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"
-pytest -q
 ```
 
 The suite should pass without Docker, a network connection, model weights, or a
@@ -129,10 +129,23 @@ Read [`src/fssaira/verification.py`](../src/fssaira/verification.py) and
 - **Conformance** asks whether the same control properties survive when an
   institution replaces a backend.
 
-## Step 7 · Discover why “human in the loop” is incomplete (7 minutes)
+## Step 7 · Check whether the contract is enforced or merely complete (5 minutes)
+
+```bash
+fssaira coverage
+```
+
+Read [`src/fssaira/coverage.py`](../src/fssaira/coverage.py), then compare
+[`contract/`](../contract/) with [`contract/bindings/`](../contract/bindings/).
+A contract can contain every required sentence while none of its failure tests
+runs. Coverage classifies each requirement as machine-verified, attested, or
+unverified and fails when an enforcement claim is bound to nothing.
+
+## Step 8 · Discover why “human in the loop” is incomplete (10 minutes)
 
 ```bash
 fssaira oversight profiles/student_support.yaml --sweep
+fssaira assisted-review profiles/student_support.yaml
 ```
 
 Open the offline [oversight calculator](oversight/) and then read
@@ -141,7 +154,26 @@ review attention as a finite, declared resource. Above the ceiling it defers to
 the manual path instead of quietly turning approval into a signature service.
 The degradation curve is a declared parameter, not measured human behaviour.
 
-## Step 8 · Learn what a verified hash does not prove (7 minutes)
+Then read [`src/fssaira/assisted_review.py`](../src/fssaira/assisted_review.py).
+An assistant can increase review throughput, but it is not an independent
+judgement when it shares the proposing model, evidence path, and posture. This
+is a deployment declaration and configuration gate—not a claim that the code
+can inspect organizational independence.
+
+## Step 9 · Follow authority through an agent chain (7 minutes)
+
+```bash
+fssaira delegation
+```
+
+Read [`src/fssaira/delegation.py`](../src/fssaira/delegation.py) beside the three
+reported architectures. Checking only the immediate caller proves one hop, not
+the authority of the whole chain. The verifier requires a rooted, attenuating,
+acyclic, unexpired chain with an authorized leaf and a bounded depth. The trial
+uses constructed chains; it does not claim evidence from a production
+multi-agent system.
+
+## Step 10 · Learn what a verified hash does not prove (7 minutes)
 
 Use a fresh output name each time:
 
@@ -154,7 +186,7 @@ unanchored, and consistent against a separately retained fingerprint. A hash can
 show that records agree. It cannot show that an event happened, an input was
 true, or a decision was fair.
 
-## Step 9 · Test whether the method travels (5 minutes)
+## Step 11 · Test whether the method travels (5 minutes)
 
 ```bash
 make second-domain
@@ -164,7 +196,7 @@ Compare [`profiles/academic_record_correction.yaml`](../profiles/academic_record
 with the first profile. The library should not change when the domain changes.
 The new profile inherits the structure, not the first profile’s evidence.
 
-## Step 10 · Contribute an attack, not a testimonial (5 minutes)
+## Step 12 · Contribute an attack, not a testimonial (5 minutes)
 
 ```bash
 fssaira challenge --dir challenges
@@ -174,7 +206,7 @@ Copy [`challenges/TEMPLATE.yaml`](../challenges/TEMPLATE.yaml), describe a failu
 from your domain, and score it. Entries are data, not executable contributor
 code. A failure the architecture does not contain is a useful result.
 
-## Step 11 · Map the teaching seams to the distributed stack (5 minutes)
+## Step 13 · Map the teaching seams to the distributed stack (5 minutes)
 
 Only now read [`docs/PLATFORM.md`](PLATFORM.md) and
 [`deploy/compose.yaml`](../deploy/compose.yaml).
@@ -193,7 +225,7 @@ The table is a mapping, not an equivalence claim. A Python interface cannot
 prove physical directionality; a single Docker host cannot provide independent
 administrative trust.
 
-## Step 12 · Extend it safely (8 minutes)
+## Step 14 · Extend it safely (8 minutes)
 
 ```bash
 fssaira init my_domain --output /tmp/fssaira-my-domain
@@ -212,11 +244,16 @@ purpose.
 - I can explain what the approval digest binds and why stale approval fails.
 - I can identify the manual fallback and its accountable owner.
 - I can reproduce a denial, remove its control, and make the harm return.
+- I can show whether every contract requirement is verified, attested, or
+  unverified.
 - I can explain the oversight ceiling using my institution’s own assumptions.
+- I can explain why a dependent review assistant is not a second opinion.
+- I can verify the full delegation chain rather than only its final hop.
 - I can distinguish tamper-evidence from truth, fairness, and non-repudiation.
 - I can state which claims are fixture observations and which remain unevidenced.
 - I can add a domain without copying another domain’s assurance claims.
 
 For a facilitated version of this path, continue with
 [`docs/LAB.md`](LAB.md). For a claim-by-claim audit, use
-[`docs/REVIEWERS.md`](REVIEWERS.md) and run `make reviewer`.
+[`docs/REVIEWERS.md`](REVIEWERS.md) and run `make reviewer`. Before a real pilot,
+work through the evidence obligations in [`GAPS.md`](GAPS.md).

@@ -119,3 +119,32 @@ def test_formatted_abstract_uses_the_current_paper_title():
     with ZipFile(DOCS / "extended-abstract.docx") as archive:
         document_xml = archive.read("word/document.xml").decode("utf-8")
     assert title in document_xml
+
+
+def test_repository_root_has_a_python3_portable_entrypoint():
+    """The first command must work on modern macOS, where `python` is absent."""
+    makefile = (ROOT.parent / "Makefile").read_text(encoding="utf-8")
+    assert "SYSTEM_PYTHON ?= python3" in makefile
+    assert "make setup" in (ROOT.parent / "README.md").read_text(encoding="utf-8")
+    for path in (ROOT / "README.md", ROOT / "docs" / "REVIEWERS.md", ROOT / "docs" / "LAB.md"):
+        text = path.read_text(encoding="utf-8")
+        assert "cd fssai-ra/fssai-ra" not in text, f"stale nested clone path in {path}"
+
+
+def test_publication_titles_agree_across_both_citations():
+    import yaml
+
+    title = (ROOT / "paper" / "form-ready-abstract.md").read_text(
+        encoding="utf-8"
+    ).splitlines()[0].removeprefix("# ")
+    for path in (ROOT.parent / "CITATION.cff", ROOT / "CITATION.cff"):
+        citation = yaml.safe_load(path.read_text(encoding="utf-8"))
+        assert citation["preferred-citation"]["title"] == title, path
+
+
+def test_package_metadata_sends_readers_to_the_documentation_map():
+    metadata = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert (
+        'Documentation = "https://github.com/genaiworks/fssai-ra/blob/main/'
+        'fssai-ra/docs/README.md"'
+    ) in metadata

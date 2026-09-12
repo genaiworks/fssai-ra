@@ -13,12 +13,16 @@ agentic AI. It runs in memory on a laptop, or as a reference deployment with
 FastAPI, PostgreSQL, Redis, Kafka, PySpark, Iceberg, object storage, a local
 model through Ollama, and a React operator console.
 
-The companion paper is *Trust by Construction: A Testable Architecture for
-Sovereign AI Agents in Education*, prepared for the **UNU Macau AI Conference
+The companion paper is *From Model Literacy to System Literacy: Teaching Trust
+by Construction for Agentic AI*, prepared for the **UNU Macau AI Conference
 2026** — *AI × Education: AI for Learning, Learning for AI* — and its
 UNU–Springer proceedings.
 
 ## Start here
+
+The [documentation map](fssai-ra/docs/README.md) explains what the repository
+means and gives linked routes for policy leaders, AI engineers, educators,
+reviewers, and adopters.
 
 **If you came from the paper or the panel**
 
@@ -32,6 +36,7 @@ UNU–Springer proceedings.
 
 - [Check every claim in ten minutes](fssai-ra/docs/REVIEWERS.md) — offline, no Docker
 - [Responsible AI: risk → mitigation → test → result](fssai-ra/docs/RESPONSIBLE_AI.md)
+- [Open evidence gaps and closure criteria](fssai-ra/docs/GAPS.md)
 - [Who benefits, and how we would know](fssai-ra/docs/IMPACT.md)
 
 **If you want to use it**
@@ -39,7 +44,7 @@ UNU–Springer proceedings.
 - [Authority Boundary Worksheet](fssai-ra/docs/worksheet/) — one capability, seven fields, fifteen minutes, in a browser
 - [Oversight capacity calculator](fssai-ra/docs/oversight/) — how much review can you actually supply? Offline, sends nothing anywhere
 - [The authority boundary lab](fssai-ra/docs/LAB.md) — two hours offline (ninety-minute path documented), for people who will govern one of these systems
-- [The two-minute demonstration](fssai-ra/docs/DEMO.md) — `python scripts/demo.py`
+- [The two-minute demonstration](fssai-ra/docs/DEMO.md) — `make demo`
 - [Adoption playbook](fssai-ra/docs/ADOPTION.md) — a 30/60/90-day path
 - [Procurement questions](fssai-ra/docs/PROCUREMENT.md) — the seven fields as a supplier questionnaire, plus delegated authority and review-assistant independence
 - [Project overview and architecture](fssai-ra/README.md)
@@ -49,11 +54,14 @@ UNU–Springer proceedings.
 
 ```bash
 git clone https://github.com/genaiworks/fssai-ra.git
-cd fssai-ra/fssai-ra
-python -m venv .venv && source .venv/bin/activate
-python -m pip install -e ".[dev]"
+cd fssai-ra
+make setup                                        # uses python3; creates fssai-ra/.venv
+make demo                                         # two-minute guided walkthrough
+make reviewer                                     # reproduce every public claim
 
-pytest                                            # 478 deterministic tests, fully offline
+cd fssai-ra                                       # optional: use the CLI directly
+source .venv/bin/activate
+python -m pytest                                  # deterministic, fully offline
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # 240 states, 5 invariants, 0 violations
 fssaira evaluate profiles/student_support.yaml    # 30 adversarial + 6 benign + 8 ablations
@@ -63,12 +71,11 @@ fssaira coverage                                  # is each contract requirement
 fssaira delegation                                # authority that travels: 10 chain risk classes, 3 architectures
 fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
-make reviewer                                     # all of the above, one command
 fssaira init my-domain                            # scaffold your own
 ```
 
 No network, no model weights, no GPU. Release `v1.0.0` contains 187 deterministic
-tests; current source has 478. Both include a bounded model checker over the
+tests; current source has 513 deterministic tests. Both include a bounded model checker over the
 profile's declared authority space, a portable conformance suite, and versioned
 machine-readable results. These establish specified properties in a synthetic
 environment; they are **not** a security certification or evidence of production

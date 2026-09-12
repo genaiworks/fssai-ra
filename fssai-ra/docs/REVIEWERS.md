@@ -13,9 +13,12 @@ the issue.
 
 ```bash
 git clone https://github.com/genaiworks/fssai-ra.git
-cd fssai-ra/fssai-ra
-python -m venv .venv && source .venv/bin/activate
-python -m pip install -e ".[dev]"
+cd fssai-ra
+make setup
+make reviewer
+
+# Optional: activate the environment for the individual commands below.
+cd fssai-ra && source .venv/bin/activate
 ```
 
 ---
@@ -26,7 +29,7 @@ python -m pip install -e ".[dev]"
 |---|---|---|---|
 | 0 | `make reviewer` | **All of the below, in one command** | every check, regenerated rather than typed |
 | 1 | `python scripts/demo.py --fast` | Whether the system does what the paper says | Six acts: quarantine, denial, execution, refusal, tamper detection, comparison |
-| 2 | `pytest` | Whether the code works at all | `478 passed` in a few seconds |
+| 2 | `pytest` | Whether the code works at all | `513 passed` in a few seconds |
 | 3 | `fssaira verify profiles/student_support.yaml` | Whether the authority invariants hold across the whole declared space | 240 states, 5 invariants, **0 violations** |
 | 4 | `fssaira evaluate profiles/student_support.yaml` | Containment **and** its cost | 30/30 contained, 0 unauthorized mutations, false-denial rate **0.0** |
 | 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 26/26, conformant |
