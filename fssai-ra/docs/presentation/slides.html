@@ -698,7 +698,7 @@ const SLIDES = [
         <div class="body">
           <h3>Does it hold after you replace a component?</h3>
           <p class="faint">A portable conformance suite runs the properties against <em>your</em> database, bus, and model, naming the governance claim each check defends.</p>
-          <p><strong>25 checks, 2 backend profiles.</strong></p>
+          <p><strong>26 checks, 2 backend profiles.</strong></p>
         </div>
       </div>
       <div class="callout">
@@ -890,6 +890,52 @@ const SLIDES = [
   <p>Be scrupulous about the caveat. We did not measure reviewers. We measured whether the control binds given a curve the institution declares.</p>`
 },
 {
+  eyebrow: ["The hard part", "When the reviewer also has a model"],
+  time: "9:40",
+  html: `
+    <h2>Assistance buys throughput. Only independence makes it oversight.</h2>
+    <div class="body">
+      <p>Everything on the last slide assumed an <em>unaided</em> reader. No institution whose queue exceeds its roster will staff review that way — and it should not. Assistance completes <strong>5&times;</strong> the legitimate work.</p>
+      <div class="callout">
+        <p>But the deliberation floor must then fall, and <strong>the floor was never measuring seconds</strong>. It was a proxy for <em>a second mind independently reaching the same conclusion</em> — which survives only if the assistant is independent of the proposer.</p>
+      </div>
+      <div class="ledger">
+        <div><span class="seq">1</span><span>merit failures — assistant shares the proposer's model and evidence</span><span class="hash"><b class="bad">5</b></span></div>
+        <div><span class="seq">2</span><span>merit failures — independent model, evidence path, adversarial posture</span><span class="hash"><b>1</b></span></div>
+        <div><span class="seq">3</span><span>oversight refusals fired in the harmful arm</span><span class="hash"><b class="bad">0</b></span></div>
+      </div>
+      <p>Same queue. Same lowered floor. In the harmful arm the chain is intact, the reviewer is inside quota, every approval clears the floor, and nothing refuses. <strong>There is no runtime signal to alert on</strong> — so the control is a <em>configuration gate</em>: declare a dependent assistant and a lowered floor, and the deployment does not start.</p>
+      <p class="faint">And the independent arm reaches <strong>1, not 0</strong>. Assistance multiplies attention without making it unbounded: you have bought a larger ceiling to compute, not permission to stop computing one.</p>
+    </div>`,
+  notes: `The natural follow-on to the oversight slide, and the one that makes this a 2026 talk rather than a 2024 one.
+  <p>Expect this objection: "surely a good assistant helps." Agree immediately — the 5x is on the slide precisely so you are not arguing against assistance. You are arguing against <em>undeclared</em> assistance.</p>
+  <p>The three independence properties are the practical takeaway: a different model, a different evidence path, an adversarial posture. All three are procurement language, not research language. If a delegate writes down one thing, it should be these.</p>
+  <p>Be scrupulous: the proposer/assistant correlation is a declared parameter. We evaluated no model and name no vendor.</p>`
+},
+{
+  eyebrow: ["Composition", "Authority that travels"],
+  time: "10:15",
+  html: `
+    <h2>Checking every hop is not checking the chain.</h2>
+    <div class="body">
+      <p>Everything so far governs <em>one</em> agent under <em>one</em> grant. That was right for 2023. Today an orchestrator spawns sub-agents, and those sub-agents call tool servers nobody in the room wrote.</p>
+      <div class="callout">
+        <p><strong>No principal may pass on authority it does not itself hold, and no chain may end with more authority than its root was granted.</strong></p>
+      </div>
+      <div class="figures">
+        <div class="fig"><span class="k">Unguarded</span><b>0/10</b><span class="note">the leaf's claimed scope is the decision</span></div>
+        <div class="fig"><span class="k">Per-hop check</span><b>2/10</b><span class="note">each hop validates its own delegator</span></div>
+        <div class="fig"><span class="k">Verify the chain</span><b>10/10</b><span class="note">768 states explored, 0 violations</span></div>
+      </div>
+      <p>The middle column is the finding. Validating each hop against its immediate delegator is a <em>real</em> control — it is what a careful engineer builds, and it stops re-amplification where it happens. It cannot see the root, so a lapsed ancestor two hops up, a repeated principal and an unrooted origin all pass. <strong>Every hop locally correct; the composition wrong.</strong></p>
+      <p class="faint">These are not model failures. A perfectly aligned model at every hop produces all of them — which is exactly why it belongs in the architecture and not in a prompt.</p>
+    </div>`,
+  notes: `Keep this one brisk — it is a second contribution, not a second talk.
+  <p>The line that lands: "every hop was locally correct and the composition was wrong." Anyone who has audited a microservice estate recognises it instantly.</p>
+  <p>If asked how this relates to the rest: it is the same rule, extended. Authority under delegation is monotonically non-increasing. That is the whole idea.</p>
+  <p>Honest disclosure if pressed: our own checker admitted the confused deputy on its first run, because nothing bound the chain to the principal presenting it. An authority object bound to nobody is a bearer token. We fixed it and kept the regression test.</p>`
+},
+{
   eyebrow: ["Generalization", "A second domain, and what it caught"],
   time: "9:40",
   html: `
@@ -899,7 +945,7 @@ const SLIDES = [
       <div class="figures">
         <div class="fig"><span class="k">Model check</span><b>4,800</b><span class="note">configurations, 0 violations</span></div>
         <div class="fig"><span class="k">Adversarial</span><b>30/30</b><span class="note">contained, 9/9 benign completed</span></div>
-        <div class="fig"><span class="k">Conformance</span><b>25</b><span class="note">checks, no library change</span></div>
+        <div class="fig"><span class="k">Conformance</span><b>26</b><span class="note">checks, no library change</span></div>
       </div>
       <div class="callout">
         <p><strong>It failed on the first run, and the defect was real.</strong> A declared approval role on a routine transition was silently ignored, because the enforcement map was built only from <em>consequential</em> rules. The field was mandatory in the schema, present in the profile, visible to any reviewer reading it — and absent at runtime.</p>
@@ -950,7 +996,7 @@ const SLIDES = [
         <p class="faint"><strong>Beyond the cases we imagined.</strong> 6,800 randomly generated tool calls — nonexistent tools, mismatched operations, URLs in unexpected arguments, calls that lie about their own action class — checked against a reference predicate written independently of the implementation. Zero disagreements.</p>
         <p class="faint"><strong>And what it costs.</strong> About 7 µs of overhead per policy decision; 66 µs for a full propose–approve–execute cycle. Negligible beside model inference, which we do not measure because it is a property of whichever model you choose.</p>
       </div>
-      <p class="faint">394 deterministic tests on current source, 187 at the <code>v1.0.0</code> tag. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
+      <p class="faint">461 deterministic tests on current source, 187 at the <code>v1.0.0</code> tag. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
     </div>`,
   notes: `Lead with the false-denial rate if the panel is policy-heavy. It is the figure that shows we are not optimising for a security theatre metric.
   <p>“Reproduces on a disconnected laptop” is the sentence that matters for capacity building — it means an institution with no budget can verify us.</p>`

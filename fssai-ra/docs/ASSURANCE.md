@@ -166,9 +166,54 @@ about a *mechanism* rather than about people. Nothing here measures a human.
 
 | Public claim | Enforcement or mechanism | Executable evidence | Limit |
 |---|---|---|---|
-| The identical suite holds on a domain it was not designed against | `academic_record_correction` added through the documented extension path; 4,800 configurations, 0 violations, 30/30 contained, 9/9 benign, 25 conformance checks, **no library change** | `tests/test_generalization.py` | Two domains, both authored here. It tests that the method travels, not that it travels everywhere |
+| The identical suite holds on a domain it was not designed against | `academic_record_correction` added through the documented extension path; 4,800 configurations, 0 violations, 30/30 contained, 9/9 benign, 26 conformance checks, **no library change** | `tests/test_generalization.py` | Two domains, both authored here. It tests that the method travels, not that it travels everywhere |
 | Neither domain borrows the other's evidence | Separate reports, separate result files, separate denominators; asserted rather than assumed | `test_the_second_domain_carries_its_own_evidence_and_borrows_none` | Equal scores on both domains are a coincidence of these fixtures, not a property |
 | A second domain finds what one domain cannot | The first run failed: a declared `approval_role` on a non-consequential transition was silently unenforced, because the enforcement map was built only from consequential rules | `test_a_declared_role_is_enforced_on_every_transition` (regression); `test_the_offline_packet_checker_agrees_with_the_executor_on_routine_steps` | One defect is an anecdote. It is reported because it is evidence *against* single-domain results, including ours |
+
+### Does authority survive being passed on?
+
+Every claim above governs one agent acting under one grant. That was the right
+model for the agent of 2023 and it is not the shape institutions now deploy: an
+orchestrator spawns sub-agents, a sub-agent calls a tool server it did not
+write, and authority travels through hops that were each individually
+reasonable. These claims govern the composition.
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| No principal passes on authority it does not hold | Chain verifier recomputes the conferred scope from the institutional root grant downward, as the intersection of every hop, treating each hop's account of itself as evidence rather than as a decision | `tests/test_delegation.py`; `fssaira delegation` | Bounds authority under composition, never the competence or intent of any hop |
+| A chain authorises the principal it names and nobody else | The holder binding: the requester must be the chain's leaf delegate. Work done *for* another principal executes under that principal's authority, intersected with the actor's | `test_a_chain_is_bound_to_the_principal_it_names`; `test_acting_for_another_principal_uses_that_principal_s_authority` | Identity of the requester is taken from the authenticated principal; forging that is the identity layer's problem, not this one |
+| The chain controls are load-bearing, not decorative | Each of the nine invariants is removed in turn and the harm returns in every case; the comparison runs three architectures over the same chains | `test_every_delegation_invariant_is_load_bearing` | Ablation against fixtures, as everywhere else here |
+| Validating each hop locally is not verifying the chain | A middle arm validates every hop against its immediate delegator — a real control, and what a careful engineer builds. It contains 2 of 10 risk classes; chain verification contains 10 | `test_checking_each_hop_against_its_delegator_is_not_checking_the_chain` | The middle arm is our construction of a plausible implementation, not a survey of deployed ones |
+| The declared chain space holds under enumeration | 768 configurations over depth, attenuation, expiry, rootedness, signature, holder binding, and cycles; 5 invariants; 0 violations | `test_the_declared_delegation_space_holds_under_bounded_model_checking` | Bounded enumeration, not a proof. Unbounded identifiers, concurrent delegation, revocation propagation, and key compromise at an intermediate hop are outside the bounds |
+| The checker found a defect in itself | The first run admitted the confused deputy: every invariant held on a chain that simply was not the requester's. An authority object bound to nobody is a bearer token | `test_a_chain_is_bound_to_the_principal_it_names` (regression) | One defect found by a method is the only evidence the method does anything |
+
+### What happens when the reviewer also has a model?
+
+§7 establishes that oversight is finite and that pushing a queue past it turns
+review into a signature service. That argument assumes an **unaided** reader.
+Institutions deploying capable models will not staff review with unaided
+readers, and they are not wrong to.
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| Throughput is bought with independence, not with assistance | The deliberation floor a deployment may set is a function of three declared properties of its review assistant: a different model from the proposer, a different evidence path, and an adversarial posture | `test_a_lowered_floor_without_declared_independence_is_refused`; `fssaira assisted-review` | The floor multipliers encode a judgement about what independence is worth. An institution that disagrees should set its own and publish them |
+| A dependent assistant reintroduces the merit-failure class | Identical queues, identical lowered floor, differing only in declared independence: 5 merit failures with a dependent assistant, 1 with an independent one | `test_a_dependent_assistant_reintroduces_merit_failures` | The proposer/assistant error correlation is a **declared parameter**. No model was evaluated and no rate is claimed for any named system |
+| There is no runtime signal for this failure | In the harmful arm the evidence chain is intact, the reviewer is inside quota, every approval clears the configured floor, and no oversight refusal fires | `test_every_runtime_mechanism_passes_in_the_harmful_arm` | Which is why the control is a configuration gate rather than a runtime check: at runtime the two deployments are indistinguishable |
+| Assistance genuinely helps, and that is why the gate matters | Assisted review completes 5x the legitimate work of the unaided arm and defers none of it; the unaided arm contains everything by deferring 32 of 40 | `test_assistance_genuinely_buys_throughput` | A control that only ever costs is not a trade-off worth reasoning about. This one is |
+| Independence moves the ceiling; it does not remove it | The independent arm reaches 1 merit failure, not 0. Independence multiplies effective attention; it does not make attention unbounded | `test_independence_moves_the_ceiling_rather_than_removing_it` | An institution that buys an assistant has bought a larger ceiling to compute, not permission to stop computing one |
+
+### Is the contract enforced, or only written down?
+
+The seven-field control contract is this project's central claim, and one of the
+seven fields is an executable failure test. The loader validated that every
+requirement *had* that field and never that the test *existed*.
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| Every requirement is bound to a check, or attested by a named role | Three-way coverage over the contract: machine-verified, organizationally attested, or unverified. The unverified count is printed by the tool | `tests/test_coverage.py`; `fssaira coverage` | Coverage measures that a control is *exercised*, never that it is *adequate* |
+| A binding cannot be fiction | Every locator naming a file and symbol is resolved against the actual source; a binding pointing at something that does not exist fails the build | `test_every_binding_locator_actually_exists` | Without this the coverage report would be a YAML file asserting its own correctness |
+| Attestation is counted separately from testing | An organizational declaration must name both an attesting role and a review cadence, and the number of them is pinned so it cannot grow quietly | `test_an_organizational_declaration_must_name_an_owner_and_a_cadence`; `test_organizational_attestation_does_not_grow_silently` | An attestation is a person's word on a schedule. It is weaker than a test and is reported as a different thing |
+| This found a real gap in our own contract | The first run reported **18 of 28** requirements with a failure test written in prose and bound to nothing. Most had tests; nothing connected them, so deleting one removed a governance claim silently. One control — ET-2 — had no check at all and now has `CF-ET-03` | `evaluation/results/v1.0.0-contract-coverage.json` | The current figure is 33 machine-verified, 3 attested, 0 unverified. That it was ever 18 is the finding |
 
 ### Is the adversary ever someone else?
 
@@ -194,6 +239,16 @@ about a *mechanism* rather than about people. Nothing here measures a human.
 - distributed failure modes and linearizability across processes or nodes. The
   bounded 32-caller replay race covers one process and one transactional SQLite
   database; the model checker remains single-threaded;
+- **real proposer/assistant error correlation.** The assisted-review results
+  turn on how often a dependent review assistant reproduces the proposing
+  model's error. That correlation is a *declared parameter*. No model was
+  evaluated, no assistant was measured, and no rate is claimed for any named
+  system. Measuring it is open work, and it is the number that decides how much
+  throughput assistance can safely buy;
+- **any real multi-agent deployment.** The delegation results are fixture
+  observations over constructed chains. Nothing here observes an orchestrator, a
+  sub-agent, or a federated institutional agent in production, and revocation
+  propagation to already-issued descendants is explicitly outside the bounds;
 - **reviewer behaviour under load.** The oversight controls in §7 are exercised
   against a *declared* degradation curve. No reviewer was observed, no error rate
   was estimated, and nothing here establishes how real officers behave when a

@@ -62,6 +62,13 @@ jobs:
         working-directory: fssai-ra
         run: python -m fssaira.cli validate-contract contract
 
+      # Completeness is not enforcement. This one fails if any requirement
+      # describes a failure test and binds it to nothing, which is how a
+      # governance claim stops being true without anything going red.
+      - name: Every contract requirement is bound to a check or attested
+        working-directory: fssai-ra
+        run: python -m fssaira.cli coverage
+
       - name: Authority invariants hold under bounded model checking
         working-directory: fssai-ra
         run: python -m fssaira.cli verify profiles/student_support.yaml
@@ -69,6 +76,14 @@ jobs:
       - name: Adversarial, utility, and ablation suite
         working-directory: fssai-ra
         run: python -m fssaira.cli evaluate profiles/student_support.yaml
+
+      - name: Delegated authority holds under chain verification
+        working-directory: fssai-ra
+        run: python -m fssaira.cli delegation
+
+      - name: The assisted-review gate refuses an undeclared lowered floor
+        working-directory: fssai-ra
+        run: python -m fssaira.cli assisted-review profiles/student_support.yaml
 
       - name: Conformance on both backend profiles
         working-directory: fssai-ra

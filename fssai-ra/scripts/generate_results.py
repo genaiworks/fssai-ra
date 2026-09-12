@@ -25,8 +25,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fssaira import __version__  # noqa: E402
+from fssaira.assisted_review import run_assisted_review_trial  # noqa: E402
 from fssaira.challenge import run_corpus  # noqa: E402
 from fssaira.conformance import memory_bundle, run_conformance, sql_bundle  # noqa: E402
+from fssaira.coverage import measure_coverage  # noqa: E402
+from fssaira.delegation import verify_delegation_space  # noqa: E402
+from fssaira.delegation_eval import ablate_delegation, run_delegation_suite  # noqa: E402
 from fssaira.evaluation import EvaluationRunner  # noqa: E402
 from fssaira.experiment import run_comparison  # noqa: E402
 from fssaira.oversight import (  # noqa: E402
@@ -76,6 +80,19 @@ def generate(output_dir: Path, tag: str) -> dict:
     second_verification = verify_profile(second_profile)
     second_conformance = run_conformance(memory_bundle(second_profile))
 
+    # Delegated authority: the chain controls, their ablations, and the
+    # bounded enumeration of the declared chain space.
+    delegation = run_delegation_suite()
+    delegation_ablations = ablate_delegation()
+    delegation_space = verify_delegation_space()
+
+    # Assisted review: what happens to the oversight argument once the reviewer
+    # also has a model.
+    assisted = run_assisted_review_trial(profile)
+
+    # The contract's own coverage: is each requirement enforced, or written down?
+    coverage = measure_coverage(str(ROOT / "contract"))
+
     oversight_policy = ReviewLoadPolicy()
     oversight = run_queue_pressure_trial(
         profile, arrivals=40, policy=oversight_policy,
@@ -106,6 +123,15 @@ def generate(output_dir: Path, tag: str) -> dict:
         json.dumps(sweep, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-adversary-corpus.json").write_text(
         json.dumps(corpus, indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-delegation.json").write_text(
+        json.dumps({**delegation.to_dict(), "ablations": delegation_ablations},
+                   indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-delegation-verification.json").write_text(
+        json.dumps(delegation_space.to_dict(), indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-assisted-review.json").write_text(
+        json.dumps(assisted, indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-contract-coverage.json").write_text(
+        json.dumps(coverage.to_dict(), indent=2) + "\n", encoding="utf-8")
 
     payload = evaluation.to_dict()
     summary = {
@@ -162,6 +188,39 @@ def generate(output_dir: Path, tag: str) -> dict:
             "concurrent_replay_responses": race.replayed,
             "concurrent_mutations": race.mutations,
             "concurrent_distinct_receipts": race.distinct_receipts,
+            # delegated authority: the 2026 shape of the agent
+            "delegation_hostile_chains": delegation.hostile_total,
+            "delegation_contained_unguarded": delegation.contained("unguarded"),
+            "delegation_contained_caller_checked": delegation.contained("caller_checked"),
+            "delegation_contained_this_architecture": delegation.contained("this_architecture"),
+            "delegation_benign_chain_completed": delegation.benign_completed("this_architecture"),
+            "delegation_invariants_ablated": len(delegation_ablations),
+            "delegation_invariants_load_bearing": sum(
+                row["load_bearing"] for row in delegation_ablations
+            ),
+            "delegation_states_explored": delegation_space.states_explored,
+            "delegation_states_explored_display": f"{delegation_space.states_explored:,}",
+            "delegation_violations": len(delegation_space.violations),
+            # assisted review: what happens when the reviewer also has a model
+            "assisted_merit_failures_unaided": assisted["summary"]["merit_failures_unaided"],
+            "assisted_merit_failures_dependent": assisted["summary"][
+                "merit_failures_assisted_dependent"],
+            "assisted_merit_failures_independent": assisted["summary"][
+                "merit_failures_assisted_independent"],
+            "assisted_benign_unaided": assisted["summary"]["benign_completed_unaided"],
+            "assisted_benign_independent": assisted["summary"][
+                "benign_completed_assisted_independent"],
+            "assisted_benign_gain": assisted["summary"][
+                "benign_completion_gain_from_assistance"],
+            "assisted_deferrals_unaided": assisted["summary"]["deferred_to_manual_unaided"],
+            "assisted_deferrals_independent": assisted["summary"]["deferred_to_manual_assisted"],
+            "assisted_gate_refused_the_harmful_arm": assisted["summary"][
+                "configuration_gate_refused_the_harmful_arm"],
+            # the contract's own coverage
+            "coverage_requirements": coverage.total,
+            "coverage_machine_verified": coverage.machine_verified,
+            "coverage_organizationally_attested": coverage.organizationally_attested,
+            "coverage_unverified": coverage.unverified,
             # contract and tests
             "contract_requirements": _contract_count(),
             "control_contract_fields": 7,
@@ -259,6 +318,16 @@ def generate(output_dir: Path, tag: str) -> dict:
             "corpus_fully_contained": (
                 corpus["contained_by_arm"]["C · FSSAI-RA"] == corpus["live_challenges"]
             ),
+            "delegation_chains_contained_and_benign_completes": delegation.holds,
+            "delegation_invariants_all_load_bearing": all(
+                row["load_bearing"] for row in delegation_ablations
+            ),
+            "delegation_space_holds": delegation_space.holds,
+            "assisted_review_gate_binds": assisted["summary"][
+                "configuration_gate_refused_the_harmful_arm"],
+            "dependent_assistance_reintroduces_harm": assisted["summary"][
+                "dependent_assistance_reintroduced_harm"],
+            "every_contract_requirement_is_bound_or_attested": coverage.holds,
         },
         "limits": [
             (
@@ -280,6 +349,15 @@ def generate(output_dir: Path, tag: str) -> dict:
             "applies to the other; each carries its own",
             "the adversary corpus is contributed attacks, not a threat catalogue, and no attack in "
             "it yet comes from outside this project",
+            "the delegation results bound authority under composition, not the competence or "
+            "intent of any hop; a fully attenuated chain can still carry a substantively wrong "
+            "action, and no real multi-agent deployment was observed",
+            "the proposer/assistant error correlation is a declared parameter, exactly like the "
+            "reviewer degradation curve: no model was evaluated and no rate is claimed for any "
+            "named system",
+            "contract coverage measures that a control is exercised, never that it is adequate; "
+            "an organizational attestation is a named role's word on a declared cadence and is "
+            "counted separately from a test for that reason",
         ],
     }
     (output_dir / f"{tag}-summary.json").write_text(
@@ -363,6 +441,35 @@ def render_markdown(summary: dict) -> str:
          f"{figures['concurrent_distinct_receipts']} distinct receipt; bounded to one process"),
         ("Control-contract requirements", str(figures["contract_requirements"]),
          f"{figures['control_contract_fields']} fields each"),
+        ("Delegation — chains contained",
+         f"{figures['delegation_contained_this_architecture']}/"
+         f"{figures['delegation_hostile_chains']}",
+         f"unguarded arm contained {figures['delegation_contained_unguarded']}; "
+         f"per-hop validation contained {figures['delegation_contained_caller_checked']}; "
+         "the benign two-hop chain completes"),
+        ("Delegation — invariants load-bearing",
+         f"{figures['delegation_invariants_load_bearing']}/"
+         f"{figures['delegation_invariants_ablated']}",
+         "each removed in turn; every removal restored its harm"),
+        ("Delegation — states explored",
+         figures["delegation_states_explored_display"],
+         f"5 invariants, {figures['delegation_violations']} violations, over the "
+         "declared chain space"),
+        ("Assisted review — merit failures",
+         f"{figures['assisted_merit_failures_dependent']} → "
+         f"{figures['assisted_merit_failures_independent']}",
+         "dependent then independent review assistant, identical lowered floor; "
+         "every runtime mechanism passed in both"),
+        ("Assisted review — benign completed",
+         f"{figures['assisted_benign_unaided']} → {figures['assisted_benign_independent']}",
+         f"unaided then assisted: assistance is worth {figures['assisted_benign_gain']}x "
+         "in completed legitimate work, which is why institutions will buy it"),
+        ("Contract coverage — machine-verified",
+         f"{figures['coverage_machine_verified']}/{figures['coverage_requirements']}",
+         f"{figures['coverage_organizationally_attested']} organizationally attested, "
+         f"{figures['coverage_unverified']} unverified; every requirement bound to a "
+         "check that is itself checked to exist"),
+
         ("Deterministic tests", str(figures["test_count"]), "no network, no model weights"),
     ]
     # Kept in a separate block because these answer different questions from the

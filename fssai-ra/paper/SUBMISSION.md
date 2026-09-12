@@ -45,15 +45,27 @@ The submission should remain clear if a reviewer reads only four elements:
 ## If the form enforces a hard 1,500 words
 
 `form-ready-abstract.md` is written to the form's four capped fields and already
-validates. `extended-abstract.md` is the proceedings-style version and runs to
-about 1,580 words of body text.
+validates. `extended-abstract.md` is the proceedings-style version and now runs
+to about 1,880 words of body text, up from 1,580 when it argued three
+contributions rather than six.
 
-If a hard cap must be met there, cut **§4, "Does the method travel?"** — the
-second-domain section — down to two sentences inside §5, keeping the figures and
-the defect it exposed. That is the right cut because the generalization claim is
-supported by the repository whether or not the abstract argues it, while §3
-(oversight) is the contribution that earns the panel slot and §7 (limits) is the
-section that earns a reviewer's trust. Never cut §3 or §7.
+If a hard cap must be met there, cut in this order, stopping as soon as it fits:
+
+1. **§5, "Does the method travel?"** — the second-domain section — down to two
+   sentences inside §6, keeping the 4,800 configurations and the defect it
+   exposed. The generalization claim is supported by the repository whether or
+   not the abstract argues it.
+2. **§4, "Authority that travels"** — down to its one-sentence rule and the
+   2-of-10 versus 10-of-10 finding, with the composition supplement carrying the
+   method.
+3. **§6's second paragraph** — the lab — to two sentences, keeping "no learning
+   gain is claimed".
+
+Never cut §3 (oversight, including its assisted-review extension) or §8 (limits).
+§3 is the contribution that earns the panel slot; §8 is the section that earns a
+reviewer's trust. The coverage finding in §2 is four sentences and stays: a paper
+that applies a diagnostic to everyone else and not itself invites exactly one
+question, and it should arrive already answered.
 
 The submission addresses both halves of the theme. *AI for Learning* is the
 student-support workflow with governed action and redress. *Learning for AI* is

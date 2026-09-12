@@ -1,0 +1,606 @@
+{
+  "schema_version": "1.0",
+  "kind": "contract-coverage",
+  "generated_at": "2026-09-12T18:23:08.162394+00:00",
+  "totals": {
+    "requirements": 36,
+    "machine_verified": 33,
+    "organizationally_attested": 3,
+    "unverified": 0,
+    "machine_verified_fraction": 0.9167
+  },
+  "unverified_requirements": [],
+  "bindings_naming_unknown_requirements": [],
+  "requirements": [
+    {
+      "requirement_id": "IB-1",
+      "domain": "import_boundary",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "IB-1",
+          "mechanism": "scenario",
+          "locator": "src/fssaira/evaluation.py::import_boundary_scenarios",
+          "note": "oversized, disallowed type, unregistered source, tampered signature, size mismatch"
+        },
+        {
+          "requirement_id": "IB-1",
+          "mechanism": "unit_test",
+          "locator": "tests/test_import_api.py::test_import_gateway_quarantines_bad_signature_without_publishing",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "IB-2",
+      "domain": "import_boundary",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "IB-2",
+          "mechanism": "unit_test",
+          "locator": "tests/test_diode_transport.py::test_neither_end_exposes_a_return_path",
+          "note": ""
+        },
+        {
+          "requirement_id": "IB-2",
+          "mechanism": "unit_test",
+          "locator": "tests/test_import_api.py::test_import_gateway_has_no_readback_route",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "IB-3",
+      "domain": "import_boundary",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "IB-3",
+          "mechanism": "unit_test",
+          "locator": "tests/test_diode_transport.py::test_an_interface_without_an_owner_is_flagged",
+          "note": "the inventory mechanism is tested; the signed review of a real deployment's interfaces is the organizational half and is attested separately"
+        }
+      ]
+    },
+    {
+      "requirement_id": "IB-4",
+      "domain": "import_boundary",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "IB-4",
+          "mechanism": "unit_test",
+          "locator": "tests/test_attacks.py",
+          "note": "prompt-injection specimen delivered as evidence, obtaining no authorization"
+        }
+      ]
+    },
+    {
+      "requirement_id": "ET-1",
+      "domain": "event_transport",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "ET-1",
+          "mechanism": "conformance",
+          "locator": "CF-ET-01, CF-ET-02",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "ET-2",
+      "domain": "event_transport",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "ET-2",
+          "mechanism": "conformance",
+          "locator": "CF-ET-03",
+          "note": "added when coverage found ET-2 bound to nothing. The dead-letter path and idempotent producer were implemented in kafka_backend and exercised by no check reachable without a live broker"
+        }
+      ]
+    },
+    {
+      "requirement_id": "ET-3",
+      "domain": "event_transport",
+      "status": "organizationally_attested",
+      "bindings": [],
+      "attested_by": "Audit and Assurance",
+      "attestation_cadence": "annually, and whenever the appeal window changes"
+    },
+    {
+      "requirement_id": "RD-1",
+      "domain": "reproducible_data",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "RD-1",
+          "mechanism": "conformance",
+          "locator": "CF-RD-01, CF-RD-02",
+          "note": ""
+        },
+        {
+          "requirement_id": "RD-1",
+          "mechanism": "scenario",
+          "locator": "src/fssaira/evaluation.py::platform_scenarios",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "RD-2",
+      "domain": "reproducible_data",
+      "status": "organizationally_attested",
+      "bindings": [],
+      "attested_by": "Audit and Assurance",
+      "attestation_cadence": "annually, and whenever a snapshot retention rule changes"
+    },
+    {
+      "requirement_id": "BI-1",
+      "domain": "bounded_intelligence",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "BI-1",
+          "mechanism": "conformance",
+          "locator": "CF-BI-01",
+          "note": ""
+        },
+        {
+          "requirement_id": "BI-1",
+          "mechanism": "scenario",
+          "locator": "src/fssaira/evaluation.py::bounded_intelligence_scenarios",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "BI-2",
+      "domain": "bounded_intelligence",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "BI-2",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/evaluation.py::egress_default_deny",
+          "note": ""
+        },
+        {
+          "requirement_id": "BI-2",
+          "mechanism": "conformance",
+          "locator": "CF-BI-02",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "BI-3",
+      "domain": "bounded_intelligence",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "BI-3",
+          "mechanism": "unit_test",
+          "locator": "tests/test_privilege_invariance.py::test_a_call_that_understates_its_class_is_reclassified",
+          "note": ""
+        },
+        {
+          "requirement_id": "BI-3",
+          "mechanism": "unit_test",
+          "locator": "tests/test_privilege_invariance.py::test_an_unknown_capability_fails_closed",
+          "note": ""
+        },
+        {
+          "requirement_id": "BI-3",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/evaluation.py::privilege_invariance_catalogue",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "BI-4",
+      "domain": "bounded_intelligence",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "BI-4",
+          "mechanism": "unit_test",
+          "locator": "tests/test_properties.py",
+          "note": "the independent reference predicate denies once the call budget is exhausted"
+        }
+      ]
+    },
+    {
+      "requirement_id": "BI-5",
+      "domain": "bounded_intelligence",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "BI-5",
+          "mechanism": "unit_test",
+          "locator": "tests/test_security_and_telemetry.py::test_a_non_local_model_endpoint_is_flagged",
+          "note": ""
+        },
+        {
+          "requirement_id": "BI-5",
+          "mechanism": "unit_test",
+          "locator": "tests/test_models_and_plugins.py",
+          "note": "unreachable local model with fallback denied fails explicitly"
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-1",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-1",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/evaluation.py::named_human_for_high_impact",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-2",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-2",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/evaluation.py::least_privilege_tool_grant",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-3",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-3",
+          "mechanism": "scenario",
+          "locator": "src/fssaira/evaluation.py::evidence_write_credential",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-4",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-4",
+          "mechanism": "model_check",
+          "locator": "src/fssaira/verification.py::verify_profile",
+          "note": "240 states on the reference profile, 4800 on the second domain"
+        },
+        {
+          "requirement_id": "AA-4",
+          "mechanism": "conformance",
+          "locator": "CF-AA-10 .. CF-AA-14",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-5",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-5",
+          "mechanism": "unit_test",
+          "locator": "tests/test_exact_action.py",
+          "note": "OUTCOME_EVIDENCE_PENDING, one mutation, exactly one reconciled outcome"
+        },
+        {
+          "requirement_id": "AA-5",
+          "mechanism": "unit_test",
+          "locator": "tests/test_resilience.py::test_abrupt_exit_recovers_all_or_nothing_and_retry_is_safe",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-6",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-6",
+          "mechanism": "conformance",
+          "locator": "CF-AA-15",
+          "note": ""
+        },
+        {
+          "requirement_id": "AA-6",
+          "mechanism": "unit_test",
+          "locator": "tests/test_oversight.py::test_separation_of_duties_is_still_checked_before_capacity",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-7",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-7",
+          "mechanism": "conformance",
+          "locator": "src/fssaira/conformance.py::run_conformance",
+          "note": ""
+        },
+        {
+          "requirement_id": "AA-7",
+          "mechanism": "unit_test",
+          "locator": "tests/test_generalization.py::test_the_unchanged_conformance_suite_holds_on_a_second_domain_and_two_backends",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-8",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-8",
+          "mechanism": "unit_test",
+          "locator": "tests/test_oversight.py::test_the_ceiling_refuses_the_next_approval_rather_than_flagging_it",
+          "note": ""
+        },
+        {
+          "requirement_id": "AA-8",
+          "mechanism": "unit_test",
+          "locator": "tests/test_oversight.py::test_an_exhausted_reviewer_cannot_produce_a_signed_approval_at_all",
+          "note": ""
+        },
+        {
+          "requirement_id": "AA-8",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/oversight.py::sweep_oversight",
+          "note": "load-bearing in 16 of the 20 swept cells where harm was possible"
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-9",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-9",
+          "mechanism": "unit_test",
+          "locator": "tests/test_oversight.py::test_sustained_load_escalates_to_a_second_distinct_reviewer",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "XC-1",
+      "domain": "cross_cutting",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "XC-1",
+          "mechanism": "unit_test",
+          "locator": "tests/test_security_and_telemetry.py::test_header_identity_is_refused_unless_a_proxy_is_declared",
+          "note": ""
+        },
+        {
+          "requirement_id": "XC-1",
+          "mechanism": "unit_test",
+          "locator": "tests/test_api.py::test_api_requires_authentication_and_the_operator_role",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "XC-2",
+      "domain": "cross_cutting",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "XC-2",
+          "mechanism": "unit_test",
+          "locator": "tests/test_security_and_telemetry.py::test_teaching_defaults_are_reported_as_blocking",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "XC-3",
+      "domain": "cross_cutting",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "XC-3",
+          "mechanism": "unit_test",
+          "locator": "tests/test_decision_packet.py::test_consistent_rewrite_still_fails_an_independent_fingerprint",
+          "note": "independent recomputation detects a chain rewritten consistently in place"
+        }
+      ]
+    },
+    {
+      "requirement_id": "XC-4",
+      "domain": "cross_cutting",
+      "status": "organizationally_attested",
+      "bindings": [],
+      "attested_by": "Student Support Service Owner",
+      "attestation_cadence": "quarterly, with the named owner countersigning"
+    },
+    {
+      "requirement_id": "XC-5",
+      "domain": "cross_cutting",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "XC-5",
+          "mechanism": "unit_test",
+          "locator": "tests/test_challenge.py::test_an_attack_that_lands_on_no_arm_is_reported_inert_not_contained",
+          "note": ""
+        },
+        {
+          "requirement_id": "XC-5",
+          "mechanism": "unit_test",
+          "locator": "tests/test_challenge.py::test_a_submission_is_data_and_never_contributor_code",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "DL-1",
+      "domain": "delegated_authority",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "DL-1",
+          "mechanism": "model_check",
+          "locator": "src/fssaira/delegation.py::verify_delegation_space",
+          "note": ""
+        },
+        {
+          "requirement_id": "DL-1",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/delegation_eval.py::ablate_delegation",
+          "note": "D1 attenuation, D8a holder binding, D8b beneficiary attenuation"
+        },
+        {
+          "requirement_id": "DL-1",
+          "mechanism": "scenario",
+          "locator": "src/fssaira/delegation_eval.py::run_delegation_suite",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "DL-2",
+      "domain": "delegated_authority",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "DL-2",
+          "mechanism": "model_check",
+          "locator": "src/fssaira/delegation.py::verify_delegation_space",
+          "note": ""
+        },
+        {
+          "requirement_id": "DL-2",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/delegation_eval.py::ablate_delegation",
+          "note": "D2 rooted authority, D5 acyclicity"
+        }
+      ]
+    },
+    {
+      "requirement_id": "DL-3",
+      "domain": "delegated_authority",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "DL-3",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/delegation_eval.py::ablate_delegation",
+          "note": "D4 temporal containment"
+        }
+      ]
+    },
+    {
+      "requirement_id": "DL-4",
+      "domain": "delegated_authority",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "DL-4",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/delegation_eval.py::ablate_delegation",
+          "note": "D3 depth bound, D7 non-delegable consequence"
+        }
+      ]
+    },
+    {
+      "requirement_id": "DL-5",
+      "domain": "delegated_authority",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "DL-5",
+          "mechanism": "ablation",
+          "locator": "src/fssaira/delegation_eval.py::ablate_delegation",
+          "note": "D6 provenance"
+        },
+        {
+          "requirement_id": "DL-5",
+          "mechanism": "model_check",
+          "locator": "src/fssaira/delegation.py::verify_delegation_space",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AR-1",
+      "domain": "assisted_review",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AR-1",
+          "mechanism": "unit_test",
+          "locator": "tests/test_assisted_review.py::test_a_lowered_floor_without_declared_independence_is_refused",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AR-2",
+      "domain": "assisted_review",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AR-2",
+          "mechanism": "scenario",
+          "locator": "src/fssaira/assisted_review.py::run_assisted_review_trial",
+          "note": ""
+        },
+        {
+          "requirement_id": "AR-2",
+          "mechanism": "unit_test",
+          "locator": "tests/test_assisted_review.py::test_a_dependent_assistant_reintroduces_merit_failures",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "AR-3",
+      "domain": "assisted_review",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AR-3",
+          "mechanism": "unit_test",
+          "locator": "tests/test_assisted_review.py::test_independence_moves_the_ceiling_rather_than_removing_it",
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "reading": [
+    "machine_verified means an executable check in this repository is bound to the requirement and runs; it does not mean the control is sufficient, only that it is not imaginary",
+    "organizationally_attested is a weaker claim than a test and is counted separately on purpose; an attestation is a person's word on a cadence",
+    "unverified is the number to watch. A requirement here has a test written in prose and bound to nothing",
+    "an adopter should ask whether the attested controls are the ones that are genuinely unprovable in code, or the inconvenient ones"
+  ],
+  "limits": [
+    "coverage measures that a control is exercised, never that it is adequate",
+    "a requirement can be machine_verified by a weak check; strength of evidence is the mechanism name, not a score",
+    "attestation cadence is declared and is not itself verified here"
+  ]
+}

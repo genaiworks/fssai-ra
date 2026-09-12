@@ -42,7 +42,7 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # 394 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # 461 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
@@ -50,6 +50,9 @@ fssaira conformance --backend sql                 # does it still hold on anothe
 fssaira race-test profiles/student_support.yaml   # 32 callers, 1 mutation, 1 receipt
 fssaira resilience profiles/student_support.yaml  # process races and abrupt-exit recovery
 fssaira oversight profiles/student_support.yaml --sweep   # how much review can you supply?
+fssaira coverage                                  # is each contract requirement enforced, or just written down?
+fssaira delegation                                # authority that travels: 10 chain risk classes, 3 architectures
+fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
 make reviewer                                     # all of the above, one command
 ```
@@ -90,11 +93,69 @@ against the Python to prove the two agree — and [`docs/LAB.md`](docs/LAB.md) i
 ninety-minute lab in which participants remove a control and watch the harm
 return.
 
+**The reviewer now has a model too, and that breaks the control above.** The
+oversight argument models an *unaided* reader. No institution whose queue exceeds
+its roster will staff review that way, and it should not: in our trial assistance
+completes **5x** the legitimate work of the unaided arm, which contains
+everything by deferring 32 of 40 cases. But the deliberation floor must then
+fall — and the floor was never measuring seconds. It was a proxy for *a second
+mind independently reaching the same conclusion*, which survives only if the
+assistant is independent of the proposer.
+
+Same model family, same evidence packet, and it is not a second mind: it is the
+proposer's reasoning arriving again in a reviewer's badge, wrong the same way on
+exactly the cases that matter. Identical queues, identical lowered floor,
+differing only in declared independence: **5 merit failures with a dependent
+assistant, 1 with an independent one** — and in the harmful arm the chain is
+intact, the reviewer is inside quota, every approval clears the floor, and no
+refusal fires. There is no runtime signal to alert on, because at runtime the two
+deployments are indistinguishable.
+
+So `fssaira assisted-review` enforces it as a **configuration gate**: a
+deployment that lowers its floor while declaring a dependent assistant does not
+start. Independence is three things an institution can answer about itself and a
+procurement process can require in writing — a different model, a different
+evidence path, an adversarial posture. The independent arm reaches 1, not 0:
+assistance multiplies attention without making it unbounded, so an institution
+that buys an assistant has bought a larger ceiling to compute, not permission to
+stop computing one.
+
+**Authority now travels between agents.** Everything in `v1.0.0` governs one
+agent under one grant — the right model for 2023, and not the shape being
+deployed now that orchestrators spawn sub-agents and sub-agents call tool servers
+they did not write. The rule extends in one sentence: *no principal may pass on
+authority it does not itself hold, and no chain may end with more authority than
+its root was granted.* `fssaira delegation` enforces nine invariants —
+attenuation, rooted authority, depth, temporal containment, acyclicity,
+provenance, non-delegable consequence, holder binding, beneficiary attenuation —
+all nine load-bearing under ablation, with 768 enumerated chain shapes and 0
+violations.
+
+The finding is the middle arm. An architecture that validates *each hop against
+its immediate delegator* is a real control and is what a careful engineer builds;
+it contains **2 of 10** risk classes where verifying the chain contains **10**.
+Local validation at every hop is not verifying the chain, and the gap is exactly
+the defects nobody finds by reviewing one service. This work also caught its own
+defect on first run: the checker admitted the confused deputy, because the chain
+presented — authentic, rooted, attenuated, acyclic, in-depth — simply was not the
+requester's. An authority object bound to nobody is a bearer token.
+
+**The contract now measures whether it is enforced.** Seven fields per capability
+is this project's central claim, and one field is an executable failure test. The
+loader validated that every requirement *had* one and never that the test
+*existed*: `fssaira coverage` found **18 of 28 requirements describing a failure
+test and binding it to nothing.** Most did have tests; nothing connected them, so
+deleting one would have removed a governance claim in silence. Coverage is now
+three-way — machine-verified, organizationally attested by a named role on a
+declared cadence, or unverified — reading **33, 3, 0** today. A binding naming a
+test that does not exist fails the build, because otherwise the report would be a
+file asserting its own correctness.
+
 **A second domain, because one proves nothing about a method.**
 [`profiles/academic_record_correction.yaml`](profiles/academic_record_correction.yaml)
 was added through the documented extension path and carries its own evidence: the
 identical suite holds with no library change — 4,800 configurations, 0 violations,
-30/30 contained, 9/9 benign, 25 conformance checks. It failed on its first run and
+30/30 contained, 9/9 benign, 26 conformance checks. It failed on its first run and
 the defect was real: a declared approval role on a routine transition was silently
 unenforced. One domain could not reach it; two did immediately.
 
@@ -126,7 +187,7 @@ argument survive contact with another institution.
 |---|---|---|
 | **Bounded model checking** | What about the combination nobody imagined? | 240 configurations, 5 invariants, 0 violations |
 | **Ablation-measured coverage** | Is each control load-bearing, or decorative? | 8 of 8 controls restored their harm |
-| **Portable conformance** | Does it still hold after you replace a component? | 25 checks, 2 independent backend profiles |
+| **Portable conformance** | Does it still hold after you replace a component? | 26 checks, 2 independent backend profiles |
 | **Concurrent replay race** | Can simultaneous retries duplicate an approved action? | 32 callers, 1 mutation, 1 receipt |
 
 And on current source, three questions `v1.0.0` could not answer at all:

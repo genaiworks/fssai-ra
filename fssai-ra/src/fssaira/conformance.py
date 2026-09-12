@@ -294,11 +294,45 @@ class ConformanceSuite:
             bus.append({"n": "replay"}, key="conformance")
             return len(bus.read(0)) == before + 1, "read() reflects the new append"
 
+        def redelivery_is_distinguishable():
+            """ET-2: a consumer must be able to tell a redelivery from a new event.
+
+            Transport here is at-least-once by design, so a projection *will*
+            see the same record twice. The property that makes that survivable
+            is not that duplicates never arrive — it is that every delivery
+            carries a stable identity a consumer can deduplicate on. A bus whose
+            appends are indistinguishable after the fact cannot support an
+            idempotent projection at all, and no amount of care in the consumer
+            repairs it.
+
+            This check was added because contract coverage found ET-2 bound to
+            nothing. The dead-letter path and the idempotent producer were
+            implemented in ``kafka_backend`` and exercised by no check reachable
+            without a live broker, so the control was real and unmeasured.
+            """
+            if not hasattr(bus, "read"):
+                return True, "bus is publish-only; deduplication is the consumer's responsibility"
+            payload = {"n": "dedup-probe", "marker": "conformance"}
+            first = bus.append(payload, key="conformance")
+            second = bus.append(dict(payload), key="conformance")
+            if first == second:
+                return False, (
+                    f"two appends of identical content returned the same offset {first}; "
+                    "a consumer cannot distinguish a redelivery from a new event"
+                )
+            records = bus.read(0)
+            return len(records) >= 2, (
+                f"identical content is separately addressable at offsets {first} and {second}"
+            )
+
         return [
             self._check("CF-ET-01", "events", "ET-1",
                         "offsets are monotonic and ordered", monotonic),
             self._check("CF-ET-02", "events", "ET-1",
                         "the log can be read back from an offset", replayable),
+            self._check("CF-ET-03", "events", "ET-2",
+                        "a redelivery is distinguishable, so a projection can be idempotent",
+                        redelivery_is_distinguishable),
         ]
 
     # -- reproducible data -------------------------------------------------

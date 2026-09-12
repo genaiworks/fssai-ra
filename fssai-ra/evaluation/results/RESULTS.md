@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-12T00:41:28.811583+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-12T18:23:08.245175+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -16,10 +16,16 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Attacks contained — unguarded arm | `0%` | 28 harmful actions reached the protected asset |
 | Attacks contained — prompt-guarded arm | `29%` | 8 harmful actions; an allowlist is a real control |
 | Attacks contained — this architecture | `100%` | 0 harmful actions, at no cost to benign completion |
-| Conformance checks | `25` | passed on 2 independent backend profiles |
+| Conformance checks | `26` | passed on 2 independent backend profiles |
 | Concurrent replay race | `1 mutation from 32 callers` | 31 replay responses, 1 distinct receipt; bounded to one process |
-| Control-contract requirements | `28` | 7 fields each |
-| Deterministic tests | `394` | no network, no model weights |
+| Control-contract requirements | `36` | 7 fields each |
+| Delegation — chains contained | `10/10` | unguarded arm contained 0; per-hop validation contained 2; the benign two-hop chain completes |
+| Delegation — invariants load-bearing | `9/9` | each removed in turn; every removal restored its harm |
+| Delegation — states explored | `768` | 5 invariants, 0 violations, over the declared chain space |
+| Assisted review — merit failures | `5 → 1` | dependent then independent review assistant, identical lowered floor; every runtime mechanism passed in both |
+| Assisted review — benign completed | `7 → 35` | unaided then assisted: assistance is worth 5.0x in completed legitimate work, which is why institutions will buy it |
+| Contract coverage — machine-verified | `33/36` | 3 organizationally attested, 0 unverified; every requirement bound to a check that is itself checked to exist |
+| Deterministic tests | `461` | no network, no model weights |
 | Oversight — sustainable review | `2,640/day` | for a roster of 11, bound by the policy quota; declared capacity, not a measurement of reviewers |
 | Oversight — merit failures executed | `4 → 0` | without load control, then with it, on a queue at 5.0x declared attentive capacity |
 | Oversight — sensitivity sweep | `16/20` | cells where the control was load-bearing out of those where harm was possible; harm reached zero in 16; 4 did not bind (no deliberation floor configured); 5 had no harm to contain |
@@ -27,7 +33,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Oversight — smallest floor that fully contains | `5s` | across every swept cell where harm was possible; the number an institution needs to set its own policy |
 | Oversight — deferred to manual review | `32` | the cost of the control, and a measurement of demand against declared capacity |
 | Second domain — states explored | `4,800` | 0 violations; the identical suite, no library change |
-| Second domain — containment and utility | `30/30, 9/9` | its own evidence, borrowed from no other domain; 25 conformance checks |
+| Second domain — containment and utility | `30/30, 9/9` | its own evidence, borrowed from no other domain; 26 conformance checks |
 | Second domain — defects it exposed | `1` | a declared approval role ignored on non-consequential transitions; unreachable with one domain |
 | Adversary corpus — contained | `7/7` | unguarded arm contained 0; contributed attacks, not a threat catalogue |
 | Adversary corpus — externally contributed | `0` | the figure that matters; until it is non-zero the corpus samples the maintainers' imagination |
@@ -59,5 +65,8 @@ The adversarial suite runs in 0.02s and the bounded model check in 0.01s on the 
 - the oversight deferral count is the cost of the control, reported rather than netted off; refusing an approval preserves the boundary and delays the student
 - the second domain tests that the method transfers, not that either domain's evidence applies to the other; each carries its own
 - the adversary corpus is contributed attacks, not a threat catalogue, and no attack in it yet comes from outside this project
+- the delegation results bound authority under composition, not the competence or intent of any hop; a fully attenuated chain can still carry a substantively wrong action, and no real multi-agent deployment was observed
+- the proposer/assistant error correlation is a declared parameter, exactly like the reviewer degradation curve: no model was evaluated and no rate is claimed for any named system
+- contract coverage measures that a control is exercised, never that it is adequate; an organizational attestation is a named role's word on a declared cadence and is counted separately from a test for that reason
 
 These are fixture observations in a declared environment. They are not security probabilities, not a certification, and not evidence of production readiness. See [`docs/ASSURANCE.md`](../../docs/ASSURANCE.md) for the claim-by-claim boundary.

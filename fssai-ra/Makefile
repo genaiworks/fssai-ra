@@ -38,23 +38,29 @@ lab:  ## Open the two browser tools used by docs/LAB.md
 	@python -c "import pathlib,webbrowser; [webbrowser.open(pathlib.Path(p).resolve().as_uri()) for p in ('docs/worksheet/index.html','docs/oversight/index.html')]"
 
 reviewer:  ## Everything a reviewer should check, in one command
-	@echo "── 1/9  the suite ────────────────────────────────────────────────"
+	@echo "── 1/12  the suite ───────────────────────────────────────────────"
 	@python -m pytest -q
-	@echo "── 2/9  what this deployment really is ───────────────────────────"
+	@echo "── 2/12  what this deployment really is ──────────────────────────"
 	-@python -m fssaira.cli doctor
-	@echo "── 3/9  bounded model check, reference domain ────────────────────"
+	@echo "── 3/12  is each contract requirement enforced, or written down? ─"
+	@python -m fssaira.cli coverage
+	@echo "── 4/12  bounded model check, reference domain ───────────────────"
 	@python -m fssaira.cli verify profiles/student_support.yaml
-	@echo "── 4/9  containment, utility, and ablation ───────────────────────"
+	@echo "── 5/12  containment, utility, and ablation ──────────────────────"
 	@python -m fssaira.cli evaluate profiles/student_support.yaml
-	@echo "── 5/9  the same suite on a domain it was not designed for ───────"
+	@echo "── 6/12  the same suite on a domain it was not designed for ──────"
 	@python -m fssaira.cli verify profiles/academic_record_correction.yaml
-	@echo "── 6/9  how much oversight can actually be supplied ──────────────"
+	@echo "── 7/12  how much oversight can actually be supplied ─────────────"
 	@python -m fssaira.cli oversight profiles/student_support.yaml --sweep
-	@echo "── 7/9  the open adversary corpus ────────────────────────────────"
+	@echo "── 8/12  what a review assistant does to that answer ─────────────"
+	@python -m fssaira.cli assisted-review profiles/student_support.yaml
+	@echo "── 9/12  authority that travels: delegation chains ───────────────"
+	@python -m fssaira.cli delegation
+	@echo "── 10/12  the open adversary corpus ──────────────────────────────"
 	@python -m fssaira.cli challenge --dir challenges
-	@echo "── 8/9  do process races and recovery match their source? ────────"
+	@echo "── 11/12  do process races and recovery match their source? ──────"
 	@python scripts/check_resilience.py
-	@echo "── 9/9  do the committed numbers match a fresh run? ──────────────"
+	@echo "── 12/12  do the committed numbers match a fresh run? ────────────"
 	@python scripts/generate_results.py --check
 	@echo ""
 	@echo "  Every figure above is regenerated, not typed. If any of it disagrees"

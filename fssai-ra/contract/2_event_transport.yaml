@@ -19,6 +19,9 @@ requirements:
     failure_response: Replay from the last committed offset; a stalled projection is treated as a monitoring outage, because it is one
 
   - id: ET-3
+    verified_by: organizational
+    attested_by: Audit and Assurance
+    attestation_cadence: annually, and whenever the appeal window changes
     protected_asset: The decision archive
     permitted_operation: Retention and compaction settings must outlive the challenge and appeal window for any decision they support
     enforcement_point: Retention policy reviewed as a governance setting, not an operational default; durable evidence lives in the ledger, not in the log

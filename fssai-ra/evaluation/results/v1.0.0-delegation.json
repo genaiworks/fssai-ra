@@ -1,0 +1,335 @@
+{
+  "schema_version": "1.0",
+  "kind": "delegation-comparison",
+  "generated_at": "2026-09-12T18:23:08.106010+00:00",
+  "hostile_chains": 10,
+  "arms": {
+    "unguarded": {
+      "contained": 0,
+      "of": 10,
+      "containment_rate": 0.0,
+      "benign_chain_completed": true
+    },
+    "caller_checked": {
+      "contained": 2,
+      "of": 10,
+      "containment_rate": 0.2,
+      "benign_chain_completed": true
+    },
+    "this_architecture": {
+      "contained": 10,
+      "of": 10,
+      "containment_rate": 1.0,
+      "benign_chain_completed": true
+    }
+  },
+  "policy": {
+    "max_depth": 3,
+    "allow_machine_delegated_consequence": false,
+    "human_approval_required_below_depth": 1
+  },
+  "outcomes": [
+    {
+      "arm": "unguarded",
+      "scenario": "bearer_chain_reuse",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "bearer_chain_reuse",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "bearer_chain_reuse",
+      "contained": true,
+      "code": "REQUESTER_NOT_CHAIN_LEAF",
+      "detail": "REQUESTER_NOT_CHAIN_LEAF: the chain authorises 'assistant-broad'; the request is from 'assistant-narrow'. An authority object bound to nobody is a bearer token"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "confused_deputy",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "confused_deputy",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "confused_deputy",
+      "contained": true,
+      "code": "OUT_OF_EFFECTIVE_SCOPE",
+      "detail": "OUT_OF_EFFECTIVE_SCOPE: the chain confers no authority for 'approve_award' on 'S-105'; the effective scope is the intersection of 2 grants, not the caller's own"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "undisclosed_beneficiary",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "undisclosed_beneficiary",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "undisclosed_beneficiary",
+      "contained": true,
+      "code": "BENEFICIARY_SCOPE_EXCEEDED",
+      "detail": "BENEFICIARY_SCOPE_EXCEEDED: the request claims to act for 'assistant-narrow' but presents no chain establishing what that principal is authorised to do"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "scope_reamplification",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "scope_reamplification",
+      "contained": true,
+      "code": "SCOPE_NOT_ATTENUATED",
+      "detail": "hop 2 widens its delegator's scope"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "scope_reamplification",
+      "contained": true,
+      "code": "SCOPE_NOT_ATTENUATED",
+      "detail": "SCOPE_NOT_ATTENUATED: hop 2 (agent-a -> agent-b) grants authority its delegator does not hold"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "authority_laundering",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "authority_laundering",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "authority_laundering",
+      "contained": true,
+      "code": "CHAIN_CYCLE",
+      "detail": "CHAIN_CYCLE: principal(s) agent-a appear more than once in the chain"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "orphaned_delegation",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "orphaned_delegation",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "orphaned_delegation",
+      "contained": true,
+      "code": "DELEGATION_OUTLIVES_DELEGATOR",
+      "detail": "DELEGATION_OUTLIVES_DELEGATOR: hop 2 expires after the authority it descends from"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "unrooted_chain",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "unrooted_chain",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "unrooted_chain",
+      "contained": true,
+      "code": "CHAIN_NOT_ROOTED",
+      "detail": "CHAIN_NOT_ROOTED: chain begins at 'some-other-service', which is not the granted principal 'orchestrator-1'"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "depth_evasion",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "depth_evasion",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "depth_evasion",
+      "contained": true,
+      "code": "DEPTH_EXCEEDED",
+      "detail": "DEPTH_EXCEEDED: chain of 4 hops exceeds the declared maximum of 3"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "machine_delegated_consequence",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "machine_delegated_consequence",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "machine_delegated_consequence",
+      "contained": true,
+      "code": "CONSEQUENCE_NOT_DELEGABLE",
+      "detail": "CONSEQUENCE_NOT_DELEGABLE: hop 2 passes consequential authority onward without a named human approving that hop"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "forged_hop",
+      "contained": false,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "forged_hop",
+      "contained": true,
+      "code": "DELEGATION_KEY_UNTRUSTED",
+      "detail": "hop 2 signed by an untrusted key"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "forged_hop",
+      "contained": true,
+      "code": "DELEGATION_KEY_UNTRUSTED",
+      "detail": "DELEGATION_KEY_UNTRUSTED: hop 2 is signed by untrusted key 'rogue-key-1'"
+    },
+    {
+      "arm": "unguarded",
+      "scenario": "benign_two_hop",
+      "contained": true,
+      "code": "ALLOWED",
+      "detail": "the executor used the scope the caller presented"
+    },
+    {
+      "arm": "caller_checked",
+      "scenario": "benign_two_hop",
+      "contained": true,
+      "code": "ALLOWED",
+      "detail": "each hop checked its immediate delegator; the chain was never verified"
+    },
+    {
+      "arm": "this_architecture",
+      "scenario": "benign_two_hop",
+      "contained": true,
+      "code": "ADMITTED",
+      "detail": "the chain confers this authority"
+    }
+  ],
+  "limits": [
+    "containment of sampled delegation risk classes, not coverage of a catalogue",
+    "arm B validates each hop against its immediate delegator only; that is the realistic careful implementation, not a strawman",
+    "fixtures in a declared environment; no multi-agent deployment was observed",
+    "the benign chain is reported alongside because a control that refuses everything contains everything"
+  ],
+  "ablations": [
+    {
+      "control": "D1 attenuation",
+      "scenario": "scope_reamplification",
+      "load_bearing": true,
+      "with_control": "SCOPE_NOT_ATTENUATED",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D6 provenance",
+      "scenario": "forged_hop",
+      "load_bearing": true,
+      "with_control": "DELEGATION_KEY_UNTRUSTED",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D5 acyclicity",
+      "scenario": "authority_laundering",
+      "load_bearing": true,
+      "with_control": "CHAIN_CYCLE",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D4 temporal containment",
+      "scenario": "orphaned_delegation",
+      "load_bearing": true,
+      "with_control": "DELEGATION_OUTLIVES_DELEGATOR",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D2 rooted authority",
+      "scenario": "unrooted_chain",
+      "load_bearing": true,
+      "with_control": "CHAIN_NOT_ROOTED",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D3 depth bound",
+      "scenario": "depth_evasion",
+      "load_bearing": true,
+      "with_control": "DEPTH_EXCEEDED",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D7 non-delegable consequence",
+      "scenario": "machine_delegated_consequence",
+      "load_bearing": true,
+      "with_control": "CONSEQUENCE_NOT_DELEGABLE",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D8a holder binding",
+      "scenario": "bearer_chain_reuse",
+      "load_bearing": true,
+      "with_control": "REQUESTER_NOT_CHAIN_LEAF",
+      "without_control": "ALLOWED"
+    },
+    {
+      "control": "D8b beneficiary attenuation",
+      "scenario": "confused_deputy",
+      "load_bearing": true,
+      "with_control": "OUT_OF_EFFECTIVE_SCOPE",
+      "without_control": "ALLOWED"
+    }
+  ]
+}

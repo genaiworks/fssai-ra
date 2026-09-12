@@ -10,6 +10,9 @@ requirements:
     failure_response: Roll back to the last approved snapshot; re-review every decision made against the poisoned state
 
   - id: RD-2
+    verified_by: organizational
+    attested_by: Audit and Assurance
+    attestation_cadence: annually, and whenever a snapshot retention rule changes
     protected_asset: The reconstructability claim
     permitted_operation: Snapshot expiry and orphan-file cleanup must not remove a snapshot any live decision is bound to
     enforcement_point: Retention policy for pinned snapshots reviewed as a control; a manifest identifies data but cannot restore it

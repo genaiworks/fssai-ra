@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "kind": "delegation-verification",
+  "generated_at": "2026-09-12T18:23:08.125772+00:00",
+  "states_explored": 768,
+  "admitted": 12,
+  "invariants": [
+    "V1 an admitted chain never confers authority outside the root grant",
+    "V2 an admitted chain is rooted, acyclic, and within the declared depth",
+    "V3 an admitted chain is authentic at every hop",
+    "V4 an admitted chain is bound to the principal presenting it",
+    "V5 every refusal carries a declared, stable denial code"
+  ],
+  "violations": [],
+  "holds": true,
+  "bounds": {
+    "max_depth_enumerated": 4,
+    "attenuation_variants": 3,
+    "expiry_variants": 3,
+    "signature_variants": 3,
+    "requester_variants": 2,
+    "rooted_variants": 2,
+    "cycle_variants": 2,
+    "policy": {
+      "max_depth": 3,
+      "allow_machine_delegated_consequence": false,
+      "human_approval_required_below_depth": 1
+    },
+    "outside_the_bounds": [
+      "unbounded principal identifiers",
+      "concurrent delegation and revocation interleavings",
+      "revocation propagation to already-issued descendants",
+      "key compromise at an intermediate hop"
+    ]
+  },
+  "outcome_histogram": {
+    "ADMITTED": 12,
+    "CHAIN_CYCLE": 108,
+    "CHAIN_NOT_ROOTED": 270,
+    "DELEGATION_EXPIRED": 12,
+    "DELEGATION_KEY_UNTRUSTED": 54,
+    "DELEGATION_OUTLIVES_DELEGATOR": 12,
+    "DELEGATION_SIGNATURE_INVALID": 54,
+    "DEPTH_EXCEEDED": 216,
+    "REQUESTER_NOT_CHAIN_LEAF": 12,
+    "SCOPE_NOT_ATTENUATED": 18
+  },
+  "limits": [
+    "bounded enumeration of declared chain shapes, not a proof",
+    "unbounded principal names, concurrent delegation, and revocation propagation are outside the bounds",
+    "a chain admitted here is authorised, not correct: substantive wrongness is the oversight module's concern"
+  ]
+}

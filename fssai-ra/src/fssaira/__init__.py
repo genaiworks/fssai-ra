@@ -39,6 +39,14 @@ from .accountable_action import (
     Tool,
     ToolCall,
 )
+from .assisted_review import (
+    AssistanceMode,
+    AssistedReviewCode,
+    AssistedReviewerModel,
+    AssistedReviewPolicy,
+    ReviewAssistance,
+    run_assisted_review_trial,
+)
 from .atomic_execution import AtomicExecutor
 from .bounded_intelligence import (
     Agent,
@@ -60,6 +68,17 @@ from .challenge import (
 from .conformance import Bundle, ConformanceReport, run_conformance
 from .contract import ControlContract, Requirement
 from .control_plane import ControlPlane, MemoryObjectStore
+from .coverage import CoverageReport, measure_coverage
+from .delegation import (
+    AuthorityScope,
+    Delegation,
+    DelegationAuthority,
+    DelegationCode,
+    DelegationPolicy,
+    RootGrant,
+    verify_delegation_space,
+)
+from .delegation_eval import ablate_delegation, run_delegation_suite
 from .diode import (
     DiodeBreachError,
     OneWayChannel,
@@ -147,6 +166,15 @@ __all__ = [
     "EvidenceError", "EvidenceLedger", "EvidenceRecord",
     # governance and assurance
     "ControlContract", "Requirement", "ApplicationProfile", "ProfileError", "TransitionRule",
+    # contract coverage: is each requirement enforced, or only written down?
+    "CoverageReport", "measure_coverage",
+    # delegated authority: what a chain of agents actually confers
+    "AuthorityScope", "Delegation", "DelegationAuthority", "DelegationCode",
+    "DelegationPolicy", "RootGrant", "verify_delegation_space",
+    "run_delegation_suite", "ablate_delegation",
+    # assisted review: independence as a declarable, enforceable property
+    "AssistanceMode", "AssistedReviewCode", "AssistedReviewPolicy",
+    "AssistedReviewerModel", "ReviewAssistance", "run_assisted_review_trial",
     "AblationResult", "CoverageSummary", "EvaluationReport", "EvaluationRunner",
     "ScenarioResult", "UtilityResult",
     "ProfileVerifier", "VerificationReport", "verify_profile",

@@ -29,7 +29,7 @@ python -m pip install -e ".[dev]"
 | 2 | `pytest` | Whether the code works at all | `394 passed` in a few seconds |
 | 3 | `fssaira verify profiles/student_support.yaml` | Whether the authority invariants hold across the whole declared space | 240 states, 5 invariants, **0 violations** |
 | 4 | `fssaira evaluate profiles/student_support.yaml` | Containment **and** its cost | 30/30 contained, 0 unauthorized mutations, false-denial rate **0.0** |
-| 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 25/25, conformant |
+| 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 26/26, conformant |
 | 6 | `python scripts/generate_results.py --check` | Whether the committed numbers match a fresh run | `committed results match a fresh run` |
 | 7 | `pytest tests/test_paper_alignment.py` | Whether the paper, the deck, and the READMEs quote real figures | 38 passed |
 | 8 | `python scripts/benchmark.py` | What the governance costs | ~7 µs per decision; ~66 µs per full execution |
@@ -37,6 +37,9 @@ python -m pip install -e ".[dev]"
 | 10 | `fssaira oversight profiles/student_support.yaml --sweep` | Whether "a human approved it" survives the queue, across 25 parameter combinations | 11 reviewers sustain 2,640/day; 4 → **0** merit failures; the control never increases harm in any cell |
 | 11 | `fssaira verify profiles/academic_record_correction.yaml` | Whether the method works on a domain it was not designed for | 4,800 states, **0 violations**, no library change |
 | 12 | `fssaira challenge` | Whether the adversary is ever someone other than us | 7/7 live entries contained; **externally contributed: 0**, printed |
+| 13 | `fssaira coverage` | Whether each contract requirement is *enforced* or only written down | 33 machine-verified, 3 attested, **0 unverified** — it was 18 unverified when this check was written |
+| 14 | `fssaira assisted-review` | What a review assistant does to claim 10 | **5 → 1** merit failures, dependent vs independent, at the same lowered floor; no runtime signal separates them |
+| 15 | `fssaira delegation` | Whether authority survives being passed to another agent | 10/10 chains contained where per-hop validation contains 2/10; 768 states, **0 violations** |
 
 If any of these disagrees with the paper, **the paper is wrong** and we would like
 to know. That is the point of building alignment as a test.

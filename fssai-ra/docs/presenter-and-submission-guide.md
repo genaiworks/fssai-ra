@@ -54,7 +54,7 @@ This is an illustrative scenario. Do not describe it as an observed breach or an
 
 ## Talk lengths
 
-**Present from [`docs/presentation/slides.html`](presentation/slides.html).** It is the maintained deck: 23 slides in about fourteen minutes, plus two backup slides for questions. Its figures are checked against `scripts/generate_results.py` by `tests/test_paper_alignment.py`, so a stale number on a slide fails the build. The matching timed script is [`presentation/speaker-script.md`](presentation/speaker-script.md), and its four timing paths are checked against the deck by the same test file. Press `⌘P` in the deck for a PDF to carry as the podium backup.
+**Present from [`docs/presentation/slides.html`](presentation/slides.html).** It is the maintained deck: 25 slides in about sixteen minutes, plus two backup slides for questions. Its figures are checked against `scripts/generate_results.py` by `tests/test_paper_alignment.py`, so a stale number on a slide fails the build. The matching timed script is [`presentation/speaker-script.md`](presentation/speaker-script.md), and its four timing paths are checked against the deck by the same test file. Press `⌘P` in the deck for a PDF to carry as the podium backup.
 
 `docs/trust-by-construction-final.pptx` and its script `docs/speaker-script.md` are a **superseded v1.0.0-era pair**, kept for provenance. They contain no oversight ceiling, no second domain and no adversary corpus — that is, none of the three contributions this submission leads with. Do not rehearse from them.
 
@@ -62,12 +62,12 @@ The allocation paths live in the script rather than here, so there is one table 
 
 | Allocation | Slides | Delivery |
 |---|---|---|
-| 5 minutes | 1, 2, 5, 14, 15, 19, 20, 23 | The rule, the person, the contract, the oversight ceiling, the limits, the close |
-| 8 minutes | 1, 2, 4, 5, 7, 12, 14, 15, 18, 19, 20, 23 | Add the architecture, the demonstration and the controlled comparison |
-| 10 minutes | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 18, 19, 20, 21, 22, 23 | Add privilege invariance, the counterfactual, the theme and the ask |
-| 14 minutes | 1–23 | Complete narrative |
+| 5 minutes | 1, 2, 5, 14, 15, 16, 21, 22, 25 | The rule, the person, the contract, the oversight ceiling and its 2026 form, the limits, the close |
+| 10 minutes | 1, 2, 4, 5, 7, 12, 14, 15, 16, 20, 21, 22, 25 | Add the architecture, the demonstration and the controlled comparison |
+| 12 minutes | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25 | Add privilege invariance, the counterfactual, delegated authority, the theme and the ask |
+| 16 minutes | 1–25 | Complete narrative |
 
-Slides 19, 20 and 23 are never cut, and slides 14 and 15 are the oversight argument that earns the panel slot.
+Slides 21, 22 and 25 are never cut. Slides 14, 15 and 16 are the oversight argument — 16 is what makes it a 2026 talk rather than a 2024 one — and they are what earns the panel slot.
 
 For a discussion-only panel, use the opening above and three concrete examples: a changed action invalidates approval; an evidence outage pauses consequential automation; a student can request a correction. Avoid naming Kafka, Spark, or Iceberg unless the moderator asks about implementation.
 
@@ -122,7 +122,7 @@ We aim to reconstruct the evidence and recorded action. Exact regeneration of mo
 The teaching profile should support a deterministic stub and, optionally, a suitably sized local model. Actual hardware requirements must come from measurement. Energy comparisons must include utilization, hardware, and operational conditions; no environmental advantage has yet been established.
 
 **What evidence do you have today?**  
-The fixed v1.0.0 baseline contains 30 of 30 adversarial fixtures and completes six of six benign tasks, with eight control ablations, 240 bounded configurations, 25 conformance checks on two backend profiles and a single-process replay race. The current-source supplement adds independent-process races and abrupt-exit recovery. These are synthetic fixture observations. The repository publishes denominators, source fingerprints and limits. It does not demonstrate learner benefit or production readiness.
+The fixed v1.0.0 baseline contains 30 of 30 adversarial fixtures and completes six of six benign tasks, with eight control ablations, 240 bounded configurations, 26 conformance checks on two backend profiles and a single-process replay race. The current-source supplement adds independent-process races and abrupt-exit recovery, an assisted-review trial, delegated-authority chain verification, and three-way coverage of the control contract itself. These are synthetic fixture observations. The repository publishes denominators, source fingerprints and limits. It does not demonstrate learner benefit or production readiness.
 
 **What changed after v1.0.0, and which code should adopters use?**
 

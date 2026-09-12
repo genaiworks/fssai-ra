@@ -1,0 +1,54 @@
+# Domain 7 — delegated authority.
+#
+# The other six domains govern one agent acting under one grant. This one governs
+# what happens when that agent asks another, which by 2026 is the ordinary case
+# rather than the exotic one: orchestrators spawn sub-agents, sub-agents call tool
+# servers, institutions federate.
+#
+# Every requirement here concerns a composition rather than a component. That is
+# the point: each hop in the failures below is individually reasonable, correctly
+# implemented, and doing what it was asked. The defect is in what they add up to,
+# which is why none of it can be fixed in a prompt or found by reviewing one
+# service.
+domain: delegated_authority
+requirements:
+  - id: DL-1
+    protected_asset: The authority conferred on a chain of agents
+    permitted_operation: A principal may pass on only authority it currently holds, and a chain confers the intersection of every grant along it
+    enforcement_point: Chain verifier that recomputes conferred authority from the institutional root grant downward on every call, treating each hop's account of itself as evidence rather than as a decision
+    owner: Platform Security
+    test: Present a hop that widens its delegator's scope; present a sibling's chain as your own; act for another principal and confirm the effective authority falls to that principal's, not the actor's; withhold the beneficiary and confirm refusal
+    evidence_artifact: Chain verdict naming every principal, the conferred effective scope, and the denial code on refusal
+    failure_response: Deny the action, record the chain and the hop that failed, and route to the manual fallback
+  - id: DL-2
+    protected_asset: The accountable origin of delegated authority
+    permitted_operation: Every chain descends from an institutional grant naming an accountable owner, and no principal appears in a chain twice
+    enforcement_point: Chain verifier checks rootedness against the declared grant and acyclicity over the full principal sequence
+    owner: Student Support Service Owner
+    test: Present an internally consistent, authentically signed chain descending from no institutional grant; present a chain in which a principal reappears and confirm both are refused
+    evidence_artifact: Root grant identifier and the ordered principal sequence recorded with the verdict
+    failure_response: Deny the action and treat an unrooted chain as an unreviewed authority path
+  - id: DL-3
+    protected_asset: The currency of a delegated grant
+    permitted_operation: No delegation outlives the authority it descends from
+    enforcement_point: Chain verifier compares each hop's expiry against its delegator's and against the current time
+    owner: Platform Engineering
+    test: Issue a delegation expiring after its delegator's grant and confirm refusal; expire an intermediate hop and confirm the descendants stop working
+    evidence_artifact: Per-hop issue and expiry times recorded with the verdict
+    failure_response: Deny the action; a lapsed ancestor invalidates every descendant rather than only itself
+  - id: DL-4
+    protected_asset: The answerability of an automated decision
+    permitted_operation: A chain may be no longer than the declared maximum depth, and consequential authority may not be passed onward by a machine
+    enforcement_point: Declared delegation policy enforced by the chain verifier; a hop carrying consequential authority below the declared depth requires a named human to have approved that hop
+    owner: Program Registrar
+    test: Exceed the declared depth and confirm refusal; pass consequential authority to a successor without a human approving that hop and confirm refusal
+    evidence_artifact: Declared delegation policy published with the deployment, plus the depth and human-approval flag of every hop
+    failure_response: Deny the action and require a fresh named approval rather than inheriting one
+  - id: DL-5
+    protected_asset: The authenticity of the chain itself
+    permitted_operation: Every hop is signed by its delegator under a key the executor trusts
+    enforcement_point: Chain verifier recomputes every hop signature before evaluating any authority question
+    owner: Platform Security
+    test: Splice a hop signed by an untrusted key into an otherwise valid chain; tamper with a signed field; confirm both are refused before any scope check runs
+    evidence_artifact: Key identifier recorded per hop with the verdict
+    failure_response: Deny the action, retain the chain, and treat an untrusted signing key as a key-custody incident

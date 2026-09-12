@@ -11,28 +11,31 @@
 
 A panel opener is not a conference talk. The room has three or four other people
 who also have something to say, and the moderator is watching the clock. The deck
-runs **23 slides in about fourteen minutes**, with two backup slides that appear
+runs **25 slides in about sixteen minutes**, with two backup slides that appear
 only if someone asks.
 
 Four paths are built in. Pick one before you walk on stage. **Every one of them
-ends on slide 23**, because a talk that stops on the limits slide has ended on
+ends on slide 25**, because a talk that stops on the limits slide has ended on
 the weakest thing you had to say.
 
 | You have | Run slides | Cut |
 |---|---|---|
-| **14 minutes** | 1–23 | nothing |
-| **10 minutes** | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 18, 19, 20, 21, 22, 23 | sovereignty (3), method (9), finding (10), atomicity (11), harms (13), second domain (16), corpus (17) — fold 16 and 17 into one sentence each on 18 |
-| **8 minutes** | 1, 2, 4, 5, 7, 12, 14, 15, 18, 19, 20, 23 | the above, plus privilege invariance (6), counterfactual (8), theme (21), the ask (22) |
-| **5 minutes** | 1, 2, 5, 14, 15, 19, 20, 23 | everything but the rule, the person, the contract, the oversight argument, the limits, who this is for, and the close |
+| **16 minutes** | 1–25 | nothing |
+| **12 minutes** | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25 | sovereignty (3), method (9), finding (10), atomicity (11), harms (13), second domain (18), corpus (19) — fold 18 and 19 into one sentence each on 20 |
+| **10 minutes** | 1, 2, 4, 5, 7, 12, 14, 15, 16, 20, 21, 22, 25 | the above, plus privilege invariance (6), counterfactual (8), composition (17), theme (23), the ask (24) |
+| **5 minutes** | 1, 2, 5, 14, 15, 16, 21, 22, 25 | everything but the rule, the person, the contract, the oversight argument and its 2026 form, the limits, who this is for, and the close |
 
-**Three slides are never cut.** Slide 19, the limits: in a UN room the credibility
+**Three slides are never cut.** Slide 21, the limits: in a UN room the credibility
 of everything before it depends on those being stated by you rather than
-extracted from you. Slide 20, who this is for: without it this is a talk
-about software. And slide 23, the close: it is the only slide that hands the room
+extracted from you. Slide 22, who this is for: without it this is a talk
+about software. And slide 25, the close: it is the only slide that hands the room
 the sentence you want repeated after you sit down.
 
-Slides 14 and 15 are the oversight argument, and they are the reason this
-submission is on a panel rather than in a poster session. Cut the architecture
+Slides 14, 15 and 16 are the oversight argument, and they are the reason this
+submission is on a panel rather than in a poster session. Slide 16 in particular
+is what makes it a 2026 talk: a room that has already decided human-in-the-loop
+is solved has not yet considered what happens when the loop's human is reading a
+model's summary. Cut the architecture
 before you cut them.
 
 The arc is deliberate. It opens on a person who cannot find out why a decision
@@ -61,22 +64,27 @@ middle — never from either end.
 | 7:55 | 13 · Harms delivered | Count what reached the asset, not what was refused. |
 | 8:25 | 14 · The hard part | **The slide they will remember.** Oversight is finite. Slow down. |
 | 9:00 | 15 · Oversight measured | Two numbers: 2,640/day for this roster, and 4 → 0. |
-| 9:40 | 16 · A second domain | Generalization, and the defect it found in us. |
-| 10:15 | 17 · The corpus | The invitation. Say the ask: contribute one attack. |
-| 10:50 | 18 · Evidence | Numbers with denominators. |
-| 11:25 | 19 · Limits | **Never cut this.** |
-| 12:00 | 20 · Who this is for | **Never cut this.** Return to her. |
-| 12:35 | 21 · Both directions | Earn the panel slot on the conference theme. |
-| 13:05 | 22 · The ask | Something the room can do — hand them the worksheet. |
-| 13:35 | 23 · Close | The rule, then the stake. Then stop. |
-| — | 24 · Backup | The five domains, if the panel turns technical. |
-| — | 25 · Backup | The interface inventory, for "but you have a diode". |
+| 9:40 | 16 · The assisted reviewer | The 2026 form of the same failure. 5 → 1, and nothing to alert on. |
+| 10:15 | 17 · Authority that travels | Brisk. "Every hop locally correct; the composition wrong." |
+| 10:50 | 18 · A second domain | Generalization, and the defect it found in us. |
+| 11:20 | 19 · The corpus | The invitation. Say the ask: contribute one attack. |
+| 11:55 | 20 · Evidence | Numbers with denominators. |
+| 12:30 | 21 · Limits | **Never cut this.** |
+| 13:05 | 22 · Who this is for | **Never cut this.** Return to her. |
+| 13:40 | 23 · Both directions | Earn the panel slot on the conference theme. |
+| 14:10 | 24 · The ask | Something the room can do — hand them the worksheet. |
+| 14:40 | 25 · Close | The rule, then the stake. Then stop. |
+| — | 26 · Backup | The five domains, if the panel turns technical. |
+| — | 27 · Backup | The interface inventory, for "but you have a diode". |
 
-**If you are given ten minutes rather than fourteen,** take the ten-minute path
-above: cut 3, 9, 10, 11 and 13, and fold the second domain (16) and the corpus
-(17) into one sentence each on slide 18. Do not cut 14 or 15: the oversight
-argument is the reason this submission is on the panel rather than in a poster
-session. Do not cut 19, 20 or 23 under any circumstances.
+**If you are given twelve minutes rather than sixteen,** take the twelve-minute
+path above: cut 3, 9, 10, 11 and 13, and fold the second domain (18) and the
+corpus (19) into one sentence each on slide 20. Do not cut 14, 15 or 16: the
+oversight argument and its assisted-review extension are the reason this
+submission is on the panel rather than in a poster session. Slide 17 is the first
+of the contributions to go if time is short — the composition supplement carries
+it, and the panel can be pointed there. Do not cut 21, 22 or 25 under any
+circumstances.
 
 ---
 

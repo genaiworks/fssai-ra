@@ -1,0 +1,40 @@
+# Domain 8 — assisted review.
+#
+# Domain 5 routes consequential actions to a named human. Domain 6's cross-cutting
+# controls assume that human is reading. This domain governs what happens when the
+# human is reading a model's summary of the case instead of the case — which is
+# what an institution does, correctly and inevitably, once the queue exceeds the
+# roster.
+#
+# The control is unusual in this contract because it binds at configuration time
+# rather than at runtime. That is not a shortcut. At runtime a reviewer assisted
+# by an independent model and one assisted by the proposer's own reasoning are
+# indistinguishable: same identity, same interval, same signature, same evidence.
+# The difference exists only in what the institution declared, so the declaration
+# is where it has to be enforced.
+domain: assisted_review
+requirements:
+  - id: AR-1
+    protected_asset: The independence of a human approval from the proposal it reviews
+    permitted_operation: A deployment may lower the deliberation floor only in proportion to the independence it has declared for the review assistant
+    enforcement_point: Configuration gate that refuses to start a deployment whose declared floor is below what its declared assistant independence earns
+    owner: Student Support Service Owner
+    test: Declare a review assistant that shares the proposer's model and evidence, lower the deliberation floor, and confirm the deployment refuses to start with a stable code naming the floor it would have to raise to
+    evidence_artifact: Published assistance declaration naming the assistant, its three independence properties, the accountable declarer, and the floor the declaration permits
+    failure_response: Refuse to start; raise the floor, or establish and declare the independence that buys the throughput
+  - id: AR-2
+    protected_asset: The merit-failure class that only a reading human catches
+    permitted_operation: Review assistance must not be the proposing model reading its own evidence a second time
+    enforcement_point: Declared independence on three axes — a different model from the proposer, an evidence path that is not the proposer's assembled packet, and an adversarial posture tasked with finding grounds to refuse
+    owner: ML Platform Owner
+    test: Run identical queues with a dependent and an independent assistant at the identical lowered floor and confirm the dependent arm executes merit failures the independent arm does not, while every runtime mechanism passes in both
+    evidence_artifact: Trial report naming merit failures, benign completions, and the oversight report for each arm
+    failure_response: Treat a dependent assistant as no assistance for the purposes of the deliberation floor and restore the unaided floor
+  - id: AR-3
+    protected_asset: The oversight ceiling under assistance
+    permitted_operation: An institution deploying review assistance must recompute and republish its oversight ceiling rather than treat assistance as removing one
+    enforcement_point: Capacity arithmetic recomputed from the assisted floor and the declared attention multiplier, published with the deployment
+    owner: Audit and Assurance
+    test: Run an assisted queue past the extended attention budget and confirm merit failures return, demonstrating that assistance moved the ceiling rather than removing it
+    evidence_artifact: Published capacity figure naming the assisted floor, the declared attention multiplier, and which constraint binds
+    failure_response: Publish the recomputed ceiling; demand above it takes the manual fallback exactly as in the unaided case

@@ -34,6 +34,9 @@ requirements:
     failure_response: Treat a gap or a mismatch as an incident; the primary chain is no longer citable until reconciled
 
   - id: XC-4
+    verified_by: organizational
+    attested_by: Student Support Service Owner
+    attestation_cadence: quarterly, with the named owner countersigning
     protected_asset: Continuity of service when automation is denied
     permitted_operation: A named manual path serves the person whose request was refused
     enforcement_point: Manual fallback declared in the application profile and owned by a named service owner

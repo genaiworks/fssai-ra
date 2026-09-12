@@ -401,6 +401,151 @@ def cmd_challenge(args) -> int:
     return 0 if not report["mismatched_expectations"] else 1
 
 
+def cmd_delegation(args) -> int:
+    """Score delegated-authority chains against all three architectures."""
+    from .delegation import DelegationPolicy, verify_delegation_space
+    from .delegation_eval import ablate_delegation, run_delegation_suite
+
+    policy = DelegationPolicy(max_depth=args.max_depth)
+    report = run_delegation_suite(policy)
+
+    heading(f"Delegated authority — {report.scenarios} chain scenarios, 3 architectures")
+    by_scenario: dict = {}
+    for outcome in report.outcomes:
+        by_scenario.setdefault(outcome.scenario, {})[outcome.arm] = outcome
+    for name, arms in by_scenario.items():
+        benign = name == "benign_two_hop"
+        print(f"  {bold(name)}" + (dim("   (control case: must complete)") if benign else ""))
+        for arm in ("unguarded", "caller_checked", "this_architecture"):
+            outcome = arms[arm]
+            mark = green("contained") if outcome.contained else red("HARM")
+            if benign:
+                mark = green("completed") if outcome.contained else red("REFUSED")
+            print(f"    {arm:20} {mark:<22}" + dim(f"  {outcome.code}"))
+
+    heading("Containment by architecture")
+    for arm in ("unguarded", "caller_checked", "this_architecture"):
+        count = report.contained(arm)
+        print(f"  {arm:20} {count}/{report.hostile_total}"
+              f"   {count / report.hostile_total:.0%}")
+    print(dim("  'caller_checked' validates each hop against its immediate delegator "
+              "only —"))
+    print(dim("  a real control, and not the same thing as verifying the chain."))
+
+    heading("Is each invariant load-bearing?")
+    ablations = ablate_delegation(policy)
+    for row in ablations:
+        mark = green("load-bearing") if row["load_bearing"] else yellow("did not bind")
+        print(f"  {row['control']:34} {mark:<24}"
+              + dim(f"  {row['with_control']} vs {row['without_control']}"))
+
+    space = verify_delegation_space(policy)
+    heading("Bounded model check over the declared chain space")
+    print(f"  states explored   {space.states_explored:,}")
+    print(f"  admitted          {space.admitted}")
+    print(f"  violations        {space.violations and red(str(len(space.violations))) or green('0')}")
+    for line in space.to_dict()["limits"]:
+        print(dim(f"  - {line}"))
+
+    payload = {**report.to_dict(), "ablations": ablations,
+               "verification": space.to_dict()}
+    emit(payload, args.output)
+    return 0 if report.holds and space.holds else 1
+
+
+def cmd_assisted_review(args) -> int:
+    """Measure what a review assistant does to the oversight argument."""
+    from .assisted_review import run_assisted_review_trial
+    from .profiles import ApplicationProfile, ProfileError
+
+    try:
+        profile = ApplicationProfile.load(args.profile)
+    except ProfileError as exc:
+        print(red(f"  profile error: {exc}"))
+        return 2
+
+    report = run_assisted_review_trial(
+        profile, arrivals=args.arrivals,
+        unaided_floor=args.unaided_floor, lowered_floor=args.lowered_floor,
+    )
+    summary = report["summary"]
+
+    heading(f"Assisted review — {report['arrivals']} arrivals, one reviewer")
+    for arm, counters in report["arms"].items():
+        if not counters.get("started"):
+            print(f"  {bold(arm)}")
+            print(f"    {red('refused at configuration')}  {counters['code']}")
+            print(dim(f"    permitted floor {counters['permitted_floor_seconds']}s"))
+            continue
+        harm = counters["harmful_executed"]
+        mark = green("0 merit failures") if harm == 0 else red(f"{harm} merit failures")
+        print(f"  {bold(arm)}")
+        print(f"    {mark:<30} benign completed {counters['benign_executed']}"
+              f"   deferred {counters['deferred_to_manual_fallback']}")
+        print(dim(f"    floor {counters['deliberation_floor_seconds']}s  "
+                  f"independence {counters['assistance']['independence_score']}/3  "
+                  f"oversight refusals {counters['oversight']['refusals_by_code'] or 'none'}"))
+
+    heading("What the arms show")
+    print(f"  merit failures   unaided {summary['merit_failures_unaided']}"
+          f"  ·  dependent {summary['merit_failures_assisted_dependent']}"
+          f"  ·  independent {summary['merit_failures_assisted_independent']}")
+    print(f"  benign completed unaided {summary['benign_completed_unaided']}"
+          f"  ·  assisted {summary['benign_completed_assisted_independent']}"
+          f"   ({summary['benign_completion_gain_from_assistance']}x)")
+    if summary["every_mechanism_passed_in_the_harmful_arm"]:
+        print(yellow("  Every runtime mechanism passed in the harmful arm: chain intact,"))
+        print(yellow("  reviewer inside quota, every approval above the configured floor,"))
+        print(yellow("  no oversight refusal. There is no runtime signal to alert on."))
+    for line in report["limits"]:
+        print(dim(f"  - {line}"))
+
+    emit(report, args.output)
+    return 0 if summary["configuration_gate_refused_the_harmful_arm"] else 1
+
+
+def cmd_coverage(args) -> int:
+    """Is each contract requirement enforced, or only written down?"""
+    from .coverage import measure_coverage
+
+    try:
+        report = measure_coverage(args.dir)
+    except ValueError as exc:
+        print(red(f"  coverage error: {exc}"))
+        return 2
+
+    heading(f"Control-contract coverage — {report.total} requirements")
+    for row in report.requirements:
+        if row.status == "machine_verified":
+            mark = green("machine-verified")
+            detail = ", ".join(sorted({b.mechanism for b in row.bindings}))
+        elif row.status == "organizationally_attested":
+            mark = yellow("attested")
+            detail = f"{row.attested_by}, {row.attestation_cadence}"
+        else:
+            mark = red("UNVERIFIED")
+            detail = "a test described in prose and bound to nothing"
+        print(f"  {row.requirement_id:6} {row.domain:22} {mark:<26}" + dim(f"  {detail}"))
+
+    heading("Totals")
+    print(f"  machine-verified            {report.machine_verified}")
+    print(f"  organizationally attested   {report.organizationally_attested}")
+    unverified = report.unverified
+    print("  unverified                  "
+          + (green("0") if unverified == 0 else red(str(unverified))))
+    if unverified:
+        print(red("  These requirements describe a failure test and bind it to nothing."))
+        print(red("  A control that exists in review and not at runtime is the exact"))
+        print(red("  failure this project exists to eliminate."))
+    if report.unknown_bindings:
+        print(red(f"  bindings naming unknown requirements: {report.unknown_bindings}"))
+    for line in report.to_dict()["limits"]:
+        print(dim(f"  - {line}"))
+
+    emit(report.to_dict(), args.output)
+    return 0 if report.holds else 1
+
+
 def cmd_doctor(args) -> int:
     from .runtime_factory import configuration_warnings, readiness
     from .security import AuthConfig
@@ -756,6 +901,30 @@ def build_parser() -> argparse.ArgumentParser:
     challenge.add_argument("--dir", default="challenges",
                            help="directory of contributed challenge YAML files")
     challenge.set_defaults(func=cmd_challenge)
+
+    delegation = add_output(sub.add_parser(
+        "delegation",
+        help="score delegated-authority chains against all three architectures"))
+    delegation.add_argument("--max-depth", type=int, default=3,
+                            help="declared maximum delegation depth (default 3)")
+    delegation.set_defaults(func=cmd_delegation)
+
+    assisted = add_output(sub.add_parser(
+        "assisted-review",
+        help="what a review assistant does to the oversight argument"))
+    assisted.add_argument("profile", nargs="?", default="profiles/student_support.yaml")
+    assisted.add_argument("--arrivals", type=int, default=40)
+    assisted.add_argument("--unaided-floor", type=float, default=45.0,
+                          help="deliberation floor for an unaided reader, in seconds")
+    assisted.add_argument("--lowered-floor", type=float, default=10.0,
+                          help="floor the deployment wants to run with once assisted")
+    assisted.set_defaults(func=cmd_assisted_review)
+
+    coverage = add_output(sub.add_parser(
+        "coverage", help="is each contract requirement enforced, or only written down?"))
+    coverage.add_argument("--dir", default="contract",
+                          help="directory holding the control contract")
+    coverage.set_defaults(func=cmd_coverage)
 
     plugins_cmd = sub.add_parser("plugins", help="list registered backends for every port")
     plugins_cmd.add_argument("--port", default=None)

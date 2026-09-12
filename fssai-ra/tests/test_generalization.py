@@ -183,7 +183,7 @@ def test_the_unchanged_conformance_suite_holds_on_a_second_domain_and_two_backen
     for bundle in (memory_bundle(profile), sql_bundle(profile=profile)):
         report = run_conformance(bundle)
         assert report.passed, [check.id for check in report.failures]
-        assert len(report.executed) == 25
+        assert len(report.executed) == 26
 
 
 def test_the_second_domain_carries_its_own_evidence_and_borrows_none():

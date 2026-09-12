@@ -1,6 +1,142 @@
 # Changelog
 
-## Unreleased — oversight capacity, a second domain, and an open adversary corpus
+## Unreleased — composition: delegated authority, assisted review, and a contract that measures itself
+
+### The contract now checks whether it is enforced
+
+Seven fields per capability is this project's central claim, and one of the seven
+is an executable failure test. The loader validated that every requirement *had*
+that field. It never checked that the test **existed**.
+
+- **Found: 18 of 28 requirements described a failure test and bound it to
+  nothing.** Most of them did have tests; nothing connected the two, so deleting
+  a test would have removed a governance claim in silence. `profiles.py` already
+  says what that is — *a control that existed in review and not at runtime is the
+  exact failure this project exists to eliminate* — and it was in our own
+  contract.
+- Added `fssaira coverage` and `fssaira.coverage`: three-way coverage over the
+  control contract. **machine_verified** (an executable check is bound to it),
+  **organizationally_attested** (a named role on a declared cadence, for controls
+  no program can prove — key custody, the signed interface inventory, retention
+  policy), or **unverified**. Counting attestations as coverage would inflate the
+  figure with promises; counting them as gaps would make it permanently
+  uninformative. Publishing all three lets an adopter ask the only useful
+  question: are the attested controls the genuinely unprovable ones, or the
+  inconvenient ones?
+- Added `contract/bindings/`, kept separate from the contract itself because the
+  contract is the institution's document and the bindings are this
+  implementation's claim about it.
+- `test_every_binding_locator_actually_exists` resolves every binding against the
+  real source. Without it the coverage report would be a YAML file asserting its
+  own correctness — a more convincing version of the problem it was written to
+  detect. It caught eight fabricated locators on its first run, all ours.
+- `test_organizational_attestation_does_not_grow_silently` pins the attested
+  count, so declaring a control unprovable is a visible edit rather than a quiet
+  one.
+- **Fixed: ET-2 had no check at all.** The dead-letter path and idempotent
+  producer were implemented in `kafka_backend` and exercised by nothing reachable
+  without a live broker. Added conformance check `CF-ET-03`: a redelivery must be
+  distinguishable, so a projection can be idempotent. Conformance is now 26
+  checks, not 25.
+- Current figures: **33 machine-verified, 3 attested, 0 unverified.**
+
+### Authority that travels: delegated authority between agents
+
+Every control before this governs one agent under one grant. That was right for
+the agent of 2023 and is not the shape institutions deploy, now that
+orchestrators spawn sub-agents and sub-agents call tool servers they did not
+write. `ToolCall` carried a single `agent_id`; the word "delegation" appeared in
+the teaching docs and nowhere in the source.
+
+- Added `fssaira.delegation` and `fssaira delegation`. The rule: **no principal
+  may pass on authority it does not itself hold, and no chain may end with more
+  authority than its root was granted.** Authority under delegation is
+  monotonically non-increasing, so a chain is checkable in one pass without
+  trusting any hop's account of itself, and what it confers at the leaf is the
+  *intersection* of every grant along it.
+- Nine invariants, each with a stable denial code and each independently
+  ablatable: attenuation, rooted authority, depth bound, temporal containment,
+  acyclicity, provenance, non-delegable consequence, holder binding, beneficiary
+  attenuation. **All nine are load-bearing** — each removed in turn, each
+  restoring its harm.
+- Three arms over the same chains: unguarded contains **0/10**, per-hop
+  validation contains **2/10**, chain verification contains **10/10**, and the
+  benign two-hop chain completes in all three. The middle arm is the finding: it
+  is a real control and what a careful engineer builds, and it cannot see the
+  root, so lapsed ancestors, repeated principals and unrooted origins pass
+  straight through. **Local validation at every hop is not verifying the chain.**
+- Bounded model checking over the declared chain space: **768 configurations, 5
+  invariants, 0 violations.**
+- **Fixed, in this module's own first run: the checker admitted the confused
+  deputy.** Every invariant held — the chain was authentic, rooted, attenuated,
+  unexpired, acyclic and within depth. It simply was not the *requester's* chain.
+  An authority object bound to nobody is a bearer token, which is the thing this
+  architecture exists to refuse. Added D8a (holder binding) and D8b (beneficiary
+  attenuation: work done *for* another principal runs under that principal's
+  authority, intersected with the actor's), with regression tests.
+- Added contract domain 7, `DL-1` to `DL-5`.
+
+### Assisted review: what happens when the reviewer also has a model
+
+The oversight contribution establishes that review is finite and that a queue
+beyond the ceiling turns oversight into a signature service while every test
+stays green. That argument models an **unaided** reader, and by 2026 that
+assumption is false almost everywhere.
+
+- Added `fssaira.assisted_review` and `fssaira assisted-review`. Assistance is
+  not the mistake: it completes **5x** the legitimate work of the unaided arm,
+  which contains every merit failure by deferring 32 of 40 cases. The mistake is
+  what it does to the deliberation floor, which an assisted deployment must lower
+  or else throttle reviewers doing their jobs.
+- The floor was never measuring seconds. It was a proxy for *a second mind
+  independently reaching the same conclusion*, and that survives only if the
+  assistant is independent of the proposer. Same model family, same evidence
+  packet, and it is the proposer's reasoning arriving again in a reviewer's
+  badge — wrong the same way, fluently, on exactly the cases that matter.
+- Measured: identical queues, identical lowered floor, differing only in declared
+  independence — **5 merit failures with a dependent assistant, 1 with an
+  independent one.** In the harmful arm the evidence chain is intact, the
+  reviewer is inside quota, every approval clears the floor, and no oversight
+  refusal fires. **There is no runtime signal to alert on.**
+- So the enforcement point is a **configuration gate**, refusing at startup with
+  `FLOOR_BELOW_DECLARED_INDEPENDENCE` and naming the floor the declaration would
+  have to rise to. At runtime a dependent assistant and an independent one are
+  indistinguishable; the difference exists only in the declaration, so that is
+  where it is enforced.
+- Independence is three things an institution can answer about itself and a
+  procurement process can require in writing: a different model from the
+  proposer, an evidence path that is not the proposer's assembled packet, and an
+  adversarial posture tasked with finding grounds to refuse.
+- **The independent arm reaches 1, not 0**, and that is the result rather than a
+  tuning failure. Independence multiplies effective attention; it does not make
+  attention unbounded. An institution that buys an assistant has bought a larger
+  ceiling to compute, not permission to stop computing one.
+- The proposer/assistant error correlation is a **declared parameter**, exactly
+  like the reviewer degradation curve. No model was evaluated and no rate is
+  claimed for any named system. Measuring it is named open work.
+- Added contract domain 8, `AR-1` to `AR-3`.
+
+### Paper, deck and docs
+
+- `paper/composition-supplement.md`: the full method and results for both
+  contributions, held to the same alignment standard as the abstract — its
+  figures are checked against generated results and its limits against a required
+  list.
+- The extended abstract gains §4 and the assisted-review extension of §3, and its
+  word bound moves from 1,650 to 1,900. That is recorded as a decision in
+  `test_the_word_count_fits_the_submission_guidance`, with the cut order in
+  `paper/SUBMISSION.md` naming what goes first if a hard cap applies. The limits
+  section is never the thing that gets cut.
+- Four new pinned claims in `tests/test_paper_alignment.py`. A new figure in the
+  paper without an entry there is a number nothing checks — which would be an
+  embarrassing thing to ship alongside the coverage work.
+- Deck: two new slides (16, the assisted reviewer; 17, authority that travels).
+  The speaker script's routing and timing tables are renumbered to match, and the
+  presenter guide with them.
+- `make reviewer` is now twelve steps, with coverage first: whether the contract
+  is enforced should be established before any figure it produces is read.
+
+## Earlier unreleased work — oversight capacity, a second domain, and an open adversary corpus
 
 ### Sensitivity, and two defects it found in our own work
 

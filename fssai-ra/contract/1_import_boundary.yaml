@@ -25,6 +25,9 @@ requirements:
     failure_response: Refuse to start with a channel that exposes a return path; treat any discovered read-back route as an incident
 
   - id: IB-3
+    verified_by: organizational
+    attested_by: Infrastructure Owner
+    attestation_cadence: at every deployment and every interface change
     protected_asset: The directionality claim itself
     permitted_operation: Every interface in or out of the protected domain is declared, with a named control and a named owner
     enforcement_point: Interface inventory reviewed at deployment and at every change; a diode governs one link and nothing else

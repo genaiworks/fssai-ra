@@ -23,6 +23,7 @@ UNU–Springer proceedings.
 **If you came from the paper or the panel**
 
 - [Extended abstract](fssai-ra/paper/extended-abstract.md) — the submission
+- [Composition supplement](fssai-ra/paper/composition-supplement.md) — delegated authority and assisted review, in full
 - [Conference deck](fssai-ra/docs/presentation/slides.html) and [speaker script](fssai-ra/docs/presentation/speaker-script.md)
 - [Results, with their limits](fssai-ra/evaluation/results/RESULTS.md)
 - [Assurance claims and evidence](fssai-ra/docs/ASSURANCE.md) — every claim, its test, and what it does not mean
@@ -52,19 +53,22 @@ cd fssai-ra/fssai-ra
 python -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
 
-pytest                                            # 394 deterministic tests, fully offline
+pytest                                            # 461 deterministic tests, fully offline
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # 240 states, 5 invariants, 0 violations
 fssaira evaluate profiles/student_support.yaml    # 30 adversarial + 6 benign + 8 ablations
 fssaira conformance --backend sql                 # does it hold on another backend?
 fssaira oversight profiles/student_support.yaml --sweep   # how much review can you supply?
+fssaira coverage                                  # is each contract requirement enforced, or just written down?
+fssaira delegation                                # authority that travels: 10 chain risk classes, 3 architectures
+fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
 make reviewer                                     # all of the above, one command
 fssaira init my-domain                            # scaffold your own
 ```
 
 No network, no model weights, no GPU. Release `v1.0.0` contains 187 deterministic
-tests; current source has 394. Both include a bounded model checker over the
+tests; current source has 461. Both include a bounded model checker over the
 profile's declared authority space, a portable conformance suite, and versioned
 machine-readable results. These establish specified properties in a synthetic
 environment; they are **not** a security certification or evidence of production
@@ -87,16 +91,18 @@ to automate. That is the diagnostic, not an inconvenience.
 |---|---|---|
 | Bounded model checking | What about the combination nobody imagined? | 240 states, 0 violations |
 | Ablation-measured coverage | Is each control load-bearing, or decorative? | 8 of 8 restored their harm |
-| Portable conformance | Does it hold after you replace a component? | 25 checks, 2 backend profiles |
+| Portable conformance | Does it hold after you replace a component? | 26 checks, 2 backend profiles |
 | Utility baseline | Does legitimate work still complete? | 6 of 6, false-denial rate 0.0 |
 | Controlled comparison | Compared with how agents are built today? | 0% → 29% → 100% contained |
 
-Three things the current branch adds, each answering a question the release could
-not:
+What the current branch adds, each answering a question the release could not:
 
 | | Question it answers | Result |
 |---|---|---|
 | Oversight capacity | How much review can an institution actually supply? | 11 reviewers sustain 2,640 actions/day; 4 → 0 merit failures under load |
+| **Assisted review** | **What happens when the reviewer also has a model?** | **5 → 1 merit failures, dependent vs independent assistant, at the same lowered floor — and no runtime signal distinguishes them** |
+| **Delegated authority** | **Does authority survive being passed to another agent?** | **10/10 chains contained where per-hop validation contains 2/10; 768 states, 0 violations** |
+| **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 33 machine-verified, 3 attested, 0 unverified** |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
 | Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 
@@ -111,6 +117,16 @@ questionnaire for people adopting it. See [`CHANGELOG.md`](fssai-ra/CHANGELOG.md
 > and why the reviewer degradation curve is labelled a *declared parameter*
 > everywhere it appears. No human was observed. See
 > [assurance §7](fssai-ra/docs/ASSURANCE.md).
+
+> **And a reviewer with a model assistant can be unreviewed while looking
+> busier.** If the assistant shares the proposing model and its evidence, it is
+> not a second opinion — it is the proposer's reasoning arriving again in a
+> reviewer's badge, wrong the same way on exactly the cases that matter. The
+> merit failures come back (5 vs 1) while the chain stays intact, the reviewer
+> stays inside quota, and no refusal fires. There is nothing to alert on, so the
+> control is a **configuration gate**: throughput is bought with declared
+> independence — a different model, a different evidence path, an adversarial
+> posture — and not otherwise.
 
 Every figure above is generated by `scripts/generate_results.py` and checked
 against the paper and the deck by `tests/test_paper_alignment.py`. If prose and

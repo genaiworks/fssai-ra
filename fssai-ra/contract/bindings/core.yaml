@@ -1,0 +1,205 @@
+# Which executable check enforces which contract requirement.
+#
+# Written after `fssaira coverage` reported that eighteen of twenty-eight
+# requirements had a test described in prose and bound to nothing. Most of them
+# did have tests; nothing connected the two, so deleting a test removed a
+# governance claim silently. That is the failure this project exists to
+# eliminate, found in its own contract.
+bindings:
+  # -- import boundary --------------------------------------------------
+  - requirements: [IB-1]
+    mechanism: scenario
+    locator: src/fssaira/evaluation.py::import_boundary_scenarios
+    note: oversized, disallowed type, unregistered source, tampered signature, size mismatch
+  - requirements: [IB-1]
+    mechanism: unit_test
+    locator: tests/test_import_api.py::test_import_gateway_quarantines_bad_signature_without_publishing
+  - requirements: [IB-2]
+    mechanism: unit_test
+    locator: tests/test_diode_transport.py::test_neither_end_exposes_a_return_path
+  - requirements: [IB-2]
+    mechanism: unit_test
+    locator: tests/test_import_api.py::test_import_gateway_has_no_readback_route
+  - requirements: [IB-3]
+    mechanism: unit_test
+    locator: tests/test_diode_transport.py::test_an_interface_without_an_owner_is_flagged
+    note: >-
+      the inventory mechanism is tested; the signed review of a real deployment's
+      interfaces is the organizational half and is attested separately
+  - requirements: [IB-4]
+    mechanism: unit_test
+    locator: tests/test_attacks.py
+    note: prompt-injection specimen delivered as evidence, obtaining no authorization
+
+  # -- event transport ---------------------------------------------------
+  - requirements: [ET-1]
+    mechanism: conformance
+    locator: CF-ET-01, CF-ET-02
+  - requirements: [ET-2]
+    mechanism: conformance
+    locator: CF-ET-03
+    note: >-
+      added when coverage found ET-2 bound to nothing. The dead-letter path and
+      idempotent producer were implemented in kafka_backend and exercised by no
+      check reachable without a live broker
+
+  # -- reproducible data -------------------------------------------------
+  - requirements: [RD-1]
+    mechanism: conformance
+    locator: CF-RD-01, CF-RD-02
+  - requirements: [RD-1]
+    mechanism: scenario
+    locator: src/fssaira/evaluation.py::platform_scenarios
+
+  # -- bounded intelligence ----------------------------------------------
+  - requirements: [BI-1]
+    mechanism: conformance
+    locator: CF-BI-01
+  - requirements: [BI-1]
+    mechanism: scenario
+    locator: src/fssaira/evaluation.py::bounded_intelligence_scenarios
+  - requirements: [BI-2]
+    mechanism: ablation
+    locator: src/fssaira/evaluation.py::egress_default_deny
+  - requirements: [BI-2]
+    mechanism: conformance
+    locator: CF-BI-02
+  - requirements: [BI-3]
+    mechanism: unit_test
+    locator: tests/test_privilege_invariance.py::test_a_call_that_understates_its_class_is_reclassified
+  - requirements: [BI-3]
+    mechanism: unit_test
+    locator: tests/test_privilege_invariance.py::test_an_unknown_capability_fails_closed
+  - requirements: [BI-3]
+    mechanism: ablation
+    locator: src/fssaira/evaluation.py::privilege_invariance_catalogue
+  - requirements: [BI-4]
+    mechanism: unit_test
+    locator: tests/test_properties.py
+    note: the independent reference predicate denies once the call budget is exhausted
+  - requirements: [BI-5]
+    mechanism: unit_test
+    locator: tests/test_security_and_telemetry.py::test_a_non_local_model_endpoint_is_flagged
+  - requirements: [BI-5]
+    mechanism: unit_test
+    locator: tests/test_models_and_plugins.py
+    note: unreachable local model with fallback denied fails explicitly
+
+  # -- accountable action ------------------------------------------------
+  - requirements: [AA-1]
+    mechanism: ablation
+    locator: src/fssaira/evaluation.py::named_human_for_high_impact
+  - requirements: [AA-2]
+    mechanism: ablation
+    locator: src/fssaira/evaluation.py::least_privilege_tool_grant
+  - requirements: [AA-3]
+    mechanism: scenario
+    locator: src/fssaira/evaluation.py::evidence_write_credential
+  - requirements: [AA-4]
+    mechanism: model_check
+    locator: src/fssaira/verification.py::verify_profile
+    note: 240 states on the reference profile, 4800 on the second domain
+  - requirements: [AA-4]
+    mechanism: conformance
+    locator: CF-AA-10 .. CF-AA-14
+  - requirements: [AA-5]
+    mechanism: unit_test
+    locator: tests/test_exact_action.py
+    note: OUTCOME_EVIDENCE_PENDING, one mutation, exactly one reconciled outcome
+  - requirements: [AA-5]
+    mechanism: unit_test
+    locator: tests/test_resilience.py::test_abrupt_exit_recovers_all_or_nothing_and_retry_is_safe
+  - requirements: [AA-6]
+    mechanism: conformance
+    locator: CF-AA-15
+  - requirements: [AA-6]
+    mechanism: unit_test
+    locator: tests/test_oversight.py::test_separation_of_duties_is_still_checked_before_capacity
+  - requirements: [AA-7]
+    mechanism: conformance
+    locator: src/fssaira/conformance.py::run_conformance
+  - requirements: [AA-7]
+    mechanism: unit_test
+    locator: tests/test_generalization.py::test_the_unchanged_conformance_suite_holds_on_a_second_domain_and_two_backends
+  - requirements: [AA-8]
+    mechanism: unit_test
+    locator: tests/test_oversight.py::test_the_ceiling_refuses_the_next_approval_rather_than_flagging_it
+  - requirements: [AA-8]
+    mechanism: unit_test
+    locator: tests/test_oversight.py::test_an_exhausted_reviewer_cannot_produce_a_signed_approval_at_all
+  - requirements: [AA-8]
+    mechanism: ablation
+    locator: src/fssaira/oversight.py::sweep_oversight
+    note: load-bearing in 16 of the 20 swept cells where harm was possible
+  - requirements: [AA-9]
+    mechanism: unit_test
+    locator: tests/test_oversight.py::test_sustained_load_escalates_to_a_second_distinct_reviewer
+
+  # -- cross-cutting -----------------------------------------------------
+  - requirements: [XC-1]
+    mechanism: unit_test
+    locator: tests/test_security_and_telemetry.py::test_header_identity_is_refused_unless_a_proxy_is_declared
+  - requirements: [XC-1]
+    mechanism: unit_test
+    locator: tests/test_api.py::test_api_requires_authentication_and_the_operator_role
+  - requirements: [XC-2]
+    mechanism: unit_test
+    locator: tests/test_security_and_telemetry.py::test_teaching_defaults_are_reported_as_blocking
+  - requirements: [XC-3]
+    mechanism: unit_test
+    locator: tests/test_decision_packet.py::test_consistent_rewrite_still_fails_an_independent_fingerprint
+    note: independent recomputation detects a chain rewritten consistently in place
+  - requirements: [XC-5]
+    mechanism: unit_test
+    locator: tests/test_challenge.py::test_an_attack_that_lands_on_no_arm_is_reported_inert_not_contained
+  - requirements: [XC-5]
+    mechanism: unit_test
+    locator: tests/test_challenge.py::test_a_submission_is_data_and_never_contributor_code
+
+  # -- delegated authority -----------------------------------------------
+  - requirements: [DL-1]
+    mechanism: model_check
+    locator: src/fssaira/delegation.py::verify_delegation_space
+  - requirements: [DL-1]
+    mechanism: ablation
+    locator: src/fssaira/delegation_eval.py::ablate_delegation
+    note: D1 attenuation, D8a holder binding, D8b beneficiary attenuation
+  - requirements: [DL-1]
+    mechanism: scenario
+    locator: src/fssaira/delegation_eval.py::run_delegation_suite
+  - requirements: [DL-2]
+    mechanism: model_check
+    locator: src/fssaira/delegation.py::verify_delegation_space
+  - requirements: [DL-2]
+    mechanism: ablation
+    locator: src/fssaira/delegation_eval.py::ablate_delegation
+    note: D2 rooted authority, D5 acyclicity
+  - requirements: [DL-3]
+    mechanism: ablation
+    locator: src/fssaira/delegation_eval.py::ablate_delegation
+    note: D4 temporal containment
+  - requirements: [DL-4]
+    mechanism: ablation
+    locator: src/fssaira/delegation_eval.py::ablate_delegation
+    note: D3 depth bound, D7 non-delegable consequence
+  - requirements: [DL-5]
+    mechanism: ablation
+    locator: src/fssaira/delegation_eval.py::ablate_delegation
+    note: D6 provenance
+  - requirements: [DL-5]
+    mechanism: model_check
+    locator: src/fssaira/delegation.py::verify_delegation_space
+
+  # -- assisted review ---------------------------------------------------
+  - requirements: [AR-1]
+    mechanism: unit_test
+    locator: tests/test_assisted_review.py::test_a_lowered_floor_without_declared_independence_is_refused
+  - requirements: [AR-2]
+    mechanism: scenario
+    locator: src/fssaira/assisted_review.py::run_assisted_review_trial
+  - requirements: [AR-2]
+    mechanism: unit_test
+    locator: tests/test_assisted_review.py::test_a_dependent_assistant_reintroduces_merit_failures
+  - requirements: [AR-3]
+    mechanism: unit_test
+    locator: tests/test_assisted_review.py::test_independence_moves_the_ceiling_rather_than_removing_it
