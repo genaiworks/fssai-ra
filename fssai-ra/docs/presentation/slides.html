@@ -867,7 +867,7 @@ const SLIDES = [
     <div class="body">
       <div class="figures">
         <div class="fig"><span class="k">Roster</span><b>11</b><span class="note">reviewers, 4h/day on this queue</span></div>
-        <div class="fig"><span class="k">Sustains</span><b>3,520</b><span class="note">consequential actions/day — bound by the deliberation floor</span></div>
+        <div class="fig"><span class="k">Sustains</span><b>2,640</b><span class="note">consequential actions/day — bound by the declared quota</span></div>
         <div class="fig"><span class="k">Trial</span><b>5×</b><span class="note">demand against declared attentive capacity</span></div>
       </div>
       <div class="ledger">
@@ -876,9 +876,14 @@ const SLIDES = [
         <div><span class="seq">3</span><span>actions deferred to the manual fallback</span><span class="hash"><b>32</b></span></div>
       </div>
       <p>These proposals were <em>structurally perfect and substantively wrong</em>: right operation, current version, authentic approval, ineligible applicant. No digest detects that. No invariant excludes it. The only control behind that entire class of harm is a person who is reading.</p>
-      <p class="faint"><strong>The 32 deferrals are the finding, not a defect to tune away.</strong> They are this institution’s over-capacity made arithmetic instead of invisible. One caveat, stated plainly: the reviewer degradation curve is a <em>declared parameter</em>, not a measurement of any officer. Observing real reviewers is open work.</p>
+      <p class="faint"><strong>The 32 deferrals are the finding, not a defect to tune away.</strong> They are this institution’s over-capacity made arithmetic instead of invisible.</p>
+      <div class="callout">
+        <p><strong>“You picked three numbers that suited you.”</strong> So we swept them. Across <b>25</b> parameter combinations the control was load-bearing in <b>16</b> of the <b>20</b> where harm was possible, harm reached zero in <b>16</b>, and it never increased harm anywhere. The sweep also caught <em>our own shipped defaults</em> throttling reviewers who were reading — repairing that declaration drove the false-positive cost to <b>0</b>.</p>
+      </div>
+      <p class="faint">One caveat, stated plainly: the reviewer degradation curve is a <em>declared parameter</em>, not a measurement of any officer. Observing real reviewers is open work.</p>
     </div>`,
-  notes: `Two numbers to land: 3,520 per day for this roster, and 4 → 0 merit failures.
+  notes: `Two numbers to land: 2,640 per day for this roster, and 4 → 0 merit failures.
+  <p>The sweep is your answer to the first objection, and it is a strong one: we found a defect in our own defaults by running it. Say that out loud — a sweep that only confirmed us would be worth less.</p>
   <p>Expect the objection "you have just made the system refuse more work". Agree immediately — that is the point. The deferral count is a measurement of demand against declared capacity, and an institution that does not like the number was already over capacity; it just could not see it.</p>
   <p>Be scrupulous about the caveat. We did not measure reviewers. We measured whether the control binds given a curve the institution declares.</p>`
 },
@@ -943,7 +948,7 @@ const SLIDES = [
         <p class="faint"><strong>Beyond the cases we imagined.</strong> 6,800 randomly generated tool calls — nonexistent tools, mismatched operations, URLs in unexpected arguments, calls that lie about their own action class — checked against a reference predicate written independently of the implementation. Zero disagreements.</p>
         <p class="faint"><strong>And what it costs.</strong> About 7 µs of overhead per policy decision; 66 µs for a full propose–approve–execute cycle. Negligible beside model inference, which we do not measure because it is a property of whichever model you choose.</p>
       </div>
-      <p class="faint">187 deterministic tests. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
+      <p class="faint">371 deterministic tests on current source, 187 at the <code>v1.0.0</code> tag. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
     </div>`,
   notes: `Lead with the false-denial rate if the panel is policy-heavy. It is the figure that shows we are not optimising for a security theatre metric.
   <p>“Reproduces on a disconnected laptop” is the sentence that matters for capacity building — it means an institution with no budget can verify us.</p>`
@@ -1032,18 +1037,21 @@ const SLIDES = [
       </div>
       <div class="takeaway">
         <div>
-          <h3>Do it before you leave the room</h3>
-          <p class="faint">A worksheet for one capability. It flags the answers a reviewer would reject — an owner that is a team, an enforcement point that is the model itself, a test written as an aspiration — and emits <strong>valid, runnable configuration</strong>, not a PDF.</p>
+          <h3>Three things you can do before you leave the room</h3>
+          <p class="faint"><strong>Fill in one capability</strong> on the worksheet. It flags the answers a reviewer would reject — an owner that is a team, an enforcement point that is the model itself — and emits <strong>runnable configuration</strong>, not a PDF.</p>
+          <p class="faint"><strong>Compute your oversight ceiling.</strong> Five numbers you already have. It runs offline and sends nothing anywhere, which matters: finding out you are over capacity should not require telling anyone.</p>
+          <p class="faint"><strong>Contribute one attack.</strong> Seven fields of YAML, no records, no code. Every attack in this talk was written by us, and the tool prints that.</p>
         </div>
         <div class="link">
-          <span class="mono">worksheet</span>
-          <b>fssai-ra.dev/worksheet</b>
-          <span class="faint">also in the repository at <code>docs/worksheet/</code></span>
+          <span class="mono">in the repository</span>
+          <b>docs/worksheet/<br>docs/oversight/<br>challenges/</b>
+          <span class="faint">and <code>docs/LAB.md</code> — ninety minutes, offline, for the people who will have to govern one of these</span>
         </div>
       </div>
       <p class="faint">Then <code>fssaira init</code> scaffolds the domain — health, courts, benefits, licensing — with a profile, a contract, and a deliberately failing test you replace with the attack you actually fear. The scaffold ships an <strong>empty</strong> assurance file on purpose: a new domain inherits the structure and none of the evidence.</p>
     </div>`,
-  notes: `End on something the audience can do, not on a summary of what I said. Point at the worksheet link and say it takes about fifteen minutes for one capability.
+  notes: `End on something the audience can do, not on a summary of what I said. Point at the worksheet and say it takes about fifteen minutes for one capability.
+  <p>If you only have time for one of the three, make it the oversight calculator: it is the one that produces a number about <em>their</em> institution, and a number about yourself is harder to leave in the room.</p>
   <p>If the moderator allows it, invite them to open it during the panel — a room that fills in one capability while listening is a room that has adopted something.</p>
   <p>Hand-off line to the moderator: “I would rather be asked which of our limits matters most in your institution than which of our results is largest.”</p>`
 },

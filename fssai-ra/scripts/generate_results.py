@@ -33,6 +33,7 @@ from fssaira.oversight import (  # noqa: E402
     DeclaredReviewerModel,
     ReviewLoadPolicy,
     run_queue_pressure_trial,
+    sweep_oversight,
 )
 from fssaira.profiles import ApplicationProfile  # noqa: E402
 from fssaira.race import run_replay_race  # noqa: E402
@@ -81,6 +82,9 @@ def generate(output_dir: Path, tag: str) -> dict:
         reviewer=DeclaredReviewerModel(),
     )
     capacity = oversight_policy.sustainable_actions_per_day(REVIEWER_ROSTER)
+    # The sweep exists because a single trial invites the objection that the
+    # parameters were chosen to suit the result. It is generated, not optional.
+    sweep = sweep_oversight(profile, arrivals=40)
     corpus = run_corpus(CHALLENGE_DIR)
 
     evaluation.write_json(output_dir / f"{tag}-student-support.json")
@@ -98,6 +102,8 @@ def generate(output_dir: Path, tag: str) -> dict:
     second_conformance.write_json(output_dir / f"{tag}-conformance-second-domain.json")
     (output_dir / f"{tag}-oversight.json").write_text(
         json.dumps(oversight, indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-oversight-sweep.json").write_text(
+        json.dumps(sweep, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-adversary-corpus.json").write_text(
         json.dumps(corpus, indent=2) + "\n", encoding="utf-8")
 
@@ -198,6 +204,26 @@ def generate(output_dir: Path, tag: str) -> dict:
                 f"{capacity['sustainable_per_day']:,.0f}"
             ),
             "oversight_binding_constraint": capacity["binding_constraint"],
+            "oversight_policy_self_consistent": (
+                oversight_policy.declared_consistency()["consistent"]
+            ),
+            # sensitivity: the answer to "you chose parameters that suited you"
+            "sweep_cells_total": sweep["summary"]["cells_total"],
+            "sweep_cells_harm_possible": sweep["summary"]["cells_where_harm_was_possible"],
+            "sweep_cells_load_bearing": (
+                sweep["summary"]["cells_where_the_control_was_load_bearing"]
+            ),
+            "sweep_cells_harm_reached_zero": sweep["summary"]["cells_where_harm_reached_zero"],
+            "sweep_cells_did_not_bind": (
+                sweep["summary"]["cells_where_the_control_did_not_bind"]
+            ),
+            "sweep_cells_nothing_to_contain": sweep["summary"]["cells_with_no_harm_to_contain"],
+            "sweep_false_positive_deferrals": (
+                sweep["summary"]["deferrals_where_there_was_no_harm_to_contain"]
+            ),
+            "sweep_smallest_floor_that_fully_contains": (
+                sweep["summary"]["smallest_floor_that_fully_contains_everywhere"]
+            ),
             # the open adversary corpus
             "corpus_size": corpus["corpus_size"],
             "corpus_live": corpus["live_challenges"],
@@ -223,6 +249,12 @@ def generate(output_dir: Path, tag: str) -> dict:
             "second_domain_conformant": second_conformance.passed,
             "oversight_load_control_is_load_bearing": (
                 oversight["summary"]["load_control_is_load_bearing"]
+            ),
+            "oversight_control_never_increased_harm": (
+                sweep["summary"]["control_never_created_harm"]
+            ),
+            "oversight_policy_declaration_is_coherent": (
+                oversight_policy.declared_consistency()["consistent"]
             ),
             "corpus_fully_contained": (
                 corpus["contained_by_arm"]["C · FSSAI-RA"] == corpus["live_challenges"]
@@ -347,6 +379,20 @@ def render_markdown(summary: dict) -> str:
          f"{figures['oversight_harms_with_load_control']}",
          "without load control, then with it, on a queue at "
          f"{figures['oversight_demand_ratio']}x declared attentive capacity"),
+        ("Oversight — sensitivity sweep",
+         f"{figures['sweep_cells_load_bearing']}/{figures['sweep_cells_harm_possible']}",
+         f"cells where the control was load-bearing out of those where harm was possible; "
+         f"harm reached zero in {figures['sweep_cells_harm_reached_zero']}; "
+         f"{figures['sweep_cells_did_not_bind']} did not bind (no deliberation floor configured); "
+         f"{figures['sweep_cells_nothing_to_contain']} had no harm to contain"),
+        ("Oversight — false-positive cost",
+         str(figures["sweep_false_positive_deferrals"]),
+         "deferrals across the whole sweep where there was no harm to contain; an "
+         "attentive reviewer is not throttled by the shipped policy"),
+        ("Oversight — smallest floor that fully contains",
+         f"{figures['sweep_smallest_floor_that_fully_contains']:g}s",
+         "across every swept cell where harm was possible; the number an institution needs "
+         "to set its own policy"),
         ("Oversight — deferred to manual review",
          str(figures["oversight_deferred_to_manual"]),
          "the cost of the control, and a measurement of demand against declared capacity"),
@@ -395,6 +441,10 @@ def render_markdown(summary: dict) -> str:
         f"- Second domain conformant under the identical suite: **{verdicts['second_domain_conformant']}**",
         f"- Second domain invariants hold: **{verdicts['second_domain_model_check_holds']}**",
         f"- Review-load control is load-bearing: **{verdicts['oversight_load_control_is_load_bearing']}**",
+        f"- The control never increased harm in any swept cell: "
+        f"**{verdicts['oversight_control_never_increased_harm']}**",
+        f"- The shipped review policy is self-consistent: "
+        f"**{verdicts['oversight_policy_declaration_is_coherent']}**",
         f"- Contributed adversary corpus fully contained: **{verdicts['corpus_fully_contained']}**",
         "",
         "## Cost of reproduction",

@@ -315,6 +315,21 @@ def run_corpus(directory: str | Path = "challenges") -> dict:
         arm: sum(item["arms"][arm]["contained"] for item in live) for arm in arms
     }
     contributors = sorted({item["submitted_by"] for item in scored})
+    # Coverage is derived from what the corpus declares and what the run
+    # observed, never from a taxonomy asserted here. A hardcoded list of risk
+    # classes would let the corpus claim coverage it had not earned, and would
+    # go stale the moment a standard was revised.
+    risk_classes: dict[str, list[str]] = {}
+    for item in scored:
+        for reference in item["threat_references"]:
+            risk_classes.setdefault(reference, []).append(item["challenge_id"])
+    harms_exercised = sorted({
+        harm for item in live for harm in item["harms_observed_unguarded"]
+    })
+    controls_reached = sorted({
+        code for item in scored
+        for code in item["arms"]["C · FSSAI-RA"].get("denial_codes", [])
+    })
     return {
         "schema_version": "1.0",
         "kind": "adversary-corpus",
@@ -331,6 +346,29 @@ def run_corpus(directory: str | Path = "challenges") -> dict:
             arm: (round(totals[arm] / len(live), 4) if live else 0.0) for arm in arms
         },
         "contributors": contributors,
+        "coverage": {
+            "harms_exercised": harms_exercised,
+            "denial_controls_reached": controls_reached,
+            "risk_classes_referenced": dict(sorted(risk_classes.items())),
+            # A negative control is legitimate work that must be *allowed*. An
+            # inert entry that Arm C refused is not one: it is an attack stopped
+            # before its harm could land, which is a different and better result.
+            # Conflating the two would let the corpus claim it measures
+            # over-restriction when it does not.
+            "negative_controls": [
+                item["challenge_id"] for item in scored
+                if not item["is_live"] and not item["expected_harms"]
+                and not item["arms"]["C · FSSAI-RA"].get("denial_codes")
+            ],
+            "attacks_stopped_before_harm_landed": [
+                item["challenge_id"] for item in scored
+                if not item["is_live"] and item["arms"]["C · FSSAI-RA"].get("denial_codes")
+            ],
+            "note": (
+                "derived from what the corpus declares and what this run observed; "
+                "referencing a risk class is not evidence of covering it"
+            ),
+        },
         "externally_contributed": sorted({
             item["submitted_by"] for item in scored
             if "FSSAI-RA maintainers" not in item["submitted_by"]
@@ -342,6 +380,10 @@ def run_corpus(directory: str | Path = "challenges") -> dict:
             "the externally_contributed count is the figure that matters",
             "each challenge runs against the shared fixtures, not a contributor's deployment",
             "an inert challenge is reported rather than scored as a containment",
+            "an inert entry may be a negative control (legitimate work that must succeed), a "
+            "control reached before any harm lands, or an attack that simply does not work; "
+            "the per-challenge denial codes distinguish them",
+            "referencing a published risk class records intent, not coverage of that class",
         ],
     }
 

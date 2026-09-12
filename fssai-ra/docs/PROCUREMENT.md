@@ -196,3 +196,32 @@ The questions do not change when the supplier is your own team. They get harder
 to avoid, which is the point. Run the worksheet at
 [`docs/worksheet/`](worksheet/) against your own capability before you run this
 questionnaire against anyone else's.
+
+---
+
+## The question that is not about the software
+
+Every question above asks what the supplier's system does. This one asks what
+your institution will have to supply, and no vendor can answer it for you.
+
+> **How many consequential actions per day will this system route to a named
+> human for approval, and how many can we actually review?**
+
+Ask for the first number in writing, as a forecast at full rollout rather than at
+pilot scale. Work out the second yourself — the
+[oversight capacity calculator](oversight/) takes five numbers you already have,
+runs offline, and sends nothing anywhere.
+
+If the forecast exceeds your ceiling, the contract needs one of four answers
+written into it: more reviewers funded, a narrower definition of what requires
+approval, a published service level for the queue, or an explicit acceptance that
+approvals above the line are not review. A procurement that records none of them
+has chosen the fourth by default.
+
+**A supplier answer that should concern you:** *"the system is designed so that
+review is quick."* Quick review is not the goal; sufficient review is. A supplier
+who treats approval latency as a performance metric to minimise has told you what
+their product optimises, and it is not oversight.
+
+**A supplier answer that should reassure you:** a number, a stated assumption
+about how long a reviewer needs, and a willingness to have both written down.

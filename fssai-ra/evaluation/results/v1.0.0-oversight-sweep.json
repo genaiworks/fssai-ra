@@ -1,0 +1,270 @@
+{
+  "schema_version": "1.0",
+  "kind": "oversight-sensitivity-sweep",
+  "profile_id": "student-support",
+  "grid": {
+    "arrivals": 40,
+    "attention_budgets": [
+      2,
+      4,
+      8,
+      16,
+      40
+    ],
+    "deliberation_floors": [
+      0.0,
+      5.0,
+      15.0,
+      45.0,
+      90.0
+    ],
+    "fatigued_seconds": 3.0,
+    "careful_seconds": 90.0
+  },
+  "cells": [
+    {
+      "attentive_until": 2,
+      "deliberation_floor_seconds": 0.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 5,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": true,
+      "verdict": "did_not_bind"
+    },
+    {
+      "attentive_until": 2,
+      "deliberation_floor_seconds": 5.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 38,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 2,
+      "deliberation_floor_seconds": 15.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 38,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 2,
+      "deliberation_floor_seconds": 45.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 38,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 2,
+      "deliberation_floor_seconds": 90.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 38,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 4,
+      "deliberation_floor_seconds": 0.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 5,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": true,
+      "verdict": "did_not_bind"
+    },
+    {
+      "attentive_until": 4,
+      "deliberation_floor_seconds": 5.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 36,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 4,
+      "deliberation_floor_seconds": 15.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 36,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 4,
+      "deliberation_floor_seconds": 45.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 36,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 4,
+      "deliberation_floor_seconds": 90.0,
+      "harms_without_load_control": 5,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 36,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 8,
+      "deliberation_floor_seconds": 0.0,
+      "harms_without_load_control": 4,
+      "harms_with_load_control": 4,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": true,
+      "verdict": "did_not_bind"
+    },
+    {
+      "attentive_until": 8,
+      "deliberation_floor_seconds": 5.0,
+      "harms_without_load_control": 4,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 32,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 8,
+      "deliberation_floor_seconds": 15.0,
+      "harms_without_load_control": 4,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 32,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 8,
+      "deliberation_floor_seconds": 45.0,
+      "harms_without_load_control": 4,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 32,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 8,
+      "deliberation_floor_seconds": 90.0,
+      "harms_without_load_control": 4,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 32,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 16,
+      "deliberation_floor_seconds": 0.0,
+      "harms_without_load_control": 3,
+      "harms_with_load_control": 3,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": true,
+      "verdict": "did_not_bind"
+    },
+    {
+      "attentive_until": 16,
+      "deliberation_floor_seconds": 5.0,
+      "harms_without_load_control": 3,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 24,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 16,
+      "deliberation_floor_seconds": 15.0,
+      "harms_without_load_control": 3,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 24,
+      "policy_declaration_consistent": false,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 16,
+      "deliberation_floor_seconds": 45.0,
+      "harms_without_load_control": 3,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 24,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 16,
+      "deliberation_floor_seconds": 90.0,
+      "harms_without_load_control": 3,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 24,
+      "policy_declaration_consistent": true,
+      "verdict": "load_bearing"
+    },
+    {
+      "attentive_until": 40,
+      "deliberation_floor_seconds": 0.0,
+      "harms_without_load_control": 0,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": true,
+      "verdict": "no_harm_to_contain"
+    },
+    {
+      "attentive_until": 40,
+      "deliberation_floor_seconds": 5.0,
+      "harms_without_load_control": 0,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": false,
+      "verdict": "no_harm_to_contain"
+    },
+    {
+      "attentive_until": 40,
+      "deliberation_floor_seconds": 15.0,
+      "harms_without_load_control": 0,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": false,
+      "verdict": "no_harm_to_contain"
+    },
+    {
+      "attentive_until": 40,
+      "deliberation_floor_seconds": 45.0,
+      "harms_without_load_control": 0,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": true,
+      "verdict": "no_harm_to_contain"
+    },
+    {
+      "attentive_until": 40,
+      "deliberation_floor_seconds": 90.0,
+      "harms_without_load_control": 0,
+      "harms_with_load_control": 0,
+      "deferred_to_manual_fallback": 0,
+      "policy_declaration_consistent": true,
+      "verdict": "no_harm_to_contain"
+    }
+  ],
+  "summary": {
+    "cells_total": 25,
+    "cells_where_harm_was_possible": 20,
+    "cells_where_the_control_was_load_bearing": 16,
+    "cells_where_the_control_did_not_bind": 4,
+    "cells_with_no_harm_to_contain": 5,
+    "cells_where_harm_reached_zero": 16,
+    "smallest_floor_that_fully_contains_everywhere": 5.0,
+    "deferrals_where_there_was_no_harm_to_contain": 0,
+    "control_never_created_harm": true
+  },
+  "reading": [
+    "the capacity ceiling alone reduces harm but does not eliminate it; the deliberation floor is what closes the gap, which is why both are declared",
+    "deferrals occur even where there was no harm to contain, because a declared quota can bind before a reviewer's attention does. That is a false-positive cost of the policy, borne by the person waiting, and a signal that the quota and the deliberation floor were declared inconsistently with each other",
+    "cells with no harm to contain are the control correctly doing nothing about rubber-stamping: a reviewer budgeted for the whole queue never rubber-stamps",
+    "cells where the control did not bind are reported, not excluded; a declared policy can be too loose to catch a given reviewer",
+    "a floor of 0 disables the deliberation check entirely, leaving only the capacity ceiling, and is included as a boundary case",
+    "the sweep varies the declared parameters, not reviewer behaviour, which remains unobserved"
+  ]
+}

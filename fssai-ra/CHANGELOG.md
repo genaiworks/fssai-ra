@@ -2,6 +2,77 @@
 
 ## Unreleased — oversight capacity, a second domain, and an open adversary corpus
 
+### Sensitivity, and two defects it found in our own work
+
+A single queue-pressure trial with three chosen numbers invites one fair
+objection: the parameters were picked to suit the result. So they are swept, and
+the whole surface is published — including the cells where the control does
+nothing.
+
+- Added `fssaira oversight --sweep` and `sweep_oversight()`: 25 parameter
+  combinations of reviewer attention budget against deliberation floor. The
+  control was load-bearing in 16 of the 20 cells where harm was possible, harm
+  reached zero in 16, it never increased harm in any cell, and the 4 non-binding
+  cells (no deliberation floor configured) are reported rather than omitted.
+- **Fixed: the shipped review policy contradicted itself.** A 20-per-hour quota
+  paired with a 45-second deliberation floor bound four times earlier than the
+  floor, so a reviewer reading every case was still deferred. The sweep surfaced
+  it as 75 false-positive deferrals. Defaults are now 60 per hour with escalation
+  at 40, and the false-positive cost across the sweep is **0**.
+- **Fixed: the two capacity ceilings were not comparable quantities.** The quota
+  ceiling was computed over 24 hours and the attention ceiling over a reviewer's
+  actual availability, inflating the quota fourfold and naming the wrong binding
+  constraint. Both now use the declared working day. The published capacity for a
+  roster of 11 moves from 3,520 to **2,640 consequential actions per day**, now
+  bound by the quota rather than by attention.
+- Added `ReviewLoadPolicy.declared_consistency()`, which reports whether a quota
+  and a deliberation floor contradict each other, and in which direction. It
+  deliberately does not repair the declaration: choosing the number on an
+  institution's behalf is the move this project exists to refuse.
+
+### Two artifacts an institution can use without installing anything
+
+- Added [`docs/oversight/`](docs/oversight/), a browser calculator that works out
+  an institution's oversight ceiling from numbers it already has. One
+  self-contained file: no build, no network call, no storage, no analytics —
+  because working out that you are over capacity should not require telling
+  anyone. `tests/test_oversight_calculator.py` extracts its JavaScript and runs
+  it against the Python implementation over six input regimes, so the take-home
+  tool cannot drift from the enforcement code.
+- Added [`docs/LAB.md`](docs/LAB.md), a ninety-minute offline lab for people who
+  will approve, procure, or govern one of these systems. Every command it prints
+  is checked against the real parser by `tests/test_lab.py`, because a facilitator
+  discovers a broken command in front of twenty people on conference wifi. It
+  states plainly that no cohort has run it and no learning gain is claimed.
+- Added `make reviewer`, which runs everything a reviewer should check in one
+  command, and `make oversight`, `make challenge`, `make second-domain`, `make lab`.
+
+### The corpus, widened
+
+- Grew the adversary corpus from 4 entries to 10, covering egress through a
+  granted tool, an out-of-scope operation on a granted tool, unbounded
+  consumption, a non-URL exfiltration destination, an honestly-declared
+  consequential action, and **one negative control**: ordinary legitimate work
+  that must succeed. A corpus of attacks alone measures only refusal.
+- `fssaira challenge` now reports coverage derived from the run — harms actually
+  exercised, denial controls actually reached, risk classes referenced — rather
+  than from a taxonomy asserted here, and distinguishes a negative control from
+  an attack stopped before its harm could land.
+- Added a GitHub issue template so an attack can be contributed without cloning
+  anything.
+- Writing the corpus caught a smaller thing worth recording: an entry built to
+  test the per-agent call budget sent exactly the budgeted number of calls and
+  saw nothing refused. A contributor would have concluded no budget existed.
+
+### Also
+
+- Wired the oversight monitor through `ControlPlane`, so the HTTP API and the
+  console enforce review capacity on the same path the CLI does. `approve()` now
+  takes `presented_at` and refuses to infer it from the proposal's creation time:
+  a proposal that queued for an hour and was approved in two seconds has an hour
+  of elapsed time and two seconds of deliberation.
+
+
 ### Human review is a finite resource, and now a bounded one
 
 Every control this project shipped routed a consequential action to a named human
@@ -18,7 +89,7 @@ completely unreviewed, and nothing in `v1.0.0` could tell the difference.
 - `ApprovalAuthority` takes an optional oversight monitor. With none configured
   its behaviour is unchanged, and a test asserts that rather than assuming it.
 - Added `fssaira oversight`, which computes what a roster can genuinely sustain
-  (11 reviewers → 3,520 consequential actions/day with the shipped defaults, bound
+  (11 reviewers → 2,640 consequential actions/day with the shipped defaults, bound
   by the deliberation floor) and runs a queue-pressure trial against it. At five
   times declared capacity: 4 structurally valid but substantively wrong actions
   execute without the control, 0 with it, at a reported cost of 32 deferrals.

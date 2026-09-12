@@ -273,6 +273,7 @@ def cmd_oversight(args) -> int:
         DeclaredReviewerModel,
         ReviewLoadPolicy,
         run_queue_pressure_trial,
+        sweep_oversight,
     )
     from .profiles import ApplicationProfile
 
@@ -312,6 +313,45 @@ def cmd_oversight(args) -> int:
         "the load control changed nothing on this queue",
     ))
     print(dim("  The reviewer degradation curve is a declared parameter, not a measurement."))
+
+    # Is the declared policy coherent with itself? An institution should learn
+    # this from the tool rather than from a backlog.
+    coherence = policy.declared_consistency()
+    heading("Is this policy declaration self-consistent?")
+    print(f"  quota permits            {coherence['quota_per_window']} per window")
+    if coherence["floor_permits_per_window"] is not None:
+        print(f"  deliberation floor permits {coherence['floor_permits_per_window']:g} per window")
+    print("  " + verdict(coherence["consistent"],
+                         f"coherent — the {coherence['binds_first'].replace('_', ' ')} binds first",
+                         "INCOHERENT"))
+    if not coherence["consistent"]:
+        print(yellow(f"  {coherence['note']}"))
+
+    if args.sweep:
+        sweep = sweep_oversight(profile, arrivals=args.arrivals)
+        totals = sweep["summary"]
+        heading(f"Sensitivity sweep — {totals['cells_total']} parameter combinations")
+        print(f"  cells where harm was possible          {totals['cells_where_harm_was_possible']}")
+        print(f"  ... the control was load-bearing in    "
+              f"{green(str(totals['cells_where_the_control_was_load_bearing']))}")
+        print(f"  ... harm reached zero in               "
+              f"{green(str(totals['cells_where_harm_reached_zero']))}")
+        print(f"  ... the control did not bind in        "
+              f"{red(str(totals['cells_where_the_control_did_not_bind']))}"
+              + dim("  (no deliberation floor configured)"))
+        print(f"  cells with no harm to contain          {totals['cells_with_no_harm_to_contain']}"
+              + dim("  (an attentive reviewer; the control correctly does nothing)"))
+        print(f"  deferrals where nothing was at stake   "
+              f"{totals['deferrals_where_there_was_no_harm_to_contain']}"
+              + dim("  (the false-positive cost)"))
+        floor = totals["smallest_floor_that_fully_contains_everywhere"]
+        print(f"  smallest floor that fully contains     "
+              f"{'none in this grid' if floor is None else f'{floor:g}s'}")
+        print("\n  " + verdict(totals["control_never_created_harm"],
+                               "the control never increased harm in any cell",
+                               "a cell showed more harm with the control than without"))
+        report["sensitivity_sweep"] = sweep
+
     emit(report, args.output)
     return 0 if summary["harmful_executed_with_load_control"] == 0 else 1
 
@@ -699,14 +739,16 @@ def build_parser() -> argparse.ArgumentParser:
                            help="consequential actions arriving in the queue")
     oversight.add_argument("--reviewers", type=int, default=11,
                            help="roster size, for the published capacity arithmetic")
-    oversight.add_argument("--max-approvals", type=int, default=20,
+    oversight.add_argument("--max-approvals", type=int, default=60,
                            help="declared per-reviewer ceiling per window")
     oversight.add_argument("--deliberation-floor", type=float, default=45.0,
                            help="minimum seconds between presentation and approval")
-    oversight.add_argument("--escalate-after", type=int, default=12,
+    oversight.add_argument("--escalate-after", type=int, default=40,
                            help="approvals in a window after which a second reviewer is required")
     oversight.add_argument("--attentive-until", type=int, default=8,
                            help="declared reviewer attention budget (a parameter, not a measurement)")
+    oversight.add_argument("--sweep", action="store_true",
+                           help="also sweep the declared parameters and report every cell")
     oversight.set_defaults(func=cmd_oversight)
 
     challenge = add_output(sub.add_parser(

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "conformance",
-  "generated_at": "2026-09-11T22:51:10.055151+00:00",
+  "generated_at": "2026-09-11T23:13:03.743892+00:00",
   "profile_id": "student-support",
   "backends": {
     "register": "sql:sqlite",

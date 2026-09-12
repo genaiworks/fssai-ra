@@ -40,15 +40,16 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # 328 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # 371 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
 fssaira conformance --backend sql                 # does it still hold on another backend?
 fssaira race-test profiles/student_support.yaml   # 32 callers, 1 mutation, 1 receipt
 fssaira resilience profiles/student_support.yaml  # process races and abrupt-exit recovery
-fssaira oversight profiles/student_support.yaml   # how much review can you actually supply?
+fssaira oversight profiles/student_support.yaml --sweep   # how much review can you supply?
 fssaira challenge                                 # the open adversary corpus, scored
+make reviewer                                     # all of the above, one command
 ```
 
 After installation, these checks need no network, model weights or GPU.
@@ -69,8 +70,23 @@ under load, and a published headroom figure. `fssaira oversight` computes what a
 roster can genuinely sustain and runs a queue-pressure trial against it. On a
 queue at five times declared capacity, 4 structurally valid but substantively
 wrong actions execute without the control and 0 with it, at a reported cost of 32
-deferrals to the manual fallback. **The reviewer degradation curve is a declared
+deferrals to the manual fallback.
+
+`--sweep` answers the obvious objection that three numbers were chosen to suit
+the result: across 25 parameter combinations the control was load-bearing in 16
+of the 20 where harm was possible, harm reached zero in 16, and it never
+increased harm anywhere. The sweep also caught **our own shipped defaults**
+pairing a quota with a deliberation floor that contradicted it, throttling
+reviewers who were reading every case; repairing the declaration drove that
+false-positive cost to 0. **The reviewer degradation curve is a declared
 parameter, not a measurement of any human** — see [`docs/ASSURANCE.md`](docs/ASSURANCE.md) §7.
+
+Two artifacts make this usable without installing anything: the
+[oversight calculator](docs/oversight/) works out an institution's ceiling in a
+browser, offline, sending nothing anywhere — and a test runs its JavaScript
+against the Python to prove the two agree — and [`docs/LAB.md`](docs/LAB.md) is a
+ninety-minute lab in which participants remove a control and watch the harm
+return.
 
 **A second domain, because one proves nothing about a method.**
 [`profiles/academic_record_correction.yaml`](profiles/academic_record_correction.yaml)
@@ -81,11 +97,13 @@ the defect was real: a declared approval role on a routine transition was silent
 unenforced. One domain could not reach it; two did immediately.
 
 **An adversary who is not the author.** [`challenges/`](challenges/) is an open
-corpus: an attack is seven fields of YAML, scored against all three architecture
-arms and attributed to whoever contributed it. No student record, deployment
-detail, or vendor name is needed, and no contributor code runs. `fssaira challenge`
-prints how many attacks came from outside this project — **currently 0**, stated
-in the output rather than buried in a limitation.
+corpus of 10 entries — attacks, controls reached before harm lands, and one
+negative control of ordinary legitimate work that must succeed. An attack is
+seven fields of YAML, scored against all three architecture arms and attributed
+to whoever contributed it. No student record, deployment detail, or vendor name
+is needed, and no contributor code runs. `fssaira challenge` prints how many
+attacks came from outside this project — **currently 0**, stated in the output
+rather than buried in a limitation.
 
 Plus: independent-process races and abrupt-exit recovery on SQLite, full
 proposal-digest binding for replay receipts, strict profile validation, and
@@ -113,9 +131,9 @@ And on current source, three questions `v1.0.0` could not answer at all:
 
 | | Question it answers | Result |
 |---|---|---|
-| **Oversight capacity** | How much review can this institution actually supply? | 11 reviewers sustain 3,520 actions/day; 4 → 0 merit failures under load |
+| **Oversight capacity** | How much review can this institution actually supply? | 11 reviewers sustain 2,640 actions/day; 4 → 0 merit failures under load |
 | **A second domain** | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
-| **Open adversary corpus** | Is the adversary ever someone other than the author? | 4 attacks scored across 3 arms; 0 contributed externally, and we say so |
+| **Open adversary corpus** | Is the adversary ever someone other than the author? | 10 entries across 3 arms; 0 contributed externally, and we say so |
 
 Plus: **single-transaction execution** on PostgreSQL, which removes — rather than
 merely detects — the one failure mode the previous release could only document;

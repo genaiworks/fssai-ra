@@ -1,5 +1,6 @@
 .PHONY: help install test lint results figures demo check api gateway console dev-env \
-        stack-up stack-down verify evaluate conformance doctor openapi clean
+        stack-up stack-down verify evaluate conformance doctor openapi clean \
+        reviewer oversight challenge second-domain lab
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -19,6 +20,43 @@ verify:  ## Bounded model check of the reference profile
 
 evaluate:  ## Adversarial scenarios, utility baseline, and ablations
 	python -m fssaira.cli evaluate profiles/student_support.yaml
+
+oversight:  ## What review can this roster actually supply, and does the control bind?
+	python -m fssaira.cli oversight profiles/student_support.yaml --sweep
+
+challenge:  ## Score the open adversary corpus against all three architectures
+	python -m fssaira.cli challenge --dir challenges
+
+second-domain:  ## The identical suite against a domain it was not designed for
+	python -m fssaira.cli verify profiles/academic_record_correction.yaml
+	python -m fssaira.cli evaluate profiles/academic_record_correction.yaml
+	python -m fssaira.cli conformance --profile profiles/academic_record_correction.yaml
+
+lab:  ## Open the two browser tools used by docs/LAB.md
+	@echo "  worksheet   docs/worksheet/index.html"
+	@echo "  calculator  docs/oversight/index.html"
+	@python -c "import pathlib,webbrowser; [webbrowser.open(pathlib.Path(p).resolve().as_uri()) for p in ('docs/worksheet/index.html','docs/oversight/index.html')]"
+
+reviewer:  ## Everything a reviewer should check, in one command
+	@echo "── 1/8  the suite ────────────────────────────────────────────────"
+	@python -m pytest -q
+	@echo "── 2/8  what this deployment really is ───────────────────────────"
+	-@python -m fssaira.cli doctor
+	@echo "── 3/8  bounded model check, reference domain ────────────────────"
+	@python -m fssaira.cli verify profiles/student_support.yaml
+	@echo "── 4/8  containment, utility, and ablation ───────────────────────"
+	@python -m fssaira.cli evaluate profiles/student_support.yaml
+	@echo "── 5/8  the same suite on a domain it was not designed for ───────"
+	@python -m fssaira.cli verify profiles/academic_record_correction.yaml
+	@echo "── 6/8  how much oversight can actually be supplied ──────────────"
+	@python -m fssaira.cli oversight profiles/student_support.yaml --sweep
+	@echo "── 7/8  the open adversary corpus ────────────────────────────────"
+	@python -m fssaira.cli challenge --dir challenges
+	@echo "── 8/8  do the committed numbers match a fresh run? ──────────────"
+	@python scripts/generate_results.py --check
+	@echo ""
+	@echo "  Every figure above is regenerated, not typed. If any of it disagrees"
+	@echo "  with the paper, the paper is wrong and we would like to know."
 
 conformance:  ## Conformance on both backend profiles
 	python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml

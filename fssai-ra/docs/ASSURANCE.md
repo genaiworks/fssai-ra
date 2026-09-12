@@ -137,6 +137,27 @@ about a *mechanism* rather than about people. Nothing here measures a human.
 | An institution can compute its own oversight ceiling | Two independent ceilings — declared quota and deliberation floor against available hours — with the binding one named | `test_capacity_arithmetic_names_which_constraint_binds`; `fssaira oversight` | **Arithmetic over declared inputs, not a measurement.** It is only as good as the roster and floor an institution honestly declares |
 | No claim is made about how real reviewers behave | The degradation curve is an explicit fixture parameter, labelled as such in the module, the report, the CLI output, and the generated limits | `test_the_trial_states_that_its_reviewer_curve_is_declared_not_observed` | **No reviewer was observed.** Reviewer accuracy under load remains listed below as not evidenced |
 
+### Is the oversight result an artefact of chosen parameters?
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| The result is not an artefact of three convenient numbers | Sensitivity sweep over reviewer attention budgets and deliberation floors; every cell published, including those where the control does nothing | `tests/test_oversight.py::test_the_sweep_publishes_every_cell_including_the_unflattering_ones`; `evaluation/results/v1.0.0-oversight-sweep.json` | A grid, not a proof. It sweeps the *declared* parameters, not reviewer behaviour, which is unobserved |
+| The control never makes things worse | Every swept cell compared with and without the load policy | `test_the_control_never_increases_harm_anywhere_in_the_grid` | Within the grid and these fixtures |
+| Where the control does nothing, we say so | 4 cells report `did_not_bind` (no deliberation floor configured) and 5 report `no_harm_to_contain` (an attentive reviewer) | `test_disabling_the_deliberation_floor_disables_the_control` | Reporting a boundary case is not the same as having no boundary |
+| An attentive reviewer is not throttled | False-positive deferrals across the whole sweep | `test_an_attentive_reviewer_is_never_deferred_under_the_shipped_policy` | **True only because the sweep caught our own defaults doing the opposite.** An earlier quota bound four times before the deliberation floor |
+| A policy declaration can contradict itself, and the tool says which way | Quota compared against what the deliberation floor permits per window | `test_the_shipped_defaults_are_self_consistent`; `test_a_quota_far_below_the_floor_is_reported_as_throttling_attentive_reviewers` | It reports the relationship and deliberately does not repair it; choosing a number on an institution's behalf is the move this project refuses |
+| Both capacity ceilings are comparable quantities | Quota and attention ceilings computed over the same working day | `test_both_capacity_ceilings_are_computed_over_the_same_working_day` | Fixes a defect the sweep exposed: a 24-hour quota was being compared against a 4-hour attention budget, naming the wrong binding constraint |
+
+### The take-home tools
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| The browser calculator computes what the enforcement code computes | Its JavaScript is extracted and executed against the Python implementation over six input regimes, covering both binding constraints and both ways a declaration can contradict itself | `tests/test_oversight_calculator.py` | Checks the arithmetic and the diagnostic thresholds, not the page's usability |
+| An institution can compute its ceiling without telling anyone | No network call, no storage, no analytics; the page is one self-contained file | `test_the_page_exists_and_is_self_contained` | Fonts load from a CDN and the stack degrades without them |
+| The caveat travels with the tool | The page states that no reviewer was observed, and that the reading time is the user's declaration | `test_the_page_states_that_no_reviewer_was_observed` | A caveat on a page is not a guarantee anybody reads it |
+| The lab runs offline on whatever laptops arrive | Every command it prints is checked against the real parser and the real scripts directory; the model exercise names an offline backend | `tests/test_lab.py` | Checks that the commands exist and run, not that the session works in a room |
+| No learning gain is claimed | The lab states that it has not been trialled with a cohort and that no pre/post assessment exists | `test_the_lab_states_what_it_does_not_measure` | **Educational effect is unevidenced.** It is a designed artifact offered for others to test |
+
 ### Does the method transfer?
 
 | Public claim | Enforcement or mechanism | Executable evidence | Limit |
@@ -177,6 +198,8 @@ about a *mechanism* rather than about people. Nothing here measures a human.
   subjects, not more code;
 - whether a second signature under the same institutional pressure is an
   independent judgement, which is what the escalation control assumes;
+- any educational effect of the lab or the browser tools. No cohort has run them,
+  no pre/post assessment exists, and no learning gain is claimed;
 - reviewer workload, appeal quality, fairness, accessibility, cost, or energy;
 - any attack contributed from outside this project;
 - institutional deployment, independent audit, penetration test, or certification.

@@ -20,8 +20,9 @@ python -m pip install -e ".[dev]"
 
 | # | Command | What it settles | Expect |
 |---|---|---|---|
+| 0 | `make reviewer` | **All of the below, in one command** | every check, regenerated rather than typed |
 | 1 | `python scripts/demo.py --fast` | Whether the system does what the paper says | Six acts: quarantine, denial, execution, refusal, tamper detection, comparison |
-| 2 | `pytest` | Whether the code works at all | `328 passed` in a few seconds |
+| 2 | `pytest` | Whether the code works at all | `371 passed` in a few seconds |
 | 3 | `fssaira verify profiles/student_support.yaml` | Whether the authority invariants hold across the whole declared space | 240 states, 5 invariants, **0 violations** |
 | 4 | `fssaira evaluate profiles/student_support.yaml` | Containment **and** its cost | 30/30 contained, 0 unauthorized mutations, false-denial rate **0.0** |
 | 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 25/25, conformant |
@@ -29,9 +30,9 @@ python -m pip install -e ".[dev]"
 | 7 | `pytest tests/test_paper_alignment.py` | Whether the paper, the deck, and the READMEs quote real figures | 38 passed |
 | 8 | `python scripts/benchmark.py` | What the governance costs | ~7 µs per decision; ~66 µs per full execution |
 | 9 | `fssaira race-test profiles/student_support.yaml` | Whether simultaneous retries duplicate the action | 32 callers, **1 mutation**, **1 receipt** |
-| 10 | `fssaira oversight profiles/student_support.yaml` | Whether "a human approved it" survives the queue | 11 reviewers sustain 3,520/day; 4 → **0** merit failures, 32 deferrals |
+| 10 | `fssaira oversight profiles/student_support.yaml --sweep` | Whether "a human approved it" survives the queue, across 25 parameter combinations | 11 reviewers sustain 2,640/day; 4 → **0** merit failures; the control never increases harm in any cell |
 | 11 | `fssaira verify profiles/academic_record_correction.yaml` | Whether the method works on a domain it was not designed for | 4,800 states, **0 violations**, no library change |
-| 12 | `fssaira challenge` | Whether the adversary is ever someone other than us | 4/4 contained; **externally contributed: 0**, printed |
+| 12 | `fssaira challenge` | Whether the adversary is ever someone other than us | 7/7 live entries contained; **externally contributed: 0**, printed |
 
 If any of these disagrees with the paper, **the paper is wrong** and we would like
 to know. That is the point of building alignment as a test.

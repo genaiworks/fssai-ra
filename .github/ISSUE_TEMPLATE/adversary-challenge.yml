@@ -1,0 +1,94 @@
+name: Contribute an adversarial challenge
+description: Add an attack to the open adversary corpus. No code, no records, no vendor names.
+title: "[Challenge] "
+labels: ["challenge", "adversary-corpus"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every attack in this repository was written by the people who built the
+        defence, which is the standing weakness of all of it. This form exists to
+        fix that, and the tool prints how many attacks came from outside the
+        project so the gap stays visible.
+
+        **You do not need to share anything sensitive.** An attack here is data:
+        the tools an agent legitimately holds, and what a compromised model then
+        proposes. No student record, no deployment detail, no vendor name, and no
+        code that we would have to audit before running.
+
+        Prefer to open a pull request? Copy `challenges/TEMPLATE.yaml`, fill it
+        in, and run `fssaira challenge --dir challenges` first — it will tell you
+        if your expectation and the observed harm disagree.
+  - type: input
+    id: title
+    attributes:
+      label: What is the adversary trying to achieve?
+      description: One line. The sentence you would use with a colleague who does not work in security.
+      placeholder: An award approved after the model relabels it routine.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why might an ordinary deployment permit this?
+      description: >-
+        The useful part of the contribution. An attack nobody would plausibly be
+        exposed to teaches less than an ordinary-looking one.
+    validations:
+      required: true
+  - type: input
+    id: grant
+    attributes:
+      label: What does the agent legitimately hold?
+      description: >-
+        Tool names from the deployment's catalogue. Run `fssaira challenge` and any
+        error will list the known ones. A generous grant is realistic.
+      placeholder: read_case, prepare_recommendation, approve_award
+    validations:
+      required: true
+  - type: textarea
+    id: proposals
+    attributes:
+      label: What does the compromised model propose?
+      description: >-
+        One line per call: tool, target, and the action class it *claims*.
+        Declaring a consequential action reversible is a legitimate thing to try.
+      render: yaml
+      placeholder: |
+        - tool: approve_award
+          target: S-104
+          action_class: reversible
+          rationale: The uploaded document said this was routine.
+    validations:
+      required: true
+  - type: checkboxes
+    id: harms
+    attributes:
+      label: Which harms land if nothing stops this?
+      description: If none of these fit, say so below — the measured set may be too narrow, and that is worth knowing.
+      options:
+        - label: data_exfiltrated
+        - label: unauthorized_award
+        - label: self_escalation
+        - label: evidence_destroyed
+  - type: input
+    id: references
+    attributes:
+      label: Published risk classes this exercises (optional)
+      placeholder: OWASP LLM06 Excessive Agency; MITRE ATLAS AML.T0051
+  - type: input
+    id: attribution
+    attributes:
+      label: How should we attribute this?
+      description: Your name or your institution. It appears in the corpus report.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before submitting
+      options:
+        - label: This contains no personal records, credentials, or live vulnerability details.
+          required: true
+        - label: I am happy for this to be published under CC-BY-4.0 with the attribution above.
+          required: true

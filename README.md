@@ -36,6 +36,8 @@ UNU–Springer proceedings.
 **If you want to use it**
 
 - [Authority Boundary Worksheet](fssai-ra/docs/worksheet/) — one capability, seven fields, fifteen minutes, in a browser
+- [Oversight capacity calculator](fssai-ra/docs/oversight/) — how much review can you actually supply? Offline, sends nothing anywhere
+- [The authority boundary lab](fssai-ra/docs/LAB.md) — ninety minutes, offline, for people who will govern one of these systems
 - [The two-minute demonstration](fssai-ra/docs/DEMO.md) — `python scripts/demo.py`
 - [Adoption playbook](fssai-ra/docs/ADOPTION.md) — a 30/60/90-day path
 - [Procurement questions](fssai-ra/docs/PROCUREMENT.md) — the seven fields as a supplier questionnaire
@@ -50,18 +52,19 @@ cd fssai-ra/fssai-ra
 python -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
 
-pytest                                            # 328 deterministic tests, fully offline
+pytest                                            # 371 deterministic tests, fully offline
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # 240 states, 5 invariants, 0 violations
 fssaira evaluate profiles/student_support.yaml    # 30 adversarial + 6 benign + 8 ablations
 fssaira conformance --backend sql                 # does it hold on another backend?
-fssaira oversight profiles/student_support.yaml   # how much review can you actually supply?
+fssaira oversight profiles/student_support.yaml --sweep   # how much review can you supply?
 fssaira challenge                                 # the open adversary corpus, scored
+make reviewer                                     # all of the above, one command
 fssaira init my-domain                            # scaffold your own
 ```
 
 No network, no model weights, no GPU. Release `v1.0.0` contains 187 deterministic
-tests; current source has 328. Both include a bounded model checker over the
+tests; current source has 371. Both include a bounded model checker over the
 profile's declared authority space, a portable conformance suite, and versioned
 machine-readable results. These establish specified properties in a synthetic
 environment; they are **not** a security certification or evidence of production
@@ -93,9 +96,9 @@ not:
 
 | | Question it answers | Result |
 |---|---|---|
-| Oversight capacity | How much review can an institution actually supply? | 11 reviewers sustain 3,520 actions/day; 4 → 0 merit failures under load |
+| Oversight capacity | How much review can an institution actually supply? | 11 reviewers sustain 2,640 actions/day; 4 → 0 merit failures under load |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
-| Open adversary corpus | Is the adversary ever someone other than the author? | 4 attacks, 3 arms, and an externally-contributed count of 0 that we print |
+| Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 
 Plus single-transaction execution on PostgreSQL, privilege invariance, real
 authentication, a React console, and a worksheet, playbook, and procurement

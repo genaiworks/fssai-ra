@@ -1,0 +1,423 @@
+<title>Oversight Capacity Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+
+<style>
+/* ───────────────────────────────────────────────────────────────────────────
+   Oversight Capacity Calculator — companion to the Authority Boundary
+   Worksheet and to the FSSAI-RA reference architecture.
+
+   Same visual identity, same rule about colour: oxide red is spent only where
+   a declaration would fail review or a queue exceeds what can be reviewed.
+
+   Self-contained on purpose. No build, no network, no analytics, no storage.
+   The numbers you type never leave this page — which matters, because the
+   people who most need this tool work in institutions that cannot send
+   staffing figures to a third party to find out whether they are over capacity.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+  --ground: #e9edf1; --stage: #f8fafb; --panel: #eff3f6; --inset: #e3e9ee;
+  --ink: #111a22; --ink-soft: #46545f; --ink-faint: #7e8b96;
+  --rule: #c9d2da; --rule-strong: #a8b5c0;
+  --refuse: #a8322a; --refuse-wash: #f5e5e3;
+  --authorize: #1f6b5c; --authorize-wash: #dfeae7;
+  --mark: #8a6a1f; --mark-wash: #f4ecdb;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Newsreader", Georgia, serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0b1117; --stage: #111a21; --panel: #16212a; --inset: #0d151b;
+    --ink: #e8eef3; --ink-soft: #a4b2bd; --ink-faint: #73838f;
+    --rule: #26343f; --rule-strong: #3a4b58;
+    --refuse: #e2776c; --refuse-wash: #2c1a19;
+    --authorize: #52b79f; --authorize-wash: #14241f;
+    --mark: #d3a94a; --mark-wash: #241d0f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0b1117; --stage: #111a21; --panel: #16212a; --inset: #0d151b;
+  --ink: #e8eef3; --ink-soft: #a4b2bd; --ink-faint: #73838f;
+  --rule: #26343f; --rule-strong: #3a4b58;
+  --refuse: #e2776c; --refuse-wash: #2c1a19;
+  --authorize: #52b79f; --authorize-wash: #14241f;
+  --mark: #d3a94a; --mark-wash: #241d0f;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font-family: var(--body); font-size: 17px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 34px 60px; padding-left: clamp(16px, 4vw, 40px); padding-right: clamp(16px, 4vw, 40px); }
+
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.4vw, 46px); line-height: 1.04; letter-spacing: -.022em; margin: 0 0 10px; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: clamp(19px, 2.3vw, 25px); letter-spacing: -.012em; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+p { margin: 0; max-width: 66ch; }
+.lead { font-size: clamp(17px, 1.9vw, 21px); line-height: 1.45; color: var(--ink-soft); }
+.faint { color: var(--ink-faint); font-size: 14.5px; max-width: 72ch; }
+.soft { color: var(--ink-soft); }
+code, .mono { font-family: var(--mono); font-size: .87em; }
+a { color: inherit; text-underline-offset: 3px; }
+
+header.head { border-bottom: 2px solid var(--ink); padding-bottom: 20px; margin-bottom: 26px; display: grid; gap: 12px; }
+.kicker { font-family: var(--display); font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); }
+
+section.card { background: var(--stage); border: 1px solid var(--rule); padding: clamp(18px, 2.6vw, 28px); margin-bottom: 18px; display: grid; gap: 16px; }
+
+/* ── inputs ─────────────────────────────────────────────────────────────── */
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 18px; }
+.inp { display: grid; gap: 6px; align-content: start; }
+.inp label { font-family: var(--display); font-weight: 600; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+.inp input {
+  width: 100%; background: var(--inset); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 0; padding: 9px 11px;
+  font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums;
+}
+.inp input:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.inp .hint { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+
+/* ── the verdict ────────────────────────────────────────────────────────── */
+.score { display: grid; grid-template-columns: auto 1fr; gap: clamp(16px, 3vw, 30px); align-items: center; }
+@media (max-width: 620px) { .score { grid-template-columns: 1fr; } }
+.dial { display: grid; gap: 2px; justify-items: center; border: 1.5px solid var(--rule-strong); padding: 14px 22px; min-width: 168px; }
+.dial b { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5vw, 42px); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.dial span { font-family: var(--display); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); text-align: center; }
+.score.ok .dial { border-color: var(--authorize); } .score.ok .dial b { color: var(--authorize); }
+.score.over .dial { border-color: var(--refuse); } .score.over .dial b { color: var(--refuse); }
+.verdict { font-family: var(--display); font-weight: 600; font-size: clamp(16px, 2vw, 21px); line-height: 1.25; text-wrap: balance; }
+
+.rows { display: grid; gap: 0; }
+.row { border-top: 1px solid var(--rule); padding: 11px 0; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: baseline; }
+.row:first-child { border-top: 0; }
+.row .k { font-size: 15.5px; color: var(--ink-soft); }
+.row .v { font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row.strong .k { color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 14px; }
+.row.strong .v { font-weight: 600; }
+.binds { font-family: var(--display); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--rule-strong); padding: 2px 7px; margin-left: 8px; color: var(--ink-faint); }
+
+.flag { border-left: 3px solid var(--mark); background: var(--mark-wash); padding: 12px 15px; display: grid; gap: 5px; }
+.flag.bad { border-left-color: var(--refuse); background: var(--refuse-wash); }
+.flag.good { border-left-color: var(--authorize); background: var(--authorize-wash); }
+.flag b { font-family: var(--display); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.flag p { font-size: 15px; }
+
+/* ── the bar ────────────────────────────────────────────────────────────── */
+.bar { display: grid; gap: 7px; }
+.bar .track { position: relative; height: 30px; border: 1px solid var(--rule-strong); background: var(--inset); overflow: hidden; }
+.bar .fill { position: absolute; inset: 0 auto 0 0; background: var(--authorize); opacity: .28; }
+.bar .fill.over { background: var(--refuse); opacity: .3; }
+.bar .ceiling { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+.bar .labels { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); }
+
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--display); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+button {
+  font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: .04em;
+  background: var(--ink); color: var(--ground); border: 1px solid var(--ink);
+  padding: 9px 16px; cursor: pointer; border-radius: 0;
+}
+button.ghost { background: transparent; color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--mark); outline-offset: 2px; }
+
+footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule); display: grid; gap: 10px; }
+@media print {
+  body { background: #fff; } .actions, .noprint { display: none !important; }
+  section.card { break-inside: avoid; border-color: #999; }
+}
+</style>
+
+<div class="wrap">
+<header class="head">
+  <div class="kicker">FSSAI-RA · companion to the Authority Boundary Worksheet</div>
+  <h1>How much oversight can you actually supply?</h1>
+  <p class="lead">Every governed agent architecture routes consequential actions to a named human. Almost none of them say what happens when there are more actions than the humans can read. This works out your ceiling from numbers you already have.</p>
+  <p class="faint">Nothing you type leaves this page. There is no network call, no storage, and no analytics — which matters, because working out that you are over capacity should not require telling anyone.</p>
+</header>
+
+<section class="card">
+  <h2>Your numbers</h2>
+  <div class="inputs">
+    <div class="inp">
+      <label for="reviewers">Reviewers on the roster</label>
+      <input id="reviewers" type="number" min="1" step="1" value="11" inputmode="numeric">
+      <span class="hint">People authorised to approve this class of action.</span>
+    </div>
+    <div class="inp">
+      <label for="hours">Hours per day, per reviewer</label>
+      <input id="hours" type="number" min="0.25" step="0.25" value="4" inputmode="decimal">
+      <span class="hint">Time actually available for <em>this</em> queue, not their contract.</span>
+    </div>
+    <div class="inp">
+      <label for="floor">Minutes to review one case</label>
+      <input id="floor" type="number" min="0.1" step="0.25" value="0.75" inputmode="decimal">
+      <span class="hint">What a careful reading genuinely takes. 0.75 = 45 seconds.</span>
+    </div>
+    <div class="inp">
+      <label for="quota">Quota per reviewer per hour</label>
+      <input id="quota" type="number" min="1" step="1" value="60" inputmode="numeric">
+      <span class="hint">The most you will let one person approve in an hour.</span>
+    </div>
+    <div class="inp">
+      <label for="demand">Consequential actions per day</label>
+      <input id="demand" type="number" min="0" step="10" value="2000" inputmode="numeric">
+      <span class="hint">What the queue actually sends. Estimate high.</span>
+    </div>
+  </div>
+  <div class="actions noprint">
+    <button id="reset" class="ghost" type="button">Reset</button>
+    <button id="copy" type="button">Copy the result</button>
+    <button id="print" class="ghost" type="button">Print</button>
+  </div>
+</section>
+
+<section class="card" id="verdict-card">
+  <div class="score" id="score">
+    <div class="dial"><b id="ceiling">—</b><span>reviewable per day</span></div>
+    <div>
+      <p class="verdict" id="verdict">—</p>
+      <p class="faint" id="verdict-sub" style="margin-top:8px"></p>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="track">
+      <div class="fill" id="fill"></div>
+      <div class="ceiling" id="ceilmark"></div>
+    </div>
+    <div class="labels"><span id="lab-demand">demand</span><span id="lab-ceiling">ceiling</span></div>
+  </div>
+
+  <div class="rows">
+    <div class="row"><span class="k">Quota ceiling — what your declared quota permits</span><span class="v" id="r-quota">—</span></div>
+    <div class="row"><span class="k">Attention ceiling — what the reading time permits</span><span class="v" id="r-attention">—</span></div>
+    <div class="row strong"><span class="k">Reviewable per day</span><span class="v" id="r-ceiling">—</span></div>
+    <div class="row"><span class="k">Actions arriving per day</span><span class="v" id="r-demand">—</span></div>
+    <div class="row strong"><span class="k" id="gap-label">Gap</span><span class="v" id="r-gap">—</span></div>
+  </div>
+
+  <div id="flags" style="display:grid; gap:10px"></div>
+</section>
+
+<section class="card">
+  <h2>What each answer commits you to</h2>
+  <table>
+    <thead><tr><th style="width:34%">If your gap is</th><th>Then one of these is true, and you should say which</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="num">at or below zero</td>
+        <td>You can review what you send. Publish the ceiling anyway, because the number moves the first time someone automates a new workflow into the same queue.</td>
+      </tr>
+      <tr>
+        <td class="num">above zero</td>
+        <td>One of four things: you hire, you narrow what counts as consequential, you accept a queue and tell people how long it is — or the approvals above the line stop being review and become signatures. The fourth happens by default if you do not choose one of the first three.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="faint">There is no fifth option where the reviewers simply go faster. If the reading time you entered is real, going faster means not reading; and an approval issued without reading is exactly the failure this architecture cannot detect from the inside — every digest still binds, every signature still verifies, and the record still says a human approved it.</p>
+</section>
+
+<section class="card">
+  <h2>Turning this into an enforced control</h2>
+  <p>The ceiling above is arithmetic. It becomes a <em>control</em> when the system refuses to issue an approval beyond it, rather than recording a concern afterwards. In the reference implementation that is three settings and one command:</p>
+  <pre class="mono" style="background:var(--inset); border:1px solid var(--rule); padding:14px; overflow-x:auto; font-size:13.5px; line-height:1.6"><span id="cmd">fssaira oversight profiles/your_profile.yaml \
+  --reviewers 11 --max-approvals 60 --deliberation-floor 45 --sweep</span></pre>
+  <p class="faint">The tool refuses an approval returned faster than the floor, refuses one beyond the quota, escalates to a second reviewer under sustained load, and reports what it deferred. It also checks whether your quota and your reading time contradict each other, which is a mistake we shipped ourselves and found only by sweeping the parameters.</p>
+  <p class="faint"><strong>What this is not.</strong> No reviewer was observed to build any of this. The reading time is a number <em>you</em> declare, and the ceiling is only as honest as that declaration. Whether real reviewers degrade the way the model assumes is unmeasured and named as open work.</p>
+</section>
+
+<footer>
+  <p class="faint"><strong>Trust by Construction</strong> — a testable architecture for sovereign AI agents in education. Prepared for the UNU Macau AI Conference 2026. Apache-2.0.</p>
+  <p class="faint">Companion tools: the <a href="../worksheet/">Authority Boundary Worksheet</a> (one capability, seven fields, fifteen minutes) and the <a href="../LAB.md">classroom lab</a>. Source: <span class="mono">github.com/genaiworks/fssai-ra</span></p>
+</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const ids = ["reviewers", "hours", "floor", "quota", "demand"];
+  const DEFAULTS = { reviewers: 11, hours: 4, floor: 0.75, quota: 60, demand: 2000 };
+  const fmt = n => Number.isFinite(n) ? Math.round(n).toLocaleString("en") : "—";
+
+  function read() {
+    const v = {};
+    for (const id of ids) {
+      const raw = parseFloat($(id).value);
+      v[id] = Number.isFinite(raw) ? raw : NaN;
+    }
+    return v;
+  }
+
+  function compute(v) {
+    // Two independent ceilings, computed over the same working day. Comparing a
+    // 24-hour quota against an available-hours attention budget is the arithmetic
+    // error that made our own first version name the wrong binding constraint.
+    const quotaCeiling = v.reviewers * v.quota * v.hours;
+    const attentionCeiling = v.reviewers * (v.hours * 60) / v.floor;
+    const ceiling = Math.min(quotaCeiling, attentionCeiling);
+    const binds = quotaCeiling <= attentionCeiling ? "quota" : "reading time";
+    // A quota far from what the reading time permits is a contradiction: either
+    // it throttles reviewers who are reading, or it never fires at all.
+    const permitted = 60 / v.floor;              // reviews per hour the floor allows
+    const ratio = v.quota / permitted;
+    return { quotaCeiling, attentionCeiling, ceiling, binds, ratio, permitted,
+             gap: v.demand - ceiling };
+  }
+
+  function flag(kind, title, body) {
+    const el = document.createElement("div");
+    el.className = "flag " + kind;
+    const b = document.createElement("b"); b.textContent = title;
+    const p = document.createElement("p"); p.textContent = body;
+    el.append(b, p); return el;
+  }
+
+  function render() {
+    const v = read();
+    const bad = ids.some(id => !Number.isFinite(v[id]) || v[id] < 0) ||
+                v.reviewers < 1 || v.hours <= 0 || v.floor <= 0 || v.quota < 1;
+    const flags = $("flags"); flags.textContent = "";
+    if (bad) {
+      $("ceiling").textContent = "—";
+      $("verdict").textContent = "Fill in every field with a positive number.";
+      $("verdict-sub").textContent = "";
+      $("score").className = "score";
+      for (const k of ["r-quota","r-attention","r-ceiling","r-demand","r-gap"]) $(k).textContent = "—";
+      $("fill").style.width = "0%";
+      return;
+    }
+
+    const c = compute(v);
+    const over = c.gap > 0;
+
+    $("ceiling").textContent = fmt(c.ceiling);
+    $("r-quota").textContent = fmt(c.quotaCeiling) + " / day";
+    $("r-attention").textContent = fmt(c.attentionCeiling) + " / day";
+    $("r-ceiling").innerHTML = "";
+    $("r-ceiling").append(document.createTextNode(fmt(c.ceiling) + " / day"));
+    const tag = document.createElement("span");
+    tag.className = "binds"; tag.textContent = c.binds + " binds";
+    $("r-ceiling").append(tag);
+    $("r-demand").textContent = fmt(v.demand) + " / day";
+    $("gap-label").textContent = over ? "Beyond what can be reviewed" : "Headroom";
+    $("r-gap").textContent = (over ? "+" : "") + fmt(Math.abs(c.gap)) + " / day";
+
+    $("score").className = "score " + (over ? "over" : "ok");
+    if (over) {
+      const share = Math.round(100 * c.gap / Math.max(v.demand, 1));
+      $("verdict").textContent =
+        fmt(c.gap) + " consequential actions a day arrive beyond what this roster can review.";
+      $("verdict-sub").textContent =
+        share + "% of the queue. Those approvals will still be issued, still be signed, and still " +
+        "appear in the record as a human decision. Nothing inside the system can tell them apart.";
+    } else {
+      $("verdict").textContent = "This roster can review what the queue sends.";
+      $("verdict-sub").textContent =
+        fmt(-c.gap) + " a day of headroom. Re-run this the next time a workflow is automated " +
+        "into the same queue: the ceiling is fixed and the demand is not.";
+    }
+
+    const span = Math.max(v.demand, c.ceiling, 1);
+    $("fill").style.width = (100 * Math.min(v.demand, span) / span) + "%";
+    $("fill").className = "fill" + (over ? " over" : "");
+    $("ceilmark").style.left = (100 * c.ceiling / span) + "%";
+    $("lab-demand").textContent = "demand " + fmt(v.demand) + "/day";
+    $("lab-ceiling").textContent = "ceiling " + fmt(c.ceiling) + "/day";
+
+    if (c.ratio < 0.5) {
+      flags.append(flag("bad", "Your quota contradicts your reading time",
+        "A " + v.floor + "-minute reading lets one reviewer do " + fmt(c.permitted) +
+        " an hour, but your quota caps them at " + v.quota + ". Reviewers who read every case " +
+        "would still be turned away. Raise the quota, or state plainly that the lower number is " +
+        "the capacity you are willing to staff."));
+    } else if (c.ratio > 2) {
+      flags.append(flag("bad", "Your quota will never fire",
+        "The reading time already caps a reviewer at " + fmt(c.permitted) + " an hour, well below " +
+        "your quota of " + v.quota + ". The quota is decorative: it is not the control you think " +
+        "it is, and removing it would change nothing."));
+    } else {
+      flags.append(flag("good", "Quota and reading time agree",
+        "Both cap the hour comparably, so the quota constrains sustained load without turning " +
+        "away a reviewer who is reading every case."));
+    }
+
+    if (v.floor < 0.5) {
+      flags.append(flag("", "That is a fast reading",
+        "Under 30 seconds per consequential decision. If it is genuinely enough, say so and keep " +
+        "it. If it is what the backlog forced, the ceiling above is describing a queue that " +
+        "already stopped being reviewed."));
+    }
+    if (over && c.binds === "quota") {
+      flags.append(flag("", "The quota is the binding constraint",
+        "Your reviewers have attention to spare; the declared quota is what stops them. That is a " +
+        "policy choice and a reversible one — unlike the reading time, which is not."));
+    }
+
+    $("cmd").textContent =
+      "fssaira oversight profiles/your_profile.yaml \\\n  --reviewers " + v.reviewers +
+      " --max-approvals " + v.quota + " --deliberation-floor " + Math.round(v.floor * 60) + " --sweep";
+  }
+
+  function summary() {
+    const v = read(), c = compute(v);
+    return [
+      "Oversight capacity — declared inputs",
+      "  reviewers on the roster        " + v.reviewers,
+      "  hours per day per reviewer     " + v.hours,
+      "  minutes to review one case     " + v.floor,
+      "  quota per reviewer per hour    " + v.quota,
+      "  consequential actions per day  " + fmt(v.demand),
+      "",
+      "Result",
+      "  quota ceiling                  " + fmt(c.quotaCeiling) + " / day",
+      "  attention ceiling              " + fmt(c.attentionCeiling) + " / day",
+      "  reviewable per day             " + fmt(c.ceiling) + " / day (" + c.binds + " binds)",
+      "  " + (c.gap > 0 ? "beyond review capacity       +" + fmt(c.gap)
+                        : "headroom                      " + fmt(-c.gap)) + " / day",
+      "",
+      "Arithmetic over declared inputs, not a measurement of any reviewer.",
+      "Trust by Construction / FSSAI-RA — github.com/genaiworks/fssai-ra",
+    ].join("\n");
+  }
+
+  for (const id of ids) $(id).addEventListener("input", render);
+  $("reset").addEventListener("click", () => {
+    for (const id of ids) $(id).value = DEFAULTS[id];
+    render();
+  });
+  $("print").addEventListener("click", () => window.print());
+  $("copy").addEventListener("click", async () => {
+    const button = $("copy"), text = summary();
+    try {
+      await navigator.clipboard.writeText(text);
+      button.textContent = "Copied";
+    } catch {
+      // Clipboard access is refused in plenty of ordinary situations — a file://
+      // page, a locked-down browser. Falling back to a selectable block is the
+      // difference between a tool that works everywhere and one that works here.
+      const pre = document.createElement("pre");
+      pre.className = "mono";
+      pre.style.cssText = "background:var(--inset);border:1px solid var(--rule);padding:12px;overflow-x:auto;font-size:13px";
+      pre.textContent = text;
+      button.insertAdjacentElement("afterend", pre);
+      button.textContent = "Select and copy above";
+    }
+    setTimeout(() => { button.textContent = "Copy the result"; }, 2600);
+  });
+
+  render();
+})();
+</script>

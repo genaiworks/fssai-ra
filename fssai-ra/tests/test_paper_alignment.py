@@ -63,6 +63,12 @@ CLAIMS = [
      "{second_domain_benign_total} benign tasks, {second_domain_conformance_checks} "
      "conformance checks"),
     ("corpus provenance", "today that number is **{corpus_externally_contributed}**"),
+    ("oversight sensitivity sweep", "across {sweep_cells_total} parameter combinations the "
+     "control was load-bearing in {sweep_cells_load_bearing} of the "
+     "{sweep_cells_harm_possible} where harm was possible, harm reached zero in "
+     "{sweep_cells_harm_reached_zero}"),
+    ("oversight false-positive cost", "drove the false-positive cost to "
+     "{sweep_false_positive_deferrals}"),
 ]
 
 

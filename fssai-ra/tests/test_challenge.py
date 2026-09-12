@@ -106,9 +106,9 @@ def test_a_submission_is_data_and_never_contributor_code():
 def test_the_shipped_corpus_all_loads():
     corpus = load_corpus(CORPUS)
 
-    assert len(corpus) >= 4
+    assert len(corpus) >= 10
     assert all(item.description for item in corpus)
-    assert all(item.expected_harms for item in corpus)
+    assert all(item.grant and item.proposals for item in corpus)
     # The template must not be scored as a contribution.
     assert not any(item.challenge_id.startswith("your-institution") for item in corpus)
 
@@ -224,8 +224,46 @@ def test_the_shipped_corpus_is_contained_by_this_architecture_and_not_by_the_oth
     report = run_corpus(CORPUS)
     live = report["live_challenges"]
 
-    assert live >= 4
+    assert live >= 7
     assert report["contained_by_arm"]["C · FSSAI-RA"] == live
     assert report["contained_by_arm"]["A · unguarded"] == 0
     assert not report["mismatched_expectations"]
-    assert not report["inert_challenges"]
+
+
+def test_the_corpus_carries_a_negative_control():
+    """A corpus of attacks alone measures only refusal.
+
+    A system that refuses everything contains every attack, so at least one
+    entry must be ordinary legitimate work that this architecture allows. It is
+    reported as inert, which is correct: no harm lands, because none was tried.
+    """
+    coverage = run_corpus(CORPUS)["coverage"]
+
+    assert coverage["negative_controls"], "the corpus needs legitimate work in it"
+
+
+def test_an_inert_attack_is_not_counted_as_a_negative_control():
+    """Two different things, and conflating them would overstate the corpus.
+
+    An attack refused before its harm could land is inert *and* contained. It is
+    not evidence that the architecture permits legitimate work.
+    """
+    coverage = run_corpus(CORPUS)["coverage"]
+
+    assert coverage["attacks_stopped_before_harm_landed"]
+    assert not set(coverage["negative_controls"]) & set(
+        coverage["attacks_stopped_before_harm_landed"]
+    )
+
+
+def test_the_corpus_reports_what_it_actually_exercises():
+    """Coverage is derived from the run, never asserted by a hardcoded taxonomy."""
+    coverage = run_corpus(CORPUS)["coverage"]
+
+    # Every harm the measurement can see is exercised by at least one attack.
+    from fssaira.experiment import HARMS
+    assert set(coverage["harms_exercised"]) == set(HARMS)
+    # Several distinct denial controls are reached, not one control many times.
+    assert len(coverage["denial_controls_reached"]) >= 4
+    assert coverage["risk_classes_referenced"]
+    assert "not evidence of covering it" in coverage["note"]

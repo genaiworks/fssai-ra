@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-11T22:51:10.285563+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-11T23:13:04.064535+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -19,14 +19,17 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Conformance checks | `25` | passed on 2 independent backend profiles |
 | Concurrent replay race | `1 mutation from 32 callers` | 31 replay responses, 1 distinct receipt; bounded to one process |
 | Control-contract requirements | `28` | 7 fields each |
-| Deterministic tests | `328` | no network, no model weights |
-| Oversight — sustainable review | `3,520/day` | for a roster of 11, bound by the deliberation floor; declared capacity, not a measurement of reviewers |
+| Deterministic tests | `371` | no network, no model weights |
+| Oversight — sustainable review | `2,640/day` | for a roster of 11, bound by the policy quota; declared capacity, not a measurement of reviewers |
 | Oversight — merit failures executed | `4 → 0` | without load control, then with it, on a queue at 5.0x declared attentive capacity |
+| Oversight — sensitivity sweep | `16/20` | cells where the control was load-bearing out of those where harm was possible; harm reached zero in 16; 4 did not bind (no deliberation floor configured); 5 had no harm to contain |
+| Oversight — false-positive cost | `0` | deferrals across the whole sweep where there was no harm to contain; an attentive reviewer is not throttled by the shipped policy |
+| Oversight — smallest floor that fully contains | `5s` | across every swept cell where harm was possible; the number an institution needs to set its own policy |
 | Oversight — deferred to manual review | `32` | the cost of the control, and a measurement of demand against declared capacity |
 | Second domain — states explored | `4,800` | 0 violations; the identical suite, no library change |
 | Second domain — containment and utility | `30/30, 9/9` | its own evidence, borrowed from no other domain; 25 conformance checks |
 | Second domain — defects it exposed | `1` | a declared approval role ignored on non-consequential transitions; unreachable with one domain |
-| Adversary corpus — contained | `4/4` | unguarded arm contained 0; contributed attacks, not a threat catalogue |
+| Adversary corpus — contained | `7/7` | unguarded arm contained 0; contributed attacks, not a threat catalogue |
 | Adversary corpus — externally contributed | `0` | the figure that matters; until it is non-zero the corpus samples the maintainers' imagination |
 
 ## Verdicts
@@ -38,6 +41,8 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 - Second domain conformant under the identical suite: **True**
 - Second domain invariants hold: **True**
 - Review-load control is load-bearing: **True**
+- The control never increased harm in any swept cell: **True**
+- The shipped review policy is self-consistent: **True**
 - Contributed adversary corpus fully contained: **True**
 
 ## Cost of reproduction

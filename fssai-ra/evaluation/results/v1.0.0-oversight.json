@@ -10,11 +10,19 @@
     "status": "declared parameter, not a measurement of any reviewer"
   },
   "policy": {
-    "max_approvals_per_window": 20,
+    "max_approvals_per_window": 60,
     "window_seconds": 3600.0,
     "min_deliberation_seconds": 45.0,
-    "second_reviewer_after": 12,
-    "reviewing_seconds_per_day": 14400.0
+    "second_reviewer_after": 40,
+    "reviewing_seconds_per_day": 14400.0,
+    "declared_consistency": {
+      "quota_per_window": 60,
+      "floor_permits_per_window": 80.0,
+      "ratio": 0.75,
+      "binds_first": "quota",
+      "consistent": true,
+      "note": "the quota and the deliberation floor cap the window comparably"
+    }
   },
   "arms": {
     "no_load_control": {
@@ -49,7 +57,7 @@
         "refusals_by_code": {
           "DELIBERATION_TOO_SHORT": 32
         },
-        "capacity_headroom": 0.65
+        "capacity_headroom": 0.8833
       }
     }
   },

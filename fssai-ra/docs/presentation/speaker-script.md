@@ -47,7 +47,7 @@ middle — never from either end.
 | 7:15 | 12 · The experiment | Compared to what? Three architectures, same attacks. |
 | 7:55 | 13 · Harms delivered | Count what reached the asset, not what was refused. |
 | 8:25 | 14 · The hard part | **The slide they will remember.** Oversight is finite. Slow down. |
-| 9:00 | 15 · Oversight measured | Two numbers: 3,520/day for this roster, and 4 → 0. |
+| 9:00 | 15 · Oversight measured | Two numbers: 2,640/day for this roster, and 4 → 0. |
 | 9:40 | 16 · A second domain | Generalization, and the defect it found in us. |
 | 10:15 | 17 · The corpus | The invitation. Say the ask: contribute one attack. |
 | 10:50 | 18 · Evidence | Numbers with denominators. |

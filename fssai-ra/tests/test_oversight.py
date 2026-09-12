@@ -15,6 +15,7 @@ from fssaira.oversight import (
     OversightMonitor,
     ReviewLoadPolicy,
     run_queue_pressure_trial,
+    sweep_oversight,
 )
 from fssaira.profiles import ApplicationProfile
 
@@ -69,12 +70,14 @@ def test_capacity_arithmetic_names_which_constraint_binds():
     assert attention_bound["binding_constraint"] == "deliberation_floor"
     assert attention_bound["sustainable_per_day"] == 4 * 14_400 / 600
 
-    # A tight quota with a short floor: the declared quota binds.
+    # A tight quota with a short floor: the declared quota binds. Four windows of
+    # availability per reviewer (4h of 1h windows), not twenty-four: both ceilings
+    # are computed over the same working day.
     quota_bound = ReviewLoadPolicy(
         max_approvals_per_window=2, min_deliberation_seconds=1.0, second_reviewer_after=None,
     ).sustainable_actions_per_day(4)
     assert quota_bound["binding_constraint"] == "policy_quota"
-    assert quota_bound["sustainable_per_day"] == 4 * 2 * 24
+    assert quota_bound["sustainable_per_day"] == 4 * 2 * 4
 
 
 def test_capacity_is_reported_as_arithmetic_not_as_a_measurement():
@@ -363,3 +366,146 @@ def test_queue_time_is_never_mistaken_for_deliberation_time():
                       approver_role="student_support_officer")
 
     assert denial.value.code == OversightCode.DELIBERATION_UNVERIFIABLE
+
+
+# -- is the declared policy coherent with itself? --------------------------
+
+def test_the_shipped_defaults_are_self_consistent():
+    """A default our own diagnostic flags would be an embarrassing thing to ship.
+
+    An earlier default paired a 20-per-hour quota with a 45-second floor. The
+    floor permits 80 reviews an hour, so the quota bound first by a factor of
+    four and deferred reviewers who were reading every case. The sensitivity
+    sweep caught it; this pins the repair.
+    """
+    coherence = ReviewLoadPolicy().declared_consistency()
+
+    assert coherence["consistent"], coherence["note"]
+    assert coherence["quota_per_window"] <= coherence["floor_permits_per_window"]
+
+
+def test_a_quota_far_below_the_floor_is_reported_as_throttling_attentive_reviewers():
+    coherence = ReviewLoadPolicy(
+        max_approvals_per_window=10, min_deliberation_seconds=45.0, second_reviewer_after=None,
+    ).declared_consistency()
+
+    assert not coherence["consistent"]
+    assert coherence["binds_first"] == "quota"
+    assert "reading every case is still deferred" in coherence["note"]
+
+
+def test_a_quota_far_above_the_floor_is_reported_as_decorative():
+    coherence = ReviewLoadPolicy(
+        max_approvals_per_window=500, min_deliberation_seconds=45.0, second_reviewer_after=None,
+    ).declared_consistency()
+
+    assert not coherence["consistent"]
+    assert coherence["binds_first"] == "deliberation_floor"
+    assert "decorative" in coherence["note"]
+
+
+def test_with_no_floor_only_the_quota_can_bind():
+    coherence = ReviewLoadPolicy(
+        min_deliberation_seconds=0.0, second_reviewer_after=None,
+    ).declared_consistency()
+
+    assert coherence["consistent"]
+    assert coherence["floor_permits_per_window"] is None
+
+
+def test_both_capacity_ceilings_are_computed_over_the_same_working_day():
+    """The bug the sweep exposed: a 24-hour quota against a 4-hour attention budget.
+
+    A reviewer available four hours a day cannot serve twenty-four windows of
+    quota. Comparing the two on different days made the quota look four times
+    larger than it is, and named the wrong constraint as binding.
+    """
+    policy = ReviewLoadPolicy(
+        max_approvals_per_window=10, window_seconds=3_600.0,
+        min_deliberation_seconds=60.0, second_reviewer_after=None,
+        reviewing_seconds_per_day=4 * 3_600.0,
+    )
+
+    capacity = policy.sustainable_actions_per_day(1)
+
+    # Four windows of availability, ten approvals each.
+    assert capacity["policy_ceiling_per_day"] == 40
+    # Four hours at one minute each.
+    assert capacity["attention_ceiling_per_day"] == 240
+    assert capacity["sustainable_per_day"] == 40
+    assert capacity["binding_constraint"] == "policy_quota"
+
+
+def test_the_cli_defaults_match_the_policy_defaults():
+    """Otherwise the tool reports a policy nobody is actually running."""
+    from fssaira.cli import build_parser
+
+    args = build_parser().parse_args(["oversight", PROFILE])
+    policy = ReviewLoadPolicy()
+
+    assert args.max_approvals == policy.max_approvals_per_window
+    assert args.deliberation_floor == policy.min_deliberation_seconds
+    assert args.escalate_after == policy.second_reviewer_after
+
+
+# -- the sensitivity sweep --------------------------------------------------
+
+def test_the_sweep_publishes_every_cell_including_the_unflattering_ones():
+    report = sweep_oversight(ApplicationProfile.load(PROFILE))
+    summary = report["summary"]
+
+    assert summary["cells_total"] == len(report["cells"])
+    assert summary["cells_total"] == 25
+    # Every cell carries its own verdict, so nothing is summarised away.
+    assert all("verdict" in cell for cell in report["cells"])
+    assert {cell["verdict"] for cell in report["cells"]} <= {
+        "load_bearing", "no_harm_to_contain", "did_not_bind",
+    }
+
+
+def test_the_control_never_increases_harm_anywhere_in_the_grid():
+    """The one result that would invalidate the whole contribution."""
+    report = sweep_oversight(ApplicationProfile.load(PROFILE))
+
+    assert report["summary"]["control_never_created_harm"]
+    for cell in report["cells"]:
+        assert cell["harms_with_load_control"] <= cell["harms_without_load_control"]
+
+
+def test_disabling_the_deliberation_floor_disables_the_control():
+    """The boundary case, reported as a non-binding cell rather than hidden.
+
+    With the shipped quota, a 40-arrival queue never reaches the ceiling, so a
+    floor of zero leaves nothing to catch a rubber-stamping reviewer. A sweep
+    that quietly omitted these cells would be claiming a control that is not
+    there.
+    """
+    report = sweep_oversight(ApplicationProfile.load(PROFILE))
+    no_floor = [c for c in report["cells"] if c["deliberation_floor_seconds"] == 0.0]
+    at_risk = [c for c in no_floor if c["harms_without_load_control"] > 0]
+
+    assert at_risk, "the grid must include cells where harm was possible with no floor"
+    assert all(cell["verdict"] == "did_not_bind" for cell in at_risk)
+    assert report["summary"]["cells_where_the_control_did_not_bind"] == len(at_risk)
+
+
+def test_an_attentive_reviewer_is_never_deferred_under_the_shipped_policy():
+    """The false-positive cost, which the declaration fix drove to zero.
+
+    Before it, a reviewer reading every case was deferred 15 times in 40 because
+    the quota bound before their attention did.
+    """
+    report = sweep_oversight(ApplicationProfile.load(PROFILE))
+
+    assert report["summary"]["deferrals_where_there_was_no_harm_to_contain"] == 0
+
+
+def test_the_sweep_names_the_smallest_floor_that_fully_contains():
+    """The number an institution actually needs to set a policy."""
+    report = sweep_oversight(ApplicationProfile.load(PROFILE))
+    floor = report["summary"]["smallest_floor_that_fully_contains_everywhere"]
+
+    assert floor is not None
+    for cell in report["cells"]:
+        if cell["deliberation_floor_seconds"] == floor:
+            assert cell["harms_with_load_control"] == 0

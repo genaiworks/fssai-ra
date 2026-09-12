@@ -93,15 +93,19 @@ class ReviewLoadPolicy:
     control contract applies to everything else.
     """
 
-    #: Consequential approvals one reviewer may issue per window.
-    max_approvals_per_window: int = 20
+    #: Consequential approvals one reviewer may issue per window. The default is
+    #: deliberately consistent with the deliberation floor below: 60 approvals of
+    #: at least 45 seconds is 45 minutes of a 60-minute window, so a reviewer who
+    #: reads every case is not throttled by the quota. An earlier default of 20
+    #: was not, and the sensitivity sweep caught it — see ``declared_consistency``.
+    max_approvals_per_window: int = 60
     #: Length of the window, in seconds.
     window_seconds: float = 3_600.0
     #: Floor on the interval between presenting a proposal and approving it.
     min_deliberation_seconds: float = 45.0
     #: Approvals in a window after which a second, distinct reviewer is required.
     #: ``None`` disables escalation.
-    second_reviewer_after: int | None = 12
+    second_reviewer_after: int | None = 40
     #: Seconds per day a reviewer is actually available for this queue. Used only
     #: for the published capacity figure, never for enforcement.
     reviewing_seconds_per_day: float = 4 * 3_600.0
@@ -139,7 +143,11 @@ class ReviewLoadPolicy:
         """
         if reviewers < 1:
             raise ValueError("reviewers must be at least 1")
-        windows_per_day = SECONDS_PER_DAY / self.window_seconds
+        # Both ceilings must be computed over the same working day. An earlier
+        # version divided the day by the window length, which silently assumed a
+        # reviewer available 24 hours and inflated the quota ceiling fourfold
+        # against an attention ceiling measured over their actual hours.
+        windows_per_day = self.reviewing_seconds_per_day / self.window_seconds
         policy_ceiling = reviewers * self.max_approvals_per_window * windows_per_day
         attention_ceiling = (
             reviewers * self.reviewing_seconds_per_day / self.min_deliberation_seconds
@@ -161,6 +169,63 @@ class ReviewLoadPolicy:
             ),
         }
 
+    def declared_consistency(self) -> dict:
+        """Are the quota and the deliberation floor consistent with each other?
+
+        The sensitivity sweep found this in our own shipped defaults, which is
+        why it exists. Two numbers in this policy independently cap how much
+        review a window can hold:
+
+        * the **quota** — ``max_approvals_per_window`` outright, and
+        * the **floor** — how many reviews of at least
+          ``min_deliberation_seconds`` fit inside ``window_seconds``.
+
+        If the quota is far below what the floor permits, the policy throttles a
+        reviewer who *was* reading every case: they are deferred to the manual
+        fallback not because they rushed, but because a number was set too low.
+        That is a false-positive cost borne by the person waiting for a decision,
+        and an institution should know it declared one rather than discover it in
+        a backlog.
+
+        If the quota is far above it, the quota is decorative: the floor binds
+        first and the quota never fires.
+
+        This reports the relationship. It deliberately does not repair it —
+        picking a number on an institution's behalf is exactly the move this
+        project exists to refuse.
+        """
+        if self.min_deliberation_seconds <= 0:
+            return {
+                "quota_per_window": self.max_approvals_per_window,
+                "floor_permits_per_window": None,
+                "binds_first": "quota",
+                "consistent": True,
+                "note": "no deliberation floor is configured, so only the quota can bind",
+            }
+        floor_permits = self.window_seconds / self.min_deliberation_seconds
+        ratio = self.max_approvals_per_window / floor_permits
+        if ratio < 0.5:
+            verdict, note = False, (
+                "the quota binds well before the deliberation floor: a reviewer reading "
+                "every case is still deferred. Raise the quota, or say plainly that the "
+                "lower number is the capacity you are willing to staff"
+            )
+        elif ratio > 2.0:
+            verdict, note = False, (
+                "the deliberation floor binds well before the quota: the quota is "
+                "decorative and will never fire"
+            )
+        else:
+            verdict, note = True, "the quota and the deliberation floor cap the window comparably"
+        return {
+            "quota_per_window": self.max_approvals_per_window,
+            "floor_permits_per_window": round(floor_permits, 2),
+            "ratio": round(ratio, 3),
+            "binds_first": "quota" if ratio <= 1 else "deliberation_floor",
+            "consistent": verdict,
+            "note": note,
+        }
+
     def to_dict(self) -> dict:
         return {
             "max_approvals_per_window": self.max_approvals_per_window,
@@ -168,6 +233,7 @@ class ReviewLoadPolicy:
             "min_deliberation_seconds": self.min_deliberation_seconds,
             "second_reviewer_after": self.second_reviewer_after,
             "reviewing_seconds_per_day": self.reviewing_seconds_per_day,
+            "declared_consistency": self.declared_consistency(),
         }
 
 
@@ -423,6 +489,9 @@ __all__ = [
     "ReviewRecord",
     "SECONDS_PER_DAY",
     "run_queue_pressure_trial",
+    "sweep_oversight",
+    "SWEEP_ATTENTION",
+    "SWEEP_FLOORS",
 ]
 
 
@@ -596,5 +665,164 @@ def run_queue_pressure_trial(
             "refusing an approval preserves the boundary and delays the student",
             "deferral to manual review is a cost, and it is reported as one",
             "this trial models one reviewer and one queue, not an institution",
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
+# The sensitivity sweep
+# ---------------------------------------------------------------------------
+#
+# A single queue-pressure trial with one set of parameters invites exactly one
+# objection, and it is a fair one: *you chose numbers that made your control look
+# necessary*. The trial has a reviewer budget, a deliberation floor, and an
+# arrival rate, and a sceptical reader has no way to know how much of the result
+# is the control and how much is the arithmetic of three numbers we picked.
+#
+# So the honest move is to sweep them and publish the whole surface, including
+# the cells where the control does nothing. Those cells are not embarrassments;
+# they are the shape of the claim. A control that binds everywhere in a parameter
+# space, including where no harm is possible, is not being measured — it is being
+# asserted with extra steps.
+
+#: Reviewer attention budgets to sweep, as a fraction of the arrival count. A
+#: reviewer budgeted for the whole queue is the important boundary case: there is
+#: no fatigue, so a correct control must do nothing at all.
+SWEEP_ATTENTION = (2, 4, 8, 16, 40)
+
+#: Deliberation floors in seconds. ``0`` disables the floor entirely, leaving only
+#: the capacity ceiling — also a boundary case worth publishing.
+SWEEP_FLOORS = (0.0, 5.0, 15.0, 45.0, 90.0)
+
+
+def sweep_oversight(
+    profile,
+    *,
+    arrivals: int = 40,
+    attention_budgets: tuple[int, ...] = SWEEP_ATTENTION,
+    deliberation_floors: tuple[float, ...] = SWEEP_FLOORS,
+    fatigued_seconds: float = 3.0,
+    careful_seconds: float = 90.0,
+    merit_refusals_every: int = 7,
+) -> dict:
+    """Run the queue-pressure trial across a grid of declared parameters.
+
+    Returns every cell, not a summary of the flattering ones. Three outcomes are
+    distinguished, because collapsing them would hide the result:
+
+    * **load_bearing** — harm occurred without the control and did not with it.
+    * **no_harm_to_contain** — the reviewer stayed attentive for the whole queue,
+      so nothing was there to catch. The control correctly does nothing.
+    * **did_not_bind** — harm occurred in both arms. The declared policy was too
+      loose to catch this reviewer, which is a real and reportable outcome.
+    """
+    cells = []
+    for budget in attention_budgets:
+        for floor in deliberation_floors:
+            policy = ReviewLoadPolicy(
+                # The shipped quota, so the sweep tests the policy a deployment
+                # actually gets rather than one chosen for the sweep. Hardcoding a
+                # different quota here was how the original version hid the
+                # false-positive cost of an inconsistent declaration.
+                max_approvals_per_window=ReviewLoadPolicy().max_approvals_per_window,
+                min_deliberation_seconds=floor,
+                # Escalation is held out of the sweep so the two parameters under
+                # test are the only things varying. It is exercised separately.
+                second_reviewer_after=None,
+            )
+            trial = run_queue_pressure_trial(
+                profile,
+                arrivals=arrivals,
+                merit_refusals_every=merit_refusals_every,
+                policy=policy,
+                reviewer=DeclaredReviewerModel(
+                    attentive_until=budget,
+                    careful_seconds=careful_seconds,
+                    fatigued_seconds=fatigued_seconds,
+                ),
+            )
+            without = trial["summary"]["harmful_executed_without_load_control"]
+            with_control = trial["summary"]["harmful_executed_with_load_control"]
+            if without == 0:
+                verdict = "no_harm_to_contain"
+            elif with_control < without:
+                verdict = "load_bearing"
+            else:
+                verdict = "did_not_bind"
+            cells.append({
+                "attentive_until": budget,
+                "deliberation_floor_seconds": floor,
+                "harms_without_load_control": without,
+                "harms_with_load_control": with_control,
+                "deferred_to_manual_fallback": trial["summary"]["deferred_to_manual_fallback"],
+                "policy_declaration_consistent": policy.declared_consistency()["consistent"],
+                "verdict": verdict,
+            })
+
+    at_risk = [cell for cell in cells if cell["verdict"] != "no_harm_to_contain"]
+    binding = [cell for cell in at_risk if cell["verdict"] == "load_bearing"]
+    failed = [cell for cell in at_risk if cell["verdict"] == "did_not_bind"]
+    quiet = [cell for cell in cells if cell["verdict"] == "no_harm_to_contain"]
+    # Reducing harm and eliminating it are different claims, and collapsing them
+    # would overstate the result. The capacity ceiling alone reduces; it is the
+    # deliberation floor that closes the gap, and the sweep is what shows that.
+    fully_contained = [cell for cell in at_risk if cell["harms_with_load_control"] == 0]
+    # The smallest floor at which *every* cell with possible harm reaches zero.
+    # This is the number an institution actually needs when setting a policy.
+    floors_that_fully_contain = sorted({
+        floor for floor in deliberation_floors
+        if all(
+            cell["harms_with_load_control"] == 0
+            for cell in cells if cell["deliberation_floor_seconds"] == floor
+        )
+    })
+    # What the control costs where there was nothing to catch: an attentive
+    # reviewer deferred anyway. This is the control's false-positive cost and it
+    # is reported rather than netted off, because it is borne by the person
+    # waiting for a decision.
+    unnecessary_deferrals = sum(cell["deferred_to_manual_fallback"] for cell in quiet)
+    return {
+        "schema_version": "1.0",
+        "kind": "oversight-sensitivity-sweep",
+        "profile_id": profile.profile_id,
+        "grid": {
+            "arrivals": arrivals,
+            "attention_budgets": list(attention_budgets),
+            "deliberation_floors": list(deliberation_floors),
+            "fatigued_seconds": fatigued_seconds,
+            "careful_seconds": careful_seconds,
+        },
+        "cells": cells,
+        "summary": {
+            "cells_total": len(cells),
+            "cells_where_harm_was_possible": len(at_risk),
+            "cells_where_the_control_was_load_bearing": len(binding),
+            "cells_where_the_control_did_not_bind": len(failed),
+            "cells_with_no_harm_to_contain": len(quiet),
+            "cells_where_harm_reached_zero": len(fully_contained),
+            "smallest_floor_that_fully_contains_everywhere": (
+                floors_that_fully_contain[0] if floors_that_fully_contain else None
+            ),
+            "deferrals_where_there_was_no_harm_to_contain": unnecessary_deferrals,
+            "control_never_created_harm": all(
+                cell["harms_with_load_control"] <= cell["harms_without_load_control"]
+                for cell in cells
+            ),
+        },
+        "reading": [
+            "the capacity ceiling alone reduces harm but does not eliminate it; the "
+            "deliberation floor is what closes the gap, which is why both are declared",
+            "deferrals occur even where there was no harm to contain, because a declared "
+            "quota can bind before a reviewer's attention does. That is a false-positive "
+            "cost of the policy, borne by the person waiting, and a signal that the quota "
+            "and the deliberation floor were declared inconsistently with each other",
+            "cells with no harm to contain are the control correctly doing nothing about "
+            "rubber-stamping: a reviewer budgeted for the whole queue never rubber-stamps",
+            "cells where the control did not bind are reported, not excluded; a declared "
+            "policy can be too loose to catch a given reviewer",
+            "a floor of 0 disables the deliberation check entirely, leaving only the "
+            "capacity ceiling, and is included as a boundary case",
+            "the sweep varies the declared parameters, not reviewer behaviour, which "
+            "remains unobserved",
         ],
     }

@@ -27,6 +27,22 @@ That list is your actual finding. In most organisations the field that fails is
 thing: the control being claimed does not exist yet. You now have something
 specific to say in a meeting, which is more than a maturity model will give you.
 
+3. Open the [oversight capacity calculator](oversight/) and answer five
+   questions you already know the answers to: how many people may approve this
+   class of action, how many hours a day they actually have for it, how long a
+   careful reading takes, the most you would let one person approve in an hour,
+   and how many of these actions a day the queue sends.
+
+That produces a second finding, and it is usually the more uncomfortable one.
+Every governed-agent design routes consequential actions to a named human; very
+few say what happens when there are more actions than the humans can read. If
+your demand exceeds your ceiling, four answers are honest — hire, narrow what
+counts as consequential, accept a queue and publish its length, or let those
+approvals stop being review. The fourth happens by default if nobody chooses.
+
+The calculator runs offline and sends nothing anywhere, which is deliberate:
+finding out that you are over capacity should not require telling anyone.
+
 ```bash
 pip install "fssaira[dev] @ git+https://github.com/genaiworks/fssai-ra#subdirectory=fssai-ra"
 fssaira init my-domain --domain-id my-domain --title "My Domain"
@@ -124,6 +140,8 @@ method decays into a vocabulary.
 | Unauthorized actions completed per attempt | Evaluation report, `unauthorized_mutations` | That zero means the system is secure |
 | Benign task completion | Evaluation report, `false_denial_rate` | That a synthetic suite predicts real usability |
 | Time to detect a broken evidence chain | Run the verification job on a schedule; time it | That detection is prevention |
+| **Oversight ceiling** | `fssaira oversight <profile> --sweep`, or the calculator, with your own roster | That the ceiling is a measurement of your reviewers. It is arithmetic over what *you* declared, and only as honest as the reading time you entered |
+| **Demand against that ceiling** | Count consequential actions per day; compare | That deferrals are a defect. They are the gap between demand and declared capacity, and reporting them is the point |
 | Approval latency and reviewer effort | Instrument it; we have not | Anything at all — we have not measured this and neither have you, yet |
 | Recovery time after a denied action | Time the manual fallback with a real person | That the fallback works because it is documented |
 
@@ -137,6 +155,17 @@ through is a paragraph, not a service.
 **"We'll adopt the architecture."** You cannot. You adopt the method for one
 capability, then another. An architecture-wide adoption programme has no failure
 test and no owner, which are the two things this method is about.
+
+**"We'll add human review, so the volume does not matter."** It is the only thing
+that does. Review is the one input in the pipeline that does not scale with the
+hardware, and past a reviewer's capacity every mechanism in this repository still
+passes its tests while the oversight they feed becomes a signature service. Put
+the ceiling in the business case beside the volume forecast, not after the
+pilot.
+
+**"We'll set the reading time lower so the numbers work."** Then the ceiling
+describes a queue that already stopped being reviewed. The number is only useful
+if you would defend it to the person whose case was refused.
 
 **"Let's put the contract in the wiki."** The contract is enforced configuration.
 If it lives somewhere that cannot fail a build, it will drift within a quarter.

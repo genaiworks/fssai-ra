@@ -56,6 +56,25 @@ corpus therefore still samples the maintainers' imagination. That number is the
 one to watch, and it is printed in the tool rather than buried in a limitations
 paragraph.
 
+## What is in here now
+
+Ten entries, and they are not all attacks — a corpus of attacks alone measures
+only how much a system refuses, and a system that refuses everything scores
+perfectly.
+
+| | |
+|---|---|
+| Live attacks, contained by this architecture | 7 of 7 |
+| Contained by an unguarded agent | 0 |
+| Attacks stopped before any harm could land | 2 |
+| Negative controls — legitimate work that must succeed | 1 |
+| Contributed from outside this project | **0** |
+
+`fssaira challenge` also reports which harms the corpus actually exercises and
+which denial controls it reaches, derived from the run rather than from a
+taxonomy asserted here. Referencing a published risk class records intent; it is
+not evidence of covering that class, and the report says so.
+
 ## What contributing has already been worth
 
 The first challenge run through this mechanism found a defect — in the
@@ -72,9 +91,14 @@ figures were unchanged — that attack set never reaches the blind spot — and
 `tests/test_challenge.py` pins them so a future correction cannot quietly move
 them.
 
-That is one defect from four attacks written by the same team that wrote the
-defence. It is a reasonable advertisement for what a corpus written by other
-people would find.
+That is one defect from a handful of attacks written by the same team that wrote
+the defence. Writing the corpus also caught a second, smaller thing: an attack
+built to test the per-agent call budget sent exactly the budgeted number of calls
+and saw nothing refused. A contributor would have concluded no budget existed.
+The entry now sends more than the budget and says why in its description.
+
+Both are reasonable advertisements for what a corpus written by other people
+would find.
 
 ## A note on scope
 
