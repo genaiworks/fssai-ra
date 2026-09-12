@@ -147,6 +147,40 @@ completely unreviewed, and nothing in `v1.0.0` could tell the difference.
   claiming 180, 187, and 149 deterministic tests, none of them current. The paper
   was protected from that drift and the front door was not.
 
+### Conference readiness: the submission surface, guarded
+
+The alignment tests covered the proceedings-style abstract, the deck and the
+READMEs. They did not cover the file that is actually pasted into the UNU form,
+or the script that routes the deck on stage. Both had drifted.
+
+- **Fixed: three of the four submission fields were over the form's character
+  cap.** `scripts/check_submission.py` counted `len(body)`; a browser submits a
+  textarea with CRLF line endings, so every paragraph break costs two characters
+  rather than one. Introduction was 1,505 against a cap of 1,500, Development 1
+  was 3,901 against 3,900, and Development 2 was 3,911 against 3,900 — while the
+  checker reported all four valid. The checker now counts as the form receives,
+  reports `headroom`, and the abstract was trimmed to fit with room to spare.
+- **Extended alignment testing to `paper/form-ready-abstract.md`**, the version
+  reviewers actually receive. It restates the same results in different prose, so
+  it has its own templates — including a spelled-out-number guard, because
+  regenerating figures and grepping for `25` will never find `Twenty-five`.
+- **Fixed: the deck's speaker script routed a nineteen-slide deck that no longer
+  exists.** Four slides were added and the paths table was not updated, so the
+  printed "full" run was 1–19 on a page that also said slide 20 must never be cut,
+  and every shortened path ended the talk on the limits slide with the close
+  dropped. Rewrote the four paths; all of them now end on the close.
+- Added tests binding the script to the deck: the stated slide count, that every
+  routed slide exists, that every path ends on the close, and that no path cuts a
+  slide the same page says is never cut.
+- **The v1.0.0-era PowerPoint is marked superseded.** It contains no oversight
+  ceiling, no second domain and no adversary corpus — none of the three
+  contributions this submission leads with — and `paper/SUBMISSION.md` was
+  telling an accepted author to present from it. `docs/presentation/slides.html`
+  is now named as the deck everywhere.
+- Fixed a broken `docs/ASSURANCE.md` link in `evaluation/results/RESULTS.md`, at
+  its generator; dated `docs/REVIEWER_ASSESSMENT.md` as a record of one review
+  round rather than a status page; synchronised the quoted test count (394).
+
 ## Unreleased — reviewer-driven resilience and identity checks
 
 - Added `fssaira resilience` with independent spawned-process races and four

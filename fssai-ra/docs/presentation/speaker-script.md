@@ -6,21 +6,29 @@
 
 A panel opener is not a conference talk. The room has three or four other people
 who also have something to say, and the moderator is watching the clock. The deck
-runs **19 slides in about twelve minutes**, with two backup slides that appear
+runs **23 slides in about fourteen minutes**, with two backup slides that appear
 only if someone asks.
 
-Three paths are built in. Pick one before you walk on stage.
+Four paths are built in. Pick one before you walk on stage. **Every one of them
+ends on slide 23**, because a talk that stops on the limits slide has ended on
+the weakest thing you had to say.
 
 | You have | Run slides | Cut |
 |---|---|---|
-| **12 minutes** | 1–19 | nothing |
-| **8 minutes** | 1, 2, 4, 5, 6, 7, 12, 14, 15, 16, 18, 19 | sovereignty (3), counterfactual (8), method (9), finding (10), atomicity (11), harms (13), theme (17) |
-| **5 minutes** | 1, 2, 5, 7, 12, 15, 16, 19 | everything else — the person, the contract, the demo, the comparison, the limits, who benefits, the rule |
+| **14 minutes** | 1–23 | nothing |
+| **10 minutes** | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 18, 19, 20, 21, 22, 23 | sovereignty (3), method (9), finding (10), atomicity (11), harms (13), second domain (16), corpus (17) — fold 16 and 17 into one sentence each on 18 |
+| **8 minutes** | 1, 2, 4, 5, 7, 12, 14, 15, 18, 19, 20, 23 | the above, plus privilege invariance (6), counterfactual (8), theme (21), the ask (22) |
+| **5 minutes** | 1, 2, 5, 14, 15, 19, 20, 23 | everything but the rule, the person, the contract, the oversight argument, the limits, who this is for, and the close |
 
-**Two slides are never cut.** Slide 19, the limits: in a UN room the credibility
+**Three slides are never cut.** Slide 19, the limits: in a UN room the credibility
 of everything before it depends on those being stated by you rather than
-extracted from you. And slide 20, who this is for: without it this is a talk
-about software.
+extracted from you. Slide 20, who this is for: without it this is a talk
+about software. And slide 23, the close: it is the only slide that hands the room
+the sentence you want repeated after you sit down.
+
+Slides 14 and 15 are the oversight argument, and they are the reason this
+submission is on a panel rather than in a poster session. Cut the architecture
+before you cut them.
 
 The arc is deliberate. It opens on a person who cannot find out why a decision
 was made about her, spends the middle earning the right to be believed, and
@@ -59,11 +67,11 @@ middle — never from either end.
 | — | 24 · Backup | The five domains, if the panel turns technical. |
 | — | 25 · Backup | The interface inventory, for "but you have a diode". |
 
-**If you are given ten minutes rather than fourteen,** cut slides 16 and 17 (the
-second domain and the corpus) and fold them into one sentence each on slide 18.
-Do not cut 14 or 15: the oversight argument is the reason this submission is on
-the panel rather than in a poster session. Do not cut 19 or 20 under any
-circumstances.
+**If you are given ten minutes rather than fourteen,** take the ten-minute path
+above: cut 3, 9, 10, 11 and 13, and fold the second domain (16) and the corpus
+(17) into one sentence each on slide 18. Do not cut 14 or 15: the oversight
+argument is the reason this submission is on the panel rather than in a poster
+session. Do not cut 19, 20 or 23 under any circumstances.
 
 ---
 

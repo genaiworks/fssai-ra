@@ -45,7 +45,7 @@ The identical verifier, evaluator, and conformance suite hold on it with no chan
 
 A containment figure means nothing without a baseline, so identical hostile proposals and identical legitimate work went to three architectures. An *unguarded* arm contained 0% and delivered 28 harmful actions. A *prompt-guarded* arm — a safety prompt plus a per-agent tool allowlist, the two mitigations most commonly deployed — contained 29% and delivered 8. That arm is not a strawman; what it lacks is an enforcement point independent of the model. This architecture contained all seven and delivered none.
 
-Against the reference profile: 30 of 30 adversarial scenarios contained, zero unauthorized mutations, 11 distinct denial controls each exercised, 8 of 8 ablated controls restored their harm when removed, 25 conformance checks passing on 2 backend profiles, a 32-caller race produced 1 mutation and 1 receipt, and 371 deterministic tests run offline in seconds.
+Against the reference profile: 30 of 30 adversarial scenarios contained, zero unauthorized mutations, 11 distinct denial controls each exercised, 8 of 8 ablated controls restored their harm when removed, 25 conformance checks passing on 2 backend profiles, a 32-caller race produced 1 mutation and 1 receipt, and 394 deterministic tests run offline in seconds.
 
 One figure matters more than the containment rate: **6 of 6 benign tasks completed, false-denial rate 0.0.** A system that denies everything scores perfectly on containment and is useless. Reporting both is what stops either being optimised alone.
 

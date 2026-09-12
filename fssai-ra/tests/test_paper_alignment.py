@@ -452,3 +452,104 @@ def test_the_submitted_abstract_states_its_limits(submitted):
         assert phrase in submitted, (
             f"the submitted abstract should still state its limits; {phrase!r} is missing"
         )
+
+
+# ---------------------------------------------------------------------------
+# The deck and the script that routes it
+# ---------------------------------------------------------------------------
+#
+# The script's paths table was written when the deck was nineteen slides and was
+# not updated when four more were added. It therefore told a presenter that the
+# full run was "1-19" on a page that also said slide 20 must never be cut, and
+# every shortened path ended on the limits slide with the close dropped. The
+# timing table below it was correct the whole time, which is what made the
+# contradiction survive: both were on the same page and only one was read.
+
+SCRIPT = ROOT / "docs" / "presentation" / "speaker-script.md"
+
+
+@pytest.fixture(scope="module")
+def deck_slides() -> list[str]:
+    """The deck's slides, in order, labelled by their eyebrow."""
+    blocks = re.split(r"\n\s*\{\s*\n\s*eyebrow:", DECK.read_text(encoding="utf-8"))
+    labels = []
+    for block in blocks[1:]:
+        match = re.match(r'\s*\[\s*"([^"]*)"', block)
+        labels.append(match.group(1) if match else "")
+    assert labels, "no slides found in the deck; the slide literal's shape has changed"
+    return labels
+
+
+@pytest.fixture(scope="module")
+def script() -> str:
+    assert SCRIPT.exists(), f"{SCRIPT} is missing"
+    return SCRIPT.read_text(encoding="utf-8")
+
+
+def _narrative_count(deck_slides: list[str]) -> int:
+    """Slides the talk runs, excluding the backup slides kept for questions."""
+    return sum(1 for label in deck_slides if label.strip().lower() != "backup")
+
+
+def _paths(script: str) -> dict[str, list[int]]:
+    """Every 'Run slides' row of the paths table, expanded from ranges."""
+    paths = {}
+    for row in re.findall(r"^\|\s*\*\*([^*]+)\*\*\s*\|([^|]+)\|", script, re.M):
+        name, cells = row[0].strip(), row[1]
+        numbers: list[int] = []
+        for token in cells.split(","):
+            token = token.strip()
+            span = re.fullmatch(r"(\d+)\s*[-–]\s*(\d+)", token)
+            if span:
+                numbers.extend(range(int(span.group(1)), int(span.group(2)) + 1))
+            elif token.isdigit():
+                numbers.append(int(token))
+        if numbers:
+            paths[name] = numbers
+    return paths
+
+
+def test_the_script_states_the_deck_it_actually_routes(script, deck_slides):
+    match = re.search(r"runs \*\*(\d+) slides", script)
+    assert match, "the script should say how many slides the deck runs"
+    assert int(match.group(1)) == _narrative_count(deck_slides), (
+        f"the script says the deck runs {match.group(1)} slides but it has "
+        f"{_narrative_count(deck_slides)} narrative slides and "
+        f"{len(deck_slides) - _narrative_count(deck_slides)} backup slides"
+    )
+
+
+def test_every_path_runs_slides_that_exist(script, deck_slides):
+    paths = _paths(script)
+    assert paths, "no paths table found in the script"
+    for name, numbers in paths.items():
+        assert max(numbers) <= len(deck_slides), (
+            f"the {name} path runs slide {max(numbers)}; the deck has "
+            f"{len(deck_slides)} slides"
+        )
+
+
+def test_every_path_ends_on_the_close(script, deck_slides):
+    """A path that stops earlier ends the talk on whatever preceded the close.
+
+    Before this test the shortened paths ended on the limits slide, which is the
+    one slide in the deck written to be the least reassuring thing in the room.
+    """
+    last = _narrative_count(deck_slides)
+    for name, numbers in _paths(script).items():
+        assert numbers[-1] == last, (
+            f"the {name} path ends on slide {numbers[-1]}, not the close (slide {last})"
+        )
+
+
+def test_no_path_cuts_a_slide_the_script_says_is_never_cut(script, deck_slides):
+    """The never-cut rule and the paths table must not contradict each other."""
+    stated = {int(n) for n in re.findall(r"Slide (\d+),", script)}
+    for clause in re.findall(r"Do not cut ([\d,\s]+(?:or\s*\d+)?)", script):
+        stated |= {int(n) for n in re.findall(r"\d+", clause)}
+    assert stated, "the script should name the slides it refuses to cut"
+    for name, numbers in _paths(script).items():
+        missing = sorted(stated - set(numbers))
+        assert not missing, (
+            f"the {name} path cuts slide(s) {missing}, which the script says are never cut"
+        )

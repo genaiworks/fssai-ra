@@ -1,6 +1,12 @@
-# Speaker script for the current 14-slide PowerPoint
+# Speaker script for the superseded 14-slide PowerPoint
 
-Working allocation: eight minutes. Confirm the actual panel slot. This script
+> **Superseded. Do not rehearse from this.** The maintained deck is
+> [`presentation/slides.html`](presentation/slides.html) with
+> [its script](presentation/speaker-script.md). This script and the PowerPoint it
+> matches predate the oversight ceiling, the second domain and the adversary
+> corpus, and are kept only for provenance.
+
+Working allocation: eight minutes. This script
 matches `docs/trust-by-construction-final.pptx`; the browser deck has a different
 sequence. Baseline results come from v1.0.0. Slide 11 presents a separately
 identified current-source supplement. The deck notes contain source links.

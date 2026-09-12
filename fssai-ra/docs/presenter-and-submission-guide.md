@@ -50,13 +50,20 @@ This is an illustrative scenario. Do not describe it as an observed breach or an
 
 ## Talk lengths
 
-The current 14-slide PowerPoint assumes an **eight-minute contribution**, because the invitation does not state a speaking allocation. All 14 slides form its narrative; slide 14 is the closing slide. The matching timed script is `docs/speaker-script.md`. The HTML deck under `docs/presentation/` has a different sequence and its own script. Use one deck and its matching script when rehearsing.
+**Present from [`docs/presentation/slides.html`](presentation/slides.html).** It is the maintained deck: 23 slides in about fourteen minutes, plus two backup slides for questions. Its figures are checked against `scripts/generate_results.py` by `tests/test_paper_alignment.py`, so a stale number on a slide fails the build. The matching timed script is [`presentation/speaker-script.md`](presentation/speaker-script.md), and its four timing paths are checked against the deck by the same test file. Press `⌘P` in the deck for a PDF to carry as the podium backup.
+
+`docs/trust-by-construction-final.pptx` and its script `docs/speaker-script.md` are a **superseded v1.0.0-era pair**, kept for provenance. They contain no oversight ceiling, no second domain and no adversary corpus — that is, none of the three contributions this submission leads with. Do not rehearse from them.
+
+The allocation paths live in the script rather than here, so there is one table to keep correct:
 
 | Allocation | Slides | Delivery |
 |---|---|---|
-| 3 minutes | 1, 2, 6, 8, 14 | One case, one authority rule, bounded evidence, one adoption request |
-| 5 minutes | 1, 2, 4, 5, 6, 8, 11, 14 | Add the architecture and recovery evidence |
-| 8 minutes | 1–14 | Complete narrative, including contribution, limitations and shared capacity |
+| 5 minutes | 1, 2, 5, 14, 15, 19, 20, 23 | The rule, the person, the contract, the oversight ceiling, the limits, the close |
+| 8 minutes | 1, 2, 4, 5, 7, 12, 14, 15, 18, 19, 20, 23 | Add the architecture, the demonstration and the controlled comparison |
+| 10 minutes | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 18, 19, 20, 21, 22, 23 | Add privilege invariance, the counterfactual, the theme and the ask |
+| 14 minutes | 1–23 | Complete narrative |
+
+Slides 19, 20 and 23 are never cut, and slides 14 and 15 are the oversight argument that earns the panel slot.
 
 For a discussion-only panel, use the opening above and three concrete examples: a changed action invalidates approval; an evidence outage pauses consequential automation; a student can request a correction. Avoid naming Kafka, Spark, or Iceberg unless the moderator asks about implementation.
 

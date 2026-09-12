@@ -68,7 +68,13 @@ evidence, and restore service.
 
 ## If accepted
 
-- Use `docs/trust-by-construction-final.pptx` for the panel presentation.
+- Present from [`docs/presentation/slides.html`](../docs/presentation/slides.html)
+  with [its script](../docs/presentation/speaker-script.md). Press `⌘P` for a PDF
+  to carry as the podium backup.
+- `docs/trust-by-construction-final.pptx` is a **superseded v1.0.0-era deck**. It
+  predates the oversight ceiling, the second domain, and the adversary corpus, so
+  it cannot make the argument this submission is on the panel to make. Do not
+  present from it.
 - Rehearse the live synthetic demo and carry a recording.
 - Use `docs/worksheet/` as the audience takeaway and extension entry point.
 - Expand the longer abstract with reviewer, fairness, accessibility, cost, energy,

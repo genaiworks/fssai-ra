@@ -22,9 +22,11 @@ AI*) and its UNU–Springer proceedings.
 
 **Submission and presentation:** the form-safe paste fields are in
 [`paper/form-ready-abstract.md`](paper/form-ready-abstract.md), validated by
-`python scripts/check_submission.py`. The current PowerPoint is
-[`docs/trust-by-construction-final.pptx`](docs/trust-by-construction-final.pptx);
-the browser deck and timed script remain under [`docs/presentation/`](docs/presentation/).
+`python scripts/check_submission.py` and checked against the generated figures by
+`tests/test_paper_alignment.py`. The deck is
+[`docs/presentation/slides.html`](docs/presentation/slides.html) with its
+[timed script](docs/presentation/speaker-script.md). The PowerPoint under
+`docs/` is a superseded v1.0.0-era deck, kept for provenance.
 
 > **Bounded claim: testable containment in a declared environment.** The teaching
 > profile demonstrates independent checks for specified failure paths. It is not a
@@ -40,7 +42,7 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # 371 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # 394 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation

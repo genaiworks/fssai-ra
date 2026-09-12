@@ -52,7 +52,7 @@ cd fssai-ra/fssai-ra
 python -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
 
-pytest                                            # 371 deterministic tests, fully offline
+pytest                                            # 394 deterministic tests, fully offline
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # 240 states, 5 invariants, 0 violations
 fssaira evaluate profiles/student_support.yaml    # 30 adversarial + 6 benign + 8 ablations
@@ -64,7 +64,7 @@ fssaira init my-domain                            # scaffold your own
 ```
 
 No network, no model weights, no GPU. Release `v1.0.0` contains 187 deterministic
-tests; current source has 371. Both include a bounded model checker over the
+tests; current source has 394. Both include a bounded model checker over the
 profile's declared authority space, a portable conformance suite, and versioned
 machine-readable results. These establish specified properties in a synthetic
 environment; they are **not** a security certification or evidence of production

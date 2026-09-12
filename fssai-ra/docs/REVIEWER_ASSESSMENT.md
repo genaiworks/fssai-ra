@@ -1,5 +1,12 @@
 # Reviewer assessment and implemented improvements
 
+> **A record of one editorial review round, not a current status page.** The
+> figures in the table below are the ones that round saw. The repository has
+> moved since: see [`../README.md`](../README.md) for current counts and
+> [`../evaluation/results/RESULTS.md`](../evaluation/results/RESULTS.md) for the
+> generated figures. Nothing on this page is checked by
+> `tests/test_paper_alignment.py`, which is why it is dated rather than updated.
+
 ## Assessment
 
 I would support this as a conference contribution about a testable reference
@@ -21,7 +28,7 @@ artifact usable, but listing more technologies does not establish novelty.
 | What happens when the process dies? | Four abrupt-exit checkpoints around the transaction | Reopening and retrying preserves the expected all-or-nothing state |
 | Can another institution reproduce the result? | A command-line resilience runner and source/profile fingerprints | CI reruns and compares the complete supplemental report |
 | Does the framework really accept another domain? | Race fixtures derive operation, states and reviewer role from the profile | Generic-template and malformed-profile regression tests |
-| Do the claims match the artifact? | Corrected source links, matching 14-slide script, separate baseline and supplement | Full suite: 240 passing tests; abstract field constraints still pass |
+| Do the claims match the artifact? | Corrected source links, matching script, separate baseline and supplement | Full suite: 240 passing tests at that revision; abstract field constraints still pass |
 
 The review also fixed a SQLite lock leak when creating a connection failed and
 removed a PostgreSQL serialization-retry claim absent from the implementation.
@@ -35,8 +42,8 @@ authority and recovery claim. They do not establish deployment safety, education
 benefit, or a probability of resisting arbitrary attacks.”
 
 Keep the original `v1.0.0` figures and tag separate from the enhanced source.
-The updated slide 11 presents the supplement explicitly. The current test count
-is an engineering statistic, not an additional scientific result.
+The current test count is an engineering statistic, not an additional scientific
+result.
 
 ## Conditions before an institutional pilot
 
@@ -67,10 +74,11 @@ new request IDs simply to bypass the check.
 
 ## Presentation and submission
 
-Use the current PowerPoint with its matching eight-minute script. All 14 slides
-belong to the narrative; slide 14 closes the talk. Shorter selections appear in
-the updated playbook. The empirical supplement is supporting material, not an
-extra field to paste into the abstract form.
+Present from [`presentation/slides.html`](presentation/slides.html) with
+[its script](presentation/speaker-script.md); the allocation paths live there.
+The PowerPoint this section originally pointed to is superseded and predates the
+oversight, second-domain and corpus results. The empirical supplement is
+supporting material, not an extra field to paste into the abstract form.
 
 Before submission, fill in author details, confirm the final source revision,
 recheck the live form, and obtain an education-domain review. Shortlisting is not
