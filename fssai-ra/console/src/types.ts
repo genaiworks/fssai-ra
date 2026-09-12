@@ -170,6 +170,73 @@ export interface InterfaceInventory {
   complete: boolean;
 }
 
+/** Three-way coverage over the control contract. `unverified` is the number an
+ *  operator should look at first: a requirement there describes a failure test
+ *  and binds it to nothing. */
+export interface CoverageReport {
+  totals: {
+    requirements: number;
+    machine_verified: number;
+    organizationally_attested: number;
+    unverified: number;
+    machine_verified_fraction: number | null;
+  };
+  unverified_requirements: string[];
+  bindings_naming_unknown_requirements: string[];
+  requirements: {
+    requirement_id: string;
+    domain: string;
+    status: "machine_verified" | "organizationally_attested" | "unverified";
+    bindings: { mechanism: string; locator: string; note: string }[];
+    attested_by?: string;
+    attestation_cadence?: string;
+    declared_test?: string;
+  }[];
+  limits: string[];
+}
+
+/** What a chain of agents confers, across three architectures. */
+export interface DelegationReport {
+  hostile_chains: number;
+  arms: Record<string, {
+    contained: number;
+    of: number;
+    containment_rate: number | null;
+    benign_chain_completed: boolean;
+  }>;
+  outcomes: { arm: string; scenario: string; contained: boolean; code: string; detail: string }[];
+  ablations: { control: string; scenario: string; load_bearing: boolean; with_control: string; without_control: string }[];
+  verification: { states_explored: number; admitted: number; holds: boolean; violations: unknown[] };
+  limits: string[];
+}
+
+/** What a review assistant does to this deployment's oversight claim. */
+export interface AssistedReviewReport {
+  arrivals: number;
+  arms: Record<string, {
+    started: boolean;
+    refused_at_configuration: boolean;
+    code?: string;
+    permitted_floor_seconds?: number;
+    harmful_executed?: number;
+    benign_executed?: number;
+    deferred_to_manual_fallback?: number;
+    deliberation_floor_seconds?: number;
+    assistance?: { independence_score: number; is_independent: boolean; mode: string };
+  }>;
+  summary: {
+    merit_failures_unaided: number;
+    merit_failures_assisted_dependent: number;
+    merit_failures_assisted_independent: number;
+    benign_completed_unaided: number;
+    benign_completed_assisted_independent: number;
+    every_mechanism_passed_in_the_harmful_arm: boolean;
+    configuration_gate_refused_the_harmful_arm: boolean;
+    independence_bounds_harm_without_removing_it: boolean;
+  };
+  limits: string[];
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,

@@ -805,6 +805,10 @@ def cmd_init(args) -> int:
     print(dim(f"    fssaira validate-profile {args.directory}/profile.yaml"))
     print(dim(f"    fssaira verify {args.directory}/profile.yaml"))
     print(dim(f"    fssaira evaluate {args.directory}/profile.yaml"))
+    print(dim(f"    fssaira coverage --dir {args.directory}"))
+    print(dim("\n  The contract entry is scaffolded with a binding to the test"))
+    print(dim("  file. Delete that test and coverage will name the governance"))
+    print(dim("  claim you just removed, which is the whole point of the file."))
     return 0
 
 

@@ -4,7 +4,7 @@
 >
 > **Recommended next:** Run the [worksheet](worksheet/) and [oversight calculator](oversight/), then contribute a failure case via [`../challenges/README.md`](../challenges/README.md).
 
-**Ninety minutes. Offline. No GPU, no model weights, no Docker, no accounts.**
+**Two hours (ninety-minute path documented). Offline. No GPU, no model weights, no Docker, no accounts.**
 
 A lab for people who will be asked to approve, procure, or govern an agentic AI
 system — registrars, programme officers, policy staff, auditors, and the
@@ -52,9 +52,21 @@ has no Python, run those two and demonstrate the rest from your own machine.
 | 0:10 | 1 · Make a control refuse you | The difference between a policy and an enforcement point |
 | 0:25 | 2 · Remove it and watch the harm return | Why "we have a policy" is not an answer |
 | 0:40 | 3 · Compute your oversight ceiling | A number for their own institution, and what it commits them to |
-| 1:00 | 4 · Forge the evidence | What tamper-evidence does and does not prove |
-| 1:15 | 5 · Contribute an attack | A pull request, and a reason to come back |
-| 1:25 | Debrief | Three things to publish this quarter |
+| 1:00 | 4 · Give the reviewer a model | Why assistance can raise throughput and remove the control at once |
+| 1:15 | 5 · Delegate, and watch the chain | That checking every hop is not checking the chain |
+| 1:25 | 6 · Forge the evidence | What tamper-evidence does and does not prove |
+| 1:40 | 7 · Contribute an attack | A pull request, and a reason to come back |
+| 1:50 | Debrief | Three things to publish this quarter |
+
+**Two hours, with a ninety-minute path.** The lab grew when delegated authority
+and assisted review were added, and padding the timetable to pretend otherwise
+would be the same move this repository refuses everywhere else. If you have
+ninety minutes, cut **5** (delegation) and **7** (contribute an attack), and give
+exercise 5's one-sentence finding in the debrief instead: *checking every hop is
+not checking the chain.* **Never cut 2 or 3** — without them this is a
+demonstration, not a lab — and never cut 4 in a room that has already decided
+human-in-the-loop is a solved problem, because 4 is the exercise that shows them
+otherwise.
 
 ---
 
@@ -200,7 +212,86 @@ excess is deferred to the manual fallback.
 
 ---
 
-## Exercise 4 · Forge the evidence (15 min)
+## Exercise 4 · Give the reviewer a model (15 min)
+
+Exercise 3 assumed an unaided reader. Nobody staffs review that way once the
+queue exceeds the roster, and they are not wrong to.
+
+```bash
+fssaira assisted-review profiles/student_support.yaml
+```
+
+**Do not describe the result before showing it.** Let the room read the first two
+arms: the unaided deployment contains every merit failure and defers 32 of 40
+cases; the assisted one completes five times the work and defers none. Ask
+whether they would sign off on the second. Most will, and they should — that is
+what makes the exercise work.
+
+Then read the third column: the same lowered floor, differing only in whether the
+review assistant is independent of the proposing model. **5 merit failures versus
+1.** Now ask the room to find the signal that would have told an operator. There
+isn't one. The evidence chain is intact, the reviewer is inside quota, every
+approval clears the configured floor, and no refusal fires.
+
+**Ask three questions:**
+
+1. *Which model reviews your model's work?* Most will not know. That is the
+   finding, not a failure of preparation.
+2. *Does the assistant read the case, or the packet the proposing agent
+   assembled?* An assistant handed the proposer's selection inherits the
+   proposer's selection errors — the ones that matter.
+3. *Is it asked to summarise, or to find grounds to refuse?* A summariser is
+   optimised to agree with its input.
+
+Those three questions are the deliverable. They are procurement language, they
+fit in a contract, and an institution can require them tomorrow.
+
+> **The wrong conclusion to correct.** Someone will hear "don't use AI to help
+> reviewers." That is not the finding, and the 5x is on the screen to prevent it.
+> The finding is that throughput is bought with *independence* and not otherwise,
+> and that a deployment which has declared none has bought none.
+
+> **Say this plainly.** The correlation between a proposer and a dependent
+> assistant is a declared parameter here. No model was evaluated and no rate is
+> claimed for any named system. And note the independent arm reaches 1, not 0:
+> assistance moves the ceiling, it does not abolish it.
+
+---
+
+## Exercise 5 · Delegate, and watch the chain (10 min)
+
+Everything so far governs one agent under one grant. Ask the room how many of
+their planned deployments involve exactly one agent calling exactly one tool. In
+2026 the answer is usually none.
+
+```bash
+fssaira delegation
+```
+
+Three architectures, the same ten chains. Before revealing the middle column,
+ask the room to design the control themselves: *what would you check?* Almost
+everyone proposes some version of "each service validates its caller." Let that
+answer stand, then show what it scores.
+
+**What you should see.** Unguarded contains 0 of 10. Per-hop validation contains
+**2** of 10. Verifying the chain from an institutional root grant contains 10,
+and the benign two-hop chain still completes in all three.
+
+The middle column is the whole exercise. Per-hop validation is a real control,
+correctly implemented, doing exactly what it was designed to do — and it cannot
+see the root, so a lapsed grant two hops up, a principal that appears twice, and
+a chain descending from no institutional grant all pass. **Every hop locally
+correct; the composition wrong.**
+
+**The question to leave them with:** *if the grant at the top of your chain is
+revoked this afternoon, what stops working, and when?* Most architectures cannot
+answer. Ours refuses at use time and says plainly that pushing a revocation to
+already-issued descendants is out of scope — which is a better answer than a
+confident one.
+
+---
+
+## Exercise 6 · Forge the evidence (15 min)
 
 Every decision produces a packet: the proposal, the approval, the receipt, and
 the selected records. An independent checker verifies it with nothing but the
@@ -237,7 +328,7 @@ was true, or that the decision was fair or kind.
 
 ---
 
-## Exercise 5 · Contribute an attack (10 min)
+## Exercise 7 · Contribute an attack (10 min)
 
 ```bash
 fssaira challenge

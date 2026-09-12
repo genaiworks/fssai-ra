@@ -1,4 +1,4 @@
-# The seven fields as procurement questions
+# The seven fields as procurement questions, and two more
 
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
 >
@@ -156,6 +156,77 @@ Under load or outage, the people it serves are simply not served.
 
 ---
 
+# Two questions the seven fields do not ask
+
+The seven fields describe one capability held by one agent and approved by one
+human. Both halves of that sentence are now usually false in a real deployment,
+and each false half has its own question. Neither requires the supplier to
+disclose anything proprietary; both are answerable in writing.
+
+## 8 · Delegated authority
+
+> *Does this agent ask other agents, or other services, to act for it — and when
+> it does, whose authority executes?*
+
+**Strong.** The supplier can name the maximum delegation depth, states that a
+delegate's authority is the intersection of every grant in the chain rather than
+the last one declared, and can say what happens when an intermediate grant
+expires or is revoked. Best answer: the executor recomputes conferred authority
+from an institutional root grant on every call, and a chain is bound to the
+principal presenting it.
+
+**Weak.** "Each service validates its caller." This is a real control and it is
+not the same thing. A per-hop check cannot see the root, so a lapsed grant two
+hops up, a principal that appears twice in the chain, and a chain that descends
+from no institutional grant at all are invisible to it. Ask specifically: *if
+agent A's authority expires, does agent C — which A delegated to via B — stop
+working?* A supplier who cannot answer has not modelled the chain.
+
+**Also weak.** "Our agents don't delegate." Ask whether the product calls tool
+servers, plugins, MCP servers, or any component the supplier did not write. If
+it does, it delegates; it just has not called it that.
+
+**If no answer arrives:** authority in this system is a bearer token. Anyone
+holding a valid context can present it, and the question *who was allowed to do
+this* has no answer that survives more than one hop.
+
+## 9 · Independence of review assistance
+
+> *If a model helps our reviewers decide, is that model independent of the model
+> that produced the proposal?*
+
+This is the question to ask if you ask only one of the two. A supplier will often
+offer review assistance as a feature — it raises throughput, genuinely and
+substantially — and the deliberation time your officers spend will fall
+accordingly. That is fine only if the assistant is a second opinion rather than
+the same opinion twice.
+
+**Strong.** All three of these, stated in the contract:
+
+| | What to require | Why |
+|---|---|---|
+| **Different model** | a different family or provider from the proposing model | two instances of the same model with different prompts do not qualify; the correlated error is in the weights, not the prompt |
+| **Different evidence path** | the assistant reads the authoritative record, not the packet the proposing agent assembled | an assistant handed the proposer's selection inherits the proposer's selection errors, which are the ones that matter |
+| **Adversarial posture** | tasked with finding grounds to refuse and naming what is missing, not with summarising | a summariser is optimised to agree with its input; its failure mode on a wrong proposal is a fluent summary of a wrong proposal |
+
+**Weak.** "The same model, with a reviewer prompt." "It summarises the case for
+the officer." Both describe the proposer's reasoning arriving a second time in a
+reviewer's badge. On exactly the cases where the proposal was substantively wrong
+— ineligible applicant, evidence that does not support the recommendation, a case
+that needed a conversation — the assistant is wrong the same way and confident
+about it, and your officer ratifies. Every log will say a human approved it.
+
+**The follow-up that matters:** *what deliberation time does your system expect
+per case with assistance enabled, and what did it expect without?* If the number
+falls and none of the three independence properties hold, the supplier has sold
+you throughput and charged your oversight for it.
+
+**If no answer arrives:** treat the assistant as no assistance for the purposes
+of review capacity, and keep the unaided review time in your own planning. You
+can always relax that later; you cannot recover a year of approvals nobody read.
+
+---
+
 ## Scoring the answers
 
 Do not score this as a percentage. Count blocking findings.
@@ -169,6 +240,8 @@ Do not score this as a percentage. Count blocking findings.
 | Failure test | a warning | **blocking** |
 | Evidence artifact | a warning | **blocking** |
 | Failure response | a warning | **blocking** |
+| Delegated authority | a warning | **blocking** *if the product calls any component the supplier did not write* |
+| Review-assistance independence | **blocking** *if assistance is offered and any of the three properties is absent* | **blocking** |
 
 **One blocking finding is enough to defer.** Not to reject — to defer, with the
 finding named, until it is closed. Most suppliers can close these; many have
@@ -176,7 +249,7 @@ simply never been asked in these terms.
 
 ---
 
-## Three questions to ask about the supplier's own evidence
+## Four questions to ask about the supplier's own evidence
 
 Separate from the seven fields, and worth more than a demonstration:
 
@@ -191,6 +264,15 @@ Separate from the seven fields, and worth more than a demonstration:
    either not looked or is not telling you. Ask for the list; compare it with
    [`docs/ASSURANCE.md`](ASSURANCE.md) in this repository, which is what such a
    list looks like when someone has actually written one.
+
+4. **"Which of your controls has an executable test, and which has a written
+   one?"** The distinction is not pedantic. A control described in a design
+   document and bound to nothing that runs disappears the first time someone
+   refactors, and nothing goes red. We found eighteen of those in our own
+   contract by building a check for exactly this; `fssaira coverage` is what the
+   answer looks like when it is measured rather than asserted. A supplier who
+   has never separated the two has not been asked before, which is worth knowing
+   either way.
 
 ---
 

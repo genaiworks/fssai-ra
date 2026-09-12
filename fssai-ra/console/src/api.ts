@@ -1,8 +1,8 @@
 import { ApiError } from "./types";
 import type {
-  Approval, Capability, ConformanceReport, EvidencePage, ExecutionResult, Health,
-  InterfaceInventory, ModelProposal, Profile, Proposal, Readiness, Requirement,
-  VerificationReport,
+  Approval, AssistedReviewReport, Capability, ConformanceReport, CoverageReport,
+  DelegationReport, EvidencePage, ExecutionResult, Health, InterfaceInventory,
+  ModelProposal, Profile, Proposal, Readiness, Requirement, VerificationReport,
 } from "./types";
 
 // Resolved defensively: import.meta.env exists under Vite but not in a plain
@@ -103,6 +103,9 @@ export const api = {
 
   verification: () => call<VerificationReport>("/v1/verification"),
   conformance: () => call<ConformanceReport>("/v1/conformance"),
+  coverage: () => call<CoverageReport>("/v1/coverage"),
+  delegation: () => call<DelegationReport>("/v1/delegation"),
+  assistedReview: () => call<AssistedReviewReport>("/v1/assisted-review"),
 
   proposeTask: (task: string, evidence: string[]) =>
     call<{ model: string; proposals: ModelProposal[]; note: string }>("/v1/propose-task", {

@@ -67,3 +67,46 @@ def test_the_lab_states_what_it_does_not_measure(lab):
 def test_the_lab_keeps_the_exercises_that_carry_the_argument(lab):
     """Cutting exercise 2 or 3 leaves a demonstration, not a lab."""
     assert "Never cut 2 or 3" in lab
+
+
+def test_the_lab_timetable_adds_up_to_the_duration_it_advertises(lab):
+    """The lab grew and its headline duration did not, until this test existed.
+
+    Every exercise heading states its own length and the timetable states a start
+    time for each. Those two must agree with the total the lab advertises, or a
+    facilitator plans a ninety-minute slot around a session that needs two hours
+    — which is a real failure in a room, not a documentation nit.
+    """
+    import re
+
+    durations = [int(m) for m in re.findall(r"^## Exercise \d+ · .+ \((\d+) min\)", lab, re.M)]
+    assert len(durations) >= 6, f"expected the full exercise sequence, found {len(durations)}"
+
+    starts = re.findall(r"^\| (\d):(\d\d) \| ", lab, re.M)
+    assert starts, "the timetable should state a start time for each exercise"
+    minutes = [int(h) * 60 + int(m) for h, m in starts]
+    assert minutes == sorted(minutes), "timetable start times are out of order"
+
+    # Each start time must equal the previous start plus the previous exercise's
+    # stated length. The debrief is the final row and carries no "(N min)".
+    for index, duration in enumerate(durations):
+        expected = minutes[index] + duration
+        actual = minutes[index + 1]
+        assert actual == expected, (
+            f"exercise {index} runs {duration} min from {minutes[index]}, so the next "
+            f"row should start at {expected}, not {actual}"
+        )
+
+    total = minutes[-1] + 5  # the debrief
+    advertised_two_hours = "Two hours" in lab
+    assert advertised_two_hours, "the lab header should state its real duration"
+    assert 100 <= total <= 125, (
+        f"the timetable totals {total} minutes, which no longer reads as 'two hours'; "
+        "update the header and every doc that cites the duration"
+    )
+
+
+def test_the_lab_documents_what_to_cut_for_a_shorter_slot(lab):
+    """A facilitator with ninety minutes needs the cut named, not left to them."""
+    assert "ninety-minute path" in lab
+    assert "Never cut 2 or 3" in lab

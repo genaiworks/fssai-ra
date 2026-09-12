@@ -118,3 +118,44 @@ def test_assurance_endpoints_run_on_the_configured_backends():
 
     conformance = client.get("/v1/conformance", headers=OPERATOR).json()
     assert conformance["summary"]["conformant"] is True
+
+
+def test_the_composition_assurance_endpoints_publish_their_own_figures():
+    """Coverage, delegation and assisted review are published like conformance.
+
+    An operator replacing a component needs the same three answers about the
+    newer controls that they already get about the older ones: does it hold, on
+    what, and what does it not establish.
+    """
+    client = build_client()
+
+    coverage = client.get("/v1/coverage", headers=OPERATOR).json()
+    assert coverage["totals"]["unverified"] == 0, (
+        "a requirement describing a failure test and binding it to nothing "
+        "should be visible on the deployment's own assurance endpoint"
+    )
+    assert coverage["totals"]["machine_verified"] > 0
+    assert coverage["limits"]
+
+    delegation = client.get("/v1/delegation", headers=OPERATOR).json()
+    arms = delegation["arms"]
+    assert arms["this_architecture"]["contained"] == delegation["hostile_chains"]
+    assert arms["this_architecture"]["benign_chain_completed"] is True
+    assert arms["caller_checked"]["contained"] < arms["this_architecture"]["contained"]
+    assert delegation["verification"]["holds"] is True
+    assert all(row["load_bearing"] for row in delegation["ablations"])
+
+    assisted = client.get("/v1/assisted-review", headers=OPERATOR).json()
+    summary = assisted["summary"]
+    assert summary["configuration_gate_refused_the_harmful_arm"] is True
+    assert summary["dependent_assistance_reintroduced_harm"] is True
+    assert any("declared parameter" in line for line in assisted["limits"]), (
+        "the endpoint must carry the caveat that no model was evaluated"
+    )
+
+
+def test_the_composition_endpoints_require_the_operator_role():
+    """They run real checks and publish deployment posture; they are not public."""
+    client = build_client()
+    for path in ("/v1/coverage", "/v1/delegation", "/v1/assisted-review"):
+        assert client.get(path).status_code == 401, f"{path} is reachable unauthenticated"

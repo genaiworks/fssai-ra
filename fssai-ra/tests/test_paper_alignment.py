@@ -378,6 +378,29 @@ def test_no_readme_overstates_the_test_count(path, figures):
         )
 
 
+def test_the_reviewer_guide_quotes_the_current_test_count(figures):
+    """The reviewer guide tells a sceptic what ``pytest`` will print.
+
+    It was the one front-door document outside ``READMES`` quoting a figure, and
+    it drifted to 394 while the suite grew past 470. A reviewer who runs the
+    command and sees a different number has been given a reason to doubt every
+    other figure in the repository, which is an expensive way to lose an argument
+    you were winning.
+    """
+    guide = ROOT / "docs" / "REVIEWERS.md"
+    assert guide.exists(), f"{guide} is missing"
+    quoted = [
+        int(value.replace(",", ""))
+        for value in re.findall(r"`(\d[\d,]*) passed`", guide.read_text(encoding="utf-8"))
+    ]
+    assert quoted, "the reviewer guide should say what a passing run prints"
+    for count in quoted:
+        assert count == figures["test_count"], (
+            f"docs/REVIEWERS.md says `{count} passed` but the suite has "
+            f"{figures['test_count']} tests"
+        )
+
+
 @pytest.mark.parametrize("path", READMES, ids=lambda p: p.parent.name + "/README.md")
 def test_no_readme_quotes_a_stale_oversight_capacity(path, figures):
     """Both READMEs lead with the oversight figure, so both are checked.

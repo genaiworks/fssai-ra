@@ -2,9 +2,16 @@
 
 | File | What it is |
 |---|---|
-| [`extended-abstract.md`](extended-abstract.md) | **The submission.** ~1,500 words for the UNU Macau AI Conference 2026 and its UNU–Springer proceedings. |
-| [`SUBMISSION.md`](SUBMISSION.md) | Checklist, deadline, and what to paste where. |
+| [`extended-abstract.md`](extended-abstract.md) | **The proceedings version.** The full argument for the UNU Macau AI Conference 2026 and its UNU–Springer proceedings. |
+| [`form-ready-abstract.md`](form-ready-abstract.md) | **What goes in the form.** Written to the submission form's four capped fields, validated by `scripts/check_submission.py`, and plain ASCII so it pastes without mojibake. |
+| [`composition-supplement.md`](composition-supplement.md) | Delegated authority and assisted review in full — the two contributions the abstract states in compressed form. |
+| [`empirical-supplement.md`](empirical-supplement.md) | Recovery and replay identity: process races and abrupt-exit recovery after the `v1.0.0` baseline. |
+| [`SUBMISSION.md`](SUBMISSION.md) | Checklist, deadline, what to paste where, and the order to cut in if a hard word cap applies. |
 | [`archive/`](archive/) | Superseded versions, kept for provenance. Do not cite these. |
+
+Both supplements are held to the same standard as the abstract: their figures are
+generated, and `tests/test_paper_alignment.py` fails the build if the prose and a
+fresh run disagree. A supplement is where detail goes, not where checking stops.
 
 ## The alignment guarantee
 
@@ -27,15 +34,22 @@ pytest tests/test_paper_alignment.py        # confirm the prose still matches
 
 ## Word count
 
-The call asks for approximately 1,500 words. The body (sections 1–5, excluding
-the metadata header and the closing note) is checked to stay between 1,300 and
-1,600 by `test_the_word_count_fits_the_submission_guidance`.
+The call asks for approximately 1,500 words. The body — every numbered section,
+excluding the metadata header and the references — is checked to stay between
+1,300 and **1,900** by `test_the_word_count_fits_the_submission_guidance`.
+
+The upper bound was 1,650 while the abstract argued three contributions. It was
+raised deliberately when three more were added — the contract's own coverage,
+assisted review, and delegated authority — and the reason is recorded in that
+test's docstring rather than here, so it travels with the assertion. The existing
+sections were compressed to pay for most of the increase.
+
+`form-ready-abstract.md` is the artifact written to the form's caps and is
+unaffected. If a hard cap must be met on the proceedings version too,
+[`SUBMISSION.md`](SUBMISSION.md) names the cut order; the limits section is never
+what gets cut.
 
 ```bash
-python - <<'PY'
-import re, pathlib
-text = pathlib.Path("paper/extended-abstract.md").read_text()
-body = text[text.index("## 1."):text.index("---\n\n*Full paper")]
-print(len(re.findall(r"[A-Za-z0-9'’\-]+", body)), "words")
-PY
+python scripts/check_submission.py            # the form fields still fit
+pytest tests/test_paper_alignment.py -k word  # the body is inside the bound
 ```

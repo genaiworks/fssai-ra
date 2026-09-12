@@ -42,7 +42,7 @@ git clone https://github.com/genaiworks/fssai-ra.git
 cd fssai-ra/fssai-ra
 pip install -e ".[dev]"
 
-pytest                                            # 461 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # 478 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
@@ -90,7 +90,7 @@ Two artifacts make this usable without installing anything: the
 [oversight calculator](docs/oversight/) works out an institution's ceiling in a
 browser, offline, sending nothing anywhere — and a test runs its JavaScript
 against the Python to prove the two agree — and [`docs/LAB.md`](docs/LAB.md) is a
-ninety-minute lab in which participants remove a control and watch the harm
+two-hour lab in which participants remove a control and watch the harm
 return.
 
 **The reviewer now has a model too, and that breaks the control above.** The

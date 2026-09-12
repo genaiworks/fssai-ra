@@ -144,6 +144,69 @@ and tests whether the control binds at it.
 If demand exceeds the ceiling, the deferral count is the answer, not a parameter
 to loosen. Publish the ceiling before the automation roadmap.
 
+## Bind every contract entry to something that runs
+
+A contract entry has seven fields and one of them is a failure test. Writing the
+sentence is not the same as having the test, and nothing used to notice the
+difference:
+
+```bash
+fssaira coverage --dir contract
+```
+
+Every requirement must end up in one of two places. Either an executable check is
+**bound** to it in `contract/bindings/`, naming the mechanism and a locator that
+is itself checked to exist — or the contract entry declares
+`verified_by: organizational` with an `attested_by` role and an
+`attestation_cadence`, for the controls no program can prove: key custody, a
+signed interface inventory, a manual fallback a real person will staff.
+
+Anything else is reported as **unverified**, and that number is printed rather
+than buried. Ours was 18 of 28 the first time we measured it. The bindings file
+is deliberately separate from the contract because the contract is your
+institution's document and the bindings are your implementation's claim about it;
+replace the implementation and you rewrite only the second.
+
+## Say what happens when your agent asks another agent
+
+If your workflow has one agent calling one tool, skip this. If it calls a tool
+server, a plugin, a sub-agent, or anything your team did not write, authority
+composes and the single-agent controls do not cover the composition:
+
+```bash
+fssaira delegation --max-depth 3
+```
+
+Declare two things. **How deep** delegation may go — an accountability bound
+rather than a security one, because past some length nobody can answer who
+decided. And **whether a machine may pass on consequential authority at all**;
+the default is no, because a named human approved *this* agent acting, not an
+open-ended population of its successors.
+
+Then check the property that per-hop validation cannot give you: a chain confers
+the *intersection* of every grant along it, recomputed from your institutional
+root grant, and it authorises the principal presenting it and no other.
+
+## Declare the independence of anything that reviews your model's work
+
+If reviewers in your deployment get a model assistant — and at scale they will —
+the deliberation floor you set is only defensible in proportion to how
+independent that assistant is of the model writing the proposals:
+
+```bash
+fssaira assisted-review profiles/your_profile.yaml --lowered-floor 10
+```
+
+Three declarations, all contractible: a different model from the proposer, an
+evidence path that is not the proposer's assembled packet, and an adversarial
+posture. Declare fewer and the gate refuses the lowered floor at startup rather
+than letting the deployment run with an oversight control that has quietly become
+a formality.
+
+This is an attestation, not a verification. Nothing here inspects which model you
+actually call, and the correlation between a proposer and a dependent assistant
+is a declared parameter — ours, until someone measures it on real systems.
+
 ## Contribute the attack we did not think of
 
 Every attack in this repository was written by the people who built the defence.

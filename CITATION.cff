@@ -12,7 +12,11 @@ abstract: >-
   authority boundaries of agentic AI. It implements a seven-field control
   contract, bounded model checking of a governance profile's declared authority
   space, ablation-measured authority coverage, and a portable conformance suite
-  so that replacing a backend does not silently void the assurance argument.
+  so that replacing a backend does not silently void the assurance argument. It
+  additionally verifies delegated authority across chains of agents, models
+  human review as a finite resource whose ceiling moves but does not disappear
+  when reviewers are given an AI assistant, and measures whether each contract
+  requirement is bound to a check that runs or only to a sentence.
 version: "1.0.0"
 date-released: "2026-09-11"
 license: Apache-2.0
@@ -26,6 +30,9 @@ keywords:
   - sovereign AI
   - digital public goods
   - education
+  - delegated authority
+  - multi-agent systems
+  - human oversight capacity
 preferred-citation:
   type: conference-paper
   title: "Trust by Construction: A Testable Architecture for Sovereign AI Agents in Education"

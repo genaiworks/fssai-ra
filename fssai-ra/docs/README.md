@@ -94,7 +94,7 @@ backend, and rerun the same conformance properties.
 
 1. [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) — learning outcomes and assessment
    rubric.
-2. [`LAB.md`](LAB.md) — the complete ninety-minute facilitator sequence.
+2. [`LAB.md`](LAB.md) — the complete two-hour facilitator sequence, with a ninety-minute path.
 3. [Authority Boundary Worksheet](worksheet/) — a browser-only seven-field
    exercise.
 4. [Oversight Capacity Calculator](oversight/) — a browser-only exercise using
@@ -126,9 +126,12 @@ domain. No learning gain is claimed until it is measured.
    validated form fields.
 3. [`../paper/extended-abstract.md`](../paper/extended-abstract.md) — the readable
    proceedings-oriented version.
-4. [Maintained browser deck](presentation/slides.html) — the current presentation.
-5. [Maintained panel script](presentation/speaker-script.md) — timings and cut
-   paths for 5, 8, 10, or 14 minutes.
+4. [`../paper/composition-supplement.md`](../paper/composition-supplement.md) —
+   delegated authority and assisted review in full, for questions the abstract
+   compresses.
+5. [Maintained browser deck](presentation/slides.html) — the current presentation.
+6. [Maintained panel script](presentation/speaker-script.md) — timings and cut
+   paths for 5, 10, 12, or 16 minutes.
 
 The following files are retained for provenance and are **not the rehearsal
 source**: [`speaker-script.md`](speaker-script.md) and

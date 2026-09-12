@@ -1240,6 +1240,246 @@
         }
       }
     },
+    "/v1/coverage": {
+      "get": {
+        "tags": [
+          "assurance"
+        ],
+        "summary": "Run Contract Coverage",
+        "description": "Is each control-contract requirement enforced, or only written down?\n\nPublished alongside a deployment for the same reason the conformance\nreport is: an operator replacing a component needs to know which\ngovernance claims are backed by something that runs, which rest on a\nnamed role's attestation, and which rest on nothing.",
+        "operationId": "run_contract_coverage_v1_coverage_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/delegation": {
+      "get": {
+        "tags": [
+          "assurance"
+        ],
+        "summary": "Run Delegation Check",
+        "description": "What a chain of agents confers, across three architectures.\n\nReports the scenario suite, the per-invariant ablations, and the bounded\nenumeration of the declared chain space. The deployment's own delegation\npolicy is reported with it, because the depth bound and the\nconsequential-delegation rule are declared configuration rather than\nconstants.",
+        "operationId": "run_delegation_check_v1_delegation_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assisted-review": {
+      "get": {
+        "tags": [
+          "assurance"
+        ],
+        "summary": "Run Assisted Review Check",
+        "description": "What a review assistant does to this deployment's oversight claim.\n\nThe arms differ only in the declared independence of the assistant. The\nfigures are fixture observations against a declared correlation, never a\nmeasurement of any model \u2014 the response says so in its own limits.",
+        "operationId": "run_assisted_review_check_v1_assisted_review_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/propose-task": {
       "post": {
         "tags": [

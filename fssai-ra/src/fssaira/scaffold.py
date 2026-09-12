@@ -61,6 +61,34 @@ requirements:
     failure_response: What happens instead, and who performs it
 """
 
+BINDINGS = """\
+# Which executable check enforces which contract requirement.
+#
+# Separate from contract.yaml on purpose: the contract is your institution's
+# document, and this file is your implementation's claim about it. Replace the
+# implementation and you rewrite only this half.
+#
+# `fssaira coverage --dir .` reports every requirement as machine-verified,
+# organizationally attested, or **unverified**. A new domain starts unverified,
+# which is correct: you have written the failure test as a sentence and not yet
+# as a test. Bind it here once it runs.
+#
+# Mechanisms, loosely ordered by strength of evidence:
+#   model_check · conformance · ablation · scenario · unit_test · attestation
+#
+# The locator is checked to exist. A binding pointing at a test you have not
+# written yet is a governance claim with nothing behind it, which is the exact
+# failure this file exists to make visible.
+bindings:
+  - requirements: [{prefix}-1]
+    mechanism: unit_test
+    locator: {directory}/test_{domain_id_snake}.py::test_replace_me_with_the_attack_that_matters_in_your_domain
+    note: >-
+      Replace this note with what the test actually establishes. If you delete
+      the test, `fssaira coverage` will tell you which governance claim went
+      with it.
+"""
+
 TEST = '''\
 """Executable tests for the {title} domain.
 
@@ -182,6 +210,10 @@ def scaffold_domain(
     files = {
         "profile.yaml": PROFILE,
         "contract.yaml": CONTRACT,
+        # `fssaira coverage` reads bindings from a `bindings/` directory beside
+        # the contract, so a new domain is scaffolded in the shape the tool
+        # expects rather than in one an adopter has to discover.
+        "bindings/core.yaml": BINDINGS,
         f"test_{snake}.py": TEST,
         "ASSURANCE.md": ASSURANCE,
         "README.md": README,
@@ -191,6 +223,7 @@ def scaffold_domain(
         path = directory / name
         if path.exists():
             continue
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(template.format(**context), encoding="utf-8")
         created.append(path)
     return created

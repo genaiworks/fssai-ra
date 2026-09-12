@@ -366,6 +366,57 @@ def create_app(
         )
         return run_conformance(bundle).to_dict()
 
+    @app.get("/v1/coverage", tags=["assurance"])
+    def run_contract_coverage(caller: Caller):
+        """Is each control-contract requirement enforced, or only written down?
+
+        Published alongside a deployment for the same reason the conformance
+        report is: an operator replacing a component needs to know which
+        governance claims are backed by something that runs, which rest on a
+        named role's attestation, and which rest on nothing.
+        """
+        from .coverage import measure_coverage
+
+        directory = os.getenv("FSSAI_CONTRACT_DIR", "contract")
+        try:
+            return measure_coverage(directory).to_dict()
+        except (OSError, ValueError) as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=f"the control contract could not be read from {directory!r}: {exc}",
+            ) from exc
+
+    @app.get("/v1/delegation", tags=["assurance"])
+    def run_delegation_check(caller: Caller):
+        """What a chain of agents confers, across three architectures.
+
+        Reports the scenario suite, the per-invariant ablations, and the bounded
+        enumeration of the declared chain space. The deployment's own delegation
+        policy is reported with it, because the depth bound and the
+        consequential-delegation rule are declared configuration rather than
+        constants.
+        """
+        from .delegation import verify_delegation_space
+        from .delegation_eval import ablate_delegation, run_delegation_suite
+
+        return {
+            **run_delegation_suite().to_dict(),
+            "ablations": ablate_delegation(),
+            "verification": verify_delegation_space().to_dict(),
+        }
+
+    @app.get("/v1/assisted-review", tags=["assurance"])
+    def run_assisted_review_check(caller: Caller):
+        """What a review assistant does to this deployment's oversight claim.
+
+        The arms differ only in the declared independence of the assistant. The
+        figures are fixture observations against a declared correlation, never a
+        measurement of any model — the response says so in its own limits.
+        """
+        from .assisted_review import run_assisted_review_trial
+
+        return run_assisted_review_trial(plane.profile)
+
     # -- bounded intelligence ---------------------------------------------
     @app.post("/v1/propose-task", tags=["intelligence"])
     def propose_task(request: ProposeTask, caller: Caller):

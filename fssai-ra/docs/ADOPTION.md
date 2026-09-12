@@ -148,6 +148,9 @@ method decays into a vocabulary.
 | **Demand against that ceiling** | Count consequential actions per day; compare | That deferrals are a defect. They are the gap between demand and declared capacity, and reporting them is the point |
 | Approval latency and reviewer effort | Instrument it; we have not | Anything at all — we have not measured this and neither have you, yet |
 | Recovery time after a denied action | Time the manual fallback with a real person | That the fallback works because it is documented |
+| **Contract coverage** | `fssaira coverage` on your own contract | That a machine-verified control is *adequate*. It means the control is not imaginary, which is a lower bar than it sounds and one most contracts fail |
+| **Delegation depth actually in use** | Count the hops between your institutional grant and whatever finally calls a tool | That a shallow chain is a safe one. Depth is an accountability bound, not a security one |
+| **Review-assistant independence** | Answer three questions in writing: different model, different evidence path, adversarial posture | That declaring independence establishes it. Nothing inspects which model your vendor actually calls — this is an attestation, and should be contracted as one |
 
 The last row is the one institutions skip. A manual fallback nobody has walked
 through is a paragraph, not a service.
@@ -187,6 +190,26 @@ the write path. It is cheaper on day 1 than on day 200.
 
 **"Copy the student-support assurance table and change the nouns."** See above.
 This is the one that quietly destroys the method while appearing to adopt it.
+
+**"We gave the reviewers an AI assistant, so the ceiling went up."** It did — and
+only in proportion to how independent that assistant is of the model writing the
+proposals. If it is the same model reading the same evidence packet, it is not a
+second opinion, it is the first one twice, and it agrees on exactly the cases
+where agreeing is the failure. Recompute the ceiling, write the three
+independence properties into the contract, and keep the unaided review time in
+your planning until you can evidence otherwise. You can relax that later; you
+cannot recover a year of approvals nobody read.
+
+**"Each service validates its caller, so delegation is handled."** That is a real
+control and it is not the same thing. It cannot see the root of the chain, so a
+grant that lapsed two hops up, a principal that appears twice, and a chain
+descending from no institutional grant all pass it. Ask the question that
+separates the two: *if the grant at the top is revoked this afternoon, what stops
+working, and when?*
+
+**"Our agents don't delegate."** Do they call a tool server, a plugin, or any
+component your team did not write? Then they delegate; it has simply not been
+called that, and nobody has written down what authority goes with the call.
 
 ---
 

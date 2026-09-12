@@ -155,3 +155,47 @@ def test_coverage_counts_are_internally_consistent():
         report.machine_verified + report.organizationally_attested + report.unverified
         == report.total
     )
+
+
+def test_a_scaffolded_domain_starts_bound_rather_than_unverified(tmp_path):
+    """`fssaira init` must produce a domain that passes its own coverage check.
+
+    An adopter who scaffolds a domain and immediately reads "1 unverified" has
+    been handed the project's own worst finding as their starting state. The
+    scaffold therefore writes a bindings file pointing at the test file it also
+    writes, so the first thing a new domain demonstrates is the binding working.
+    """
+    from fssaira.scaffold import scaffold_domain
+
+    created = scaffold_domain(tmp_path / "newdomain", domain_id="newdomain")
+    names = {path.name for path in created}
+    assert "contract.yaml" in names
+    assert "core.yaml" in names, "the scaffold should write a bindings file"
+
+    report = measure_coverage(str(tmp_path / "newdomain"))
+    assert report.total >= 1
+    assert report.unverified == 0, (
+        "a freshly scaffolded domain reports an unverified requirement: "
+        f"{report.unverified_ids}"
+    )
+    assert report.machine_verified >= 1
+
+
+def test_the_scaffolded_binding_points_at_the_test_the_scaffold_wrote(tmp_path):
+    """The binding must be real on arrival, not a placeholder to fix later."""
+    from fssaira.scaffold import scaffold_domain
+
+    root = tmp_path / "newdomain"
+    scaffold_domain(root, domain_id="newdomain")
+    bindings = load_bindings(str(root))
+    assert bindings, "the scaffold wrote no bindings"
+
+    for binding in bindings:
+        path, _, symbol = binding.locator.partition("::")
+        # The locator is written relative to the directory the adopter passed to
+        # `fssaira init`, so resolve it by basename against the scaffold root.
+        candidate = root / os.path.basename(path)
+        assert candidate.exists(), f"binding names {path}, which the scaffold did not write"
+        assert symbol in candidate.read_text(), (
+            f"binding names {symbol}, which is not defined in {candidate.name}"
+        )

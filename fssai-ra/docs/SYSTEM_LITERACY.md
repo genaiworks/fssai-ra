@@ -18,9 +18,9 @@ study has yet been conducted.
 | Literacy | Learner can answer | Repository exercise | Inspectable artifact |
 |---|---|---|---|
 | **1 · Data** | Where did this evidence come from, what crossed the boundary, and which version was used? | Reject an invalid import; replay an event; inspect a snapshot | quarantine reason, event identifier, lineage record, snapshot manifest |
-| **2 · Delegation** | Which power was delegated to the agent, which was withheld, and who holds the real write credential? | Propose an allowed action and an unauthorised one; trace both to the enforcement point | capability grant, control contract, proposal digest, denial code |
+| **2 · Delegation** | Which power was delegated to the agent, which was withheld, who holds the real write credential — and what happens when the agent delegates onward? | Propose an allowed action and an unauthorised one; trace both to the enforcement point. Then build a two-hop chain, widen it, and watch the chain verifier refuse | capability grant, control contract, proposal digest, denial code, delegation chain verdict |
 | **3 · Verification** | What was checked independently of the model, and what does that check not prove? | Run bounded verification, conformance, ablation, and the decision-packet forgery lab | invariant result, conformance check, ablation result, packet verdict |
-| **4 · Escalation** | When must automation stop, who takes over, and can that person genuinely review the load? | Compute an oversight ceiling; exceed it; observe deferral to the manual path | capacity declaration, headroom, escalation, recovery owner |
+| **4 · Escalation** | When must automation stop, who takes over, can that person genuinely review the load — and is their AI assistant a second opinion or the same one twice? | Compute an oversight ceiling; exceed it; observe deferral to the manual path. Then enable review assistance and compare a dependent assistant with an independent one | capacity declaration, headroom, escalation, recovery owner, assistance declaration |
 | **5 · Accountability** | Who authorised the exact action, what did they see, what happened, and how can an affected person seek correction? | Inspect proposal → approval → receipt; attempt replay; contribute a failure case | evidence chain, decision packet, replay receipt, correction or appeal route |
 
 These literacies are deliberately about systems rather than brands. FastAPI,
@@ -57,6 +57,20 @@ The assessment is behavioural: an unauthorised proposal must be possible to
 express and impossible to turn into a mutation. A model that is merely prompted
 not to act has not passed.
 
+Then the second half, which is where most real systems now live. Learners build a
+chain — an orchestrator delegating to a sub-agent, which delegates again — and
+try four things in turn: hand onward more authority than they hold; present a
+sibling's chain as their own; let a delegation outlive the grant it descends
+from; and do a narrow agent's work under a broad agent's grant. Each is refused
+with a named code, and `fssaira delegation` shows the same chains against an
+unguarded architecture and against one that checks each hop against its
+immediate delegator only.
+
+That middle column is the lesson. Per-hop validation is a real control and it is
+what most learners will build if asked; it contains two of ten risk classes
+because it cannot see the root. **Every hop locally correct, the composition
+wrong** is the sentence to leave with, and it transfers well beyond agents.
+
 ### 3. Verification literacy: evidence before assurance language
 
 Learners run four different checks because each answers a different question:
@@ -84,6 +98,26 @@ declared reading time to manufacture capacity is not an improvement. Real
 reviewer accuracy, fatigue, accessibility, and queue effects require empirical
 study and remain open work.
 
+Then the exercise most learners will actually face in post. Give the reviewer a
+model assistant and the numbers improve immediately: five times the completed
+work, no deferrals. Ask learners to lower the deliberation floor accordingly —
+which is correct, because an assisted reviewer genuinely decides faster — and
+then run the same queue with an assistant that shares the proposing model and
+its evidence packet.
+
+The merit failures come back, and nothing anywhere says so: the chain is intact,
+the reviewer is inside quota, every approval clears the floor, no refusal fires.
+Learners should sit with that for a moment before being shown the control, which
+binds at *configuration* time for the reason they will have just discovered —
+at runtime the two deployments are identical.
+
+The transferable judgement is not about models. It is that **a check which
+shares its subject's reasoning is not a check**, and that the property doing the
+work — independence — has to be declared before it can be required. The three
+declarations (a different model, a different evidence path, an adversarial
+posture) are the assessable artifact; the correlation between them is a declared
+parameter here and measuring it on real systems is open work.
+
 ### 5. Accountability literacy: contestability as an institutional process
 
 Learners reconstruct a decision from the proposal, exact approval, execution
@@ -96,7 +130,7 @@ reconciliation. It does not implement or validate the quality, timeliness,
 accessibility, or fairness of a real appeal process. Those are institutional
 obligations that the architecture can support but cannot satisfy by itself.
 
-## A 90-minute teach-and-test format
+## A two-hour teach-and-test format
 
 | Time | Activity | Observable learner output |
 |---|---|---|
