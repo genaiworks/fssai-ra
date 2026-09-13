@@ -14,6 +14,11 @@ Its central rule is:
 > **A model may propose an action. It cannot manufacture the authority to
 > execute it.**
 
+Both rules follow from one thesis, stated in [`THESIS.md`](THESIS.md) and tested by
+`fssaira thesis`:
+
+> **Intelligence is untrusted. Power and data are mediated.**
+
 Its second rule governs the read path, where most harm in systems over
 corporate and medical data occurs:
 
@@ -186,6 +191,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`README.md`](README.md) — this map.
 - [`START_HERE.md`](START_HERE.md) — self-directed repository walkthrough.
 - [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — seven-plane cross-sector pattern, invariants, lifecycle, adoption sequence, and policy and engineering gates.
+- [`THESIS.md`](THESIS.md) — the Mediation Thesis: intelligence is untrusted; power and data are mediated. Three commitments, precise invariants, six falsifiers, predictions, and what an institution does next.
 - [`SPECIFICATION.md`](SPECIFICATION.md) — normative requirements in six conformance classes, each tied to an executable test, attestation, or measurement.
 - [`RELATED_WORK.md`](RELATED_WORK.md) — foundations inherited, overlap with CaMeL, FIDES, agent design patterns, and AI control, and the contribution stated narrowly.
 - [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.

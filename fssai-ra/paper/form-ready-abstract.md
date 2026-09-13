@@ -9,11 +9,11 @@
 
 ## Introduction
 
-AI governance still centres on models. The governed object is the whole system that moves data, grants power, acts, records effects, and recovers. Corporate data release, medical record use, and academic correction face different laws yet ask the same questions: who held power, what was seen, what happened, and how can it be challenged?
+AI governance still centres on models. The governed object is the whole system that moves data, grants power, acts, records effects, and recovers. Corporate, medical, and academic systems face different laws yet the same questions: who held power, what was seen, what happened, and how can it be challenged?
 
-This work presents Trust by Construction, a cross-sector reference architecture for governed agentic AI. Two rules anchor it. A model may propose an action; it cannot manufacture the authority to execute it. A model may request information; it cannot manufacture the entitlement to see it, or launder what it saw. Neither rule assumes the model is aligned. Both are enforced outside it: independent gates alone hold write and record credentials, recheck purpose, consent, and revocation at every use, and label outputs by what built them. Authority only narrows as agents delegate; restriction only accumulates as data flows. Every decision leaves evidence the model cannot rewrite. Trust comes from separated duties, not a model, region, or certificate.
+This work presents Trust by Construction and one foundational thesis: intelligence is untrusted; power and data are mediated. Treat every model as capable, persuasive, and possibly misaligned. Route every effect and every flow of protected data through mediators the model cannot bypass. Trust only what is contracted, tested, and evidenced where it is relied on. Two rules follow. A model may propose an action; it cannot manufacture the authority to execute it. A model may request information; it cannot manufacture the entitlement to see it, or launder what it saw.
 
-A seven-field executable contract links policy to code, and domain packs carry each sector's purposes, data classes, and owners. Building on reference monitors, information-flow control, and AI control, the paper offers an open base others can test and extend. Education spreads the method as system literacy; it does not bound it.
+Mediators alone hold write and record credentials, recheck purpose, consent, and revocation at every use, and label outputs by what built them. Authority only narrows; restriction only accumulates. The thesis is falsifiable: one model output that alone causes a governed effect or disclosure refutes it. Building on reference monitors, information-flow control, and AI control, the paper offers an open, testable foundation; education spreads it as system literacy.
 
 ## Development Section 1 Methodology Core Argument and Case Context
 
@@ -49,11 +49,11 @@ Across four synthetic packs, the identical kernel covers 33,600 bounded configur
 
 Reads were tested the same way. Across corporate and healthcare packs, 48 of 48 hostile data flows were contained, including wrong-patient injections, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control contained 16. All 14 checks were load-bearing, and 9,168 configurations showed zero violations. Stateful testing, 16,000 random operations against an independent model, found that release skipped the consent recheck; fixed, it agrees everywhere.
 
-The design assumes the model may be misaligned. Of 33 failure classes, from specification gaming and deceptive risk reports to oversight flooding and compromised signers, 18 are contained, 10 bounded, and 5 residual.
+The design assumes the model may be misaligned. Of 33 failure classes, from specification gaming and deceptive risk reports to oversight flooding and compromised signers, 18 are contained, 10 bounded, and 5 residual. Six falsifiers made 55,937 bounded attempts to refute the thesis and found no counterexample.
 
 An open adversary corpus scores YAML attacks without records or code and reports external contributions; today that number is zero.
 
-Composition adds two findings. Checking only an immediate delegator contained 2 of 10 hostile chain classes; full-chain checks contained all 10. Model-assisted review completed five times the valid work of the unaided arm, but a dependent assistant repeated more merit errors than an independent one. Throughput therefore changes the authority ceiling; it does not erase it.
+Composition adds two findings. Checking only an immediate delegator contained 2 of 10 hostile chain classes; full-chain checks contained all 10. Model-assisted review completed five times the valid work of the unaided arm, but a dependent assistant repeated more merit errors than an independent one.
 
 For AI for Learning, an education pack governs an institutional workflow. For Learning for AI, the architecture teaches system literacy: trace data, bound delegation, locate independent enforcement, calculate capacity, and reconstruct accountability. No learning gain is claimed; none has been measured.
 
@@ -61,13 +61,13 @@ Open questions include the trusted base itself, hardware isolation, covert chann
 
 ## Conclusion
 
-Trust by Construction changes AI governance from a model question to a system question. Its constitutional layer separates intelligence from authority, disclosure, execution, evidence, and recovery. A model may reason, but cannot change a protected record, see beyond its grant, launder what it saw, approve its proposal, rewrite evidence, or hide an uncertain outcome. Safety rests on verifiable boundaries, not on trusted intentions.
+Trust by Construction moves AI governance from models to systems on one thesis: intelligence is untrusted; power and data are mediated. A model may reason, but cannot change a protected record, see beyond its grant, launder what it saw, approve its own proposal, rewrite evidence, or hide an uncertain outcome. Safety rests on verifiable boundaries, not on trusted intentions.
 
-Six directions follow: govern systems, not models; govern reads as strictly as writes; require a seven-field contract for each consequential capability; verify control of keys, data movement, model replacement, evidence, recovery, and exit; build sectors as domain packs over shared invariants; and share failure cases, not sensitive data.
+Five actions follow for any institution building AI: name each mediator and the credential only it holds; bind every consequential action and sensitive read to a purpose, an owner, and a failure test; declare the trusted base and review capacity; claim conformance by class with locally regenerated evidence; and share failure cases, not sensitive data.
 
-This serves policy and engineering. A policymaker can demand named powers, owners, limits, fallback, and proof. An engineer can map each duty to an enforced interface and rerun properties after changing FastAPI, Redis, Kafka, Spark, Iceberg, a model, or a hardware boundary. Education supplies the system literacy to inspect both.
+Policymakers can then demand named powers, limits, fallback, and proof. Engineers can map each duty to an enforced interface and rerun the falsifiers after replacing any model or product. Education supplies the literacy to inspect both.
 
-The claim is bounded. A governed agent can enforce an unjust rule faster; this makes action attributable and contestable but not fair. The prototype does not prove production security or compliance. It provides a base pattern and open tests for institutions to extend with domain law, public voice, hardware assurance, operations, and independent evidence. This is the work ahead.
+The claim is bounded. A governed agent can enforce an unjust rule faster; mediation makes action attributable and contestable, not fair. The prototype proves neither production security nor compliance. It offers a falsifiable foundation for law, public voice, hardware assurance, and independent evidence to build on.
 
 ## References
 

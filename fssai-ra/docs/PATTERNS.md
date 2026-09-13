@@ -22,6 +22,13 @@ labelled as organizational. That discipline is itself the first lesson: **a
 control that exists in review and not at runtime is the failure this whole
 language exists to eliminate.**
 
+## The thesis
+
+> **Intelligence is untrusted. Power and data are mediated.**
+
+The thesis, its invariants, and the six ways it could be refuted are in
+[`THESIS.md`](THESIS.md). The two rules below follow from it.
+
 ## The constitution: two rules
 
 > **1. A model may propose an action. It cannot manufacture the authority to

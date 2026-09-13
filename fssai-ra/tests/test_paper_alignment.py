@@ -103,6 +103,8 @@ CLAIMS = [
      "{threats_residual} residual**"),
     ("stateful testing", "**{disclosure_stateful_sequences} sequences and "
      "{disclosure_stateful_steps_display} operations**"),
+    ("thesis falsification", "**{thesis_attempts_display} bounded attempts found zero "
+     "counterexamples**"),
 ]
 
 
@@ -519,6 +521,8 @@ SUBMITTED_CLAIMS = [
     ("threat statuses", "{threats_contained} are contained, {threats_bounded} bounded, and "
      "{threats_residual} residual"),
     ("stateful testing", "Stateful testing, {disclosure_stateful_steps_display} random operations"),
+    ("thesis falsification", "Six falsifiers made {thesis_attempts_display} bounded attempts to "
+     "refute the thesis and found no counterexample"),
 ]
 
 

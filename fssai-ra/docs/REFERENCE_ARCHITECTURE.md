@@ -46,6 +46,14 @@ fairness method, production security approval, or hardware-isolation proof. A
 domain owner must supply applicable law, legitimate purpose, affected-person
 protections, operational controls, and evidence for the actual deployment.
 
+## The thesis
+
+> **Intelligence is untrusted. Power and data are mediated.**
+
+The seven planes below are where mediators sit. [`THESIS.md`](THESIS.md) states the
+thesis precisely, the invariants it implies, and the falsifiers `fssaira thesis`
+runs against every domain pack.
+
 ## The two constitutional rules
 
 The first rule governs the write path. Its companion governs the read path:

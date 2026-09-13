@@ -5,7 +5,7 @@
 **Keywords:** agentic AI; system literacy; secure data governance; institutional sovereignty; reference architecture; fail-secure systems; verifiable governance; digital public goods.
 **Reference implementation:** Apache-2.0, `https://github.com/genaiworks/fssai-ra`, release `v1.0.0` for the baseline figures; the oversight, composition, cross-domain, governed-disclosure, threat-catalogue, and adversary-corpus results below are current-source and published separately.
 
-**Position I will argue on the panel.** The model is no longer the right unit of AI governance. The governed object is the whole system that acquires data, proposes, delegates, authorizes, acts, records, and recovers. Future AI infrastructure therefore needs a constitutional layer: the intelligence may change, but no model should be able to create its own powers, see beyond its entitlement, rewrite its own evidence, or silently cross the institution's data boundary. That layer must hold when the model is not aligned. As capability grows, verifying a model's intentions gets harder; verifying its boundaries stays tractable.
+**Thesis I will argue on the panel: intelligence is untrusted; power and data are mediated.** The model is no longer the right unit of AI governance; the governed object is the whole system that acquires data, proposes, delegates, authorizes, acts, records, and recovers. Every future AI system should rest on three commitments. *Untrusted intelligence:* treat each model as capable, persuasive, and possibly misaligned or manipulated. *Mediated power:* every effect and every flow of protected data passes a mediator the model cannot bypass, influence, or impersonate. *Evidenced trust:* every mediation is contracted, tested, and evidenced where it is relied on. As capability grows, verifying intentions gets harder; verifying boundaries stays tractable. The thesis is falsifiable: one configuration in which model output alone causes a governed effect or disclosure refutes it.
 
 ## 1. The model is not the system
 
@@ -53,15 +53,15 @@ Assurance asks distinct questions: property and bounded checks compare real enfo
 
 Against the reference profile, **30 of 30 adversarial scenarios contained**, **240 configurations with zero violations**, **11 distinct denial controls**, **8 of 8 ablated controls restored their harm when removed**, and **26 conformance checks passing on 2 backend profiles**. A **32-caller race produced 1 mutation and 1 receipt**. The repository runs **674 deterministic tests** offline. Utility is reported beside containment: **6 of 6 benign tasks completed, false-denial rate 0.0**. A system that denies everything scores perfectly on containment and remains useless.
 
-Against an unguarded agent, a prompt plus per-agent allowlist, and the complete architecture, the same attacks delivered 28, 8, and 0 harmful actions. Prompts and allowlists are real controls; an enforcement point independent of the model must complete them.
+Against an unguarded agent, a prompt with an allowlist, and this architecture, the same attacks delivered 28, 8, and 0 harmful actions.
 
-The design assumes the model may be misaligned. A catalogue of 33 failure classes, including specification gaming, deceptive risk reporting, oversight flooding, collusion, laundering, injection, poisoning, and compromised signers, records **18 contained, 10 bounded, and 5 residual**, each bound to evidence checked to exist. Containment rests on enforcement code, not model behaviour; merit errors within granted authority, evaluation-aware models, covert channels, re-identification, and compromised administrators remain open.
+The design assumes the model may be misaligned. A catalogue of 33 failure classes, including specification gaming, deceptive risk reporting, oversight flooding, collusion, laundering, injection, poisoning, and compromised signers, records **18 contained, 10 bounded, and 5 residual**, each bound to evidence checked to exist. Six falsifiers then try to refute the thesis across every pack: **55,937 bounded attempts found zero counterexamples**, while removing a single mediator check produces them. Zero means not refuted within stated bounds, never proven. Containment rests on enforcement code, not model behaviour; merit errors within granted authority, evaluation-aware models, covert channels, re-identification, and compromised administrators remain open.
 
 Because the builders wrote every attack, an open corpus accepts YAML cases without records or contributor code. The evaluator publishes provenance; today that number is **0**.
 
 ## 7. Education is the dissemination mechanism, not the boundary
 
-The conference theme matters because this architecture requires a shift from model literacy to **system literacy**: tracing provenance, distinguishing proposals from powers and requests from entitlements, locating the enforcement point, calculating oversight capacity, and reconstructing an outcome and its redress path. A two-hour offline lab has participants break a boundary, remove a control, watch harm return, and transfer the contract to their own domain. No learning gain is claimed; none has been measured.
+The conference theme matters because this architecture requires **system literacy**: distinguishing proposals from powers and requests from entitlements, locating the mediator, and reconstructing an outcome and its redress. A two-hour offline lab has participants break a boundary, remove a control, watch harm return, and transfer the contract to their own domain. No learning gain is claimed; none has been measured.
 
 For *AI for Learning*, an education domain pack governs an institutional workflow. For *Learning for AI*, the contribution is a reusable method for learning how AI systems acquire and exercise power. The repository is offered as a digital public good: any institution can inspect the same rules, replace the domain pack, and publish its own evidence rather than inherit ours.
 
@@ -73,7 +73,7 @@ Nor does this architecture decide whether an institution's rule is legitimate. A
 
 ## 9. Direction for future AI systems
 
-1. **Govern systems, not models, and do not rest safety on alignment.** Require a constitutional layer separating intelligence from authority, disclosure, execution, evidence, and recovery.
+1. **Build on the Mediation Thesis.** Treat intelligence as untrusted, mediate every effect and data flow, and publish the attempts to refute it.
 2. **Govern reads as strictly as writes.** Bind every context to purpose, subject, field, consent, and location, and label every output by what produced it.
 3. **Make every consequential capability contractable.** No capability should ship without the seven fields, a test bound to something that runs, a recovery owner, and a conformance claim by class.
 4. **Treat sovereignty as a demonstrable lifecycle capability.** Measure control of keys, data movement, model replacement, evidence, recovery, and exit, not hosting location.

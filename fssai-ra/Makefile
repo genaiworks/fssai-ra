@@ -2,7 +2,7 @@ PYTHON ?= python3
 
 .PHONY: help install test lint results figures demo check api gateway console dev-env \
         stack-up stack-down verify evaluate conformance doctor openapi clean \
-        reviewer oversight challenge second-domain domain-packs disclosure threats lab
+        reviewer oversight challenge second-domain domain-packs disclosure threats thesis lab
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -33,6 +33,9 @@ second-domain:  ## The identical suite against a domain it was not designed for
 	$(PYTHON) -m fssaira.cli verify profiles/academic_record_correction.yaml
 	$(PYTHON) -m fssaira.cli evaluate profiles/academic_record_correction.yaml
 	$(PYTHON) -m fssaira.cli conformance --profile profiles/academic_record_correction.yaml
+
+thesis:  ## Try to refute the Mediation Thesis across every domain pack
+	$(PYTHON) -m fssaira.cli thesis
 
 threats:  ## Alignment failures and AI threats: contained, bounded, residual, with evidence checked to exist
 	$(PYTHON) -m fssaira.cli threats
@@ -68,6 +71,8 @@ reviewer:  ## Everything a reviewer should check, in one command
 	@$(MAKE) disclosure PYTHON="$(PYTHON)"
 	@echo "── 7c/14  does the safety case depend on alignment? ──────────────"
 	@$(MAKE) threats PYTHON="$(PYTHON)"
+	@echo "── 7d/14  can anyone refute the thesis? ──────────────────────────"
+	@$(MAKE) thesis PYTHON="$(PYTHON)"
 	@echo "── 8/14  portable conformance on memory and SQL backends ─────────"
 	@$(MAKE) conformance PYTHON="$(PYTHON)"
 	@echo "── 9/14  how much oversight can actually be supplied ─────────────"

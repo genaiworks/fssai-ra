@@ -950,6 +950,37 @@ def cmd_threats(args) -> int:
     return 0 if report.holds else 1
 
 
+def cmd_thesis(args) -> int:
+    """Try to refute the Mediation Thesis across every declared domain pack."""
+    from .thesis import COMMITMENTS, RULES, THESIS, TRUSTED_BASE, run_thesis
+
+    report = run_thesis()
+    payload = report.to_dict()
+    heading(f"The Mediation Thesis — {THESIS}")
+    for index, line in enumerate(COMMITMENTS, start=1):
+        print(dim(f"  {index}. {line}"))
+    for index, line in enumerate(RULES, start=1):
+        print(f"  R{index}  {line}")
+    heading("Falsification attempts")
+    for falsifier in report.falsifiers:
+        mark = red("REFUTED") if falsifier.refuted else green("not refuted")
+        print(f"  {falsifier.id} {falsifier.name:22} {falsifier.attempts:>9,} attempts  "
+              f"{falsifier.counterexamples:>3} counterexamples  {mark}")
+        print(dim(f"      refuted by: {falsifier.refuted_by}"))
+    heading("Verdict")
+    summary = payload["summary"]
+    print(f"  {summary['attempts']:,} bounded attempts, {summary['counterexamples']} counterexamples: "
+          + (green(summary["verdict"]) if report.holds else red(summary["verdict"])))
+    heading("Outside every falsifier: the trusted base")
+    for item in TRUSTED_BASE:
+        print(dim(f"  - {item}"))
+    heading("Residuals the thesis does not address")
+    for item in payload["residuals"]:
+        print(f"  {item['id']:6} {item['title']}")
+    emit(payload, args.output)
+    return 0 if report.holds else 1
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -1166,6 +1197,11 @@ def build_parser() -> argparse.ArgumentParser:
     ))
     threats.add_argument("--catalogue", type=Path, default=Path("threats/catalogue.yaml"))
     threats.set_defaults(func=cmd_threats)
+
+    thesis = add_output(sub.add_parser(
+        "thesis", help="try to refute the Mediation Thesis: six falsifiers, every domain pack",
+    ))
+    thesis.set_defaults(func=cmd_thesis)
 
     return parser
 

@@ -23,7 +23,11 @@ This reference implementation cites, for every requirement, the executable test
 that checks it here. A different implementation MUST produce its own evidence for
 the same requirement. Evidence does not transfer between deployments.
 
-## 2. The two constitutional rules
+## 2. The thesis and the two constitutional rules
+
+> **Intelligence is untrusted. Power and data are mediated.**
+
+The thesis and its falsifiers are stated in [`THESIS.md`](THESIS.md).
 
 > **R1.** A model may propose an action. It cannot manufacture the authority to
 > execute it.
@@ -134,6 +138,7 @@ The safety case moves trust away from the model. It must say where that trust we
 | V-6 | MUST | Maintain a threat catalogue in which every containment claim cites evidence and residual threats are stated. | test: `tests/test_threats.py::test_a_catalogue_with_no_residuals_is_refused` |
 | V-7 | MUST | Verify that every declared state and review role is reachable. | test: `tests/test_disclosure.py::test_every_domain_pack_reaches_every_declared_status_from_its_start` |
 | V-8 | MUST | Rerun all evidence after replacing any component, domain pack, or model. | test: `tests/test_domain_packs.py::test_the_same_authority_kernel_holds_outside_education` |
+| V-10 | MUST | Attempt to refute the Mediation Thesis with every falsifier for every domain pack in scope, and publish attempts, counterexamples, scope, trusted base, and residuals. | test: `tests/test_thesis.py::test_the_thesis_is_not_falsified_within_stated_bounds` |
 | V-9 | SHOULD | Obtain independent assessment and field evidence before production use. | measurement: open; see [`GAPS.md`](GAPS.md) |
 
 ## 5. What conformance does not mean

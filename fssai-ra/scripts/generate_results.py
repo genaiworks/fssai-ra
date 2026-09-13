@@ -126,7 +126,10 @@ def generate(output_dir: Path, tag: str) -> dict:
     # Governed disclosure: the read path. Every pack that declares a disclosure
     # policy gets the same generated suite, ablation, and bounded model check.
     from fssaira.disclosure_eval import run_disclosure_suite
+    from fssaira.thesis import run_thesis
     from fssaira.threats import check_catalogue
+
+    thesis_report = run_thesis(ROOT)
 
     threat_report = check_catalogue(ROOT / "threats" / "catalogue.yaml", ROOT)
 
@@ -193,6 +196,8 @@ def generate(output_dir: Path, tag: str) -> dict:
         json.dumps(assisted, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-contract-coverage.json").write_text(
         json.dumps(coverage.to_dict(), indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-mediation-thesis.json").write_text(
+        json.dumps(thesis_report.to_dict(), indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-threat-catalogue.json").write_text(
         json.dumps(threat_report.to_dict(), indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-governed-disclosure.json").write_text(
@@ -395,6 +400,9 @@ def generate(output_dir: Path, tag: str) -> dict:
                 (r["summary"]["checks_ablated"] for r in disclosure_reports), default=0),
             "disclosure_states_explored": sum(
                 r["verification"]["summary"]["states_explored"] for r in disclosure_reports),
+            "thesis_falsifiers": len(thesis_report.falsifiers),
+            "thesis_attempts_display": f"{thesis_report.attempts:,}",
+            "thesis_counterexamples": thesis_report.counterexamples,
             "threats_total": len(threat_report.threats),
             "threats_contained": threat_report.count("contained"),
             "threats_bounded": threat_report.count("bounded"),
@@ -459,6 +467,7 @@ def generate(output_dir: Path, tag: str) -> dict:
                 "dependent_assistance_reintroduced_harm"],
             "every_contract_requirement_is_bound_or_attested": coverage.holds,
             "every_threat_catalogue_locator_resolves": threat_report.holds,
+            "mediation_thesis_not_refuted_within_bounds": thesis_report.holds,
             "governed_disclosure_holds_in_every_declaring_pack": bool(disclosure_reports) and all(
                 r["summary"]["holds"] for r in disclosure_reports),
         },
@@ -661,6 +670,10 @@ def render_markdown(summary: dict) -> str:
          f"{figures['disclosure_states_explored']:,}",
          f"{figures['disclosure_violations']} violations; synthetic records, and redaction is "
          "not de-identification"),
+        ("Mediation Thesis — falsification attempts",
+         f"{figures['thesis_attempts_display']}, {figures['thesis_counterexamples']} counterexamples",
+         f"{figures['thesis_falsifiers']} falsifiers across every domain pack; not refuted within "
+         "stated bounds, which is not a proof; the trusted base is outside every falsifier"),
         ("Threat and alignment catalogue",
          f"{figures['threats_contained']} contained, {figures['threats_bounded']} bounded, "
          f"{figures['threats_residual']} residual",

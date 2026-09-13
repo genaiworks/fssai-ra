@@ -5,7 +5,10 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](LICENSE)
 [![Release v1.0.0](https://img.shields.io/badge/release-v1.0.0-4C566A.svg)](https://github.com/genaiworks/fssai-ra/tree/v1.0.0)
 
-> **A model may propose an action. It cannot manufacture the authority to execute it.**
+> **Intelligence is untrusted. Power and data are mediated.**
+>
+> A model may propose an action. It cannot manufacture the authority to execute it.
+> A model may request information. It cannot manufacture the entitlement to see it, or launder what it saw.
 
 **Fail-Secure Sovereign AI Reference Architecture** is a sector-neutral,
 public-interest security kernel for specifying and testing the authority and
@@ -52,6 +55,7 @@ reviewers, and adopters.
 - [Project overview and architecture](fssai-ra/README.md)
 - [Cross-sector reference architecture](fssai-ra/docs/REFERENCE_ARCHITECTURE.md) — seven planes, twelve invariants, lifecycle, adoption gates, and technology mapping
 - [Pattern language for AI over sensitive data](fssai-ra/docs/PATTERNS.md) — two constitutional rules, seven laws, patterns, anti-patterns, blueprints, and maturity levels
+- [The Mediation Thesis](fssai-ra/docs/THESIS.md) — the foundation in one sentence, its invariants, how to refute it (`fssaira thesis`), and what an institution does next
 - [Specification](fssai-ra/docs/SPECIFICATION.md) — normative MUST and SHOULD requirements in six conformance classes, each tied to evidence
 - [Related work](fssai-ra/docs/RELATED_WORK.md) — what this inherits from reference monitors and information-flow control, and how it relates to CaMeL, FIDES, and AI control
 - [Governed disclosure](fssai-ra/docs/GOVERNED_DISCLOSURE.md) — purpose-bound grants, context gate, session labels, declassification, consent, residency, break-glass
@@ -82,6 +86,7 @@ fssaira challenge                                 # the open adversary corpus, s
 fssaira profiles --verify                         # check every education, corporate, and healthcare pack
 fssaira disclosure profiles/healthcare_record_access.yaml  # what may a model read, and what may leave?
 fssaira threats                                   # alignment failures and AI threats: contained, bounded, residual
+fssaira thesis                                    # try to refute the foundation: six falsifiers, every pack
 fssaira init my-domain                            # scaffold your own
 ```
 
