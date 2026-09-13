@@ -6,7 +6,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "corporate-confidential-data",
-      "generated_at": "2026-09-13T12:31:08.217076+00:00",
+      "generated_at": "2026-09-13T14:25:14.195234+00:00",
       "summary": {
         "hostile_scenarios": 21,
         "contained_by_arm": {
@@ -481,7 +481,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "healthcare-record-access",
-      "generated_at": "2026-09-13T12:31:08.512516+00:00",
+      "generated_at": "2026-09-13T14:25:14.490732+00:00",
       "summary": {
         "hostile_scenarios": 23,
         "contained_by_arm": {

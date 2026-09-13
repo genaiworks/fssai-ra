@@ -331,6 +331,14 @@ DECK_CLAIMS = [
     ("ablation", "{controls_load_bearing} of {controls_ablated} restored their harm"),
     ("conformance", "{conformance_checks} checks, {conformance_backends_verified} backend profiles"),
     ("denial controls", "{distinct_denial_codes} denial controls"),
+    ("disclosure containment", "<b>{disclosure_contained}/{disclosure_hostile_total}</b>"),
+    ("disclosure conventional arm", "<b>{disclosure_contained_access_controlled}/{disclosure_hostile_total}</b>"),
+    ("disclosure checks", "{disclosure_checks_load_bearing}/{disclosure_checks_ablated} checks load-bearing"),
+    ("disclosure states", "{disclosure_states_explored_display} states, 0 violations"),
+    ("threats contained", "<span class=\"hash\"><b>{threats_contained}</b></span>"),
+    ("threats bounded", "<span class=\"hash\"><b>{threats_bounded}</b></span>"),
+    ("threats residual", "<b class=\"bad\">{threats_residual}</b>"),
+    ("threat classes", "{threats_total} failure classes"),
 ]
 
 

@@ -20,6 +20,19 @@
 - Domain packs may declare a validated `disclosure` section. The corporate and
   healthcare packs now do, and `/v1/profile` and `fssaira profiles --verify`
   report it. Contract domain 9 adds seven bound requirements, GD-1 to GD-7.
+- The HTTP control plane now serves `/v1/disclosure` routes when the active pack
+  declares a policy, and `/v1/propose-task` accepts a `governed_context` so the
+  model receives only values the gate released and its proposals come back
+  labelled. Refusals return `403` with the gate's denial code, and disclosure
+  records share the plane's evidence chain.
+- Fixed a de-identification defect found by the new HTTP tests: the declassification
+  pseudonym `[patient-1]` reproduced the subject identifier `patient-1` verbatim
+  whenever identifiers followed a kind-and-number pattern. Pseudonyms can no
+  longer reproduce an identifier, and a declassification whose output still
+  contains one is refused.
+- Added two slides to the panel deck, for the second rule and for the alignment
+  question, and renumbered the speaker script's paths, timings, and questions.
+  Rebuilt `docs/extended-abstract.docx` from the current form-ready abstract.
 - Added `threats/catalogue.yaml`, `fssaira.threats`, and `fssaira threats`: 32
   alignment, AI-security, secure-data, and systemic failure classes, each marked
   contained, bounded, or residual. Contained and bounded entries must cite

@@ -1,0 +1,282 @@
+"""HTTP routes for governed disclosure: the read path of the control plane.
+
+The action routes enforce the first rule: a model may propose an action, it
+cannot manufacture the authority to execute it. These routes enforce the second:
+a model may request information, it cannot manufacture the entitlement to see
+it, and it cannot launder what it saw.
+
+Every decision is made by :class:`fssaira.disclosure.DisclosureGate`. The routes
+only establish who is asking, from the authenticated principal, and hold the
+server-side grant store so a caller can name a grant but never supply one. Roles
+come from the domain pack: grants and revocations need the pack's declared data
+or privacy owner, declassification needs the rule's declared approval role, and
+break-glass review needs the declared review role.
+
+Teaching keys are used unless ``FSSAI_DISCLOSURE_GRANT_KEY`` and
+``FSSAI_DISCLOSURE_DECLASSIFICATION_KEY`` are set. The model endpoint's name
+comes from ``FSSAI_MODEL_ENDPOINT`` and must be declared in the pack; an
+undeclared endpoint receives nothing.
+"""
+
+import json
+import os
+import uuid
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+from .disclosure import (
+    DataLabel,
+    DeclassificationAuthority,
+    DisclosureDenied,
+    DisclosureGate,
+    DisclosureGrant,
+    GrantAuthority,
+)
+from .security import Principal
+
+Name = Field(min_length=1, max_length=200)
+
+
+class RecordLoad(BaseModel):
+    subject: str = Name
+    fields: dict[str, str] = Field(min_length=1, max_length=200)
+
+
+class GrantCreate(BaseModel):
+    holder: str = Name
+    purpose: str = Name
+    subjects: list[str] = Field(min_length=1, max_length=100)
+    fields: list[str] = Field(min_length=1, max_length=200)
+    ttl_seconds: int = Field(default=900, ge=1, le=86400)
+    basis: str = Field(default="declared basis", min_length=1, max_length=500)
+    break_glass: bool = False
+    justification: str = Field(default="", max_length=2000)
+
+
+class RevocationCreate(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class ConsentWithdrawal(BaseModel):
+    subject: str = Name
+    purpose: str = Name
+
+
+class ContextRequest(BaseModel):
+    grant_id: str = Name
+    session_id: str = Name
+    purpose: str = Name
+    subjects: list[str] = Field(min_length=1, max_length=100)
+    fields: list[str] = Field(min_length=1, max_length=200)
+
+
+class OutputCreate(BaseModel):
+    session_id: str = Name
+    content: str = Field(min_length=1, max_length=50_000)
+
+
+class DeclassifyRequest(BaseModel):
+    rule: str = Name
+
+
+class ReleaseRequest(BaseModel):
+    recipient: str = Name
+    purpose: str = Name
+    recipient_id: str = Field(default="", max_length=200)
+
+
+class BreakGlassReview(BaseModel):
+    finding: str = Field(min_length=1, max_length=2000)
+
+
+def _label(label: DataLabel) -> dict:
+    return label.to_dict()
+
+
+class DisclosureRuntime:
+    """The gate, its signing authorities, and the server-held grant store."""
+
+    def __init__(self, profile, evidence, evidence_token: str, *,
+                 model_endpoint: str | None = None) -> None:
+        if profile.disclosure is None:
+            raise ValueError("profile declares no disclosure policy")
+        self.profile = profile
+        self.policy = profile.disclosure
+        self.grant_authority = GrantAuthority(
+            secret=os.getenv("FSSAI_DISCLOSURE_GRANT_KEY", "teaching-disclosure-key-not-secret"))
+        self.declassifier = DeclassificationAuthority(
+            secret=os.getenv("FSSAI_DISCLOSURE_DECLASSIFICATION_KEY",
+                             "teaching-declassification-key-not-secret"))
+        self.gate = DisclosureGate(
+            self.policy, {}, evidence, evidence_token,
+            grant_keys=self.grant_authority.trusted_keys,
+            declassification_keys=self.declassifier.trusted_keys,
+        )
+        self.model_endpoint = model_endpoint if model_endpoint is not None else os.getenv(
+            "FSSAI_MODEL_ENDPOINT", "")
+        self.grants: dict[str, DisclosureGrant] = {}
+
+    @property
+    def owner_roles(self) -> set[str]:
+        governance = self.profile.governance
+        return {governance.data_owner, governance.privacy_owner} if governance else set()
+
+    def assemble(self, caller: Principal, request: ContextRequest, now: float):
+        return self.gate.assemble_context(
+            requester=caller.subject, session_id=request.session_id,
+            grant=self.grants.get(request.grant_id), purpose=request.purpose,
+            subjects=request.subjects, fields=request.fields,
+            model_endpoint=self.model_endpoint, now=now,
+        )
+
+
+def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, caller_type: Any,
+                               clock=None) -> None:
+    import time
+
+    now = clock or time.time
+
+    def need() -> DisclosureRuntime:
+        if runtime is None:
+            raise HTTPException(status_code=404,
+                                detail="this profile declares no disclosure policy")
+        return runtime
+
+    def require_any(caller: Principal, roles: set[str], what: str) -> str:
+        for role in caller.roles:
+            if role in roles:
+                return role
+        raise HTTPException(status_code=403,
+                            detail=f"{what} requires one of: {', '.join(sorted(roles))}")
+
+    @app.get("/v1/disclosure", tags=["disclosure"])
+    def disclosure_summary(caller: caller_type):
+        rt = need()
+        return {
+            "policy": rt.policy.summary(),
+            "model_endpoint": rt.model_endpoint or None,
+            "model_endpoint_zone": rt.policy.endpoints.get(rt.model_endpoint),
+            "grants_held_by_server": len(rt.grants),
+            "open_break_glass_reviews": sorted(rt.gate.open_break_glass),
+            "rule": "a model may request information; it cannot manufacture the entitlement "
+                    "to see it, and it cannot launder what it saw",
+        }
+
+    @app.post("/v1/disclosure/records", status_code=201, tags=["disclosure"])
+    def load_records(request: RecordLoad, caller: caller_type):
+        rt = need()
+        require_any(caller, {"platform_operator"}, "loading records")
+        names = rt.gate.load_records(request.subject, request.fields, loaded_by=caller.subject)
+        return {"subject": request.subject, "fields": names,
+                "note": "values are held by the gate and never echoed or logged"}
+
+    @app.post("/v1/disclosure/grants", status_code=201, tags=["disclosure"])
+    def issue_grant(request: GrantCreate, caller: caller_type):
+        rt = need()
+        if request.break_glass:
+            if request.holder != caller.subject:
+                raise HTTPException(status_code=403,
+                                    detail="break-glass access can only be declared for yourself")
+        else:
+            require_any(caller, rt.owner_roles, "issuing a grant")
+        unknown = sorted(set(request.fields) - set(rt.policy.field_classes))
+        if unknown:
+            raise HTTPException(status_code=422, detail=f"undeclared fields: {', '.join(unknown)}")
+        grant = rt.grant_authority.issue(
+            grant_id=f"grant-{uuid.uuid4().hex[:16]}", holder=request.holder,
+            purpose=request.purpose, subjects=request.subjects, fields=request.fields,
+            classes={rt.policy.field_classes[name] for name in request.fields},
+            issued_by=caller.subject, now=now(), ttl_seconds=request.ttl_seconds,
+            basis=request.basis, break_glass=request.break_glass,
+            justification=request.justification,
+        )
+        rt.grants[grant.grant_id] = grant
+        return grant.to_dict()
+
+    @app.post("/v1/disclosure/grants/{grant_id}/revoke", tags=["disclosure"])
+    def revoke_grant(grant_id: str, request: RevocationCreate, caller: caller_type):
+        rt = need()
+        require_any(caller, rt.owner_roles, "revoking a grant")
+        if grant_id not in rt.grants:
+            raise HTTPException(status_code=404, detail="unknown grant")
+        rt.gate.revoke_grant(grant_id, by=caller.subject, reason=request.reason)
+        return {"grant_id": grant_id, "revoked": True}
+
+    @app.post("/v1/disclosure/consent/withdrawals", status_code=201, tags=["disclosure"])
+    def withdraw_consent(request: ConsentWithdrawal, caller: caller_type):
+        rt = need()
+        require_any(caller, rt.owner_roles, "recording a consent withdrawal")
+        rt.gate.withdraw_consent(request.subject, request.purpose, recorded_by=caller.subject)
+        return {"subject": request.subject, "purpose": request.purpose, "withdrawn": True}
+
+    @app.post("/v1/disclosure/context", tags=["disclosure"])
+    def assemble_context(request: ContextRequest, caller: caller_type):
+        rt = need()
+        context = rt.assemble(caller, request, now())
+        return {"receipt_id": context.receipt_id, "session_id": context.session_id,
+                "label": _label(context.label), "values": context.values}
+
+    @app.post("/v1/disclosure/outputs", status_code=201, tags=["disclosure"])
+    def derive_output(request: OutputCreate, caller: caller_type):
+        rt = need()
+        output = rt.gate.derive_output(requester=caller.subject, session_id=request.session_id,
+                                       content=request.content)
+        return {"output_id": output.output_id, "label": _label(output.label),
+                "content_digest": output.digest}
+
+    @app.post("/v1/disclosure/outputs/{output_id}/declassify", status_code=201,
+              tags=["disclosure"])
+    def declassify(output_id: str, request: DeclassifyRequest, caller: caller_type):
+        rt = need()
+        rule = rt.policy.declassification.get(request.rule)
+        if rule is None:
+            raise HTTPException(status_code=404, detail="unknown declassification rule")
+        role = require_any(caller, {rule.approval_role}, f"declassification rule {rule.name}")
+        output = rt.gate.output(output_id)
+        approval = rt.declassifier.approve(output, rule=rule.name, approver=caller.subject,
+                                           approver_role=role, now=now())
+        lowered = rt.gate.declassify(output, rule=rule.name, approval=approval, now=now())
+        return {"output_id": lowered.output_id, "label": _label(lowered.label),
+                "content": lowered.content, "approved_by": lowered.declassified_by}
+
+    @app.post("/v1/disclosure/outputs/{output_id}/release", tags=["disclosure"])
+    def release(output_id: str, request: ReleaseRequest, caller: caller_type):
+        rt = need()
+        output = rt.gate.output(output_id)
+        if output.holder != caller.subject:
+            raise HTTPException(status_code=403,
+                                detail="only the principal holding an output may release it")
+        receipt = rt.gate.release(output, recipient=request.recipient,
+                                  recipient_id=request.recipient_id,
+                                  purpose=request.purpose, now=now())
+        return {"receipt_id": receipt.receipt_id, "output_id": receipt.output_id,
+                "recipient": receipt.recipient, "purpose": receipt.purpose,
+                "label": _label(receipt.label), "content": output.content}
+
+    @app.post("/v1/disclosure/break-glass/{grant_id}/review", tags=["disclosure"])
+    def review_break_glass(grant_id: str, request: BreakGlassReview, caller: caller_type):
+        rt = need()
+        rule = rt.policy.break_glass
+        if rule is None:
+            raise HTTPException(status_code=404, detail="this pack declares no emergency access")
+        role = require_any(caller, {rule.review_role}, "break-glass review")
+        rt.gate.record_break_glass_review(grant_id, reviewer=caller.subject,
+                                          reviewer_role=role, finding=request.finding)
+        return {"grant_id": grant_id, "reviewed": True}
+
+
+def proposals_output(runtime: DisclosureRuntime, caller: Principal, session_id: str,
+                     proposals: list[dict]):
+    """Label a model's proposal set as a governed output of its session."""
+    return runtime.gate.derive_output(
+        requester=caller.subject, session_id=session_id,
+        content=json.dumps(proposals, sort_keys=True, default=str),
+    )
+
+
+__all__ = [
+    "ContextRequest", "DisclosureDenied", "DisclosureRuntime", "proposals_output",
+    "register_disclosure_routes",
+]

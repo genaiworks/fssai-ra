@@ -223,6 +223,31 @@ Contract domain 9 in [`../contract/9_governed_disclosure.yaml`](../contract/9_go
 states these as seven-field requirements. [`fssaira coverage`](ASSURANCE.md) checks
 that each is bound to a test that exists.
 
+## The HTTP routes
+
+When the active domain pack declares a disclosure policy, the control plane serves
+these routes. Identity always comes from the authenticated principal, and the
+server holds grants, so a caller can name a grant but never supply one.
+
+| Route | Who may call it | What the gate decides |
+|---|---|---|
+| `GET /v1/disclosure` | any authenticated principal | nothing; reports the policy, endpoint zone, and open break-glass reviews |
+| `POST /v1/disclosure/records` | `platform_operator` | accepts only declared fields; logs names, never values |
+| `POST /v1/disclosure/grants` | the pack's data or privacy owner, or the holder for break-glass | signs a grant whose classes are derived from its fields |
+| `POST /v1/disclosure/grants/{id}/revoke` | data or privacy owner | revocation takes effect at the next read |
+| `POST /v1/disclosure/consent/withdrawals` | data or privacy owner | withdrawal takes effect at the next read |
+| `POST /v1/disclosure/context` | the grant's holder | all read-path checks |
+| `POST /v1/propose-task` with `governed_context` | the grant's holder | the same checks; the model receives only released values, and its proposal set is labelled |
+| `POST /v1/disclosure/outputs` | any holder of a session | labels the output with the session's join |
+| `POST /v1/disclosure/outputs/{id}/declassify` | the rule's declared approval role | exact-output declassification, approver independent of holder |
+| `POST /v1/disclosure/outputs/{id}/release` | the output's holder | recipient clearance |
+| `POST /v1/disclosure/break-glass/{grant_id}/review` | the declared review role | closes the obligation; the holder cannot review themself |
+
+A refusal returns `403` with the stable denial code. Configure
+`FSSAI_MODEL_ENDPOINT` with an endpoint name declared in the pack; an undeclared
+or unset endpoint receives nothing. Set `FSSAI_DISCLOSURE_GRANT_KEY` and
+`FSSAI_DISCLOSURE_DECLASSIFICATION_KEY` outside teaching use.
+
 ## Mapping to real systems
 
 The gate is an interface, not a product. A deployment keeps the checks and replaces
@@ -252,6 +277,6 @@ the mechanisms.
   declarations. They are not validated against any law.
 - All results come from synthetic records and an in-process gate. No real record
   system, model endpoint, or delivery channel is exercised.
-- The reference HTTP API reports the declared policy on `/v1/profile`. It does not
-  yet place the disclosure gate in front of its own model-proposal route. That
-  integration remains open in [`GAPS.md`](GAPS.md).
+- The reference HTTP API holds grants in process memory and loads synthetic
+  records. It has not been qualified against a real record system, consent
+  service, or identity provider. That remains open in [`GAPS.md`](GAPS.md).

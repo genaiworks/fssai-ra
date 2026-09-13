@@ -748,6 +748,34 @@ class DisclosureGate:
                                          **describe(result)})
         return result
 
+    # -- records and outputs ---------------------------------------------------
+    def load_records(self, subject: str, fields: dict[str, str], *, loaded_by: str) -> list[str]:
+        """Place synthetic or adapter-supplied values behind the gate.
+
+        Only declared fields are accepted. The evidence record names the subject
+        and field names and never the values.
+        """
+        if not isinstance(subject, str) or not subject.strip():
+            raise DisclosureDenied(DisclosureCode.SUBJECT_NOT_FOUND, "a subject is required")
+        undeclared = sorted(set(fields) - set(self.policy.field_classes))
+        if undeclared:
+            raise DisclosureDenied(DisclosureCode.FIELD_UNDECLARED,
+                                   f"undeclared fields: {', '.join(undeclared)}")
+        with self._lock:
+            self._records.setdefault(subject, {}).update(
+                {name: str(value) for name, value in fields.items()})
+            names = sorted(fields)
+            self._record("disclosure_records_loaded",
+                         {"subject": subject, "fields": names, "loaded_by": loaded_by})
+            return names
+
+    def output(self, output_id: str) -> GovernedOutput:
+        with self._lock:
+            known = self._outputs.get(output_id)
+        if known is None:
+            raise DisclosureDenied(DisclosureCode.OUTPUT_UNKNOWN, f"no output {output_id!r}")
+        return known
+
     # -- grant lifecycle -----------------------------------------------------
     def revoke_grant(self, grant_id: str, *, by: str, reason: str) -> None:
         with self._lock:
@@ -1044,8 +1072,13 @@ class DisclosureGate:
             content = content.replace(value, "[withheld]")
         subjects = known.label.subjects
         if rule.removes_subject_identity:
-            for index, subject in enumerate(sorted(subjects), start=1):
-                content = content.replace(subject, f"[{self.policy.subject_kind}-{index}]")
+            # The pseudonym must not be able to reproduce an identifier: an earlier
+            # form, "[patient-1]", re-created the subject id "patient-1" verbatim.
+            for index, subject in enumerate(sorted(subjects, key=len, reverse=True), start=1):
+                content = content.replace(subject, f"[{self.policy.subject_kind} withheld #{index}]")
+            if any(subject in content for subject in subjects):
+                raise DisclosureDenied(DisclosureCode.DECLASSIFICATION_OUT_OF_RULE,
+                                       "a subject identifier survived redaction")
             subjects = frozenset()
         label = DataLabel(
             classes=frozenset({rule.to_class}), subjects=subjects,

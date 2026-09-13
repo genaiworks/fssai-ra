@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "conformance",
-  "generated_at": "2026-09-13T12:31:07.237375+00:00",
+  "generated_at": "2026-09-13T14:25:13.205155+00:00",
   "profile_id": "academic-record-correction",
   "backends": {
     "register": "CaseRegister",

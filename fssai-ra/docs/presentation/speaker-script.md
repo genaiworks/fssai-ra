@@ -11,24 +11,24 @@
 
 A panel opener is not a conference talk. The room has three or four other people
 who also have something to say, and the moderator is watching the clock. The deck
-runs **25 slides in about sixteen minutes**, with two backup slides that appear
+runs **27 slides in about seventeen minutes**, with two backup slides that appear
 only if someone asks.
 
 Four paths are built in. Pick one before you walk on stage. **Every one of them
-ends on slide 25**, because a talk that stops on the limits slide has ended on
+ends on slide 27**, because a talk that stops on the limits slide has ended on
 the weakest thing you had to say.
 
 | You have | Run slides | Cut |
 |---|---|---|
-| **16 minutes** | 1–25 | nothing |
-| **12 minutes** | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25 | sovereignty (3), method (9), finding (10), atomicity (11), harms (13), domain packs (18), corpus (19) — fold 18 and 19 into one sentence each on 20 |
-| **10 minutes** | 1, 2, 4, 5, 7, 12, 14, 15, 16, 20, 21, 22, 25 | the above, plus privilege invariance (6), counterfactual (8), composition (17), theme (23), the ask (24) |
-| **5 minutes** | 1, 2, 5, 14, 15, 16, 21, 22, 25 | everything but the rule, the person, the contract, the oversight argument and its 2026 form, the limits, who this is for, and the close |
+| **17 minutes** | 1–27 | nothing |
+| **12 minutes** | 1, 2, 4, 5, 7, 8, 12, 14, 15, 16, 18, 19, 22, 23, 24, 25, 26, 27 | sovereignty (3), privilege invariance (6), method (9), finding (10), atomicity (11), harms (13), composition (17), domain packs (20), corpus (21) — fold 20 and 21 into one sentence each on 22 |
+| **10 minutes** | 1, 2, 4, 5, 7, 12, 14, 15, 16, 18, 19, 22, 23, 24, 27 | the above, plus counterfactual (8), theme (25), the ask (26) |
+| **5 minutes** | 1, 2, 5, 14, 15, 16, 18, 19, 23, 24, 27 | everything but the rule, the person, the contract, the oversight argument and its 2026 form, the second rule, alignment, the limits, who this is for, and the close |
 
-**Three slides are never cut.** Slide 21, the limits: in a UN room the credibility
+**Three slides are never cut.** Slide 23, the limits: in a UN room the credibility
 of everything before it depends on those being stated by you rather than
-extracted from you. Slide 22, who this is for: without it this is a talk
-about software. And slide 25, the close: it is the only slide that hands the room
+extracted from you. Slide 24, who this is for: without it this is a talk
+about software. And slide 27, the close: it is the only slide that hands the room
 the sentence you want repeated after you sit down.
 
 Slides 14, 15 and 16 are the oversight argument, and they are the reason this
@@ -37,6 +37,10 @@ is what makes it a 2026 talk: a room that has already decided human-in-the-loop
 is solved has not yet considered what happens when the loop's human is reading a
 model's summary. Cut the architecture
 before you cut them.
+
+Slides 18 and 19 are the second rule and the alignment question. They are what
+turns this from a talk about approvals into a framework for any AI system over
+corporate or medical data, and they are the paper's newest contribution. Do not cut 18 or 19.
 
 The arc is deliberate. It opens on four consequential domains that expose the
 same unanswered questions, spends the middle earning the right to be believed,
@@ -66,24 +70,26 @@ middle — never from either end.
 | 9:00 | 15 · Oversight measured | Two numbers: 2,640/day for this roster, and 4 → 0. |
 | 9:40 | 16 · The assisted reviewer | The 2026 form of the same failure. 5 → 1, and nothing to alert on. |
 | 10:15 | 17 · Authority that travels | Brisk. "Every hop locally correct; the composition wrong." |
-| 10:50 | 18 · Four domain packs | Cross-sector reuse, its limits, and the defect transfer found. |
-| 11:20 | 19 · The corpus | The invitation. Say the ask: contribute one attack. |
-| 11:55 | 20 · Evidence | Numbers with denominators. |
-| 12:30 | 21 · Limits | **Never cut this.** |
-| 13:05 | 22 · Who this is for | **Never cut this.** Connect the pattern to affected people, professionals, and institutions. |
-| 13:40 | 23 · Both directions | Earn the panel slot on the conference theme. |
-| 14:10 | 24 · The ask | Something the room can do — hand them the worksheet. |
-| 14:40 | 25 · Close | The rule, then the stake. Then stop. |
-| — | 26 · Backup | The five domains, if the panel turns technical. |
-| — | 27 · Backup | The interface inventory, for "but you have a diode". |
+| 10:50 | 18 · The second rule | Reads, not writes. 16 of 44 for careful access control, 44 of 44 here. |
+| 11:25 | 19 · Alignment | Say the residual number, 5, before anyone asks. Contained is not aligned. |
+| 12:00 | 20 · Four domain packs | Cross-sector reuse, its limits, and the defect transfer found. |
+| 12:30 | 21 · The corpus | The invitation. Say the ask: contribute one attack. |
+| 13:05 | 22 · Evidence | Numbers with denominators. |
+| 13:40 | 23 · Limits | **Never cut this.** |
+| 14:15 | 24 · Who this is for | **Never cut this.** Connect the pattern to affected people, professionals, and institutions. |
+| 14:50 | 25 · Both directions | Earn the panel slot on the conference theme. |
+| 15:20 | 26 · The ask | Something the room can do — hand them the worksheet. |
+| 15:50 | 27 · Close | Both rules, then the stake. Then stop. |
+| — | 28 · Backup | The five domains, if the panel turns technical. |
+| — | 29 · Backup | The interface inventory, for "but you have a diode". |
 
-**If you are given twelve minutes rather than sixteen,** take the twelve-minute
-path above: cut 3, 9, 10, 11 and 13, and fold the domain-pack matrix (18) and the
-corpus (19) into one sentence each on slide 20. Do not cut 14, 15 or 16: the
+**If you are given twelve minutes rather than seventeen,** take the twelve-minute
+path above: cut 3, 6, 9, 10, 11, 13 and 17, and fold the domain-pack matrix (20) and the
+corpus (21) into one sentence each on slide 22. Do not cut 14, 15 or 16: the
 oversight argument and its assisted-review extension are the reason this
 submission is on the panel rather than in a poster session. Slide 17 is the first
 of the contributions to go if time is short — the composition supplement carries
-it, and the panel can be pointed there. Do not cut 21, 22 or 25 under any
+it, and the panel can be pointed there. Do not cut 23, 24 or 27 under any
 circumstances.
 
 ---
@@ -93,7 +99,16 @@ circumstances.
 **The opening.** "A model may propose an action. It cannot manufacture the
 authority to execute it." Read it once, slowly, and let the room sit with it
 before you start explaining. Everything after is about making that testable
-rather than asserted.
+rather than asserted. The companion rule is on the same slide; do not read it
+aloud yet. It lands harder on slide 18.
+
+**The second rule (slide 18).** "A model may request information. It cannot
+manufacture the entitlement to see it, or launder what it saw." Then the middle
+column: a careful conventional design, signed grants and all, contains 16 of 44.
+
+**The alignment line (slide 19).** "As capability grows, verifying a model's
+intentions gets harder. Verifying its boundaries stays tractable." Then say the
+residual count yourself.
 
 **Her three questions (slide 2).** "Who decided this, and were they allowed to.
 What did they see when they decided. How do I contest it." Then: *in most
@@ -102,7 +117,7 @@ because anyone intended that, but because nothing was built to produce one.*
 This is the moral core of the talk. Everything technical exists to make those
 three answerable.
 
-**The line that makes the humanitarian claim honest (slide 20).** "A perfectly
+**The line that makes the humanitarian claim honest (slide 23).** "A perfectly
 governed agent enforcing an unjust policy produces well-documented injustice,
 faster. This makes harm attributable. It does not make a rule fair." Say it out
 loud. An advocate in the room will otherwise raise it for you, and owning it is
@@ -128,7 +143,7 @@ review level." This is the line for the sceptical engineer in row three.
 **During the demo.** With `APPROVAL_PAYLOAD_MISMATCH` on screen: "That is a
 governance rule behaving as observable code."
 
-**On the finding (slide 8).** "Our own attack suite was measuring less than it
+**On the finding (slide 10).** "Our own attack suite was measuring less than it
 claimed, and a green test run would never have told us." This is the strongest
 credibility move available. Do not skip it to save time.
 
@@ -147,7 +162,7 @@ matters most in your institution than which of our results is largest."
 
 ## The demonstration
 
-Rehearse it, then assume it will fail. Slide 6 stands on its own if the room's
+Rehearse it, then assume it will fail. Slide 7 stands on its own if the room's
 network does not.
 
 ```bash
@@ -170,7 +185,7 @@ Pre-flight: `docker compose --env-file deploy/.env -f deploy/compose.yaml up -d`
 then open `http://localhost:8088`, run one full cycle, and **leave the tab
 open**. Do not demo from a cold start.
 
-### The takeaway (slide 19)
+### The takeaway (slide 26)
 
 Have `docs/worksheet/` open in a third tab. If the moderator allows it, invite
 the room to fill in one capability *during* the panel — it takes about fifteen
@@ -190,7 +205,7 @@ point — and it scores 0 of 7. That lands harder than any argument.
 Twenty, in the order they are most likely to come. Each has a short answer, a
 deeper one if pressed, and the thing in the repository that backs it.
 
-The first four are new, and the first one is the likeliest question in the room.
+The first six are new, and the first one is the likeliest question in the room.
 
 ---
 
@@ -227,7 +242,7 @@ clinical safety, or production readiness. What makes transfer worth reporting is
 what it cost us: the academic pack's first run exposed a mandatory schema field
 that did nothing at runtime, unreachable with the original profile. Each adopter
 must replace our declarations and fixtures with its own obligations and evidence.
-*Backed by:* `fssaira profiles --verify`, slide 18.
+*Backed by:* `fssaira profiles --verify`, slide 20.
 
 **0c · "Every attack in your evaluation is one you wrote."**
 Also correct, and it is the standing weakness of the whole evidence base. It is
@@ -237,7 +252,26 @@ fields of YAML, no contributor code, nothing an institution would need to clear.
 *Turn it into the ask:* if you think we have missed an attack, that is a pull
 request, and the corpus already found a defect in our own measurement on its
 first run.
-*Backed by:* `fssaira challenge`, slide 19.
+*Backed by:* `fssaira challenge`, slide 21.
+
+**0d · "Isn't governed disclosure just data-loss prevention and attribute-based access control?"**
+Those are two of its mechanisms, and a deployment should use them. What they do
+not do by themselves is carry purpose into every read, check consent at the moment
+of use, or label a model's summary by what it was built from rather than by what
+the model says it is. The conventional arm on slide 18 is exactly that careful
+design, and it still lets 28 of 44 hostile flows through.
+*Limit, before anyone raises it:* redaction is not de-identification, and a model
+that paraphrases is governed only because its whole session is labelled.
+*Backed by:* `fssaira disclosure profiles/healthcare_record_access.yaml`, slide 18.
+
+**0e · "Does this solve AI alignment?"**
+No, and the slide says so. It makes a misaligned or injected model unable to cause
+the governed harms through the governed interfaces, and it names what remains:
+evaluation-aware models, compromised signers, covert channels, re-identification,
+and unjust rules applied faithfully. The claim that matters is that containment
+does not depend on the model behaving well under test, because the invariants are
+enumerated against the enforcement code.
+*Backed by:* `fssaira threats`, slide 19.
 
 **1 · "Isn't this just a testing framework?"**
 No. A test suite proves the attacks I imagined are contained. Two of our three
@@ -274,7 +308,7 @@ compromised — injection succeeding is the premise, not the failure.
 
 **5 · "Has this been deployed?"**
 No. No institutional deployment, no independent audit, no penetration test, no
-certification. Slide 19 says so. What we offer is a method and an implementation
+certification. Slide 23 says so. What we offer is a method and an implementation
 whose results reproduce offline in under two seconds.
 
 **6 · "Does human approval actually help, or is it rubber-stamping?"**
@@ -286,7 +320,7 @@ question we have not studied, and I would rather say that than imply we have.
 *Backed by:* `docs/RESPONSIBLE_AI.md` §4, which marks this row **open**.
 
 **7 · "You have a data diode, so it's secure?"**
-A diode governs exactly one link. Slide 25 is the interface inventory — the
+A diode governs exactly one link. Slide 29 is the interface inventory — the
 administrative shell, telemetry export, backup, model updates, removable media.
 Until that list is complete with a named control and owner per line, the
 directionality claim is about a link nobody attacks.

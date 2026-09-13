@@ -3,7 +3,7 @@
   "kind": "paper-figures",
   "tag": "v1.0.0",
   "software_version": "1.0.0",
-  "generated_at": "2026-09-13T12:31:08.642236+00:00",
+  "generated_at": "2026-09-13T14:25:14.622128+00:00",
   "environment": {
     "python_version": "3.14.6",
     "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
@@ -134,7 +134,7 @@
     "coverage_unverified": 0,
     "contract_requirements": 44,
     "control_contract_fields": 7,
-    "test_count": 648,
+    "test_count": 663,
     "domains_verified": 4,
     "domain_pack_states_explored": 33600,
     "domain_pack_states_explored_display": "33,600",

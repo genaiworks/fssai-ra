@@ -15,6 +15,7 @@ Route groups
 ``/v1/resources``                           the authoritative register
 ``/v1/proposals``                           propose, approve, execute, inspect
 ``/v1/evidence``                            the decision record and its verification
+``/v1/disclosure``                          governed reads and releases (second rule)
 ``/v1/verification``, ``/v1/conformance``   machine-checked assurance on demand
 ``/v1/recovery``                            reconciliation, for the named owner
 
@@ -68,11 +69,22 @@ class ApprovalCreate(BaseModel):
 EvidenceText = Annotated[str, Field(min_length=1, max_length=20_000)]
 
 
+class GovernedContext(BaseModel):
+    """Records to place in the model's context, released only through the gate."""
+
+    grant_id: str = Field(min_length=1, max_length=200)
+    session_id: str = Field(min_length=1, max_length=200)
+    purpose: str = Field(min_length=1, max_length=200)
+    subjects: list[str] = Field(min_length=1, max_length=100)
+    fields: list[str] = Field(min_length=1, max_length=200)
+
+
 class ProposeTask(BaseModel):
     """Ask the configured model for tool-call proposals. Nothing executes."""
 
     task: str = Field(min_length=1, max_length=2000)
     evidence: list[EvidenceText] = Field(default_factory=list, max_length=20)
+    governed_context: GovernedContext | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -204,9 +216,19 @@ def create_app(
     runtime: ControlPlane | None = None,
     *,
     authenticator: Authenticator | None = None,
+    model_endpoint: str | None = None,
 ) -> FastAPI:
+    from .disclosure import DisclosureDenied
+    from .disclosure_api import DisclosureRuntime, proposals_output, register_disclosure_routes
+
     plane = build_control_plane() if runtime is None else runtime
     auth = authenticator or Authenticator()
+    disclosure = (
+        DisclosureRuntime(plane.profile, plane.evidence,
+                          getattr(plane, "evidence_token", "teaching-evidence-writer"),
+                          model_endpoint=model_endpoint)
+        if plane.profile.disclosure is not None else None
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -258,6 +280,11 @@ def create_app(
     @app.exception_handler(ExecutionDenied)
     async def denied_handler(_request: Request, exc: ExecutionDenied):
         return JSONResponse(status_code=409, content={"error": exc.code, "detail": str(exc)})
+
+    @app.exception_handler(DisclosureDenied)
+    async def disclosure_denied_handler(_request: Request, exc: DisclosureDenied):
+        # 403: nothing was disclosed, and retrying the same request cannot change that.
+        return JSONResponse(status_code=403, content={"error": exc.code, "detail": exc.detail})
 
     @app.exception_handler(ExecutionUncertain)
     async def uncertain_handler(_request: Request, exc: ExecutionUncertain):
@@ -600,6 +627,18 @@ def create_app(
         catalogue = CapabilityCatalogue.default()
         evidence = [UntrustedEvidence(source="operator-supplied", text=item)
                     for item in request.evidence]
+        context = None
+        if request.governed_context is not None:
+            if disclosure is None:
+                raise HTTPException(
+                    status_code=404, detail="this profile declares no disclosure policy")
+            import time as _time
+
+            context = disclosure.assemble(caller, request.governed_context, _time.time())
+            evidence += [
+                UntrustedEvidence(source=f"governed:{context.receipt_id}", text=f"{key}: {value}")
+                for key, value in sorted(context.values.items())
+            ]
         try:
             calls = backend.propose(request.task, evidence)
         except Exception as exc:
@@ -622,11 +661,23 @@ def create_app(
                     capability and capability.action_class.value == "high_impact"
                 ),
             })
-        return {
+        payload = {
             "model": getattr(backend, "name", type(backend).__name__),
             "proposals": proposals,
             "note": "proposals only; the policy enforcement point decides what executes",
         }
+        if context is not None:
+            output = proposals_output(disclosure, caller, context.session_id, proposals)
+            payload["disclosure"] = {
+                "context_receipt": context.receipt_id,
+                "output_id": output.output_id,
+                "label": output.label.to_dict(),
+                "note": "the proposal set carries the label of everything its session read; "
+                        "release it only through /v1/disclosure/outputs/{id}/release",
+            }
+        return payload
+
+    register_disclosure_routes(app, disclosure, Caller)
 
     # -- recovery ----------------------------------------------------------
     @app.post("/v1/recovery/reconcile", tags=["recovery"])

@@ -95,6 +95,9 @@ class ControlPlane:
         self.profile = profile
         self.register = CaseRegister({}) if register is None else register
         self.evidence = EvidenceLedger(evidence_token) if evidence is None else evidence
+        #: Retained so other enforcement points held by this plane, such as the
+        #: disclosure gate, append to the same evidence chain rather than a second one.
+        self.evidence_token = evidence_token
         #: Optional :class:`fssaira.oversight.OversightMonitor`. Supplied here it
         #: is attached to the authority this plane builds, so the HTTP API and the
         #: console enforce review capacity on the same path the CLI does. An
