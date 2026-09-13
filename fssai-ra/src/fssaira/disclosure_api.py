@@ -28,8 +28,8 @@ from pydantic import BaseModel, Field
 
 from .disclosure import (
     DataLabel,
-    DisclosureCode,
     DeclassificationAuthority,
+    DisclosureCode,
     DisclosureDenied,
     DisclosureGate,
     DisclosureGrant,

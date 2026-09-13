@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-13T15:48:44.878984+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-13T16:24:44.353185+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -25,7 +25,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Assisted review — merit failures | `5 → 1` | dependent then independent review assistant, identical lowered floor; every runtime mechanism passed in both |
 | Assisted review — benign completed | `7 → 35` | unaided then assisted: assistance is worth 5.0x in completed legitimate work, which is why institutions will buy it |
 | Contract coverage — machine-verified | `41/44` | 3 organizationally attested, 0 unverified; every requirement bound to a check that is itself checked to exist |
-| Deterministic tests | `699` | no network, no model weights |
+| Deterministic tests | `724` | no network, no model weights |
 | Oversight — sustainable review | `2,640/day` | for a roster of 11, bound by the policy quota; declared capacity, not a measurement of reviewers |
 | Oversight — merit failures executed | `4 → 0` | without load control, then with it, on a queue at 5.0x declared attentive capacity |
 | Oversight — sensitivity sweep | `16/20` | cells where the control was load-bearing out of those where harm was possible; harm reached zero in 16; 4 did not bind (no deliberation floor configured); 5 had no harm to contain |
@@ -34,10 +34,10 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Oversight — deferred to manual review | `32` | the cost of the control, and a measurement of demand against declared capacity |
 | Domain packs — independently verified | `6` | 55,440 total bounded states; education, corporate confidential data, and healthcare record access; synthetic fixtures, not sector-compliance evidence |
 | Domain packs — containment and utility | `180/180, 58/58` | separate denominators per pack; 0 unauthorized mutations |
-| Governed disclosure — flows contained | `98/98` | across 4 packs; conventional access control contained 32, unguarded retrieval 0; 11/11 legitimate flows completed |
-| Governed disclosure — checks load-bearing and states explored | `14/14, 22,220` | 0 violations; synthetic records, and redaction is not de-identification |
-| Mediation Thesis — falsification attempts | `102,933, 0 counterexamples` | 6 falsifiers across every domain pack; not refuted within stated bounds, which is not a proof; the trusted base is outside every falsifier |
-| Threat and alignment catalogue | `18 contained, 10 bounded, 5 residual` | of 33 failure classes, 12 of them alignment failures; every evidence locator is checked to exist; containment is a fixture observation, not a probability |
+| Governed disclosure — flows contained | `106/106` | across 4 packs; conventional access control contained 32, unguarded retrieval 0; 15/15 legitimate flows completed |
+| Governed disclosure — checks load-bearing and states explored | `14/14, 24,272` | 0 violations; synthetic records, and redaction is not de-identification |
+| Mediation Thesis — falsification attempts | `104,997, 0 counterexamples` | 6 falsifiers across every domain pack; not refuted within stated bounds, which is not a proof; the trusted base is outside every falsifier |
+| Threat and alignment catalogue | `21 contained, 10 bounded, 5 residual` | of 36 failure classes, 12 of them alignment failures; every evidence locator is checked to exist; containment is a fixture observation, not a probability |
 | Second domain — states explored | `4,800` | 0 violations; the identical suite, no library change |
 | Second domain — containment and utility | `30/30, 9/9` | its own evidence, borrowed from no other domain; 26 conformance checks |
 | Second domain — defects it exposed | `1` | a declared approval role ignored on non-consequential transitions; unreachable with one domain |

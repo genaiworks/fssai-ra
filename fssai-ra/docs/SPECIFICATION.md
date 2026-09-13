@@ -75,6 +75,7 @@ The safety case moves trust away from the model. It must say where that trust we
 | T-1 | MUST | Declare the trusted computing base: every component whose compromise defeats R1 or R2. At minimum, list enforcement points, signing authorities, evidence store, identity provider, and administrators. | attestation: see [`SECURITY.md`](SECURITY.md) |
 | T-2 | MUST | Declare the interface inventory: every path into and out of the trusted base, with an owner. An undeclared interface is an unreviewed change. | test: `tests/test_diode_transport.py::test_an_interface_without_an_owner_is_flagged` |
 | T-3 | MUST | Hold no credential for an authoritative write or a record store in any process that runs a model. | test: `tests/test_privilege_invariance.py::test_model_output_cannot_introduce_a_capability` |
+| T-5 | MUST | Persist grants, revocations, consent, sessions, outputs, and emergency-access obligations in a store where each decision commits atomically. A restart MUST NOT forget a revocation. | test: `tests/test_disclosure_production.py::test_sql_store_survives_restart_and_forgets_nothing` |
 | T-4 | SHOULD | Separate administration of the model runtime from administration of signing keys and evidence custody. | attestation |
 
 ### TBC-A Authority
@@ -101,7 +102,10 @@ The safety case moves trust away from the model. It must say where that trust we
 | D-7 | MUST | Label every output with the join of everything its session received, and ignore any label the model claims. | test: `tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary` |
 | D-8 | MUST | Lower a label only through a declared rule, with an approval bound to the exact output digest from a declared role held by someone other than the output's holder. | test: `tests/test_disclosure.py::test_declassification_requires_exact_independent_approval` |
 | D-9 | MUST | Bound emergency access by purpose, duration, and justification. Each use MUST open a review obligation, and overdue reviews MUST block further emergency access. | test: `tests/test_disclosure.py::test_break_glass_opens_review_obligation_and_blocks_repeat` |
-| D-10 | SHOULD | Track labels per value rather than per session where the planner supports it. | measurement: not implemented here; see [`RELATED_WORK.md`](RELATED_WORK.md) |
+| D-10 | SHOULD | Track labels per value rather than per session where a trusted orchestrator can name the values used, recomputing labels from issued values and falling back to the session label when unnamed values appear. | test: `tests/test_disclosure_production.py::test_value_level_labels_release_what_session_labels_would_refuse` |
+| D-11 | MUST | Read the record source only after every authorization check passes, so a refusal reveals nothing about whether a subject exists. | test: `tests/test_disclosure_production.py::test_record_sources_are_read_only_after_authorization_so_existence_does_not_leak` |
+| D-12 | MUST | Accept externally issued grants only when signed with the issuer's published asymmetric keys, for the configured issuer and audience, with every standard claim present. | test: `tests/test_disclosure_tokens_and_concurrency.py::test_grant_tokens_are_rejected_when_anything_is_wrong` |
+| D-13 | MUST | Refuse, and record why, when the record source, consent service, or state store cannot answer. | test: `tests/test_disclosure_production.py::test_live_consent_service_is_checked_at_read_and_release_and_fails_closed` |
 
 ### TBC-C Composition and oversight
 
@@ -139,6 +143,8 @@ The safety case moves trust away from the model. It must say where that trust we
 | V-7 | MUST | Verify that every declared state and review role is reachable. | test: `tests/test_disclosure.py::test_every_domain_pack_reaches_every_declared_status_from_its_start` |
 | V-8 | MUST | Rerun all evidence after replacing any component, domain pack, or model. | test: `tests/test_domain_packs.py::test_the_same_authority_kernel_holds_outside_education` |
 | V-10 | MUST | Attempt to refute the Mediation Thesis with every falsifier for every domain pack in scope, and publish attempts, counterexamples, scope, trusted base, and residuals. | test: `tests/test_thesis.py::test_the_thesis_is_not_falsified_within_stated_bounds` |
+| V-11 | MUST | Test revocation against release, and emergency-access limits, under concurrent threads and independent processes sharing one store. | test: `tests/test_disclosure_tokens_and_concurrency.py::test_independent_processes_share_one_store_without_violating_either_invariant` |
+| V-12 | SHOULD | Instrument every pilot with indicators computed from evidence, and state what those indicators cannot measure. | test: `tests/test_disclosure_tokens_and_concurrency.py::test_pilot_indicators_come_from_evidence_and_name_what_they_cannot_measure` |
 | V-9 | SHOULD | Obtain independent assessment and field evidence before production use. | measurement: open; see [`GAPS.md`](GAPS.md) |
 
 ## 5. What conformance does not mean

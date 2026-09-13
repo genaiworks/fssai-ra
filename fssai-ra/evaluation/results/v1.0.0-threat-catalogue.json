@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "kind": "threat-catalogue",
   "summary": {
-    "threats": 33,
-    "contained": 18,
+    "threats": 36,
+    "contained": 21,
     "bounded": 10,
     "residual": 5,
     "by_family": {
@@ -13,12 +13,12 @@
         "residual": 1
       },
       "security": {
-        "contained": 6,
+        "contained": 8,
         "bounded": 3,
         "residual": 2
       },
       "data": {
-        "contained": 6,
+        "contained": 7,
         "bounded": 0,
         "residual": 1
       },
@@ -448,6 +448,45 @@
       "residual": "Resource exhaustion outside governed interfaces, such as compute cost of permitted calls, is not measured."
     },
     {
+      "id": "SE-12",
+      "family": "security",
+      "title": "Subject-existence oracle through refusal codes",
+      "threat": "An unauthorized agent probes identifiers and learns from the refusal whether a patient, customer, or applicant exists.",
+      "references": [
+        "enumeration attack",
+        "OWASP LLM02 Sensitive Information Disclosure"
+      ],
+      "controls": [
+        "authorization before record-source access"
+      ],
+      "status": "contained",
+      "evidence": [
+        "tests/test_disclosure_production.py::test_record_sources_are_read_only_after_authorization_so_existence_does_not_leak"
+      ],
+      "residual": ""
+    },
+    {
+      "id": "SE-13",
+      "family": "security",
+      "title": "Forged or misdirected grant from an authorization-server integration",
+      "threat": "A token signed with a symmetric secret, an untrusted key, the wrong issuer or audience, or an expired lifetime is presented as a disclosure grant, or a valid token's grant is widened after issue.",
+      "references": [
+        "JWT algorithm confusion",
+        "token substitution"
+      ],
+      "controls": [
+        "asymmetric issuer keys",
+        "strict claim validation",
+        "grant fields bound to the token"
+      ],
+      "status": "contained",
+      "evidence": [
+        "tests/test_disclosure_tokens_and_concurrency.py::test_grant_tokens_are_rejected_when_anything_is_wrong",
+        "tests/test_disclosure_tokens_and_concurrency.py::test_a_grant_issued_by_the_authorization_server_authorizes_exactly_what_it_says"
+      ],
+      "residual": ""
+    },
+    {
       "id": "SE-10",
       "family": "security",
       "title": "Compromised host administrator or signing authority",
@@ -534,6 +573,27 @@
       "evidence": [
         "tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read",
         "tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model"
+      ],
+      "residual": ""
+    },
+    {
+      "id": "DA-8",
+      "family": "data",
+      "title": "Revocation, consent, or emergency-access state lost on restart or split across replicas",
+      "threat": "A restart forgets a revocation, or two replicas each allow a holder's single permitted emergency access, or a release commits after a concurrent revocation.",
+      "references": [
+        "time-of-check to time-of-use",
+        "split brain"
+      ],
+      "controls": [
+        "transactional disclosure store",
+        "per-holder locking",
+        "ordered store events"
+      ],
+      "status": "contained",
+      "evidence": [
+        "tests/test_disclosure_production.py::test_sql_store_survives_restart_and_forgets_nothing",
+        "tests/test_disclosure_tokens_and_concurrency.py::test_independent_processes_share_one_store_without_violating_either_invariant"
       ],
       "residual": ""
     },

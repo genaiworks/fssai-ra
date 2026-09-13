@@ -128,10 +128,15 @@ def generate(output_dir: Path, tag: str) -> dict:
     # Governed disclosure: the read path. Every pack that declares a disclosure
     # policy gets the same generated suite, ablation, and bounded model check.
     from fssaira.disclosure_eval import run_disclosure_suite
+    from fssaira.disclosure_concurrency import run_process_race, run_thread_race
     from fssaira.thesis import run_thesis
     from fssaira.threats import check_catalogue
 
     thesis_report = run_thesis(ROOT)
+    health_policy = ApplicationProfile.load(ROOT / "profiles" / "healthcare_record_access.yaml").disclosure
+    process_race = run_process_race(str(ROOT / "profiles" / "healthcare_record_access.yaml"),
+                                    processes=4)
+    thread_race = run_thread_race(health_policy)
 
     threat_report = check_catalogue(ROOT / "threats" / "catalogue.yaml", ROOT)
 
@@ -198,6 +203,12 @@ def generate(output_dir: Path, tag: str) -> dict:
         json.dumps(assisted, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-contract-coverage.json").write_text(
         json.dumps(coverage.to_dict(), indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-disclosure-concurrency.json").write_text(
+        json.dumps({"kind": "disclosure-concurrency",
+                    "note": "attempt counts vary between runs; violations and limits do not",
+                    "thread_race": {k: v for k, v in thread_race.items() if k != "release"},
+                    "process_race": {k: v for k, v in process_race.items() if k != "release"}},
+                   indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-mediation-thesis.json").write_text(
         json.dumps(thesis_report.to_dict(), indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-threat-catalogue.json").write_text(
@@ -402,6 +413,8 @@ def generate(output_dir: Path, tag: str) -> dict:
                 (r["summary"]["checks_ablated"] for r in disclosure_reports), default=0),
             "disclosure_states_explored": sum(
                 r["verification"]["summary"]["states_explored"] for r in disclosure_reports),
+            "concurrency_processes": process_race["processes"],
+            "concurrency_violations": process_race["violations"] + thread_race["violations"],
             "thesis_falsifiers": len(thesis_report.falsifiers),
             "thesis_attempts_display": f"{thesis_report.attempts:,}",
             "thesis_counterexamples": thesis_report.counterexamples,
@@ -470,6 +483,7 @@ def generate(output_dir: Path, tag: str) -> dict:
             "every_contract_requirement_is_bound_or_attested": coverage.holds,
             "every_threat_catalogue_locator_resolves": threat_report.holds,
             "mediation_thesis_not_refuted_within_bounds": thesis_report.holds,
+            "disclosure_concurrency_holds": process_race["holds"] and thread_race["holds"],
             "governed_disclosure_holds_in_every_declaring_pack": bool(disclosure_reports) and all(
                 r["summary"]["holds"] for r in disclosure_reports),
         },

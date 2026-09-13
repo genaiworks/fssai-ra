@@ -1,0 +1,40 @@
+{
+  "kind": "disclosure-concurrency",
+  "note": "attempt counts vary between runs; violations and limits do not",
+  "thread_race": {
+    "kind": "disclosure-thread-race",
+    "store": "memory",
+    "threads": 8,
+    "break_glass": {
+      "attempts": 8,
+      "opened": 1,
+      "open_in_store": 1,
+      "limit": 1
+    },
+    "violations": 0,
+    "holds": true,
+    "bounds": [
+      "threads in one process",
+      "one output, one revocation, one holder",
+      "finite schedule; not a linearizability proof"
+    ]
+  },
+  "process_race": {
+    "kind": "disclosure-process-race",
+    "processes": 4,
+    "complete": true,
+    "break_glass": {
+      "attempts": 4,
+      "opened": 1,
+      "open_in_store": 1,
+      "limit": 1
+    },
+    "violations": 0,
+    "holds": true,
+    "bounds": [
+      "spawned processes with separate connections on one local SQLite WAL file",
+      "PostgreSQL row locking is implemented but not exercised by this fixture",
+      "finite schedule; not a distributed linearizability proof"
+    ]
+  }
+}

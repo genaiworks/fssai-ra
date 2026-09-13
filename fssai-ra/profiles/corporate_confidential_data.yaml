@@ -67,6 +67,10 @@ disclosure:
       classes: [internal, confidential, restricted, trade-secret]
       purposes: [legal-review]
       zone: corporate-private
+    external_counsel:
+      classes: [internal, confidential, restricted]
+      purposes: [legal-review]
+      zone: vendor-contracted
     external_partner:
       classes: [approved-aggregate]
       purposes: [external-release]

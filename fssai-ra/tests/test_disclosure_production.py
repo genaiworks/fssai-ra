@@ -48,7 +48,7 @@ def _policy(path=PACKS[0]):
 def _gate(fx, *, records=None, store=None, consent=None, ledger=None):
     return DisclosureGate(
         fx.policy, fx.records if records is None else records,
-        ledger or EvidenceLedger("w"), "w",
+        ledger if ledger is not None else EvidenceLedger("w"), "w",
         grant_keys=fx.authority.trusted_keys,
         declassification_keys=fx.declassifier.trusted_keys, store=store, consent=consent,
     )
