@@ -94,7 +94,7 @@ component.
 2. [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — map the seven
    planes and twelve invariants before selecting implementation components.
 3. [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — see how the same security kernel is
-   applied to education, corporate-confidential, and healthcare data.
+   applied to education, corporate, healthcare, financial, and government data.
    Then read [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) — the read-path
    rule: purpose-bound grants, a context gate, session labels, exact-output
    declassification, live consent, residency, and bounded break-glass.

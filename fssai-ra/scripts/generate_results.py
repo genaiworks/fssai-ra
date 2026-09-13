@@ -52,6 +52,8 @@ DOMAIN_PROFILE_PATHS = (
     SECOND_PROFILE_PATH,
     ROOT / "profiles" / "corporate_confidential_data.yaml",
     ROOT / "profiles" / "healthcare_record_access.yaml",
+    ROOT / "profiles" / "financial_consumer_data.yaml",
+    ROOT / "profiles" / "government_benefits.yaml",
 )
 CHALLENGE_DIR = ROOT / "challenges"
 #: Roster used only for the published oversight-capacity arithmetic.

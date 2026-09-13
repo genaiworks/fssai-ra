@@ -59,7 +59,7 @@ reviewers, and adopters.
 - [Specification](fssai-ra/docs/SPECIFICATION.md) — normative MUST and SHOULD requirements in six conformance classes, each tied to evidence
 - [Related work](fssai-ra/docs/RELATED_WORK.md) — what this inherits from reference monitors and information-flow control, and how it relates to CaMeL, FIDES, and AI control
 - [Governed disclosure](fssai-ra/docs/GOVERNED_DISCLOSURE.md) — purpose-bound grants, context gate, session labels, declassification, consent, residency, break-glass
-- [Reusable domain packs](fssai-ra/docs/DOMAIN_PACKS.md) — education, corporate confidential data, and healthcare record access
+- [Reusable domain packs](fssai-ra/docs/DOMAIN_PACKS.md) — education, corporate confidential data, healthcare records, consumer finance, and government benefits
 - [Extension guide](fssai-ra/docs/EXTENDING.md) · [Distributed platform](fssai-ra/docs/PLATFORM.md) · [Threat model](fssai-ra/docs/SECURITY.md)
 
 ## Quickstart
@@ -83,7 +83,7 @@ fssaira coverage                                  # is each contract requirement
 fssaira delegation                                # authority that travels: 10 chain risk classes, 3 architectures
 fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
-fssaira profiles --verify                         # check every education, corporate, and healthcare pack
+fssaira profiles --verify                         # check every education, corporate, healthcare, financial, and government pack
 fssaira disclosure profiles/healthcare_record_access.yaml  # what may a model read, and what may leave?
 fssaira threats                                   # alignment failures and AI threats: contained, bounded, residual
 fssaira thesis                                    # try to refute the foundation: six falsifiers, every pack
@@ -127,8 +127,9 @@ What the current branch adds, each answering a question the release could not:
 | **Delegated authority** | **Does authority survive being passed to another agent?** | **10/10 chains contained where per-hop validation contains 2/10; 768 states, 0 violations** |
 | **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 41 machine-verified, 3 attested, 0 unverified** |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
-| **Cross-sector domain packs** | **Does one kernel work across distinct governed-data shapes?** | **4 packs; 33,600 states; 120/120 hostile contained; 37/37 benign completed; 0 unauthorized mutations** |
-| **Governed disclosure** | **Can a model see only what it is entitled to, and never launder it?** | **48/48 hostile data flows contained where conventional access control contains 16; 14/14 checks load-bearing; 9,168 states, 0 violations; 16,000 random stateful operations agree with a reference model after fixing the defect they found** |
+| **Cross-sector domain packs** | **Does one kernel work across distinct governed-data shapes?** | **6 packs across education, corporate, healthcare, finance, and government; 55,440 states; 180/180 hostile contained; 58/58 benign completed; 0 unauthorized mutations** |
+| **Governed disclosure** | **Can a model see only what it is entitled to, and never launder it?** | **98/98 hostile data flows contained where conventional access control contains 32; 14/14 checks load-bearing; 22,220 states, 0 violations; 32,000 random stateful operations agree with a reference model after fixing the defect they found** |
+| **The Mediation Thesis** | **Can anyone refute the foundation?** | **6 falsifiers, 102,933 bounded attempts, 0 counterexamples, after the first run caught 5 contract bindings that named nothing** |
 | **Threat and alignment catalogue** | **Does the safety case depend on the model being aligned?** | **33 failure classes: 18 contained, 10 bounded, 5 residual, each bound to evidence checked to exist** |
 | Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 

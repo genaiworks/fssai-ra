@@ -36,6 +36,8 @@ from fssaira.profiles import ApplicationProfile, ProfileError
 PACKS = (
     "profiles/healthcare_record_access.yaml",
     "profiles/corporate_confidential_data.yaml",
+    "profiles/financial_consumer_data.yaml",
+    "profiles/government_benefits.yaml",
 )
 
 

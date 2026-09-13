@@ -43,8 +43,10 @@ threats:  ## Alignment failures and AI threats: contained, bounded, residual, wi
 disclosure:  ## What may a model read and release? Every pack that declares a disclosure policy
 	$(PYTHON) -m fssaira.cli disclosure profiles/healthcare_record_access.yaml
 	$(PYTHON) -m fssaira.cli disclosure profiles/corporate_confidential_data.yaml
+	$(PYTHON) -m fssaira.cli disclosure profiles/financial_consumer_data.yaml
+	$(PYTHON) -m fssaira.cli disclosure profiles/government_benefits.yaml
 
-domain-packs:  ## Validate and verify every reusable education, corporate, and healthcare pack
+domain-packs:  ## Validate and verify every education, corporate, healthcare, financial, and government pack
 	$(PYTHON) -m fssaira.cli profiles --verify
 
 lab:  ## Open the two browser tools used by docs/LAB.md

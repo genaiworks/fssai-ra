@@ -1,0 +1,130 @@
+# Financial services consumer-data domain pack.
+#
+# A synthetic teaching profile for an AI assistant in consumer lending and fraud
+# operations. It governs credit-limit decisions, fraud holds, and what customer
+# data may reach a model. It makes no credit decision itself and establishes no
+# compliance with any consumer-finance, fair-lending, or credit-reporting law.
+profile_id: financial-consumer-data
+version: "1.0"
+title: Consumer Credit Decisions and Fraud Operations
+resource_name: consumer_credit_request
+owner: consumer_lending_operations
+manual_fallback: >-
+  Leave the account and credit limit unchanged. Route the customer to a named
+  credit officer or fraud investigator through the staffed servicing queue, and
+  give the customer the institution's standard contact and dispute route.
+governance:
+  domain: financial-services
+  purpose: Govern credit-limit decisions, fraud holds, and purpose-bound use of consumer financial data by AI assistants.
+  deployment_profile: teaching
+  data_classes: [customer-identifier, account-financial, credit-bureau, transaction-history, fraud-signal, aggregate-statistics]
+  applicable_frameworks:
+    - Applicable consumer financial privacy, fair lending, credit reporting, and adverse-action notice obligations
+    - Organization-specific model risk management, complaints, and fraud-operations policy
+  prohibited_uses:
+    - Adverse credit decisions without a named accountable officer and stated reasons
+    - Use of protected characteristics or their proxies in credit decisions
+    - Marketing or sale of customer data without consent
+    - Model training on identifiable customer data under this teaching profile
+  processing_basis: The customer relationship, a credit application, a fraud investigation, or a regulatory reporting duty approved for the specific request.
+  data_minimization_rule: Authorize only the customer, fields, purpose, recipients, and duration required for the decision or investigation.
+  retention_rule: Retain decisions, reasons, and evidence for the approved credit, complaints, and regulatory record periods.
+  deletion_rule: Revoke access and delete working copies when the purpose ends, except records under regulatory retention or legal hold.
+  residency_rule: Process customer data only in institution-approved regions and systems recorded in the deployment contract.
+  incident_response: Suspend affected access, preserve evidence, notify security, privacy, compliance, and the data owner, and follow the approved breach and customer-notification process.
+  owners:
+    data: consumer_data_governance
+    privacy: chief_privacy_officer
+    security: chief_information_security_officer
+disclosure:
+  subject_kind: customer
+  purposes: [credit-decision, fraud-investigation, customer-access, regulatory-reporting]
+  fields:
+    customer_name: {class: customer-identifier}
+    account_number: {class: customer-identifier}
+    account_balance: {class: account-financial}
+    declared_income: {class: account-financial}
+    credit_score: {class: credit-bureau}
+    transaction_history: {class: transaction-history}
+    fraud_score: {class: fraud-signal}
+  model_endpoints:
+    bank_private_model: bank-private
+    contracted_vendor_model: vendor-contracted
+    public_model_api: external
+  class_zones:
+    customer-identifier: [bank-private]
+    account-financial: [bank-private, vendor-contracted]
+    credit-bureau: [bank-private]
+    transaction-history: [bank-private]
+    fraud-signal: [bank-private]
+    aggregate-statistics: [bank-private, vendor-contracted, external]
+  recipients:
+    credit_analyst:
+      classes: [customer-identifier, account-financial, credit-bureau]
+      purposes: [credit-decision]
+      zone: bank-private
+    fraud_investigator:
+      classes: [customer-identifier, account-financial, transaction-history, fraud-signal]
+      purposes: [fraud-investigation]
+      zone: bank-private
+    customer_portal:
+      classes: [customer-identifier, account-financial, credit-bureau, transaction-history]
+      purposes: [customer-access]
+      zone: bank-private
+      subject_scope: self
+    regulator_reporting:
+      classes: [aggregate-statistics]
+      purposes: [regulatory-reporting]
+      zone: external
+    marketing_partner:
+      classes: []
+      purposes: []
+      zone: external
+  declassification:
+    - name: aggregate_for_regulatory_reporting
+      from_classes: [account-financial, credit-bureau, transaction-history]
+      to_class: aggregate-statistics
+      purposes: [regulatory-reporting]
+      approval_role: compliance_officer
+      removes_subject_identity: true
+  break_glass:
+    purposes: [fraud-investigation]
+    max_ttl_seconds: 1800
+    max_unreviewed_per_holder: 1
+    review_role: compliance_officer
+transitions:
+  - operation: verify_customer_identity
+    from_status: draft
+    to_status: identity_verified
+    consequential: false
+    approval_role: customer_service_agent
+
+  - operation: request_credit_limit_change
+    from_status: identity_verified
+    to_status: awaiting_credit_review
+    consequential: true
+    approval_role: credit_analyst
+
+  - operation: approve_credit_limit_change
+    from_status: awaiting_credit_review
+    to_status: credit_limit_changed
+    consequential: true
+    approval_role: credit_risk_officer
+
+  - operation: decline_credit_limit_change
+    from_status: awaiting_credit_review
+    to_status: credit_declined
+    consequential: true
+    approval_role: credit_risk_officer
+
+  - operation: place_fraud_hold
+    from_status: identity_verified
+    to_status: fraud_hold
+    consequential: true
+    approval_role: fraud_investigator
+
+  - operation: release_fraud_hold
+    from_status: fraud_hold
+    to_status: identity_verified
+    consequential: true
+    approval_role: compliance_officer

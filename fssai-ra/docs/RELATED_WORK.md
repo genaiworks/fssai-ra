@@ -55,7 +55,7 @@ and evidence.
    predicates, stateful random sequences, ablation of every check, a comparison with
    a careful conventional design, and a threat catalogue that must state residuals.
 4. **Transfer as a first-class test.** The same kernel and generated suites run
-   across education, corporate, and healthcare packs. Each pack reports its own
+   across education, corporate, healthcare, financial, and government packs. Each pack reports its own
    denominators, and transfer has repeatedly exposed real defects.
 
 ## What prior work does better, today

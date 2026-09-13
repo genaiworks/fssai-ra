@@ -508,7 +508,7 @@ SUBMITTED_CLAIMS = [
      "{second_domain_scenarios_contained} of {second_domain_scenarios_total} scenarios contained, "
      "{second_domain_benign_completed} of {second_domain_benign_total} benign tasks, "
      "{second_domain_conformance_checks} conformance checks"),
-    ("cross-domain matrix", "four synthetic packs, the identical kernel covers "
+    ("cross-domain matrix", "six synthetic packs, the identical kernel covers "
      "{domain_pack_states_explored_display} bounded configurations, contains "
      "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios, "
      "completes {domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks"),

@@ -45,11 +45,11 @@ The same hostile proposals and legitimate work went to three architectures. An u
 
 Review capacity shows why human oversight is a system resource, not a slogan. With the reference assumptions, a roster of 11 reviewers sustains 2,640 consequential actions per day. In a queue trial, 40 arrivals reach one reviewer budgeted for 8. Some proposals are structurally valid yet wrong on merit. Without load control, four such failures execute. With it, none do, and 32 actions defer to manual review. The degradation curve is a declared parameter, not a measure of real officers; field study remains open.
 
-Across four synthetic packs, the identical kernel covers 33,600 bounded configurations, contains 120 of 120 hostile scenarios, completes 37 of 37 benign tasks, and records zero unauthorised mutations. This demonstrates reuse, not sector compliance or safety. The academic pack retains the transfer baseline: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. Its first run exposed a role declared in the pack but ignored at runtime.
+Across six synthetic packs, the identical kernel covers 55,440 bounded configurations, contains 180 of 180 hostile scenarios, completes 58 of 58 benign tasks, and records zero unauthorised mutations. This demonstrates reuse, not sector compliance or safety. The academic pack retains the transfer baseline: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. Its first run exposed a role declared in the pack but ignored at runtime.
 
-Reads were tested the same way. Across corporate and healthcare packs, 48 of 48 hostile data flows were contained, including wrong-patient injections, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control contained 16. All 14 checks were load-bearing, and 9,168 configurations showed zero violations. Stateful testing, 16,000 random operations against an independent model, found that release skipped the consent recheck; fixed, it agrees everywhere.
+Reads were tested the same way. Across corporate, health, finance, and government packs, 98 of 98 hostile data flows were contained, including wrong-patient injections, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control contained 32. All 14 checks were load-bearing, and 22,220 configurations showed zero violations. Stateful testing, 32,000 random operations against an independent model, found that release skipped the consent recheck; fixed, it agrees everywhere.
 
-The design assumes the model may be misaligned. Of 33 failure classes, from specification gaming and deceptive risk reports to oversight flooding and compromised signers, 18 are contained, 10 bounded, and 5 residual. Six falsifiers made 55,937 bounded attempts to refute the thesis and found no counterexample.
+The design assumes the model may be misaligned. Of 33 failure classes, from specification gaming and deceptive risk reports to oversight flooding and compromised signers, 18 are contained, 10 bounded, and 5 residual. Six falsifiers made 102,933 bounded attempts to refute the thesis and found no counterexample.
 
 An open adversary corpus scores YAML attacks without records or code and reports external contributions; today that number is zero.
 
@@ -65,7 +65,7 @@ Trust by Construction moves AI governance from models to systems on one thesis: 
 
 Five actions follow for any institution building AI: name each mediator and the credential only it holds; bind every consequential action and sensitive read to a purpose, an owner, and a failure test; declare the trusted base and review capacity; claim conformance by class with locally regenerated evidence; and share failure cases, not sensitive data.
 
-Policymakers can then demand named powers, limits, fallback, and proof. Engineers can map each duty to an enforced interface and rerun the falsifiers after replacing any model or product. Education supplies the literacy to inspect both.
+Policymakers and procurement officers can then demand named powers, limits, fallback, and proof. Engineers can map each duty to an enforced interface and rerun the falsifiers after replacing any model or product. Education supplies the literacy to inspect both, in every sector.
 
 The claim is bounded. A governed agent can enforce an unjust rule faster; mediation makes action attributable and contestable, not fair. The prototype proves neither production security nor compliance. It offers a falsifiable foundation for law, public voice, hardware assurance, and independent evidence to build on.
 

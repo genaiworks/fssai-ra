@@ -14,6 +14,8 @@ PACKS = (
     "profiles/academic_record_correction.yaml",
     "profiles/corporate_confidential_data.yaml",
     "profiles/healthcare_record_access.yaml",
+    "profiles/financial_consumer_data.yaml",
+    "profiles/government_benefits.yaml",
 )
 
 
@@ -59,6 +61,7 @@ def test_profile_catalog_validates_and_summarizes_every_pack():
     assert {item["profile_id"] for item in catalog} == {
         "student-support", "academic-record-correction",
         "corporate-confidential-data", "healthcare-record-access",
+        "financial-consumer-data", "government-benefits",
     }
     assert all(item["domain"] != "undeclared" for item in catalog)
     assert all(item["approval_roles"] for item in catalog)
@@ -95,7 +98,7 @@ def test_profile_catalog_cli_has_machine_readable_cross_domain_evidence(tmp_path
     assert main(["profiles", "--verify", "--output", str(output)]) == 0
     report = json.loads(output.read_text())
 
-    assert report["count"] == 4
+    assert report["count"] == 6
     assert report["profiles"][0]["profile_id"]
     for profile in report["profiles"]:
         assert profile["assurance"]["invariants_hold"] is True

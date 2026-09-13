@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "contract-coverage",
-  "generated_at": "2026-09-13T15:30:31.518716+00:00",
+  "generated_at": "2026-09-13T15:48:44.785235+00:00",
   "totals": {
     "requirements": 44,
     "machine_verified": 41,
@@ -182,8 +182,8 @@
         {
           "requirement_id": "BI-2",
           "mechanism": "ablation",
-          "locator": "src/fssaira/evaluation.py::egress_default_deny",
-          "note": ""
+          "locator": "tests/test_ablations.py::test_removing_egress_control_enables_exfiltration",
+          "note": "repointed after the thesis falsifier found this binding named an ablation control, not a function that exists"
         },
         {
           "requirement_id": "BI-2",
@@ -213,8 +213,8 @@
         {
           "requirement_id": "BI-3",
           "mechanism": "ablation",
-          "locator": "src/fssaira/evaluation.py::privilege_invariance_catalogue",
-          "note": ""
+          "locator": "tests/test_privilege_invariance.py::test_without_a_catalogue_the_caller_sets_its_own_review_level",
+          "note": "repointed after the thesis falsifier found this binding named an ablation control, not a function that exists"
         }
       ]
     },
@@ -258,8 +258,8 @@
         {
           "requirement_id": "AA-1",
           "mechanism": "ablation",
-          "locator": "src/fssaira/evaluation.py::named_human_for_high_impact",
-          "note": ""
+          "locator": "tests/test_ablations.py::test_removing_human_approval_enables_unilateral_high_impact",
+          "note": "repointed after the thesis falsifier found this binding named an ablation control, not a function that exists"
         }
       ]
     },
@@ -271,8 +271,8 @@
         {
           "requirement_id": "AA-2",
           "mechanism": "ablation",
-          "locator": "src/fssaira/evaluation.py::least_privilege_tool_grant",
-          "note": ""
+          "locator": "tests/test_ablations.py::test_removing_least_privilege_lets_agent_approve_awards",
+          "note": "repointed after the thesis falsifier found this binding named an ablation control, not a function that exists"
         }
       ]
     },
@@ -284,8 +284,8 @@
         {
           "requirement_id": "AA-3",
           "mechanism": "scenario",
-          "locator": "src/fssaira/evaluation.py::evidence_write_credential",
-          "note": ""
+          "locator": "src/fssaira/evaluation.py::ablations",
+          "note": "the evidence_write_credential ablation inside EvaluationRunner.ablations; repointed after the thesis falsifier found the old locator named no function"
         }
       ]
     },

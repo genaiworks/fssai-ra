@@ -64,7 +64,8 @@ bindings:
     locator: src/fssaira/evaluation.py::bounded_intelligence_scenarios
   - requirements: [BI-2]
     mechanism: ablation
-    locator: src/fssaira/evaluation.py::egress_default_deny
+    locator: tests/test_ablations.py::test_removing_egress_control_enables_exfiltration
+    note: repointed after the thesis falsifier found this binding named an ablation control, not a function that exists
   - requirements: [BI-2]
     mechanism: conformance
     locator: CF-BI-02
@@ -76,7 +77,8 @@ bindings:
     locator: tests/test_privilege_invariance.py::test_an_unknown_capability_fails_closed
   - requirements: [BI-3]
     mechanism: ablation
-    locator: src/fssaira/evaluation.py::privilege_invariance_catalogue
+    locator: tests/test_privilege_invariance.py::test_without_a_catalogue_the_caller_sets_its_own_review_level
+    note: repointed after the thesis falsifier found this binding named an ablation control, not a function that exists
   - requirements: [BI-4]
     mechanism: unit_test
     locator: tests/test_properties.py
@@ -92,13 +94,16 @@ bindings:
   # -- accountable action ------------------------------------------------
   - requirements: [AA-1]
     mechanism: ablation
-    locator: src/fssaira/evaluation.py::named_human_for_high_impact
+    locator: tests/test_ablations.py::test_removing_human_approval_enables_unilateral_high_impact
+    note: repointed after the thesis falsifier found this binding named an ablation control, not a function that exists
   - requirements: [AA-2]
     mechanism: ablation
-    locator: src/fssaira/evaluation.py::least_privilege_tool_grant
+    locator: tests/test_ablations.py::test_removing_least_privilege_lets_agent_approve_awards
+    note: repointed after the thesis falsifier found this binding named an ablation control, not a function that exists
   - requirements: [AA-3]
     mechanism: scenario
-    locator: src/fssaira/evaluation.py::evidence_write_credential
+    locator: src/fssaira/evaluation.py::ablations
+    note: the evidence_write_credential ablation inside EvaluationRunner.ablations; repointed after the thesis falsifier found the old locator named no function
   - requirements: [AA-4]
     mechanism: model_check
     locator: src/fssaira/verification.py::verify_profile

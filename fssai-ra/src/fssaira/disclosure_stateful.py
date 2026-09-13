@@ -351,6 +351,17 @@ def run_stateful(policy: DisclosurePolicy, *, sequences: int = 200, steps: int =
                 entry = ref.outputs[oid]
                 recipient = rng.choice(recipients)
                 purpose = rng.choice(purposes)
+                # Half the releases aim at a purpose the output still permits and a
+                # recipient declared for it. Uniform choices almost never satisfy a
+                # strict pack, which would leave the allow path, and any over-blocking
+                # defect in it, untested.
+                allowed_purposes = sorted(entry.label.purposes)
+                if allowed_purposes and rng.random() < 0.5:
+                    purpose = rng.choice(allowed_purposes)
+                    matching = [name for name in recipients
+                                if purpose in policy.recipients[name].purposes]
+                    if matching:
+                        recipient = rng.choice(matching)
                 recipient_id = rng.choice(SUBJECTS)
                 expected_ok = ref.release_allowed(oid, recipient, recipient_id, purpose, now)
                 try:

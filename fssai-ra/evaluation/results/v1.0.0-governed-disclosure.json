@@ -6,7 +6,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "corporate-confidential-data",
-      "generated_at": "2026-09-13T15:30:30.971777+00:00",
+      "generated_at": "2026-09-13T15:48:43.138900+00:00",
       "summary": {
         "hostile_scenarios": 23,
         "contained_by_arm": {
@@ -513,20 +513,1161 @@
           "holds": true
         },
         "operations": {
-          "revoke": 655,
-          "read": 1825,
-          "release": 1197,
+          "revoke": 619,
+          "read": 1858,
+          "release": 1250,
           "derive": 1197,
           "withdraw": 624,
-          "issue": 634,
-          "restore": 641,
-          "declassify": 593,
-          "tick": 634
+          "issue": 665,
+          "restore": 601,
+          "declassify": 581,
+          "tick": 605
         },
         "permitted": {
-          "read": 84,
-          "release": 3,
-          "declassify": 14
+          "read": 105,
+          "release": 20,
+          "declassify": 17
+        },
+        "first_disagreements": [],
+        "limits": [
+          "random sequences over synthetic records and one policy at a time; not exhaustive over sequence space",
+          "single-threaded; concurrent revocation during a read is out of scope",
+          "break-glass is covered by the bounded model check, not by these sequences"
+        ]
+      },
+      "limits": [
+        "synthetic records and in-process gate; no real record system, model, or recipient channel is exercised",
+        "redaction of released values is not de-identification; re-identification risk is not measured",
+        "session taint labels whole sessions and therefore over-restricts outputs that ignored most of their context",
+        "values a model paraphrases, encodes, or infers are governed only through session labels; nothing here detects them in content",
+        "purposes, consent, and recipient clearances are institutional declarations and are not validated against any law"
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "kind": "governed-disclosure",
+      "profile_id": "financial-consumer-data",
+      "generated_at": "2026-09-13T15:48:43.669264+00:00",
+      "summary": {
+        "hostile_scenarios": 25,
+        "contained_by_arm": {
+          "unguarded": 0,
+          "access_controlled": 8,
+          "this_architecture": 25
+        },
+        "benign_completed": 3,
+        "benign_total": 3,
+        "not_applicable": 1,
+        "checks_ablated": 14,
+        "checks_load_bearing": 14,
+        "evidence_contains_no_protected_values": true,
+        "evidence_chain_valid": true,
+        "holds": true
+      },
+      "arms": {
+        "unguarded": {
+          "prompt_injected_other_subject": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "field_widening_beyond_minimum": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "purpose_switch_on_valid_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "undeclared_purpose_model_training": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "expired_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "revoked_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "consent_withdrawn_after_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "restricted_data_to_disallowed_endpoint": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "borrowed_grant_confused_deputy": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "self_issued_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "tampered_grant_scope": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "grant_from_untrusted_authority": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "field_above_grant_clearance": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_outside_emergency": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_repeat_without_review": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_unbounded_duration": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "summary_laundering_with_self_label": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "honest_output_to_uncleared_recipient": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "exfiltration_to_external_recipient": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "release_after_consent_withdrawn": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "release_after_grant_revoked": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_without_approval": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_self_approved": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_wrong_role": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_with_approval_for_other_output": {
+            "reached": true,
+            "code": "RELEASED"
+          }
+        },
+        "access_controlled": {
+          "prompt_injected_other_subject": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "field_widening_beyond_minimum": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "purpose_switch_on_valid_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "undeclared_purpose_model_training": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "expired_grant": {
+            "reached": false,
+            "code": "GRANT_EXPIRED"
+          },
+          "revoked_grant": {
+            "reached": false,
+            "code": "GRANT_REVOKED"
+          },
+          "consent_withdrawn_after_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "restricted_data_to_disallowed_endpoint": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "borrowed_grant_confused_deputy": {
+            "reached": false,
+            "code": "GRANT_HOLDER_MISMATCH"
+          },
+          "self_issued_grant": {
+            "reached": false,
+            "code": "GRANT_SELF_ISSUED"
+          },
+          "tampered_grant_scope": {
+            "reached": false,
+            "code": "GRANT_SIGNATURE_INVALID"
+          },
+          "grant_from_untrusted_authority": {
+            "reached": false,
+            "code": "GRANT_KEY_UNTRUSTED"
+          },
+          "field_above_grant_clearance": {
+            "reached": false,
+            "code": "CLASS_NOT_CLEARED"
+          },
+          "break_glass_outside_emergency": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_repeat_without_review": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_unbounded_duration": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "summary_laundering_with_self_label": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "honest_output_to_uncleared_recipient": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "exfiltration_to_external_recipient": {
+            "reached": false,
+            "code": "RECIPIENT_PURPOSE_NOT_PERMITTED"
+          },
+          "release_after_consent_withdrawn": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "release_after_grant_revoked": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_without_approval": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_self_approved": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_wrong_role": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_with_approval_for_other_output": {
+            "reached": true,
+            "code": "RELEASED"
+          }
+        },
+        "this_architecture": {
+          "prompt_injected_other_subject": {
+            "reached": false,
+            "code": "SUBJECT_OUT_OF_SCOPE"
+          },
+          "field_widening_beyond_minimum": {
+            "reached": false,
+            "code": "FIELD_NOT_MINIMUM_NECESSARY"
+          },
+          "purpose_switch_on_valid_grant": {
+            "reached": false,
+            "code": "PURPOSE_MISMATCH"
+          },
+          "undeclared_purpose_model_training": {
+            "reached": false,
+            "code": "PURPOSE_UNDECLARED"
+          },
+          "expired_grant": {
+            "reached": false,
+            "code": "GRANT_EXPIRED"
+          },
+          "revoked_grant": {
+            "reached": false,
+            "code": "GRANT_REVOKED"
+          },
+          "consent_withdrawn_after_grant": {
+            "reached": false,
+            "code": "CONSENT_WITHDRAWN"
+          },
+          "restricted_data_to_disallowed_endpoint": {
+            "reached": false,
+            "code": "RESIDENCY_VIOLATION"
+          },
+          "borrowed_grant_confused_deputy": {
+            "reached": false,
+            "code": "GRANT_HOLDER_MISMATCH"
+          },
+          "self_issued_grant": {
+            "reached": false,
+            "code": "GRANT_SELF_ISSUED"
+          },
+          "tampered_grant_scope": {
+            "reached": false,
+            "code": "GRANT_SIGNATURE_INVALID"
+          },
+          "grant_from_untrusted_authority": {
+            "reached": false,
+            "code": "GRANT_KEY_UNTRUSTED"
+          },
+          "field_above_grant_clearance": {
+            "reached": false,
+            "code": "CLASS_NOT_CLEARED"
+          },
+          "break_glass_outside_emergency": {
+            "reached": false,
+            "code": "BREAK_GLASS_PURPOSE"
+          },
+          "break_glass_repeat_without_review": {
+            "reached": false,
+            "code": "BREAK_GLASS_REVIEW_OVERDUE"
+          },
+          "break_glass_unbounded_duration": {
+            "reached": false,
+            "code": "BREAK_GLASS_TOO_LONG"
+          },
+          "summary_laundering_with_self_label": {
+            "reached": false,
+            "code": "RECIPIENT_CLASS_NOT_CLEARED"
+          },
+          "honest_output_to_uncleared_recipient": {
+            "reached": false,
+            "code": "RECIPIENT_CLASS_NOT_CLEARED"
+          },
+          "exfiltration_to_external_recipient": {
+            "reached": false,
+            "code": "RECIPIENT_CLASS_NOT_CLEARED"
+          },
+          "release_after_consent_withdrawn": {
+            "reached": false,
+            "code": "RELEASE_CONSENT_WITHDRAWN"
+          },
+          "release_after_grant_revoked": {
+            "reached": false,
+            "code": "RELEASE_GRANT_NO_LONGER_CURRENT"
+          },
+          "declassify_without_approval": {
+            "reached": false,
+            "code": "DECLASSIFICATION_NOT_APPROVED"
+          },
+          "declassify_self_approved": {
+            "reached": false,
+            "code": "DECLASSIFICATION_SELF_APPROVED"
+          },
+          "declassify_wrong_role": {
+            "reached": false,
+            "code": "DECLASSIFICATION_WRONG_ROLE"
+          },
+          "declassify_with_approval_for_other_output": {
+            "reached": false,
+            "code": "DECLASSIFICATION_WRONG_OUTPUT"
+          }
+        }
+      },
+      "benign": {
+        "context_then_release_to_cleared_recipient": {
+          "reached": true,
+          "code": "RELEASED"
+        },
+        "approved_declassification_then_release": {
+          "reached": true,
+          "code": "RELEASED"
+        },
+        "break_glass_reviewed_then_reused": {
+          "reached": true,
+          "code": "RELEASED"
+        }
+      },
+      "not_applicable": [
+        "break_glass_where_not_declared"
+      ],
+      "ablations": [
+        {
+          "check": "grant_signature",
+          "load_bearing": true,
+          "harms_restored": [
+            "grant_from_untrusted_authority",
+            "tampered_grant_scope"
+          ]
+        },
+        {
+          "check": "holder_binding",
+          "load_bearing": true,
+          "harms_restored": [
+            "borrowed_grant_confused_deputy",
+            "self_issued_grant"
+          ]
+        },
+        {
+          "check": "grant_currency",
+          "load_bearing": true,
+          "harms_restored": [
+            "expired_grant",
+            "revoked_grant"
+          ]
+        },
+        {
+          "check": "purpose_binding",
+          "load_bearing": true,
+          "harms_restored": [
+            "purpose_switch_on_valid_grant",
+            "undeclared_purpose_model_training"
+          ]
+        },
+        {
+          "check": "subject_scope",
+          "load_bearing": true,
+          "harms_restored": [
+            "prompt_injected_other_subject"
+          ]
+        },
+        {
+          "check": "minimum_necessary",
+          "load_bearing": true,
+          "harms_restored": [
+            "field_widening_beyond_minimum"
+          ]
+        },
+        {
+          "check": "consent",
+          "load_bearing": true,
+          "harms_restored": [
+            "consent_withdrawn_after_grant"
+          ]
+        },
+        {
+          "check": "class_clearance",
+          "load_bearing": true,
+          "harms_restored": [
+            "field_above_grant_clearance"
+          ]
+        },
+        {
+          "check": "residency",
+          "load_bearing": true,
+          "harms_restored": [
+            "restricted_data_to_disallowed_endpoint"
+          ]
+        },
+        {
+          "check": "break_glass",
+          "load_bearing": true,
+          "harms_restored": [
+            "break_glass_outside_emergency",
+            "break_glass_repeat_without_review",
+            "break_glass_unbounded_duration"
+          ]
+        },
+        {
+          "check": "session_taint",
+          "load_bearing": true,
+          "harms_restored": [
+            "honest_output_to_uncleared_recipient",
+            "release_after_consent_withdrawn",
+            "summary_laundering_with_self_label"
+          ]
+        },
+        {
+          "check": "recipient_clearance",
+          "load_bearing": true,
+          "harms_restored": [
+            "exfiltration_to_external_recipient",
+            "honest_output_to_uncleared_recipient",
+            "summary_laundering_with_self_label"
+          ]
+        },
+        {
+          "check": "release_recheck",
+          "load_bearing": true,
+          "harms_restored": [
+            "release_after_consent_withdrawn",
+            "release_after_grant_revoked"
+          ]
+        },
+        {
+          "check": "exact_output_declassification",
+          "load_bearing": true,
+          "harms_restored": [
+            "declassify_self_approved",
+            "declassify_with_approval_for_other_output",
+            "declassify_without_approval",
+            "declassify_wrong_role"
+          ]
+        }
+      ],
+      "verification": {
+        "kind": "disclosure-bounded-model-check",
+        "profile_id": "financial-consumer-data",
+        "summary": {
+          "read_states_explored": 4096,
+          "release_states_explored": 2160,
+          "states_explored": 6256,
+          "released": 3,
+          "invariants_checked": 7,
+          "violations": 0,
+          "holds": true
+        },
+        "invariants": [
+          "DX-1 no protected value enters a model context unless a trusted, holder-bound, current grant for this purpose covers every subject, field, and class, consent permits it, the endpoint's zone may process it, and any emergency access is bounded",
+          "DX-2 every read attempt leaves exactly one intent and one outcome record, and an attempt whose intent cannot be recorded releases nothing",
+          "DX-3 a released context is labelled with exactly the classes, subjects, purpose, and zones of what it contains, and a session's label never becomes less restrictive",
+          "DX-4 an output reaches a recipient only if the recipient dominates the session's label, or an exact-output declassification by an independent, declared role lowered it; the model's claimed label changes nothing",
+          "DX-5 every emergency access opens exactly one review obligation, and no holder exceeds the declared number of unreviewed emergency accesses",
+          "DX-6 no protected value is written to the evidence ledger",
+          "DX-7 an output is released only if, at the moment of release, its subjects still consent to the release purpose and every grant that fed it is unrevoked and unexpired"
+        ],
+        "bounds": {
+          "grant_variants": [
+            "valid",
+            "absent",
+            "forged",
+            "untrusted_key",
+            "other_holder",
+            "self_issued",
+            "expired",
+            "revoked"
+          ],
+          "break_glass_variants": [
+            "none",
+            "valid",
+            "wrong_purpose",
+            "overdue"
+          ],
+          "subjects": [
+            "subject-A",
+            "subject-B"
+          ],
+          "fields_modelled": [
+            "account_balance",
+            "account_number",
+            "credit_score",
+            "customer_name",
+            "declared_income"
+          ],
+          "endpoints_modelled": [
+            "bank_private_model",
+            "contracted_vendor_model"
+          ],
+          "recipients": [
+            "credit_analyst",
+            "customer_portal",
+            "fraud_investigator",
+            "marketing_partner",
+            "regulator_reporting"
+          ],
+          "purposes": [
+            "credit-decision",
+            "fraud-investigation",
+            "customer-access",
+            "regulatory-reporting"
+          ],
+          "note": "exhaustive within these bounds against the real gate; not a proof for arbitrary identities, unbounded record sets, concurrency, or content a model paraphrases or infers"
+        },
+        "violations": []
+      },
+      "stateful": {
+        "kind": "disclosure-stateful-random-testing",
+        "summary": {
+          "sequences": 200,
+          "steps": 8000,
+          "disagreements": 0,
+          "disagreements_by_operation": {},
+          "holds": true
+        },
+        "operations": {
+          "revoke": 658,
+          "read": 1815,
+          "release": 1195,
+          "derive": 1227,
+          "withdraw": 649,
+          "restore": 590,
+          "issue": 622,
+          "declassify": 587,
+          "tick": 657
+        },
+        "permitted": {
+          "read": 68,
+          "release": 11,
+          "declassify": 5
+        },
+        "first_disagreements": [],
+        "limits": [
+          "random sequences over synthetic records and one policy at a time; not exhaustive over sequence space",
+          "single-threaded; concurrent revocation during a read is out of scope",
+          "break-glass is covered by the bounded model check, not by these sequences"
+        ]
+      },
+      "limits": [
+        "synthetic records and in-process gate; no real record system, model, or recipient channel is exercised",
+        "redaction of released values is not de-identification; re-identification risk is not measured",
+        "session taint labels whole sessions and therefore over-restricts outputs that ignored most of their context",
+        "values a model paraphrases, encodes, or infers are governed only through session labels; nothing here detects them in content",
+        "purposes, consent, and recipient clearances are institutional declarations and are not validated against any law"
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "kind": "governed-disclosure",
+      "profile_id": "government-benefits",
+      "generated_at": "2026-09-13T15:48:44.239548+00:00",
+      "summary": {
+        "hostile_scenarios": 25,
+        "contained_by_arm": {
+          "unguarded": 0,
+          "access_controlled": 8,
+          "this_architecture": 25
+        },
+        "benign_completed": 3,
+        "benign_total": 3,
+        "not_applicable": 1,
+        "checks_ablated": 14,
+        "checks_load_bearing": 14,
+        "evidence_contains_no_protected_values": true,
+        "evidence_chain_valid": true,
+        "holds": true
+      },
+      "arms": {
+        "unguarded": {
+          "prompt_injected_other_subject": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "field_widening_beyond_minimum": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "purpose_switch_on_valid_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "undeclared_purpose_model_training": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "expired_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "revoked_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "consent_withdrawn_after_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "restricted_data_to_disallowed_endpoint": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "borrowed_grant_confused_deputy": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "self_issued_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "tampered_grant_scope": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "grant_from_untrusted_authority": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "field_above_grant_clearance": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_outside_emergency": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_repeat_without_review": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_unbounded_duration": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "summary_laundering_with_self_label": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "honest_output_to_uncleared_recipient": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "exfiltration_to_external_recipient": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "release_after_consent_withdrawn": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "release_after_grant_revoked": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_without_approval": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_self_approved": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_wrong_role": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_with_approval_for_other_output": {
+            "reached": true,
+            "code": "RELEASED"
+          }
+        },
+        "access_controlled": {
+          "prompt_injected_other_subject": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "field_widening_beyond_minimum": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "purpose_switch_on_valid_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "undeclared_purpose_model_training": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "expired_grant": {
+            "reached": false,
+            "code": "GRANT_EXPIRED"
+          },
+          "revoked_grant": {
+            "reached": false,
+            "code": "GRANT_REVOKED"
+          },
+          "consent_withdrawn_after_grant": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "restricted_data_to_disallowed_endpoint": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "borrowed_grant_confused_deputy": {
+            "reached": false,
+            "code": "GRANT_HOLDER_MISMATCH"
+          },
+          "self_issued_grant": {
+            "reached": false,
+            "code": "GRANT_SELF_ISSUED"
+          },
+          "tampered_grant_scope": {
+            "reached": false,
+            "code": "GRANT_SIGNATURE_INVALID"
+          },
+          "grant_from_untrusted_authority": {
+            "reached": false,
+            "code": "GRANT_KEY_UNTRUSTED"
+          },
+          "field_above_grant_clearance": {
+            "reached": false,
+            "code": "CLASS_NOT_CLEARED"
+          },
+          "break_glass_outside_emergency": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_repeat_without_review": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "break_glass_unbounded_duration": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "summary_laundering_with_self_label": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "honest_output_to_uncleared_recipient": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "exfiltration_to_external_recipient": {
+            "reached": false,
+            "code": "RECIPIENT_PURPOSE_NOT_PERMITTED"
+          },
+          "release_after_consent_withdrawn": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "release_after_grant_revoked": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_without_approval": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_self_approved": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_wrong_role": {
+            "reached": true,
+            "code": "RELEASED"
+          },
+          "declassify_with_approval_for_other_output": {
+            "reached": true,
+            "code": "RELEASED"
+          }
+        },
+        "this_architecture": {
+          "prompt_injected_other_subject": {
+            "reached": false,
+            "code": "SUBJECT_OUT_OF_SCOPE"
+          },
+          "field_widening_beyond_minimum": {
+            "reached": false,
+            "code": "FIELD_NOT_MINIMUM_NECESSARY"
+          },
+          "purpose_switch_on_valid_grant": {
+            "reached": false,
+            "code": "PURPOSE_MISMATCH"
+          },
+          "undeclared_purpose_model_training": {
+            "reached": false,
+            "code": "PURPOSE_UNDECLARED"
+          },
+          "expired_grant": {
+            "reached": false,
+            "code": "GRANT_EXPIRED"
+          },
+          "revoked_grant": {
+            "reached": false,
+            "code": "GRANT_REVOKED"
+          },
+          "consent_withdrawn_after_grant": {
+            "reached": false,
+            "code": "CONSENT_WITHDRAWN"
+          },
+          "restricted_data_to_disallowed_endpoint": {
+            "reached": false,
+            "code": "RESIDENCY_VIOLATION"
+          },
+          "borrowed_grant_confused_deputy": {
+            "reached": false,
+            "code": "GRANT_HOLDER_MISMATCH"
+          },
+          "self_issued_grant": {
+            "reached": false,
+            "code": "GRANT_SELF_ISSUED"
+          },
+          "tampered_grant_scope": {
+            "reached": false,
+            "code": "GRANT_SIGNATURE_INVALID"
+          },
+          "grant_from_untrusted_authority": {
+            "reached": false,
+            "code": "GRANT_KEY_UNTRUSTED"
+          },
+          "field_above_grant_clearance": {
+            "reached": false,
+            "code": "CLASS_NOT_CLEARED"
+          },
+          "break_glass_outside_emergency": {
+            "reached": false,
+            "code": "BREAK_GLASS_PURPOSE"
+          },
+          "break_glass_repeat_without_review": {
+            "reached": false,
+            "code": "BREAK_GLASS_REVIEW_OVERDUE"
+          },
+          "break_glass_unbounded_duration": {
+            "reached": false,
+            "code": "BREAK_GLASS_TOO_LONG"
+          },
+          "summary_laundering_with_self_label": {
+            "reached": false,
+            "code": "RECIPIENT_PURPOSE_NOT_PERMITTED"
+          },
+          "honest_output_to_uncleared_recipient": {
+            "reached": false,
+            "code": "RECIPIENT_PURPOSE_NOT_PERMITTED"
+          },
+          "exfiltration_to_external_recipient": {
+            "reached": false,
+            "code": "RECIPIENT_CLASS_NOT_CLEARED"
+          },
+          "release_after_consent_withdrawn": {
+            "reached": false,
+            "code": "RELEASE_CONSENT_WITHDRAWN"
+          },
+          "release_after_grant_revoked": {
+            "reached": false,
+            "code": "RELEASE_GRANT_NO_LONGER_CURRENT"
+          },
+          "declassify_without_approval": {
+            "reached": false,
+            "code": "DECLASSIFICATION_NOT_APPROVED"
+          },
+          "declassify_self_approved": {
+            "reached": false,
+            "code": "DECLASSIFICATION_SELF_APPROVED"
+          },
+          "declassify_wrong_role": {
+            "reached": false,
+            "code": "DECLASSIFICATION_WRONG_ROLE"
+          },
+          "declassify_with_approval_for_other_output": {
+            "reached": false,
+            "code": "DECLASSIFICATION_WRONG_OUTPUT"
+          }
+        }
+      },
+      "benign": {
+        "context_then_release_to_cleared_recipient": {
+          "reached": true,
+          "code": "RELEASED"
+        },
+        "approved_declassification_then_release": {
+          "reached": true,
+          "code": "RELEASED"
+        },
+        "break_glass_reviewed_then_reused": {
+          "reached": true,
+          "code": "RELEASED"
+        }
+      },
+      "not_applicable": [
+        "break_glass_where_not_declared"
+      ],
+      "ablations": [
+        {
+          "check": "grant_signature",
+          "load_bearing": true,
+          "harms_restored": [
+            "grant_from_untrusted_authority",
+            "tampered_grant_scope"
+          ]
+        },
+        {
+          "check": "holder_binding",
+          "load_bearing": true,
+          "harms_restored": [
+            "borrowed_grant_confused_deputy",
+            "self_issued_grant"
+          ]
+        },
+        {
+          "check": "grant_currency",
+          "load_bearing": true,
+          "harms_restored": [
+            "expired_grant",
+            "revoked_grant"
+          ]
+        },
+        {
+          "check": "purpose_binding",
+          "load_bearing": true,
+          "harms_restored": [
+            "purpose_switch_on_valid_grant",
+            "undeclared_purpose_model_training"
+          ]
+        },
+        {
+          "check": "subject_scope",
+          "load_bearing": true,
+          "harms_restored": [
+            "prompt_injected_other_subject"
+          ]
+        },
+        {
+          "check": "minimum_necessary",
+          "load_bearing": true,
+          "harms_restored": [
+            "field_widening_beyond_minimum"
+          ]
+        },
+        {
+          "check": "consent",
+          "load_bearing": true,
+          "harms_restored": [
+            "consent_withdrawn_after_grant"
+          ]
+        },
+        {
+          "check": "class_clearance",
+          "load_bearing": true,
+          "harms_restored": [
+            "field_above_grant_clearance"
+          ]
+        },
+        {
+          "check": "residency",
+          "load_bearing": true,
+          "harms_restored": [
+            "restricted_data_to_disallowed_endpoint"
+          ]
+        },
+        {
+          "check": "break_glass",
+          "load_bearing": true,
+          "harms_restored": [
+            "break_glass_outside_emergency",
+            "break_glass_repeat_without_review",
+            "break_glass_unbounded_duration"
+          ]
+        },
+        {
+          "check": "session_taint",
+          "load_bearing": true,
+          "harms_restored": [
+            "honest_output_to_uncleared_recipient",
+            "release_after_consent_withdrawn",
+            "summary_laundering_with_self_label"
+          ]
+        },
+        {
+          "check": "recipient_clearance",
+          "load_bearing": true,
+          "harms_restored": [
+            "exfiltration_to_external_recipient",
+            "honest_output_to_uncleared_recipient",
+            "summary_laundering_with_self_label"
+          ]
+        },
+        {
+          "check": "release_recheck",
+          "load_bearing": true,
+          "harms_restored": [
+            "release_after_consent_withdrawn",
+            "release_after_grant_revoked"
+          ]
+        },
+        {
+          "check": "exact_output_declassification",
+          "load_bearing": true,
+          "harms_restored": [
+            "declassify_self_approved",
+            "declassify_with_approval_for_other_output",
+            "declassify_without_approval",
+            "declassify_wrong_role"
+          ]
+        }
+      ],
+      "verification": {
+        "kind": "disclosure-bounded-model-check",
+        "profile_id": "government-benefits",
+        "summary": {
+          "read_states_explored": 4096,
+          "release_states_explored": 2700,
+          "states_explored": 6796,
+          "released": 3,
+          "invariants_checked": 7,
+          "violations": 0,
+          "holds": true
+        },
+        "invariants": [
+          "DX-1 no protected value enters a model context unless a trusted, holder-bound, current grant for this purpose covers every subject, field, and class, consent permits it, the endpoint's zone may process it, and any emergency access is bounded",
+          "DX-2 every read attempt leaves exactly one intent and one outcome record, and an attempt whose intent cannot be recorded releases nothing",
+          "DX-3 a released context is labelled with exactly the classes, subjects, purpose, and zones of what it contains, and a session's label never becomes less restrictive",
+          "DX-4 an output reaches a recipient only if the recipient dominates the session's label, or an exact-output declassification by an independent, declared role lowered it; the model's claimed label changes nothing",
+          "DX-5 every emergency access opens exactly one review obligation, and no holder exceeds the declared number of unreviewed emergency accesses",
+          "DX-6 no protected value is written to the evidence ledger",
+          "DX-7 an output is released only if, at the moment of release, its subjects still consent to the release purpose and every grant that fed it is unrevoked and unexpired"
+        ],
+        "bounds": {
+          "grant_variants": [
+            "valid",
+            "absent",
+            "forged",
+            "untrusted_key",
+            "other_holder",
+            "self_issued",
+            "expired",
+            "revoked"
+          ],
+          "break_glass_variants": [
+            "none",
+            "valid",
+            "wrong_purpose",
+            "overdue"
+          ],
+          "subjects": [
+            "subject-A",
+            "subject-B"
+          ],
+          "fields_modelled": [
+            "applicant_name",
+            "caseworker_notes",
+            "disability_status",
+            "household_income",
+            "national_id"
+          ],
+          "endpoints_modelled": [
+            "agency_sovereign_model",
+            "accredited_cloud_model"
+          ],
+          "recipients": [
+            "appeals_officer",
+            "applicant_portal",
+            "eligibility_officer",
+            "enforcement_agency",
+            "statistics_office"
+          ],
+          "purposes": [
+            "eligibility-assessment",
+            "appeal-review",
+            "applicant-access",
+            "statistical-reporting",
+            "urgent-safeguarding"
+          ],
+          "note": "exhaustive within these bounds against the real gate; not a proof for arbitrary identities, unbounded record sets, concurrency, or content a model paraphrases or infers"
+        },
+        "violations": []
+      },
+      "stateful": {
+        "kind": "disclosure-stateful-random-testing",
+        "summary": {
+          "sequences": 200,
+          "steps": 8000,
+          "disagreements": 0,
+          "disagreements_by_operation": {},
+          "holds": true
+        },
+        "operations": {
+          "revoke": 680,
+          "release": 1199,
+          "withdraw": 622,
+          "issue": 621,
+          "read": 1818,
+          "derive": 1225,
+          "tick": 612,
+          "declassify": 589,
+          "restore": 634
+        },
+        "permitted": {
+          "read": 60,
+          "release": 14,
+          "declassify": 2
         },
         "first_disagreements": [],
         "limits": [
@@ -547,7 +1688,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "healthcare-record-access",
-      "generated_at": "2026-09-13T15:30:31.473289+00:00",
+      "generated_at": "2026-09-13T15:48:44.741093+00:00",
       "summary": {
         "hostile_scenarios": 25,
         "contained_by_arm": {
@@ -1083,20 +2224,20 @@
           "holds": true
         },
         "operations": {
-          "revoke": 658,
-          "read": 1835,
-          "release": 1245,
-          "derive": 1175,
-          "withdraw": 646,
-          "restore": 582,
-          "issue": 641,
-          "declassify": 593,
-          "tick": 625
+          "revoke": 651,
+          "read": 1846,
+          "release": 1205,
+          "derive": 1211,
+          "withdraw": 647,
+          "restore": 602,
+          "issue": 623,
+          "declassify": 607,
+          "tick": 608
         },
         "permitted": {
-          "read": 96,
-          "release": 6,
-          "declassify": 28
+          "read": 91,
+          "release": 30,
+          "declassify": 26
         },
         "first_disagreements": [],
         "limits": [

@@ -277,6 +277,25 @@ specification. Each must be built as a domain pack with its own evidence.
   transition. The patient portal receives only the patient's own records.
 - **Start from:** [`../profiles/healthcare_record_access.yaml`](../profiles/healthcare_record_access.yaml).
 
+### Consumer finance assistant
+
+- **Governed object:** credit decisions, fraud holds, and answers built from customer
+  financial data.
+- **Patterns:** A2, A5, D1, D2, D3, D4, D5, D7, S1.
+- **Shape:** credit and fraud purposes see different fields. Adverse decisions need a
+  named officer. Regulatory reports receive only approved aggregates, and marketing
+  receives nothing.
+- **Start from:** [`../profiles/financial_consumer_data.yaml`](../profiles/financial_consumer_data.yaml).
+
+### Public benefits caseworker agent
+
+- **Governed object:** eligibility, denial, appeal, and closure of a citizen's case.
+- **Patterns:** A2, A4, A5, D1, D2, D3, D4, D6, D7.
+- **Shape:** a sovereign model endpoint for identifiable data, independent appeal
+  decision, no disclosure path to enforcement, and statistics only through
+  data-protection-approved aggregation.
+- **Start from:** [`../profiles/government_benefits.yaml`](../profiles/government_benefits.yaml).
+
 ### Agentic workflow automation across departments
 
 - **Governed object:** consequential state changes proposed by orchestrated agents.

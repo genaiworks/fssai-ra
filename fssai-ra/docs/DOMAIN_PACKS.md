@@ -28,10 +28,14 @@ fssaira profiles --verify --output /tmp/fssaira-domain-catalog.json
 | [`student_support.yaml`](../profiles/student_support.yaml) | synthetic support case | simple two-state, one-role workflow | fairness, eligibility correctness, or handling of real student records |
 | [`academic_record_correction.yaml`](../profiles/academic_record_correction.yaml) | synthetic academic record | multi-role workflow, appeal cycle, transfer test | institutional or legal adequacy |
 | [`corporate_confidential_data.yaml`](../profiles/corporate_confidential_data.yaml) | dataset access/release request | classification, purpose-bound use, external release, revocation, legal hold | DLP, cloud IAM, records-law, or privacy compliance |
+| [`financial_consumer_data.yaml`](../profiles/financial_consumer_data.yaml) | consumer credit request | credit-limit decisions, fraud holds, customer self-access, regulatory aggregates, bounded fraud break-glass | fair lending, credit reporting, adverse-action, or consumer-privacy compliance, or use of real customer data |
+| [`government_benefits.yaml`](../profiles/government_benefits.yaml) | benefit eligibility case | eligibility, denial with appeal, retention-rule closure, statistical release, urgent-safeguarding break-glass, no sharing with enforcement | administrative-law, social-security, or public-sector data-protection compliance, or use of real applicant data |
 | [`healthcare_record_access.yaml`](../profiles/healthcare_record_access.yaml) | health-record access request | treatment access, secondary-use review, revocation, break-glass review | diagnosis, treatment, clinical safety, HIPAA/GDPR compliance, or use of real patient data |
 
-All four are teaching profiles over synthetic identifiers. The last two broaden
-the implementation surface; they are not deployment evidence.
+All six are teaching profiles over synthetic identifiers. The corporate, healthcare,
+financial, and government packs broaden the implementation surface to the sectors
+that hold the most sensitive consumer and citizen data; they are not deployment
+evidence.
 
 ## What every pack declares
 
@@ -65,12 +69,14 @@ operational owner make the statement enforceable.
 A pack may also declare a `disclosure` section. It names purposes, the class of
 every field, the zone of every model endpoint, where each class may be processed,
 recipients and their clearances, declassification rules, and emergency access.
-The corporate and healthcare packs ship complete sections. The loader rejects a
+The corporate, healthcare, financial, and government packs ship complete sections. The loader rejects a
 section that references undeclared classes, purposes, or roles.
 
 ```bash
 fssaira disclosure profiles/healthcare_record_access.yaml
 fssaira disclosure profiles/corporate_confidential_data.yaml
+fssaira disclosure profiles/financial_consumer_data.yaml
+fssaira disclosure profiles/government_benefits.yaml
 ```
 
 The suite is generated from the pack itself, so a new pack receives the same
@@ -106,6 +112,35 @@ Required domain tests include cross-tenant access, purpose substitution, field
 and recipient changes after review, bulk export through indirect tools, legal
 hold bypass, stale classification, revoked access, and privileged administrator
 bypass. The reference profile demonstrates none of those real integrations.
+
+## Financial consumer-data use
+
+The financial pack governs **credit-limit decisions and fraud operations**. An AI
+assistant may read identity, balance, income, and credit-bureau fields for a credit
+decision, but transaction history and fraud signals are reserved for fraud
+investigation. Customer data never reaches a marketing partner, and regulatory
+reporting receives only aggregates approved by the compliance officer. Emergency
+fraud access is bounded to thirty minutes and must be reviewed.
+
+Required domain tests include adverse decisions without a named officer and
+reasons, protected-characteristic proxies, purpose substitution between servicing,
+credit, and marketing, cross-customer access, stale bureau data, and fraud holds
+that are never released or reviewed.
+
+## Government benefits use
+
+The government pack governs **eligibility, denial, appeal, and case closure**. A
+denial cannot be automated: a named benefit approver decides, an appeals clerk can
+reopen it, and an independent appeals officer decides again. Immigration status is
+visible to the applicant but not to eligibility or appeals officers, and nothing is
+releasable to an enforcement agency. Official statistics receive only aggregates
+approved by the data protection officer. Urgent safeguarding access is bounded and
+reviewed by the data protection officer.
+
+Required domain tests include automated denial, sharing with enforcement or
+immigration functions, profiling on protected characteristics, appeal decided by
+the original decision maker, and retention-rule closure without data-protection
+approval.
 
 ## Healthcare record-access use
 

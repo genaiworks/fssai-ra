@@ -35,7 +35,9 @@ adding one. See [`tests/test_generalization.py`](../tests/test_generalization.py
 
 Two additional packs exercise regulated-data shapes outside education:
 [`corporate_confidential_data.yaml`](../profiles/corporate_confidential_data.yaml)
-and [`healthcare_record_access.yaml`](../profiles/healthcare_record_access.yaml).
+[`healthcare_record_access.yaml`](../profiles/healthcare_record_access.yaml),
+[`financial_consumer_data.yaml`](../profiles/financial_consumer_data.yaml), and
+[`government_benefits.yaml`](../profiles/government_benefits.yaml).
 They declare purpose, data classes, prohibited uses, applicable obligations, and
 separate data/privacy/security owners. They are executable teaching examples,
 not compliance claims.

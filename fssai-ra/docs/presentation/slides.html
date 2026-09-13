@@ -946,14 +946,14 @@ const SLIDES = [
         <p><strong>Restriction only accumulates as data flows, just as authority only narrows as it is delegated.</strong> A context gate holds the record store. Grants bind holder, purpose, subjects, fields, and expiry. Consent is checked at every read. Every output carries the labels of everything its session saw, and only an independent role can lower them for one exact output.</p>
       </div>
       <div class="figures">
-        <div class="fig"><span class="k">Unguarded retrieval</span><b>0/48</b><span class="note">service-account reads, free text out</span></div>
-        <div class="fig"><span class="k">Conventional access control</span><b>16/48</b><span class="note">signed, class-cleared grants; output checked on the model’s claimed label</span></div>
-        <div class="fig hero"><span class="k">This architecture</span><b>48/48</b><span class="note">hostile data flows contained · 14/14 checks load-bearing · 9,168 states, 0 violations</span></div>
+        <div class="fig"><span class="k">Unguarded retrieval</span><b>0/98</b><span class="note">service-account reads, free text out</span></div>
+        <div class="fig"><span class="k">Conventional access control</span><b>32/98</b><span class="note">signed, class-cleared grants; output checked on the model’s claimed label</span></div>
+        <div class="fig hero"><span class="k">This architecture</span><b>98/98</b><span class="note">hostile data flows contained · 14/14 checks load-bearing · 22,220 states, 0 violations</span></div>
       </div>
-      <p class="faint">Stateful testing, 16,000 random operations, found our own release step skipped the consent recheck; fixed. Synthetic records. Redacting values is not de-identification, and a model that paraphrases is governed only because its whole session is labelled.</p>
+      <p class="faint">Corporate, healthcare, financial, and government packs. Stateful testing, 32,000 random operations, found our own release step skipped the consent recheck; fixed. Synthetic records. Redacting values is not de-identification, and a model that paraphrases is governed only because its whole session is labelled.</p>
     </div>`,
   notes: `This is the slide for anyone in the room who runs a hospital, a bank, or a ministry.
-  <p>The line that lands: <em>the middle column is a careful, conventional design, and it still leaks 32 of 48 flows</em>: purpose switches, withdrawn consent, restricted data sent to an external model, and summaries the model labelled as harmless.</p>
+  <p>The line that lands: <em>the middle column is a careful, conventional design, and it still leaks 66 of 98 flows</em>: purpose switches, withdrawn consent, restricted data sent to an external model, and summaries the model labelled as harmless.</p>
   <p>If asked what is new: role-based access sees the same role for treatment and for model training. Purpose, live consent, and output labels are what it cannot see.</p>`
 },
 {
@@ -978,16 +978,16 @@ const SLIDES = [
   <p>If someone says "so you have solved alignment": no. We have made a misaligned model unable to cause the governed harms through the governed interfaces, and we have named the five things that remain.</p>`
 },
 {
-  eyebrow: ["Generalization", "One kernel, four domain packs"],
+  eyebrow: ["Generalization", "One kernel, six domain packs"],
   time: "9:40",
   html: `
     <h2>A method should survive changing the domain, not just the model.</h2>
     <div class="body">
-      <p class="lead">The same authority kernel now runs four independently reported packs: student support, academic-record correction, corporate-confidential data, and healthcare-record access. Each declares its own purpose, data classes, lifecycle rules, prohibited uses, owners, workflow, and evidence.</p>
+      <p class="lead">The same authority kernel now runs six independently reported packs: student support, academic-record correction, corporate-confidential data, healthcare-record access, consumer finance, and government benefits. Each declares its own purpose, data classes, lifecycle rules, prohibited uses, owners, workflow, and evidence.</p>
       <div class="figures">
-        <div class="fig"><span class="k">Domain packs</span><b>4</b><span class="note">education, corporate, healthcare</span></div>
-        <div class="fig"><span class="k">Model check</span><b>33,600</b><span class="note">bounded configurations, 0 violations</span></div>
-        <div class="fig"><span class="k">Behaviour</span><b>120/120</b><span class="note">hostile contained, 37/37 benign</span></div>
+        <div class="fig"><span class="k">Domain packs</span><b>6</b><span class="note">education, corporate, healthcare, finance, government</span></div>
+        <div class="fig"><span class="k">Model check</span><b>55,440</b><span class="note">bounded configurations, 0 violations</span></div>
+        <div class="fig"><span class="k">Behaviour</span><b>180/180</b><span class="note">hostile contained, 58/58 benign</span></div>
       </div>
       <div class="callout">
         <p><strong>The first transfer still failed—and the defect was real.</strong> The academic pack exposed an approval role silently ignored on a routine transition because enforcement was built only from <em>consequential</em> rules. A mandatory field was visible in review and absent at runtime.</p>
@@ -1038,7 +1038,7 @@ const SLIDES = [
         <p class="faint"><strong>Beyond the cases we imagined.</strong> 6,800 randomly generated tool calls — nonexistent tools, mismatched operations, URLs in unexpected arguments, calls that lie about their own action class — checked against a reference predicate written independently of the implementation. Zero disagreements.</p>
         <p class="faint"><strong>And what it costs.</strong> About 7 µs of overhead per policy decision; 66 µs for a full propose–approve–execute cycle. Negligible beside model inference, which we do not measure because it is a property of whichever model you choose.</p>
       </div>
-      <p class="faint">674 deterministic tests on current source, 187 at the <code>v1.0.0</code> tag. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
+      <p class="faint">699 deterministic tests on current source, 187 at the <code>v1.0.0</code> tag. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
     </div>`,
   notes: `Lead with the false-denial rate if the panel is policy-heavy. It is the figure that shows we are not optimising for a security theatre metric.
   <p>“Reproduces on a disconnected laptop” is the sentence that matters for capacity building — it means an institution with no budget can verify us.</p>`

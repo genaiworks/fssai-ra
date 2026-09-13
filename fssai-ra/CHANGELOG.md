@@ -20,6 +20,20 @@
 - Domain packs may declare a validated `disclosure` section. The corporate and
   healthcare packs now do, and `/v1/profile` and `fssaira profiles --verify`
   report it. Contract domain 9 adds seven bound requirements, GD-1 to GD-7.
+- **The Mediation Thesis.** Added `docs/THESIS.md`: intelligence is untrusted; power
+  and data are mediated. Three commitments, precise invariants, predictions, an
+  institutional action plan, and six falsifiers run by `fssaira thesis` and
+  `fssaira.thesis`. The first run refuted the repository's own contract: five
+  bindings named functions that do not exist. They now point at running tests. A
+  test proves the falsifiers find counterexamples when one mediator check is removed.
+- The stateful harness now aims half of its releases at a purpose the output still
+  permits and a recipient declared for it. Uniform random choices never reached a
+  permitted release on the government pack, which left the allow path, and any
+  over-blocking defect in it, untested.
+- Added financial consumer-data and government benefits domain packs, so the kernel
+  now runs across education, corporate, healthcare, financial, and government
+  workflows. Both passed every authority, disclosure, stateful, and ablation check on
+  their first run.
 - **Expert review pass.** Added `fssaira.disclosure_stateful`, randomized stateful
   testing of whole sessions against an independent reference model. Its first run
   found a real defect that single-step enumeration had passed: an output derived

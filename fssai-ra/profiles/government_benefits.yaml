@@ -1,0 +1,135 @@
+# Government benefits domain pack.
+#
+# A synthetic teaching profile for an AI assistant in a public benefits agency.
+# It governs eligibility decisions, appeals, and what applicant data may reach a
+# model. It decides no entitlement itself and establishes no compliance with any
+# administrative, social-security, or data-protection law.
+profile_id: government-benefits
+version: "1.0"
+title: Public Benefit Eligibility and Appeals
+resource_name: benefit_eligibility_case
+owner: benefits_service_delivery
+manual_fallback: >-
+  Leave the entitlement unchanged and keep any existing payment in place. Route
+  the applicant to a named caseworker through the staffed benefits office, and
+  give the applicant the agency's standard appeal and complaint route.
+governance:
+  domain: public-services
+  purpose: Govern eligibility decisions, appeals, and purpose-bound use of applicant data by AI assistants in a benefits agency.
+  deployment_profile: teaching
+  data_classes: [citizen-identifier, household-financial, health-disability, immigration-status, case-notes, statistical-aggregate]
+  applicable_frameworks:
+    - Applicable administrative law, due process, social-security, equality, and public-sector data protection obligations
+    - Organization-specific records management, appeals, safeguarding, and statistical release policy
+  prohibited_uses:
+    - Fully automated denial of a benefit without a named officer, stated reasons, and an appeal route
+    - Sharing applicant data with enforcement or immigration functions outside the declared purpose
+    - Profiling or risk scoring on protected characteristics
+    - Model training on identifiable applicant records under this teaching profile
+  processing_basis: A statutory benefit function, an appeal, a safeguarding duty, or an approved statistical purpose for the specific case.
+  data_minimization_rule: Authorize only the applicant, household fields, purpose, recipients, and duration required for the decision or appeal.
+  retention_rule: Retain decisions, reasons, appeals, and evidence for the statutory records period.
+  deletion_rule: Revoke access and delete working copies when the case closes, except records under statutory retention or legal hold.
+  residency_rule: Process applicant data only in government-approved sovereign or accredited systems recorded in the deployment contract.
+  incident_response: Suspend affected access, preserve evidence, notify the data protection officer, security, and the service owner, and follow the approved breach and applicant-notification process.
+  owners:
+    data: benefits_data_steward
+    privacy: data_protection_officer
+    security: agency_security_officer
+disclosure:
+  subject_kind: applicant
+  purposes: [eligibility-assessment, appeal-review, applicant-access, statistical-reporting, urgent-safeguarding]
+  fields:
+    applicant_name: {class: citizen-identifier}
+    national_id: {class: citizen-identifier}
+    household_income: {class: household-financial}
+    disability_status: {class: health-disability}
+    immigration_status: {class: immigration-status}
+    caseworker_notes: {class: case-notes}
+  model_endpoints:
+    agency_sovereign_model: government-sovereign
+    accredited_cloud_model: accredited-cloud
+    public_model_api: external
+  class_zones:
+    citizen-identifier: [government-sovereign]
+    household-financial: [government-sovereign, accredited-cloud]
+    health-disability: [government-sovereign]
+    immigration-status: [government-sovereign]
+    case-notes: [government-sovereign, accredited-cloud]
+    statistical-aggregate: [government-sovereign, accredited-cloud, external]
+  recipients:
+    eligibility_officer:
+      classes: [citizen-identifier, household-financial, health-disability, case-notes]
+      purposes: [eligibility-assessment, urgent-safeguarding]
+      zone: government-sovereign
+    appeals_officer:
+      classes: [citizen-identifier, household-financial, health-disability, case-notes]
+      purposes: [appeal-review]
+      zone: government-sovereign
+    applicant_portal:
+      classes: [citizen-identifier, household-financial, health-disability, immigration-status, case-notes]
+      purposes: [applicant-access]
+      zone: government-sovereign
+      subject_scope: self
+    statistics_office:
+      classes: [statistical-aggregate]
+      purposes: [statistical-reporting]
+      zone: accredited-cloud
+    enforcement_agency:
+      classes: []
+      purposes: []
+      zone: external
+  declassification:
+    - name: aggregate_for_official_statistics
+      from_classes: [citizen-identifier, household-financial, health-disability, case-notes]
+      to_class: statistical-aggregate
+      purposes: [statistical-reporting]
+      approval_role: data_protection_officer
+      removes_subject_identity: true
+  break_glass:
+    purposes: [urgent-safeguarding]
+    max_ttl_seconds: 3600
+    max_unreviewed_per_holder: 1
+    review_role: data_protection_officer
+transitions:
+  - operation: verify_applicant_identity
+    from_status: draft
+    to_status: identity_verified
+    consequential: false
+    approval_role: intake_officer
+
+  - operation: assess_eligibility
+    from_status: identity_verified
+    to_status: eligibility_assessed
+    consequential: true
+    approval_role: eligibility_officer
+
+  - operation: approve_benefit
+    from_status: eligibility_assessed
+    to_status: benefit_approved
+    consequential: true
+    approval_role: benefit_approver
+
+  - operation: deny_benefit
+    from_status: eligibility_assessed
+    to_status: benefit_denied
+    consequential: true
+    approval_role: benefit_approver
+
+  - operation: open_appeal
+    from_status: benefit_denied
+    to_status: under_appeal
+    consequential: false
+    approval_role: appeals_clerk
+
+  - operation: decide_appeal
+    from_status: under_appeal
+    to_status: eligibility_assessed
+    consequential: true
+    approval_role: independent_appeals_officer
+
+  - operation: close_case_under_retention_rule
+    from_status: benefit_approved
+    to_status: case_closed
+    consequential: true
+    approval_role: data_protection_officer

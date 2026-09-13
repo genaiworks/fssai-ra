@@ -69,6 +69,40 @@
         "synthetic profile and fixtures only",
         "not evidence of legal compliance, operational safety, or domain quality"
       ]
+    },
+    {
+      "profile_id": "financial-consumer-data",
+      "domain": "financial-services",
+      "deployment_profile": "teaching",
+      "states_explored": 8400,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 10,
+      "benign_completed": 10,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    },
+    {
+      "profile_id": "government-benefits",
+      "domain": "public-services",
+      "deployment_profile": "teaching",
+      "states_explored": 13440,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 11,
+      "benign_completed": 11,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
     }
   ],
   "limits": [

@@ -40,7 +40,7 @@ The submission should remain clear if a reviewer reads only four elements:
    contract for actions and a governed-disclosure gate for reads and releases.
 3. **Evidence:** comparative attacks, utility, ablations, bounded model checking,
    conformance, a narrowly stated replay race, a queue-pressure trial of review
-   capacity, four independently reported domain packs, hostile data flows against
+   capacity, six independently reported domain packs across education, corporate, healthcare, finance, and government, hostile data flows against
    conventional access control, and a threat catalogue whose evidence must exist and
    whose residuals are stated.
 4. **Boundary:** fixture results are neither certification nor proof of educational
