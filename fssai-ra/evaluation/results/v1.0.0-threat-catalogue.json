@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "kind": "threat-catalogue",
   "summary": {
-    "threats": 32,
-    "contained": 17,
+    "threats": 33,
+    "contained": 18,
     "bounded": 10,
     "residual": 5,
     "by_family": {
@@ -18,7 +18,7 @@
         "residual": 2
       },
       "data": {
-        "contained": 5,
+        "contained": 6,
         "bounded": 0,
         "residual": 1
       },
@@ -514,6 +514,26 @@
       "status": "contained",
       "evidence": [
         "tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read"
+      ],
+      "residual": ""
+    },
+    {
+      "id": "DA-7",
+      "family": "data",
+      "title": "Release of an output after consent withdrawal, revocation, or expiry",
+      "threat": "A summary drafted while access was valid is sent after the person withdrew consent or the grant ended.",
+      "references": [
+        "purpose limitation",
+        "time-of-check to time-of-use"
+      ],
+      "controls": [
+        "D5 Consent and Revocation as Live State",
+        "release recheck"
+      ],
+      "status": "contained",
+      "evidence": [
+        "tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read",
+        "tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model"
       ],
       "residual": ""
     },

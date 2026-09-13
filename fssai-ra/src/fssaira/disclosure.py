@@ -58,7 +58,7 @@ trusting any component's account of itself, which is what makes them controls.
 
 What is enforced
 ----------------
-Thirteen checks, each with stable denial codes and each independently ablatable
+Fourteen checks, each with stable denial codes and each independently ablatable
 (``ALL_CHECKS``). The disclosure suite in :mod:`fssaira.disclosure_eval` shows
 that removing any one of them lets a specific harm through.
 
@@ -106,6 +106,7 @@ ALL_CHECKS = (
     "break_glass",                   # emergency access is bounded and its review is not overdue
     "session_taint",                 # outputs carry the join of their session, not a claim
     "recipient_clearance",           # the recipient dominates the output's label
+    "release_recheck",               # at release, consent, revocation, and expiry are checked again
     "exact_output_declassification", # lowering a label needs an independent, exact approval
 )
 
@@ -142,6 +143,8 @@ class DisclosureCode:
     RECIPIENT_PURPOSE_NOT_PERMITTED = "RECIPIENT_PURPOSE_NOT_PERMITTED"
     RECIPIENT_ZONE_NOT_PERMITTED = "RECIPIENT_ZONE_NOT_PERMITTED"
     RECIPIENT_SUBJECT_NOT_PERMITTED = "RECIPIENT_SUBJECT_NOT_PERMITTED"
+    RELEASE_CONSENT_WITHDRAWN = "RELEASE_CONSENT_WITHDRAWN"
+    RELEASE_GRANT_NO_LONGER_CURRENT = "RELEASE_GRANT_NO_LONGER_CURRENT"
     DECLASSIFICATION_RULE_UNKNOWN = "DECLASSIFICATION_RULE_UNKNOWN"
     DECLASSIFICATION_NOT_APPROVED = "DECLASSIFICATION_NOT_APPROVED"
     DECLASSIFICATION_SIGNATURE_INVALID = "DECLASSIFICATION_SIGNATURE_INVALID"
@@ -645,6 +648,9 @@ class GovernedOutput:
     content: str
     label: DataLabel
     declassified_by: str = ""
+    #: Grants whose releases fed this output. Release re-checks them, because a
+    #: revocation or expiry after a read must also stop what was built from it.
+    grants: frozenset = frozenset()
 
     @property
     def digest(self) -> str:
@@ -670,6 +676,7 @@ class _Session:
     holder: str
     label: DataLabel
     released_values: set[str] = field(default_factory=set)
+    grants: set[str] = field(default_factory=set)
 
 
 class DisclosureGate:
@@ -712,6 +719,7 @@ class DisclosureGate:
         self._outputs: dict[str, GovernedOutput] = {}
         self._open_break_glass: dict[str, str] = {}     # grant_id -> holder
         self._seen_break_glass: set[str] = set()
+        self._grant_expiry: dict[str, float] = {}
         self._sequence = 0
         self._lock = threading.RLock()
 
@@ -969,6 +977,8 @@ class DisclosureGate:
             session = self._sessions[session_id] = _Session(requester, DataLabel.bottom(policy))
         session.label = session.label.join(label)
         session.released_values.update(v for v in values.values() if v)
+        session.grants.add(grant.grant_id)
+        self._grant_expiry[grant.grant_id] = grant.expires_at
 
         if grant.break_glass and grant.grant_id not in self._seen_break_glass:
             self._seen_break_glass.add(grant.grant_id)
@@ -995,7 +1005,8 @@ class DisclosureGate:
                 label = session.label if session else bottom
             else:
                 label = claimed_label if claimed_label is not None else bottom
-            output = GovernedOutput(self._next("output"), session_id, requester, content, label)
+            output = GovernedOutput(self._next("output"), session_id, requester, content, label,
+                                    grants=frozenset(session.grants) if session else frozenset())
             self._outputs[output.output_id] = output
             downgrade = claimed_label is not None and not claimed_label.dominates(label)
             self._record("output_labelled", {
@@ -1085,8 +1096,12 @@ class DisclosureGate:
             purposes=known.label.purposes & rule.purposes,
             zones=frozenset(self.policy.class_zones.get(rule.to_class, frozenset())),
         )
+        # A declassification that removes subject identity is a new disclosure
+        # decision by an independent authority; it no longer depends on the grants
+        # or consent of the people it no longer identifies.
         new = GovernedOutput(self._next("output"), f"{known.session_id}/declassified",
-                             known.holder, content, label, declassified_by=approved_by)
+                             known.holder, content, label, declassified_by=approved_by,
+                             grants=frozenset() if rule.removes_subject_identity else known.grants)
         self._outputs[new.output_id] = new
         return new
 
@@ -1097,12 +1112,12 @@ class DisclosureGate:
         with self._lock:
             return self._guarded(
                 "release", intent,
-                lambda: self._release(output, recipient, recipient_id, purpose),
+                lambda: self._release(output, recipient, recipient_id, purpose, now),
                 lambda receipt: {"receipt_id": receipt.receipt_id,
                                  "label": receipt.label.to_dict()},
             )
 
-    def _release(self, output, recipient, recipient_id, purpose) -> ReleaseReceipt:
+    def _release(self, output, recipient, recipient_id, purpose, now) -> ReleaseReceipt:
         known = self._issued(output)
         rule = self.policy.recipients.get(recipient)
         if rule is None:
@@ -1123,6 +1138,18 @@ class DisclosureGate:
             if rule.subject_scope == "self" and not label.subjects <= {recipient_id}:
                 raise DisclosureDenied(DisclosureCode.RECIPIENT_SUBJECT_NOT_PERMITTED,
                                        "recipient may receive only their own records")
+        if self._on("release_recheck"):
+            # Law 4 applies to release as well as to read. Found missing by the
+            # stateful harness: an output drafted before a consent withdrawal or a
+            # revocation was still released after it.
+            for subject in sorted(label.subjects):
+                if not self.consent.permits(subject, purpose):
+                    raise DisclosureDenied(DisclosureCode.RELEASE_CONSENT_WITHDRAWN,
+                                           f"{subject} no longer permits {purpose}")
+            for grant_id in sorted(known.grants):
+                if grant_id in self._revoked or now >= self._grant_expiry.get(grant_id, 0.0):
+                    raise DisclosureDenied(DisclosureCode.RELEASE_GRANT_NO_LONGER_CURRENT,
+                                           f"grant {grant_id} that fed this output is no longer current")
         return ReleaseReceipt(self._next("release"), known.output_id, recipient, purpose, label)
 
 

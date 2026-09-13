@@ -50,8 +50,8 @@ measurable rather than rhetorical.
 | Architecture | What it is | What it misses |
 |---|---|---|
 | `unguarded` | retrieval with a service-account read credential and free text out | everything |
-| `access_controlled` | signed, holder-bound, expiring, class-cleared grants plus an output check on the label the model claims | purpose, subject scope, minimum necessary, live consent, endpoint residency, emergency-access bounds, session taint, and independent declassification |
-| `this_architecture` | all thirteen checks below | the limits stated at the end of this page |
+| `access_controlled` | signed, holder-bound, expiring, class-cleared grants plus an output check on the label the model claims | purpose, subject scope, minimum necessary, live consent, endpoint residency, emergency-access bounds, session taint, independent declassification, and live-state rechecks at release |
+| `this_architecture` | all fourteen checks below | the limits stated at the end of this page |
 
 Generated results for every pack are in
 [`../evaluation/results/v1.0.0-governed-disclosure.json`](../evaluation/results/v1.0.0-governed-disclosure.json)
@@ -114,7 +114,7 @@ If the intent cannot be written, nothing is released. Records hold field names,
 codes, and digests. They never hold the protected values, because a disclosure log
 that reproduces the disclosure is a second copy of the data under weaker control.
 
-## The thirteen checks
+## The fourteen checks
 
 Each check has stable denial codes. Each one is removed in turn by the ablation,
 and removing any one lets a named harm through.
@@ -133,6 +133,7 @@ and removing any one lets a named harm through.
 | `break_glass` | emergency access outside declared purposes, too long, unjustified, or with review overdue | repeated emergency access without review |
 | `session_taint` | outputs labelled by the model's claim | a restricted summary self-labelled as unrestricted |
 | `recipient_clearance` | recipients that do not dominate the label | an honest output sent to personal email |
+| `release_recheck` | releases after consent was withdrawn, a feeding grant was revoked, or it expired | a summary drafted before withdrawal, sent after it |
 | `exact_output_declassification` | label lowering without an independent exact approval | a holder approving their own de-identification |
 
 ## Declaring a policy in a domain pack
@@ -218,6 +219,21 @@ applicable. It is never counted as contained.
 - **DX-5** Every emergency access opens one review obligation. No holder exceeds
   the declared unreviewed limit.
 - **DX-6** No protected value is written to the evidence ledger.
+- **DX-7** At the moment of release, every subject still consents to the release
+  purpose, and every grant that fed the output is unrevoked and unexpired.
+
+## Testing sequences, not only steps
+
+The bounded model check enumerates one read and one release at a time. It cannot
+see state change between steps. A stateful harness therefore runs long random
+sequences of grant, revoke, consent, time, read, derive, declassify, and release
+operations against the real gate. It compares every outcome with a reference model
+written independently of the gate.
+
+Its first run found a defect that single-step enumeration had passed. A summary
+drafted while access was valid could be released after the person withdrew consent
+or the grant was revoked. Release now rechecks live state, the new check is
+ablated like the others, and DX-7 is enumerated in the model check.
 
 Contract domain 9 in [`../contract/9_governed_disclosure.yaml`](../contract/9_governed_disclosure.yaml)
 states these as seven-field requirements. [`fssaira coverage`](ASSURANCE.md) checks

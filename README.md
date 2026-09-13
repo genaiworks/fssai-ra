@@ -52,6 +52,8 @@ reviewers, and adopters.
 - [Project overview and architecture](fssai-ra/README.md)
 - [Cross-sector reference architecture](fssai-ra/docs/REFERENCE_ARCHITECTURE.md) — seven planes, twelve invariants, lifecycle, adoption gates, and technology mapping
 - [Pattern language for AI over sensitive data](fssai-ra/docs/PATTERNS.md) — two constitutional rules, seven laws, patterns, anti-patterns, blueprints, and maturity levels
+- [Specification](fssai-ra/docs/SPECIFICATION.md) — normative MUST and SHOULD requirements in six conformance classes, each tied to evidence
+- [Related work](fssai-ra/docs/RELATED_WORK.md) — what this inherits from reference monitors and information-flow control, and how it relates to CaMeL, FIDES, and AI control
 - [Governed disclosure](fssai-ra/docs/GOVERNED_DISCLOSURE.md) — purpose-bound grants, context gate, session labels, declassification, consent, residency, break-glass
 - [Reusable domain packs](fssai-ra/docs/DOMAIN_PACKS.md) — education, corporate confidential data, and healthcare record access
 - [Extension guide](fssai-ra/docs/EXTENDING.md) · [Distributed platform](fssai-ra/docs/PLATFORM.md) · [Threat model](fssai-ra/docs/SECURITY.md)
@@ -121,8 +123,8 @@ What the current branch adds, each answering a question the release could not:
 | **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 41 machine-verified, 3 attested, 0 unverified** |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
 | **Cross-sector domain packs** | **Does one kernel work across distinct governed-data shapes?** | **4 packs; 33,600 states; 120/120 hostile contained; 37/37 benign completed; 0 unauthorized mutations** |
-| **Governed disclosure** | **Can a model see only what it is entitled to, and never launder it?** | **44/44 hostile data flows contained where conventional access control contains 16; 13/13 checks load-bearing; 6,900 states, 0 violations** |
-| **Threat and alignment catalogue** | **Does the safety case depend on the model being aligned?** | **32 failure classes: 17 contained, 10 bounded, 5 residual, each bound to evidence checked to exist** |
+| **Governed disclosure** | **Can a model see only what it is entitled to, and never launder it?** | **48/48 hostile data flows contained where conventional access control contains 16; 14/14 checks load-bearing; 9,168 states, 0 violations; 16,000 random stateful operations agree with a reference model after fixing the defect they found** |
+| **Threat and alignment catalogue** | **Does the safety case depend on the model being aligned?** | **33 failure classes: 18 contained, 10 bounded, 5 residual, each bound to evidence checked to exist** |
 | Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 
 Plus single-transaction execution on PostgreSQL, privilege invariance, real

@@ -20,7 +20,7 @@ requirements:
     failure_response: Release nothing, record the denial, and route the requester to the staffed access-request process
   - id: GD-2
     protected_asset: A data subject's current choice about how their data is used
-    permitted_operation: Consent withdrawal and grant revocation take effect at the next read, not at the next grant renewal
+    permitted_operation: Consent withdrawal, grant revocation, and expiry take effect at the next read and at the next release of anything already derived, not at the next grant renewal
     enforcement_point: Disclosure gate consults the live consent register and revocation list on every read rather than trusting state captured when the grant was issued
     owner: Privacy Office
     test: Issue a grant, read successfully, withdraw consent for that subject and purpose, and confirm the next read with the unchanged grant is refused; repeat with revocation

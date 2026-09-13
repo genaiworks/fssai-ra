@@ -360,6 +360,18 @@ def _r_uncleared_recipient(fx, gate):
     return gate.release(output, recipient=recipient, purpose=purpose, now=NOW + 2)
 
 
+def _r_release_after_consent_withdrawn(fx, gate):
+    output = _honest_output(fx, gate)
+    gate.withdraw_consent(SUBJECT_A, fx.purpose, recorded_by="privacy-office")
+    return gate.release(output, recipient=fx.cleared_recipient, purpose=fx.purpose, now=NOW + 2)
+
+
+def _r_release_after_grant_revoked(fx, gate):
+    output = _honest_output(fx, gate)
+    gate.revoke_grant("grant-1", by=ISSUER, reason="access ended before the summary was sent")
+    return gate.release(output, recipient=fx.cleared_recipient, purpose=fx.purpose, now=NOW + 2)
+
+
 def _r_external_exfiltration(fx, gate):
     target = next((n for n, r in sorted(fx.policy.recipients.items())
                    if not r.classes and not r.purposes), None)
@@ -444,6 +456,8 @@ HOSTILE = {
     "summary_laundering_with_self_label": (_release_scenario(_r_laundered_summary), "session_taint"),
     "honest_output_to_uncleared_recipient": (_release_scenario(_r_uncleared_recipient), "recipient_clearance"),
     "exfiltration_to_external_recipient": (_release_scenario(_r_external_exfiltration), "recipient_clearance"),
+    "release_after_consent_withdrawn": (_release_scenario(_r_release_after_consent_withdrawn), "release_recheck"),
+    "release_after_grant_revoked": (_release_scenario(_r_release_after_grant_revoked), "release_recheck"),
     "declassify_without_approval": (_release_scenario(_declassify_scenario("absent")), "exact_output_declassification"),
     "declassify_self_approved": (_release_scenario(_declassify_scenario("self_approved")), "exact_output_declassification"),
     "declassify_wrong_role": (_release_scenario(_declassify_scenario("wrong_role")), "exact_output_declassification"),
@@ -473,6 +487,7 @@ class DisclosureSuiteReport:
     evidence_minimized: bool
     evidence_chain_valid: bool
     verification: dict = field(default_factory=dict)
+    stateful: dict = field(default_factory=dict)
 
     @property
     def hostile_total(self) -> int:
@@ -497,6 +512,7 @@ class DisclosureSuiteReport:
             and self.load_bearing == len(self.ablations)
             and self.evidence_minimized and self.evidence_chain_valid
             and self.verification.get("summary", {}).get("holds", False)
+            and self.stateful.get("summary", {}).get("holds", False)
         )
 
     def to_dict(self) -> dict:
@@ -522,6 +538,7 @@ class DisclosureSuiteReport:
             "not_applicable": self.not_applicable,
             "ablations": self.ablations,
             "verification": self.verification,
+            "stateful": self.stateful,
             "limits": [
                 "synthetic records and in-process gate; no real record system, model, or "
                 "recipient channel is exercised",
@@ -578,11 +595,14 @@ def run_disclosure_suite(policy: DisclosurePolicy, *, profile_id: str = "",
     minimized, chain_valid = _evidence_properties(fx)
     verification = verify_disclosure_space(policy, profile_id=profile_id).to_dict() \
         if verify else {}
+    from .disclosure_stateful import run_stateful
+
+    stateful = run_stateful(policy).to_dict() if verify else {}
     return DisclosureSuiteReport(
         profile_id=profile_id, generated_at=datetime.now(timezone.utc).isoformat(),
         arms=arms, benign=benign, not_applicable=not_applicable, ablations=ablations,
         evidence_minimized=minimized, evidence_chain_valid=chain_valid,
-        verification=verification,
+        verification=verification, stateful=stateful,
     )
 
 
@@ -622,6 +642,8 @@ DX_INVARIANTS = (
     "DX-5 every emergency access opens exactly one review obligation, and no holder exceeds "
     "the declared number of unreviewed emergency accesses",
     "DX-6 no protected value is written to the evidence ledger",
+    "DX-7 an output is released only if, at the moment of release, its subjects still consent "
+    "to the release purpose and every grant that fed it is unrevoked and unexpired",
 )
 
 GRANT_VARIANTS = ("valid", "absent", "forged", "untrusted_key", "other_holder",
@@ -831,6 +853,8 @@ def verify_disclosure_space(policy: DisclosurePolicy, *,
 
 DECLASS_VARIANTS = ("none", "valid", "absent", "self_approved", "wrong_role",
                     "other_output", "expired", "forged")
+#: State that changes between deriving an output and releasing it.
+LIVE_VARIANTS = ("live", "consent_withdrawn", "grant_revoked", "grant_expired")
 
 
 def _verify_release_space(fx: DisclosureFixture) -> tuple[int, list]:
@@ -847,9 +871,10 @@ def _verify_release_space(fx: DisclosureFixture) -> tuple[int, list]:
         sessions, ("none", "honest", "downgraded"), sorted(policy.recipients),
         policy.purposes,
     ):
-        for declass_v in (DECLASS_VARIANTS if path else ("none",)):
+        for declass_v, live_v in itertools.product(
+                DECLASS_VARIANTS if path else ("none",), LIVE_VARIANTS):
             states += 1
-            key = "|".join((session_name, claimed_v, recipient, purpose, declass_v))
+            key = "|".join((session_name, claimed_v, recipient, purpose, declass_v, live_v))
             gate = fx.gate(ARMS["this_architecture"])
             if path:
                 rule, _r, grant_purpose, fields, endpoint = path
@@ -876,8 +901,15 @@ def _verify_release_space(fx: DisclosureFixture) -> tuple[int, list]:
                     output = gate.declassify(output, rule=rule.name, approval=approval,
                                              now=NOW + 2)
                     declass_ok = True
+                release_now = NOW + 3
+                if live_v == "consent_withdrawn":
+                    gate.withdraw_consent(SUBJECT_A, purpose, recorded_by="bounded-check")
+                elif live_v == "grant_revoked":
+                    gate.revoke_grant(grant.grant_id, by=ISSUER, reason="bounded check")
+                elif live_v == "grant_expired":
+                    release_now = grant.expires_at + 1
                 receipt = gate.release(output, recipient=recipient, recipient_id=SUBJECT_A,
-                                       purpose=purpose, now=NOW + 3)
+                                       purpose=purpose, now=release_now)
             except DisclosureDenied:
                 receipt = None
 
@@ -897,8 +929,12 @@ def _verify_release_space(fx: DisclosureFixture) -> tuple[int, list]:
                     policy.class_zones[rule.to_class],
                 )
             target = policy.recipients[recipient]
+            identity_removed = expected_declass and rule.removes_subject_identity
+            live_ok = live_v == "live" or identity_removed or (
+                live_v == "consent_withdrawn" and SUBJECT_A not in effective.subjects)
             allowed = (
-                (declass_v == "none" or expected_declass)
+                live_ok
+                and (declass_v == "none" or expected_declass)
                 and effective.classes <= target.classes
                 and purpose in target.purposes and purpose in effective.purposes
                 and target.zone in effective.zones
@@ -907,7 +943,8 @@ def _verify_release_space(fx: DisclosureFixture) -> tuple[int, list]:
             if (receipt is not None) != allowed:
                 violations.append(DisclosureViolation(
                     DX_INVARIANTS[3], key,
-                    "released to a recipient that does not dominate the label"
+                    ("released to a recipient that does not dominate the label, or after "
+                     "consent, revocation, or expiry should have stopped it")
                     if receipt is not None else "a permitted release was refused"))
     return states, violations
 

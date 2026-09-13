@@ -274,6 +274,16 @@ threats:
     status: contained
     evidence:
       - tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read
+  - id: DA-7
+    family: data
+    title: Release of an output after consent withdrawal, revocation, or expiry
+    threat: A summary drafted while access was valid is sent after the person withdrew consent or the grant ended.
+    references: [purpose limitation, time-of-check to time-of-use]
+    controls: [D5 Consent and Revocation as Live State, release recheck]
+    status: contained
+    evidence:
+      - tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read
+      - tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model
   - id: DA-3
     family: data
     title: Restricted data processed at an unapproved location

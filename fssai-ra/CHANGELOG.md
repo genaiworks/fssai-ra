@@ -20,6 +20,21 @@
 - Domain packs may declare a validated `disclosure` section. The corporate and
   healthcare packs now do, and `/v1/profile` and `fssaira profiles --verify`
   report it. Contract domain 9 adds seven bound requirements, GD-1 to GD-7.
+- **Expert review pass.** Added `fssaira.disclosure_stateful`, randomized stateful
+  testing of whole sessions against an independent reference model. Its first run
+  found a real defect that single-step enumeration had passed: an output derived
+  before a consent withdrawal, revocation, or expiry could still be released. A
+  fourteenth check, `release_recheck`, fixes it; invariant DX-7 enumerates it;
+  hostile scenarios, regression tests, contract bindings, and threat DA-7 cover it.
+- Added `docs/SPECIFICATION.md`, normative requirements in six conformance classes
+  with an evidence kind for each, and `tests/test_specification.py`, which fails if
+  a cited test disappears. Added `docs/RELATED_WORK.md`, positioning the work
+  against reference monitors, lattice information flow, Clark-Wilson, the confused
+  deputy, decentralised labels, contextual integrity, CaMeL, FIDES, agent design
+  patterns, and AI control, with every citation verified.
+- Both abstracts now state the positioning against prior work, the stateful
+  finding, and the trusted base the design relies on. The introduction expands on
+  how both rules are enforced outside the model.
 - The HTTP control plane now serves `/v1/disclosure` routes when the active pack
   declares a policy, and `/v1/propose-task` accepts a `governed_context` so the
   model receives only values the gate released and its proposals come back

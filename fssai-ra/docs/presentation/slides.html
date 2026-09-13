@@ -946,14 +946,14 @@ const SLIDES = [
         <p><strong>Restriction only accumulates as data flows, just as authority only narrows as it is delegated.</strong> A context gate holds the record store. Grants bind holder, purpose, subjects, fields, and expiry. Consent is checked at every read. Every output carries the labels of everything its session saw, and only an independent role can lower them for one exact output.</p>
       </div>
       <div class="figures">
-        <div class="fig"><span class="k">Unguarded retrieval</span><b>0/44</b><span class="note">service-account reads, free text out</span></div>
-        <div class="fig"><span class="k">Conventional access control</span><b>16/44</b><span class="note">signed, class-cleared grants; output checked on the model’s claimed label</span></div>
-        <div class="fig hero"><span class="k">This architecture</span><b>44/44</b><span class="note">hostile data flows contained · 13/13 checks load-bearing · 6,900 states, 0 violations</span></div>
+        <div class="fig"><span class="k">Unguarded retrieval</span><b>0/48</b><span class="note">service-account reads, free text out</span></div>
+        <div class="fig"><span class="k">Conventional access control</span><b>16/48</b><span class="note">signed, class-cleared grants; output checked on the model’s claimed label</span></div>
+        <div class="fig hero"><span class="k">This architecture</span><b>48/48</b><span class="note">hostile data flows contained · 14/14 checks load-bearing · 9,168 states, 0 violations</span></div>
       </div>
-      <p class="faint">Corporate and healthcare packs, synthetic records. Redacting values is not de-identification, and a model that paraphrases is governed only because its whole session is labelled.</p>
+      <p class="faint">Stateful testing, 16,000 random operations, found our own release step skipped the consent recheck; fixed. Synthetic records. Redacting values is not de-identification, and a model that paraphrases is governed only because its whole session is labelled.</p>
     </div>`,
   notes: `This is the slide for anyone in the room who runs a hospital, a bank, or a ministry.
-  <p>The line that lands: <em>the middle column is a careful, conventional design, and it still leaks 28 of 44 flows</em>: purpose switches, withdrawn consent, restricted data sent to an external model, and summaries the model labelled as harmless.</p>
+  <p>The line that lands: <em>the middle column is a careful, conventional design, and it still leaks 32 of 48 flows</em>: purpose switches, withdrawn consent, restricted data sent to an external model, and summaries the model labelled as harmless.</p>
   <p>If asked what is new: role-based access sees the same role for treatment and for model training. Purpose, live consent, and output labels are what it cannot see.</p>`
 },
 {
@@ -964,14 +964,14 @@ const SLIDES = [
     <div class="body">
       <p class="lead">As capability grows, verifying a model’s intentions gets harder. Verifying its boundaries stays tractable.</p>
       <div class="ledger">
-        <div><span class="seq">contained</span><span>specification gaming, deceptive risk reports, self-escalation, collusion, data laundering, prompt injection</span><span class="hash"><b>17</b></span></div>
+        <div><span class="seq">contained</span><span>specification gaming, deceptive risk reports, self-escalation, collusion, data laundering, prompt injection, release after consent withdrawal</span><span class="hash"><b>18</b></span></div>
         <div><span class="seq">bounded</span><span>persuasive wrong proposals, oversight flooding, poisoning, exfiltration attempts</span><span class="hash"><b>10</b></span></div>
         <div><span class="seq">residual</span><span>evaluation-aware models, compromised signers, covert channels, re-identification, unjust rules</span><span class="hash"><b class="bad">5</b></span></div>
       </div>
       <div class="callout refuse">
         <p><strong>Contained is not aligned.</strong> It means the governed harm did not occur through a governed interface in tested fixtures, whatever the model intended. It is not a probability.</p>
       </div>
-      <p class="faint">32 failure classes. Every cited test is checked to exist, and a catalogue with no residuals is refused by the tool.</p>
+      <p class="faint">33 failure classes. Every cited test is checked to exist, and a catalogue with no residuals is refused by the tool.</p>
     </div>`,
   notes: `Say the residual number before anyone asks for it.
   <p>The claim is narrow and strong: the containment invariants are checked against the enforcement code, not against how a model behaves under test. That is why an evaluation-aware model does not change them. It does change utility and merit quality, and those stay open.</p>
@@ -1038,7 +1038,7 @@ const SLIDES = [
         <p class="faint"><strong>Beyond the cases we imagined.</strong> 6,800 randomly generated tool calls — nonexistent tools, mismatched operations, URLs in unexpected arguments, calls that lie about their own action class — checked against a reference predicate written independently of the implementation. Zero disagreements.</p>
         <p class="faint"><strong>And what it costs.</strong> About 7 µs of overhead per policy decision; 66 µs for a full propose–approve–execute cycle. Negligible beside model inference, which we do not measure because it is a property of whichever model you choose.</p>
       </div>
-      <p class="faint">663 deterministic tests on current source, 187 at the <code>v1.0.0</code> tag. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
+      <p class="faint">674 deterministic tests on current source, 187 at the <code>v1.0.0</code> tag. No network, no model weights, no GPU. The whole suite reproduces on a disconnected laptop in under three seconds — so a second institution can <em>check</em> these numbers rather than trust them.</p>
     </div>`,
   notes: `Lead with the false-denial rate if the panel is policy-heavy. It is the figure that shows we are not optimising for a security theatre metric.
   <p>“Reproduces on a disconnected laptop” is the sentence that matters for capacity building — it means an institution with no budget can verify us.</p>`

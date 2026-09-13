@@ -45,9 +45,12 @@ Everyone should take the same opening route before specialising:
    constitutional rules, seven laws, a pattern catalogue, anti-patterns,
    blueprints for corporate, clinical, agentic, and research systems, and a
    maturity scale.
-4. **See it:** [`DEMO.md`](DEMO.md) — understand the six-act demonstration and
+4. **Know the obligations:** [`SPECIFICATION.md`](SPECIFICATION.md) — what a
+   system must do to claim each conformance class, and
+   [`RELATED_WORK.md`](RELATED_WORK.md) — what this inherits and adds.
+5. **See it:** [`DEMO.md`](DEMO.md) — understand the six-act demonstration and
    the observation each act supports.
-5. **Choose your role:** continue through one of the routes below. Return to the
+6. **Choose your role:** continue through one of the routes below. Return to the
    [glossary](GLOSSARY.md) whenever policy and engineering terms stop matching.
 
 ## Policy leader route
@@ -183,6 +186,8 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`README.md`](README.md) — this map.
 - [`START_HERE.md`](START_HERE.md) — self-directed repository walkthrough.
 - [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — seven-plane cross-sector pattern, invariants, lifecycle, adoption sequence, and policy and engineering gates.
+- [`SPECIFICATION.md`](SPECIFICATION.md) — normative requirements in six conformance classes, each tied to an executable test, attestation, or measurement.
+- [`RELATED_WORK.md`](RELATED_WORK.md) — foundations inherited, overlap with CaMeL, FIDES, agent design patterns, and AI control, and the contribution stated narrowly.
 - [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.
 - [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) — the second constitutional rule: what a model may read and what may leave.
 - [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — reusable corporate, healthcare, and education domain packs.

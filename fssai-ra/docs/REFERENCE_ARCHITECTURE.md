@@ -60,7 +60,7 @@ govern effects. Purpose-bound disclosure grants govern what may enter a model
 context. The boundary plane labels every derived output from what its session
 received, so a model can never lower the sensitivity of its own output.
 [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) specifies the lattice, the
-thirteen checks, and invariants DX-1 to DX-6. [`PATTERNS.md`](PATTERNS.md) turns
+fourteen checks, invariants DX-1 to DX-7, and stateful sequence testing. [`PATTERNS.md`](PATTERNS.md) turns
 both rules into a reusable pattern language.
 
 ## The constitutional model

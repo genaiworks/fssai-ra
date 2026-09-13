@@ -70,7 +70,7 @@ middle — never from either end.
 | 9:00 | 15 · Oversight measured | Two numbers: 2,640/day for this roster, and 4 → 0. |
 | 9:40 | 16 · The assisted reviewer | The 2026 form of the same failure. 5 → 1, and nothing to alert on. |
 | 10:15 | 17 · Authority that travels | Brisk. "Every hop locally correct; the composition wrong." |
-| 10:50 | 18 · The second rule | Reads, not writes. 16 of 44 for careful access control, 44 of 44 here. |
+| 10:50 | 18 · The second rule | Reads, not writes. 16 of 48 for careful access control, 48 of 48 here. |
 | 11:25 | 19 · Alignment | Say the residual number, 5, before anyone asks. Contained is not aligned. |
 | 12:00 | 20 · Four domain packs | Cross-sector reuse, its limits, and the defect transfer found. |
 | 12:30 | 21 · The corpus | The invitation. Say the ask: contribute one attack. |
@@ -104,11 +104,14 @@ aloud yet. It lands harder on slide 18.
 
 **The second rule (slide 18).** "A model may request information. It cannot
 manufacture the entitlement to see it, or launder what it saw." Then the middle
-column: a careful conventional design, signed grants and all, contains 16 of 44.
+column: a careful conventional design, signed grants and all, contains 16 of 48.
 
 **The alignment line (slide 19).** "As capability grows, verifying a model's
 intentions gets harder. Verifying its boundaries stays tractable." Then say the
-residual count yourself.
+residual count yourself. If an expert asks what is new, say: the mechanisms are
+old, from reference monitors to information-flow control; the composition with
+purpose, consent, review capacity, and evidence, and a method that measures
+itself, is the contribution.
 
 **Her three questions (slide 2).** "Who decided this, and were they allowed to.
 What did they see when they decided. How do I contest it." Then: *in most
@@ -259,7 +262,8 @@ Those are two of its mechanisms, and a deployment should use them. What they do
 not do by themselves is carry purpose into every read, check consent at the moment
 of use, or label a model's summary by what it was built from rather than by what
 the model says it is. The conventional arm on slide 18 is exactly that careful
-design, and it still lets 28 of 44 hostile flows through.
+design, and it still lets 32 of 48 hostile flows through. Then the defect we found in
+our own gate: release did not recheck consent, until stateful testing showed it.
 *Limit, before anyone raises it:* redaction is not de-identification, and a model
 that paraphrases is governed only because its whole session is labelled.
 *Backed by:* `fssaira disclosure profiles/healthcare_record_access.yaml`, slide 18.

@@ -231,6 +231,13 @@ bindings:
   - requirements: [GD-2]
     mechanism: unit_test
     locator: tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read
+  - requirements: [GD-2, GD-4]
+    mechanism: model_check
+    locator: tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model
+    note: stateful random sequences against an independent reference model; found release did not recheck consent or revocation
+  - requirements: [GD-2]
+    mechanism: unit_test
+    locator: tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read
   - requirements: [GD-4]
     mechanism: unit_test
     locator: tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary

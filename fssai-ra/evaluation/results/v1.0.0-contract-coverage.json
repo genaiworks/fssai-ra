@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "contract-coverage",
-  "generated_at": "2026-09-13T14:25:14.531400+00:00",
+  "generated_at": "2026-09-13T15:30:31.518716+00:00",
   "totals": {
     "requirements": 44,
     "machine_verified": 41,
@@ -675,6 +675,18 @@
           "mechanism": "unit_test",
           "locator": "tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read",
           "note": ""
+        },
+        {
+          "requirement_id": "GD-2",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model",
+          "note": "stateful random sequences against an independent reference model; found release did not recheck consent or revocation"
+        },
+        {
+          "requirement_id": "GD-2",
+          "mechanism": "unit_test",
+          "locator": "tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read",
+          "note": ""
         }
       ]
     },
@@ -725,6 +737,12 @@
           "mechanism": "scenario",
           "locator": "tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains",
           "note": ""
+        },
+        {
+          "requirement_id": "GD-4",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model",
+          "note": "stateful random sequences against an independent reference model; found release did not recheck consent or revocation"
         },
         {
           "requirement_id": "GD-4",

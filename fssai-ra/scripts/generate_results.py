@@ -403,6 +403,13 @@ def generate(output_dir: Path, tag: str) -> dict:
                 1 for t in threat_report.threats if t.family == "alignment"),
             "threats_alignment_contained": threat_report.count("contained", "alignment"),
             "disclosure_states_explored_display": f"{sum(r['verification']['summary']['states_explored'] for r in disclosure_reports):,}",
+            "disclosure_stateful_sequences": sum(
+                r["stateful"]["summary"]["sequences"] for r in disclosure_reports),
+            "disclosure_stateful_steps_display": f"{sum(r['stateful']['summary']['steps'] for r in disclosure_reports):,}",
+            "disclosure_stateful_disagreements": sum(
+                r["stateful"]["summary"]["disagreements"] for r in disclosure_reports),
+            "defects_found_by_stateful_testing": 1,
+            "specification_requirements": _specification_count(),
             "disclosure_violations": sum(
                 r["verification"]["summary"]["violations"] for r in disclosure_reports),
             # timings, so a reader knows the cost of reproducing this
@@ -749,6 +756,13 @@ def render_markdown(summary: dict) -> str:
         "",
     ]
     return "\n".join(lines)
+
+
+def _specification_count() -> int:
+    import re as _re
+
+    text = (ROOT / "docs" / "SPECIFICATION.md").read_text(encoding="utf-8")
+    return len(_re.findall(r"^\|\s*[A-Z]-\d+\s*\|\s*(?:MUST NOT|MUST|SHOULD|MAY)\s*\|", text, _re.M))
 
 
 def main() -> int:

@@ -62,7 +62,8 @@ def test_conventional_access_control_leaves_harms_this_architecture_contains(sui
     assert suite.contained("access_controlled") < suite.hostile_total
     leaked = {name for name, row in suite.arms["access_controlled"].items() if row["reached"]}
     for expected in ("summary_laundering_with_self_label", "purpose_switch_on_valid_grant",
-                     "consent_withdrawn_after_grant", "restricted_data_to_disallowed_endpoint"):
+                     "consent_withdrawn_after_grant", "restricted_data_to_disallowed_endpoint",
+                     "release_after_consent_withdrawn", "release_after_grant_revoked"):
         assert expected in leaked
 
 
@@ -176,6 +177,47 @@ def test_consent_withdrawal_and_revocation_take_effect_at_next_read():
     with pytest.raises(DisclosureDenied) as denied:
         fx.read(gate, grant)
     assert denied.value.code == DisclosureCode.GRANT_REVOKED
+
+
+@pytest.mark.parametrize("path", PACKS)
+def test_random_operation_sequences_agree_with_the_reference_model(path):
+    """Sequences expose what single-step enumeration cannot: state changing between steps."""
+    from fssaira.disclosure_stateful import run_stateful
+
+    report = run_stateful(_policy(path), sequences=120, steps=40)
+    assert report.holds, report.to_dict()["first_disagreements"][:2]
+    assert report.released["read"] > 0 and report.released["release"] > 0
+
+
+@pytest.mark.parametrize("mutate,code", [
+    (lambda gate, fx, grant: gate.withdraw_consent(SUBJECT_A, fx.purpose, recorded_by="p"),
+     DisclosureCode.RELEASE_CONSENT_WITHDRAWN),
+    (lambda gate, fx, grant: gate.revoke_grant(grant.grant_id, by="owner", reason="ended"),
+     DisclosureCode.RELEASE_GRANT_NO_LONGER_CURRENT),
+])
+def test_release_rechecks_consent_and_revocation_after_the_read(mutate, code):
+    """The defect the stateful harness found on its first run, kept as a regression."""
+    fx = DisclosureFixture(_policy())
+    gate = fx.gate(ARMS["this_architecture"])
+    grant = fx.grant()
+    fx.read(gate, grant)
+    output = gate.derive_output(requester=AGENT, session_id="session-1", content="summary")
+    mutate(gate, fx, grant)
+    with pytest.raises(DisclosureDenied) as denied:
+        gate.release(output, recipient=fx.cleared_recipient, purpose=fx.purpose, now=NOW + 2)
+    assert denied.value.code == code
+
+
+def test_release_after_grant_expiry_is_refused():
+    fx = DisclosureFixture(_policy(PACKS[1]))
+    gate = fx.gate(ARMS["this_architecture"])
+    grant = fx.grant()
+    fx.read(gate, grant)
+    output = gate.derive_output(requester=AGENT, session_id="session-1", content="summary")
+    with pytest.raises(DisclosureDenied) as denied:
+        gate.release(output, recipient=fx.cleared_recipient, purpose=fx.purpose,
+                     now=grant.expires_at + 1)
+    assert denied.value.code == DisclosureCode.RELEASE_GRANT_NO_LONGER_CURRENT
 
 
 def test_intent_evidence_failure_releases_nothing():

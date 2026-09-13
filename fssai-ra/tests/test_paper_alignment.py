@@ -101,6 +101,8 @@ CLAIMS = [
     ("threat catalogue", "A catalogue of {threats_total} failure classes"),
     ("threat statuses", "**{threats_contained} contained, {threats_bounded} bounded, and "
      "{threats_residual} residual**"),
+    ("stateful testing", "**{disclosure_stateful_sequences} sequences and "
+     "{disclosure_stateful_steps_display} operations**"),
 ]
 
 
@@ -516,6 +518,7 @@ SUBMITTED_CLAIMS = [
     ("threat catalogue", "{threats_total} failure classes"),
     ("threat statuses", "{threats_contained} are contained, {threats_bounded} bounded, and "
      "{threats_residual} residual"),
+    ("stateful testing", "Stateful testing, {disclosure_stateful_steps_display} random operations"),
 ]
 
 
