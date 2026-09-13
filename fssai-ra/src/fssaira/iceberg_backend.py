@@ -25,6 +25,7 @@ import hashlib
 import json
 import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 DEFAULT_NAMESPACE = "fssaira"
@@ -79,8 +80,20 @@ class IcebergSnapshotStore:
         import pyarrow as pa
 
         table = self._table()
-        table.append(pa.Table.from_pylist(list(rows), schema=table.schema().as_arrow()))
-        return str(table.refresh().current_snapshot().snapshot_id)
+        properties = {
+            key: value for key, value in {
+                "fssaira.note": note,
+                "fssaira.requested-parent": parent or "",
+            }.items() if value
+        }
+        table.append(
+            pa.Table.from_pylist(list(rows), schema=table.schema().as_arrow()),
+            snapshot_properties=properties,
+        )
+        snapshot = table.refresh().current_snapshot()
+        if snapshot is None:
+            raise RuntimeError("Iceberg append completed without creating a snapshot")
+        return str(snapshot.snapshot_id)
 
     def read(self, snapshot_id: str) -> list:  # pragma: no cover
         table = self._table()
@@ -96,15 +109,25 @@ class IcebergSnapshotStore:
         return str(table.refresh().current_snapshot().snapshot_id)
 
     def history(self) -> list[dict]:  # pragma: no cover
-        return [
-            {"snapshot_id": str(entry.snapshot_id), "timestamp_ms": entry.timestamp_ms,
-             "parent_id": str(entry.parent_snapshot_id or "")}
-            for entry in self._table().history()
-        ]
+        table = self._table().refresh()
+        history = []
+        for entry in table.history():
+            snapshot = table.snapshot_by_id(entry.snapshot_id)
+            history.append({
+                "snapshot_id": str(entry.snapshot_id),
+                "timestamp_ms": entry.timestamp_ms,
+                # ``history()`` returns SnapshotLogEntry, which has no parent
+                # field. Parentage lives on the referenced Snapshot object.
+                "parent_id": (
+                    "" if snapshot is None or snapshot.parent_snapshot_id is None
+                    else str(snapshot.parent_snapshot_id)
+                ),
+            })
+        return history
 
     @property
     def current_id(self) -> str | None:  # pragma: no cover
-        snapshot = self._table().current_snapshot()
+        snapshot = self._table().refresh().current_snapshot()
         return None if snapshot is None else str(snapshot.snapshot_id)
 
     def current_rows(self) -> list:  # pragma: no cover
@@ -163,7 +186,10 @@ def archive_evidence(ledger, store: IcebergSnapshotStore) -> dict:  # pragma: no
     administration. It does not make the chain stronger; it makes silent
     truncation of the primary detectable by comparison.
     """
-    import time as _time
+    if store.table.rsplit(".", 1)[-1] != EVIDENCE_TABLE:
+        raise ValueError(
+            f"evidence archives require an {EVIDENCE_TABLE!r} table, got {store.table!r}"
+        )
 
     rows = [
         {
@@ -171,7 +197,7 @@ def archive_evidence(ledger, store: IcebergSnapshotStore) -> dict:  # pragma: no
             "request_id": str(record.payload.get("request_id", "")),
             "payload_json": json.dumps(record.payload, sort_keys=True, default=str),
             "prev_hash": record.prev_hash, "hash": record.hash,
-            "archived_at": _time.time(),
+            "archived_at": datetime.now(timezone.utc),
         }
         for record in ledger
     ]

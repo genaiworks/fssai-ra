@@ -23,14 +23,11 @@ def load_env(path: Path) -> dict[str, str]:
 
 
 def request(
-    method: str, url: str, body: dict | None = None, *,
-    role: str = "platform_operator", subject: str = "stack-smoke-test",
+    method: str, url: str, body: dict | None = None, *, token: str | None = None,
 ):
-    headers = {
-        "Content-Type": "application/json",
-        "X-FSSAI-Identity": subject,
-        "X-FSSAI-Role": role,
-    }
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     encoded = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(url, data=encoded, headers=headers, method=method)
     try:
@@ -42,6 +39,20 @@ def request(
 
 def main() -> None:
     env = load_env(ROOT / "deploy" / ".env")
+    identities = json.loads(env["FSSAI_AUTH_TOKENS_JSON"])
+
+    def token_for(role: str) -> str:
+        try:
+            return next(
+                token for token, identity in identities.items()
+                if role in identity.get("roles", [])
+            )
+        except StopIteration as exc:
+            raise RuntimeError(f"deploy/.env has no token for required role {role!r}") from exc
+
+    operator = token_for("platform_operator")
+    officer = token_for("student_support_officer")
+    agent = token_for("proposer")
     base = "http://127.0.0.1:8080"
     suffix = uuid.uuid4().hex[:12]
     resource_id = f"smoke-resource-{suffix}"
@@ -52,7 +63,7 @@ def main() -> None:
 
     status, _ = request("POST", f"{base}/v1/resources", {
         "resource_id": resource_id, "status": "draft", "version": 1,
-    })
+    }, token=operator)
     assert status == 201
     status, _ = request("POST", f"{base}/v1/proposals", {
         "request_id": request_id,
@@ -61,19 +72,29 @@ def main() -> None:
         "from_status": "draft",
         "to_status": "ready_for_officer_review",
         "evidence_version": "smoke-snapshot-v1",
-    }, role="agent")
+    }, token=agent)
+    assert status == 201
+    status, _ = request(
+        "POST", f"{base}/v1/proposals/{request_id}/review", {}, token=officer,
+    )
     assert status == 201
     status, _ = request(
         "POST", f"{base}/v1/proposals/{request_id}/approval", {"ttl_seconds": 300},
-        role="student_support_officer", subject="stack-smoke-reviewer",
+        token=officer,
     )
     assert status == 201
-    status, first = request("POST", f"{base}/v1/proposals/{request_id}/execute", {})
+    status, first = request(
+        "POST", f"{base}/v1/proposals/{request_id}/execute", {}, token=operator,
+    )
     assert status == 200 and first["status"] == "ready_for_officer_review"
-    status, replay = request("POST", f"{base}/v1/proposals/{request_id}/execute", {})
+    status, replay = request(
+        "POST", f"{base}/v1/proposals/{request_id}/execute", {}, token=operator,
+    )
     assert status == 200 and replay["replayed"] is True
     assert replay["receipt_hash"] == first["receipt_hash"]
-    status, evidence = request("GET", f"{base}/v1/proposals/{request_id}/evidence")
+    status, evidence = request(
+        "GET", f"{base}/v1/proposals/{request_id}/evidence", token=operator,
+    )
     assert status == 200 and len(evidence["records"]) == 2
 
     source_keys = json.loads(env["FSSAI_IMPORT_SOURCE_KEYS_JSON"])

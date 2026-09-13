@@ -99,6 +99,18 @@ jobs:
         working-directory: fssai-ra
         run: python scripts/check_resilience.py
 
+      - name: Generated OpenAPI contract has not drifted
+        working-directory: fssai-ra
+        run: |
+          python scripts/export_openapi.py
+          git diff --exit-code -- docs/openapi.json
+
+      - name: Reference Compose topology is valid
+        working-directory: fssai-ra
+        run: |
+          python scripts/bootstrap_dev_env.py
+          docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
+
       - name: Upload assurance artifacts
         uses: actions/upload-artifact@v6
         with:
@@ -116,7 +128,7 @@ jobs:
       - run: python -m pip install ruff
       - name: Ruff
         working-directory: fssai-ra
-        run: ruff check src tests scripts jobs
+        run: ruff check src tests scripts jobs adapters
 
   package:
     name: Build and install package
@@ -156,7 +168,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
-        with: { node-version: "22", cache: npm, cache-dependency-path: fssai-ra/console/package.json }
+        with: { node-version: "22", cache: npm, cache-dependency-path: fssai-ra/console/package-lock.json }
       - name: Install
         working-directory: fssai-ra/console
         run: npm ci --no-audit --no-fund

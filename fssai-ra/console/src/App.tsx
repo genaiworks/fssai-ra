@@ -19,6 +19,7 @@ const TABS = [
 const DEV_TOKENS = [
   { token: "dev-operator-token", label: "platform operator" },
   { token: "dev-officer-token", label: "support officer" },
+  { token: "dev-second-officer-token", label: "second support officer" },
   { token: "dev-agent-token", label: "bounded agent" },
   { token: "dev-auditor-token", label: "auditor" },
 ];
@@ -63,13 +64,25 @@ export function App() {
           <span className="faint" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             acting as
           </span>
-          <select value={token} onChange={(e) => changeToken(e.target.value)} style={{ width: "auto" }}>
+          <input
+            aria-label="Bearer token"
+            type="password"
+            value={token}
+            onChange={(e) => changeToken(e.target.value)}
+            placeholder="paste bearer token"
+            autoComplete="off"
+            style={{ width: 220 }}
+          />
+          <select
+            aria-label="Use a published teaching identity"
+            value={DEV_TOKENS.some((item) => item.token === token) ? token : ""}
+            onChange={(e) => { if (e.target.value) changeToken(e.target.value); }}
+            style={{ width: "auto" }}
+          >
+            <option value="">custom token</option>
             {DEV_TOKENS.map((item) => (
               <option key={item.token} value={item.token}>{item.label}</option>
             ))}
-            {!DEV_TOKENS.some((item) => item.token === token) && (
-              <option value={token}>configured token</option>
-            )}
           </select>
         </label>
       </header>

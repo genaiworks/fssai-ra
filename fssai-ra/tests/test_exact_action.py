@@ -117,6 +117,24 @@ def test_tampered_approval_is_rejected_before_mutation():
     assert register.mutation_count == 0
 
 
+def test_second_reviewer_identity_and_role_are_covered_by_the_signature():
+    register, _, authority, executor, proposal = setup_workflow()
+    approval = authority.approve(
+        proposal,
+        approver="officer-17",
+        second_approver="officer-18",
+        second_approver_role="student_support_officer",
+        now=1000,
+    )
+    forged = replace(approval, second_approver="attacker")
+
+    assert_denied(
+        "APPROVAL_SIGNATURE_INVALID",
+        lambda: executor.execute(proposal, forged, now=1001),
+    )
+    assert register.mutation_count == 0
+
+
 def test_untrusted_approval_key_is_rejected_before_mutation():
     register, _, _, executor, proposal = setup_workflow()
     other_authority = ApprovalAuthority(key_id="unknown-key", signing_key="other-secret")
@@ -211,3 +229,126 @@ def test_completed_mutation_is_marked_uncertain_then_reconciled_once():
     assert executor.pending_outcome_count == 0
     assert len(ledger.find("action_outcome", request_id="req-recovery")) == 1
     assert ledger.verify()
+
+
+# ---------------------------------------------------------------------------
+# The escalation endorsement, re-checked by the executor
+# ---------------------------------------------------------------------------
+#
+# The oversight monitor refuses to *issue* an approval whose second reviewer is
+# missing or is the primary. In a real deployment that check is made by a
+# different process with different owners, so the executor re-derives it — the
+# same reason it rechecks the digest, audience, role, expiry and version that
+# were all correct when the approval was signed.
+#
+# Until these tests existed, escalation was the one field the executor carried
+# into evidence without ever checking it.
+
+
+def _escalation_fixture():
+    from fssaira.profiles import ApplicationProfile
+
+    profile = ApplicationProfile.load("profiles/student_support.yaml")
+    rule = next(r for r in profile.transitions if r.consequential)
+    register = CaseRegister({"c1": {"status": rule.from_status, "version": 1}})
+    ledger = EvidenceLedger("escalation-token")
+    executor = profile.make_executor(register, ledger, "escalation-token")
+    proposal = ActionProposal(
+        "req-esc", "agent-1", rule.operation, "c1", 1,
+        rule.from_status, rule.to_status, "snap-1",
+    )
+    return ApprovalAuthority(), executor, proposal, rule
+
+
+def _approve(authority, proposal, rule, **kwargs):
+    return authority.approve(
+        proposal, approver="officer-1", approver_role=rule.approval_role,
+        now=1_000.0, **kwargs
+    )
+
+
+def test_an_escalation_naming_the_primary_as_the_second_reviewer_is_refused():
+    """Two signatures from one person are not a second judgement."""
+    authority, executor, proposal, rule = _escalation_fixture()
+    approval = _approve(
+        authority, proposal, rule,
+        second_approver="officer-1", second_approver_role=rule.approval_role,
+    )
+    with pytest.raises(ExecutionDenied) as denial:
+        executor.validate_authorization(proposal, approval, now=1_001.0)
+    assert denial.value.code == "SECOND_APPROVER_NOT_DISTINCT"
+
+
+def test_the_requester_cannot_be_the_escalation_reviewer():
+    """Separation of duties applies to the second signature as much as the first."""
+    authority, executor, proposal, rule = _escalation_fixture()
+    approval = _approve(
+        authority, proposal, rule,
+        second_approver="agent-1", second_approver_role=rule.approval_role,
+    )
+    with pytest.raises(ExecutionDenied) as denial:
+        executor.validate_authorization(proposal, approval, now=1_001.0)
+    assert denial.value.code == "SECOND_APPROVER_IS_REQUESTER"
+
+
+def test_an_escalation_reviewer_must_carry_the_role_they_hold():
+    """An unattributed signature is not an endorsement."""
+    authority, executor, proposal, rule = _escalation_fixture()
+    approval = _approve(authority, proposal, rule, second_approver="officer-2")
+    with pytest.raises(ExecutionDenied) as denial:
+        executor.validate_authorization(proposal, approval, now=1_001.0)
+    assert denial.value.code == "SECOND_APPROVER_ROLE_MISSING"
+
+
+def test_escalating_to_a_role_that_could_not_have_approved_it_alone_is_refused():
+    """Otherwise escalation adds a name rather than a control."""
+    authority, executor, proposal, rule = _escalation_fixture()
+    approval = _approve(
+        authority, proposal, rule,
+        second_approver="officer-2", second_approver_role="facilities_contractor",
+    )
+    with pytest.raises(ExecutionDenied) as denial:
+        executor.validate_authorization(proposal, approval, now=1_001.0)
+    assert denial.value.code == "SECOND_APPROVER_ROLE_NOT_ALLOWED"
+
+
+def test_a_role_recorded_for_a_reviewer_who_was_never_named_is_refused():
+    authority, executor, proposal, rule = _escalation_fixture()
+    approval = _approve(authority, proposal, rule, second_approver_role=rule.approval_role)
+    with pytest.raises(ExecutionDenied) as denial:
+        executor.validate_authorization(proposal, approval, now=1_001.0)
+    assert denial.value.code == "SECOND_APPROVER_ROLE_WITHOUT_REVIEWER"
+
+
+def test_a_well_formed_escalation_executes_and_records_both_reviewers():
+    """The control must not refuse the thing it exists to permit."""
+    authority, executor, proposal, rule = _escalation_fixture()
+    approval = _approve(
+        authority, proposal, rule,
+        second_approver="officer-2", second_approver_role=rule.approval_role,
+    )
+    result = executor.execute(proposal, approval, now=1_001.0)
+    assert result.status == rule.to_status
+
+    intent = executor._evidence.find("action_intent", request_id=proposal.request_id)
+    assert intent, "an escalated action must leave an intent record"
+    payload = intent[0].payload
+    assert payload["approver"] == "officer-1"
+    assert payload["second_approver"] == "officer-2"
+    assert payload["second_approver_role"] == rule.approval_role, (
+        "the evidence must name the role the escalation reviewer held, not just their name"
+    )
+
+
+def test_the_escalation_fields_are_authenticated_not_merely_carried():
+    """Tampering with either must invalidate the signature."""
+    authority, executor, proposal, rule = _escalation_fixture()
+    approval = _approve(
+        authority, proposal, rule,
+        second_approver="officer-2", second_approver_role=rule.approval_role,
+    )
+    for field, value in (("second_approver", "officer-9"), ("second_approver_role", "registrar")):
+        tampered = replace(approval, **{field: value})
+        with pytest.raises(ExecutionDenied) as denial:
+            executor.validate_authorization(proposal, tampered, now=1_001.0)
+        assert denial.value.code == "APPROVAL_SIGNATURE_INVALID", field

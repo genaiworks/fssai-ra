@@ -14,6 +14,10 @@ bindings:
   - requirements: [IB-1]
     mechanism: unit_test
     locator: tests/test_import_api.py::test_import_gateway_quarantines_bad_signature_without_publishing
+  - requirements: [IB-1, IB-4]
+    mechanism: unit_test
+    locator: tests/test_import_api.py::test_import_gateway_records_an_unclosed_intent_when_delivery_fails
+    note: the boundary records delivery intent before publication and never reports a failed publish as accepted
   - requirements: [IB-2]
     mechanism: unit_test
     locator: tests/test_diode_transport.py::test_neither_end_exposes_a_return_path
@@ -38,10 +42,10 @@ bindings:
   - requirements: [ET-2]
     mechanism: conformance
     locator: CF-ET-03
-    note: >-
-      added when coverage found ET-2 bound to nothing. The dead-letter path and
-      idempotent producer were implemented in kafka_backend and exercised by no
-      check reachable without a live broker
+  - requirements: [ET-2]
+    mechanism: unit_test
+    locator: tests/test_kafka_backend.py
+    note: broker-independent message fixtures verify that source offsets remain uncommitted until handler success or acknowledged dead-letter publication
 
   # -- reproducible data -------------------------------------------------
   - requirements: [RD-1]
@@ -131,6 +135,15 @@ bindings:
     mechanism: ablation
     locator: src/fssaira/oversight.py::sweep_oversight
     note: load-bearing in 16 of the 20 swept cells where harm was possible
+  - requirements: [AA-10]
+    mechanism: unit_test
+    locator: tests/test_exact_action.py::test_an_escalation_naming_the_primary_as_the_second_reviewer_is_refused
+  - requirements: [AA-10]
+    mechanism: unit_test
+    locator: tests/test_exact_action.py::test_escalating_to_a_role_that_could_not_have_approved_it_alone_is_refused
+    note: >-
+      the executor re-derives the endorsement rather than trusting the approval
+      service that signed it
   - requirements: [AA-9]
     mechanism: unit_test
     locator: tests/test_oversight.py::test_sustained_load_escalates_to_a_second_distinct_reviewer

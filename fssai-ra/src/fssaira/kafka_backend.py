@@ -130,13 +130,19 @@ class KafkaEventConsumer:
         message = self.consumer.poll(timeout)
         if message is None:
             return None
-        error = message.error()
-        if error:
-            kafka = _require_kafka()
-            if error.code() == kafka.KafkaError._PARTITION_EOF:
-                return None
-            raise RuntimeError(f"Kafka consume failed: {error}")
+        if not self._broker_message_is_usable(message):
+            return None
         return self._parse(message)
+
+    @staticmethod
+    def _broker_message_is_usable(message) -> bool:
+        error = message.error()
+        if not error:
+            return True
+        kafka = _require_kafka()
+        if error.code() == kafka.KafkaError._PARTITION_EOF:
+            return False
+        raise RuntimeError(f"Kafka consume failed: {error}")
 
     @staticmethod
     def _parse(message) -> ConsumedEvent | None:
@@ -182,7 +188,7 @@ class KafkaEventConsumer:
                 message = self.consumer.poll(timeout)
                 if message is None:
                     continue
-                if message.error():
+                if not self._broker_message_is_usable(message):
                     continue
                 self._process_message(message, handler)
         finally:

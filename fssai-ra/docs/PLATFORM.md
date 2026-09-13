@@ -31,14 +31,16 @@ documents and updates
           v
   import-gateway :8081  ---- inward event ---->  Apache Kafka
   type size provenance       boundary seam          |
-  HMAC quarantine                                  +--> PySpark validation
+  HMAC quarantine + durable low-side audit          +--> PySpark validation
   no read-back route                               |        |
                                                     |        v
 CONTROL PLANE                                      |   Apache Iceberg
                                                     |   snapshots and history
-client -> FastAPI :8080 -> Redis                    |
-          |                cases proposals          +--> controlled consumers
-          |                approvals idempotency
+client -> FastAPI :8080 -> PostgreSQL               |
+          |                case + evidence in one   +--> controlled consumers
+          |                transaction
+          |              -> Redis (alternative
+          |                best-effort adapter)
           v                pending outcomes
  exact-action executor
           |
@@ -70,44 +72,72 @@ Requirements are Docker with Compose v2 and at least 8 GB of memory for the
 analytics profile.
 
 ```bash
-python scripts/bootstrap_dev_env.py
+python3 scripts/bootstrap_dev_env.py
 docker compose --env-file deploy/.env -f deploy/compose.yaml up --build -d \
   redis kafka control-api import-gateway
 curl http://127.0.0.1:8080/health
 curl http://127.0.0.1:8081/health
 ```
 
-The generated `deploy/.env` is ignored by Git and contains random local credentials.
+The generated `deploy/.env` is ignored by Git and contains random local credentials,
+including distinct bearer tokens for the operator, proposer, and two reviewing officers.
 Do not promote it. An institutional deployment should obtain secrets from its key
 management service, authenticate callers through an OIDC or workload-identity
 gateway, enable authenticated and encrypted Kafka listeners, and operate Redis with
 an approved persistence and high-availability design.
 
+The console's header accepts a pasted bearer token and keeps it only for the
+browser session. The four named choices are published teaching tokens and will
+correctly fail against a generated distributed-stack configuration.
+
 ### Exercise the exact-action API
 
+The checked-in `.env.example` uses the readable placeholders below. If you ran
+`make dev-env`, use the corresponding random token key from
+`FSSAI_AUTH_TOKENS_JSON` instead.
+
 ```bash
+export OPERATOR_TOKEN='change-me-operator-token'
+export AGENT_TOKEN='change-me-agent-token'
+export OFFICER_TOKEN='change-me-officer-token'
+export SECOND_OFFICER_TOKEN='change-me-second-officer-token'
+
 curl -X POST http://127.0.0.1:8080/v1/resources \
   -H 'Content-Type: application/json' \
-  -H 'X-FSSAI-Identity: operator-1' \
-  -H 'X-FSSAI-Role: platform_operator' \
+  -H "Authorization: Bearer $OPERATOR_TOKEN" \
   -d '{"resource_id":"S-500","status":"draft","version":1}'
 
 curl -X POST http://127.0.0.1:8080/v1/proposals \
   -H 'Content-Type: application/json' \
-  -H 'X-FSSAI-Identity: agent-1' \
-  -H 'X-FSSAI-Role: bounded_agent' \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
   -d '{"request_id":"req-500","operation":"prepare_case_for_review","resource_id":"S-500","from_status":"draft","to_status":"ready_for_officer_review","evidence_version":"snapshot-500"}'
+
+curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/review \
+  -H "Authorization: Bearer $OFFICER_TOKEN"
+
+# Only when the configured load threshold requires escalation: the second
+# officer starts an independently timed review, waits for the declared floor,
+# then endorses the exact proposal digest.
+curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/review \
+  -H "Authorization: Bearer $SECOND_OFFICER_TOKEN"
+curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/endorsement \
+  -H "Authorization: Bearer $SECOND_OFFICER_TOKEN"
 
 curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/approval \
   -H 'Content-Type: application/json' \
-  -H 'X-FSSAI-Identity: officer-1' \
-  -H 'X-FSSAI-Role: student_support_officer' \
+  -H "Authorization: Bearer $OFFICER_TOKEN" \
   -d '{"ttl_seconds":300}'
 
 curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/execute \
-  -H 'X-FSSAI-Identity: executor-1' \
-  -H 'X-FSSAI-Role: executor'
+  -H "Authorization: Bearer $OPERATOR_TOKEN"
 ```
+
+`/review` stores the first presentation time idempotently on the server. If a
+deliberation floor is configured, an immediate approval is refused; refreshing
+or repeating `/review` cannot reset that clock. After the escalation threshold,
+a distinct officer starts their own review and posts `/endorsement` before the
+primary reviewer approves. Both identities and roles are covered by the signed
+approval artifact and recorded with the action intent.
 
 Changing the target, state, evidence version, reviewer role, or approved payload
 causes a stable fail-secure error code. Retrying the successful request returns the
@@ -131,8 +161,8 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg 
 ```
 
 The streaming job reads normalized inward events, preserves Kafka partition and
-offset, and appends them to an Iceberg v2 table through a checkpointed Structured
-Streaming query. Production deployments must pin container digests and compatible
+offset, and merges them into an Iceberg v2 table on that stable identity. Replayed
+micro-batches therefore do not create duplicate rows. Production deployments must pin container digests and compatible
 Spark, Scala, Kafka connector, and Iceberg runtime artifacts after integration
 testing. The unpinned quickstart images in Compose are for evaluation only.
 

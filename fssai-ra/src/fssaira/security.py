@@ -38,6 +38,7 @@ DEV_TOKENS = {
     # a configuration warning, and the compose file overrides them.
     "dev-operator-token": ("platform.operator", ("platform_operator",)),
     "dev-officer-token": ("officer.díaz", ("student_support_officer",)),
+    "dev-second-officer-token": ("officer.okafor", ("student_support_officer",)),
     "dev-agent-token": ("bounded-agent-1", ("proposer",)),
     "dev-auditor-token": ("audit.reviewer", ("auditor",)),
 }
@@ -199,10 +200,11 @@ class Authenticator:
                 "header authentication requires an authenticating proxy; set "
                 "FSSAI_TRUST_PROXY_HEADERS=yes-i-run-an-authenticating-proxy to accept the risk"
             )
-        if not identity or not role:
+        identity = (identity or "").strip()
+        roles = tuple(part.strip() for part in (role or "").split(",") if part.strip())
+        if not identity or not roles:
             raise AuthenticationError("X-FSSAI-Identity and X-FSSAI-Role are required")
-        return Principal(identity, tuple(part.strip() for part in role.split(",") if part.strip()),
-                         method="proxy-header")
+        return Principal(identity, roles, method="proxy-header")
 
     def _from_oidc(self, authorization: str | None) -> Principal:  # pragma: no cover - optional
         if not authorization or not authorization.lower().startswith("bearer "):
@@ -226,10 +228,10 @@ class Authenticator:
             raise AuthenticationError(
                 "oidc mode requires the 'auth' extra: pip install 'fssaira[auth]'"
             ) from exc
-        if not self._jwks_cache.get("client"):
-            self._jwks_cache["client"] = PyJWKClient(self.config.jwks_url)
-        key = self._jwks_cache["client"].get_signing_key_from_jwt(token).key
         try:
+            if not self._jwks_cache.get("client"):
+                self._jwks_cache["client"] = PyJWKClient(self.config.jwks_url)
+            key = self._jwks_cache["client"].get_signing_key_from_jwt(token).key
             claims = jwt.decode(
                 token, key, algorithms=["RS256", "ES256"],
                 audience=self.config.oidc_audience or None,
@@ -237,7 +239,14 @@ class Authenticator:
             )
         except Exception as exc:
             raise AuthenticationError(f"token rejected: {exc}") from exc
-        roles = claims.get("roles") or claims.get("realm_access", {}).get("roles") or []
+        if not isinstance(claims, dict):
+            raise AuthenticationError("token rejected: claims must be an object")
+        roles = claims.get("roles")
+        if roles is None:
+            realm = claims.get("realm_access", {})
+            if not isinstance(realm, dict):
+                raise AuthenticationError("token rejected: realm_access claim must be an object")
+            roles = realm.get("roles", [])
         subject = claims.get("preferred_username") or claims.get("sub", "")
         if not subject:
             raise AuthenticationError("token rejected: subject claim is missing")

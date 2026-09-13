@@ -170,12 +170,17 @@ services:
       FSSAI_KAFKA_BOOTSTRAP: kafka:29092
       FSSAI_IMPORT_SOURCE_KEYS_JSON: ${FSSAI_IMPORT_SOURCE_KEYS_JSON}
       FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
+      # Quarantine and ingest evidence belongs on the low side and must survive
+      # a gateway restart. It is deliberately not written to the control DB.
+      FSSAI_IMPORT_AUDIT_PATH: /var/lib/fssaira/import-audit.sqlite3
     depends_on:
       kafka: {condition: service_healthy}
     ports: ["127.0.0.1:8081:8081"]
     # Deliberately not on the `control` network. The gateway can publish inward
     # and cannot reach the control plane, the database, or the console.
     networks: [low-side, data]
+    volumes:
+      - import-audit:/var/lib/fssaira
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/health"]
       interval: 15s
@@ -264,3 +269,4 @@ volumes:
   object-data: {}
   ollama-models: {}
   spark-checkpoints: {}
+  import-audit: {}

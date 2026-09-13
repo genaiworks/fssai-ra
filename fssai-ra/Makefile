@@ -15,7 +15,7 @@ test:  ## Run the deterministic test suite
 	$(PYTHON) -m pytest
 
 lint:  ## Lint the Python sources
-	$(PYTHON) -m ruff check src tests scripts jobs
+	$(PYTHON) -m ruff check src tests scripts jobs adapters
 
 verify:  ## Bounded model check of the reference profile
 	$(PYTHON) -m fssaira.cli verify profiles/student_support.yaml

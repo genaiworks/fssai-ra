@@ -35,7 +35,9 @@ RUN python -m pip install --no-index --find-links=/wheels fssaira[platform] && r
 COPY profiles ./profiles
 COPY contract ./contract
 
-RUN useradd --create-home --uid 10001 fssaira && chown -R 10001 /app
+RUN useradd --create-home --uid 10001 fssaira \
+ && mkdir -p /var/lib/fssaira \
+ && chown -R 10001 /app /var/lib/fssaira
 USER 10001
 
 EXPOSE 8080

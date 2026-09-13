@@ -22,6 +22,7 @@ handled by lineage and rollback rather than by the boundary.
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import hmac
 import re
@@ -167,16 +168,33 @@ class ImportBoundary:
         )
         self.last_report = report
         evidence = UntrustedEvidence(source=raw.source, text=clean)
-        # Protocol break: hand a normalized, minimal record to the diode.
-        self._diode.send_inward({
-            "source": raw.source, "text": clean, "stripped": flags, "content_hash": content_hash,
-        })
-        self._evidence.append(
-            "ingest",
-            {"source": raw.source, "stripped_markers": flags,
-             "bytes": report.bytes_out, "content_hash": content_hash},
-            token=self._token,
-        )
+        record = {
+            "source": raw.source, "stripped_markers": flags,
+            "bytes": report.bytes_out, "content_hash": content_hash,
+        }
+        # Record intent before delivery. This ordering is load-bearing: if the
+        # inward publisher accepts the item and the process then loses its audit
+        # store, there is still a durable record identifying exactly what was
+        # about to cross. A completed ``ingest`` record closes that intent.
+        self._evidence.append("ingest_intent", record, token=self._token)
+        try:
+            # Protocol break: hand a normalized, minimal record to the diode.
+            self._diode.send_inward({
+                "source": raw.source, "text": clean, "stripped": flags,
+                "content_hash": content_hash,
+            })
+        except Exception as exc:
+            # This second append is best effort: the original exception remains
+            # authoritative if the evidence store also fails. The unclosed
+            # intent is itself a recoverable signal for an operator.
+            with contextlib.suppress(Exception):
+                self._evidence.append(
+                    "ingest_delivery_failed",
+                    {**record, "error_type": type(exc).__name__},
+                    token=self._token,
+                )
+            raise
+        self._evidence.append("ingest", record, token=self._token)
         return evidence
 
 

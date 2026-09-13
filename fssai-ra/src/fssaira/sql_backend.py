@@ -499,6 +499,14 @@ class _TxObjects:
             (namespace, key, self._u.database.dumps(value)),
         )
 
+    def put_if_absent(self, namespace: str, key: str, value: dict) -> bool:
+        row = self._u.one(
+            f"INSERT INTO {self._u.table('objects')} (namespace, key, value) VALUES (?, ?, ?) "
+            "ON CONFLICT (namespace, key) DO NOTHING RETURNING key",
+            (namespace, key, self._u.database.dumps(value)),
+        )
+        return row is not None
+
     def get(self, namespace: str, key: str) -> dict | None:
         row = self._u.one(
             f"SELECT value FROM {self._u.table('objects')} WHERE namespace = ? AND key = ?",

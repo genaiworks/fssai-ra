@@ -74,6 +74,8 @@ CLAIMS = [
     # an entry here is a figure nothing checks — which is the defect the contract
     # coverage work exists to catch, so it would be an embarrassing one to ship.
     ("contract coverage", "**eighteen of twenty-eight were prose bound to nothing.**"),
+    ("contract coverage today", "reading {coverage_machine_verified}, "
+     "{coverage_organizationally_attested}, {coverage_unverified} today"),
     ("assisted review", "**{assisted_merit_failures_dependent} merit failures with a "
      "dependent assistant, {assisted_merit_failures_independent} with an independent one**"),
     ("delegation chain shapes", "{delegation_states_explored_display} enumerated chain "
@@ -207,6 +209,9 @@ SUPPLEMENT_CLAIMS = [
      "{assisted_benign_independent} | 0 |"),
     ("assisted unaided baseline", "| **{assisted_merit_failures_unaided}** | "
      "{assisted_benign_unaided} | {assisted_deferrals_unaided} |"),
+    ("coverage totals", "**{coverage_machine_verified} machine-verified, "
+     "{coverage_organizationally_attested} attested, {coverage_unverified} unverified**, "
+     "across {coverage_requirements} requirements"),
 ]
 
 

@@ -21,6 +21,25 @@ def build_client() -> TestClient:
     return TestClient(create_app(ControlPlane(profile), authenticator=Authenticator(AuthConfig())))
 
 
+def test_operational_responses_are_not_cacheable():
+    response = build_client().get("/v1/profile", headers=OFFICER)
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["referrer-policy"] == "no-referrer"
+
+
+def test_model_proposal_evidence_items_have_a_size_bound():
+    response = build_client().post(
+        "/v1/propose-task",
+        json={"task": "summarise", "evidence": ["x" * 20_001]},
+        headers=AGENT,
+    )
+
+    assert response.status_code == 422
+
+
 def test_openapi_control_plane_workflow():
     client = build_client()
 
@@ -102,6 +121,31 @@ def test_approval_role_is_checked_before_the_authority_signs():
     )
 
     assert response.status_code == 403
+
+
+def test_endorser_cannot_issue_the_primary_approval():
+    client = build_client()
+    client.post(
+        "/v1/resources", json={"resource_id": "S-distinct", "status": "draft"},
+        headers=OPERATOR,
+    )
+    proposal = client.post(
+        "/v1/proposals",
+        json={
+            "operation": "prepare_case_for_review", "resource_id": "S-distinct",
+            "from_status": "draft", "to_status": "ready_for_officer_review",
+            "evidence_version": "snap-1",
+        },
+        headers=AGENT,
+    ).json()
+    path = f"/v1/proposals/{proposal['request_id']}"
+    assert client.post(f"{path}/review", headers=OFFICER).status_code == 201
+    assert client.post(f"{path}/endorsement", headers=OFFICER).status_code == 201
+
+    response = client.post(f"{path}/approval", json={}, headers=OFFICER)
+
+    assert response.status_code == 409
+    assert response.json()["error"] == "SECOND_REVIEWER_NOT_DISTINCT"
 
 
 def test_declared_deliberation_floor_is_operable_through_server_timed_review(monkeypatch):
@@ -223,6 +267,7 @@ def test_second_review_is_authenticated_bound_and_persisted(monkeypatch):
 
     assert approval.status_code == 201
     assert approval.json()["second_approver"] == "officer.second"
+    assert approval.json()["second_approver_role"] == "student_support_officer"
     stored = plane.objects.get("approval", second)
     assert stored["second_approver"] == "officer.second"
 
@@ -308,8 +353,17 @@ def test_the_composition_assurance_endpoints_publish_their_own_figures():
 def test_the_composition_endpoints_require_the_operator_role():
     """They run real checks and publish deployment posture; they are not public."""
     client = build_client()
-    for path in ("/v1/coverage", "/v1/delegation", "/v1/assisted-review"):
+    for path in (
+        "/v1/verification", "/v1/conformance", "/v1/coverage",
+        "/v1/delegation", "/v1/assisted-review",
+    ):
         assert client.get(path).status_code == 401, f"{path} is reachable unauthenticated"
+        assert client.get(path, headers=OFFICER).status_code == 403, (
+            f"{path} accepts an authenticated caller without an assurance role"
+        )
+        assert client.get(
+            path, headers={"Authorization": "Bearer dev-auditor-token"}
+        ).status_code == 200
 
 
 def test_health_publishes_what_this_deployment_has_declared():

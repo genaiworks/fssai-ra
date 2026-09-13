@@ -75,7 +75,7 @@ fssaira init my-domain                            # scaffold your own
 ```
 
 No network, no model weights, no GPU. Release `v1.0.0` contains 187 deterministic
-tests; current source has 543 deterministic tests. Both include a bounded model checker over the
+tests; current source has 588 deterministic tests. Both include a bounded model checker over the
 profile's declared authority space, a portable conformance suite, and versioned
 machine-readable results. These establish specified properties in a synthetic
 environment; they are **not** a security certification or evidence of production
@@ -109,7 +109,7 @@ What the current branch adds, each answering a question the release could not:
 | Oversight capacity | How much review can an institution actually supply? | 11 reviewers sustain 2,640 actions/day; 4 → 0 merit failures under load |
 | **Assisted review** | **What happens when the reviewer also has a model?** | **5 → 1 merit failures, dependent vs independent assistant, at the same lowered floor — and no runtime signal distinguishes them** |
 | **Delegated authority** | **Does authority survive being passed to another agent?** | **10/10 chains contained where per-hop validation contains 2/10; 768 states, 0 violations** |
-| **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 33 machine-verified, 3 attested, 0 unverified** |
+| **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 34 machine-verified, 3 attested, 0 unverified** |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
 | Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 

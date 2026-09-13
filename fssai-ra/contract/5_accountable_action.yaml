@@ -76,6 +76,22 @@ requirements:
     test: Drive a queue past the declared capacity with a reviewer model that stops reading, and confirm that approvals are refused, that no structurally valid but substantively wrong proposal executes, and that the excess is routed to the manual fallback
     evidence_artifact: Oversight report naming approvals per reviewer, median deliberation interval, escalations required, refusals by code, and remaining capacity headroom
     failure_response: Refuse to issue the approval, route the action to the declared manual fallback, and report the deferral count as a measurement of demand against declared capacity
+  # AA-10 exists because AA-9 was enforced in only one place. The oversight
+  # monitor refuses to *issue* an approval whose second reviewer is missing or is
+  # the primary, and in a real deployment that monitor lives in the approval
+  # service — a different process, with different owners, from the executor. The
+  # executor re-derives every other authority question rather than trusting the
+  # party that answered it. Escalation was the one field it carried into evidence
+  # unchecked.
+  - id: AA-10
+    protected_asset: The meaning of a second signature
+    permitted_operation: An escalated action carries a second reviewer who is distinct from the primary, distinct from the requester, and holds a role permitted for this transition
+    enforcement_point: Executor re-validates the escalation endorsement independently of the approval service that issued it; the second reviewer's identity and role are inside the signed payload and are recorded in the intent evidence
+    owner: Program Registrar
+    test: Present a signed approval naming the primary as the second reviewer, one naming the requester, one naming a reviewer without a role, one whose second reviewer holds a role not permitted for the transition, and one recording a role for a reviewer who was never named; confirm each is denied with its own code and that a well-formed escalation executes and records both names and both roles
+    evidence_artifact: Intent record naming the primary approver, the escalation reviewer, and the role each held
+    failure_response: Deny the action; treat an approval whose two signatures resolve to one person as a control failure in the approval service rather than a routing error
+
   - id: AA-9
     protected_asset: The independence of sustained review
     permitted_operation: Past the declared escalation threshold within a window, a consequential action requires a second, distinct reviewer

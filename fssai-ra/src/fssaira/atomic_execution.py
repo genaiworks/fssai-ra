@@ -110,6 +110,7 @@ class AtomicExecutor(AccountableExecutor):
                     "approver": approval.approver,
                     "approval_key_id": approval.key_id,
                     "second_approver": approval.second_approver,
+                    "second_approver_role": approval.second_approver_role,
                     "evidence_version": proposal.evidence_version,
                 },
                 token=self._token,
@@ -211,6 +212,10 @@ class _DatabaseObjectStoreView:
     def put(self, namespace: str, key: str, value: dict) -> None:
         with self._db.transaction() as unit:
             unit.objects.put(namespace, key, value)
+
+    def put_if_absent(self, namespace: str, key: str, value: dict) -> bool:
+        with self._db.transaction() as unit:
+            return unit.objects.put_if_absent(namespace, key, value)
 
     def get(self, namespace: str, key: str) -> dict | None:
         with self._db.transaction() as unit:

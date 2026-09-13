@@ -71,7 +71,18 @@ a test fails the build if it ever documents a variable no code reads.
 | Kafka or policy dependency unavailable | Reject new consequential workflow | Restore dependency or use governed manual service |
 | `REVIEW_CAPACITY_EXCEEDED` | No approval is issued; the action takes the manual fallback | Do not raise the quota to clear a backlog. The deferral count is the measurement: demand exceeded the capacity this institution declared. Staff it, narrow what counts as consequential, or publish the queue length |
 | `DELIBERATION_TOO_SHORT` | No approval is issued | Check whether reviewers acquired an assistant nobody declared. Lowering the floor is correct only in proportion to declared independence |
-| `SECOND_REVIEWER_REQUIRED` | No approval is issued | Supply a distinct second reviewer, or take the manual fallback. Two signatures under the same backlog are not two independent judgements |
+| `DELIBERATION_UNVERIFIABLE` | No approval is issued | Start a server-timed review with `POST /v1/proposals/{id}/review`; never accept a client-supplied timestamp |
+| `SECOND_REVIEWER_REQUIRED` | No approval is issued | A distinct authorized reviewer must start `/review` and post `/endorsement`, or the action takes the manual fallback. Two endorsements under the same backlog are not necessarily independent judgements |
+
+The reference Compose gateway writes both accepted-import and quarantine
+records to the low-side `import-audit` volume. Its `/health` response reports
+`audit_durable: true`. A gateway started without `FSSAI_IMPORT_AUDIT_PATH`
+uses an in-memory teaching ledger and reports `false`; a restart then loses
+those boundary records, so that mode is not suitable for a pilot.
+For accepted content the gateway records `ingest_intent` before inward
+publication and `ingest` after acknowledgement. An intent with no closing
+record is a recovery signal; the gateway never reports that request as accepted.
+| Kafka handler or dead-letter publication failure | Source offset remains uncommitted | Restore the handler or DLQ and replay; never advance the source offset without either a successful projection or an acknowledged failure record |
 | `FLOOR_BELOW_DECLARED_INDEPENDENCE` | The deployment refuses to start | Raise the floor, or establish and declare a different model, a different evidence path, and an adversarial posture for the review assistant |
 | `SCOPE_NOT_ATTENUATED`, `CHAIN_NOT_ROOTED`, `CHAIN_CYCLE`, `DEPTH_EXCEEDED` | No mutation | A chain tried to confer authority its root never granted. Record the chain and the hop that failed; treat an unrooted chain as an unreviewed authority path |
 | `REQUESTER_NOT_CHAIN_LEAF` | No mutation | A principal presented a chain that authorises someone else. Treat as a credential-handling incident, not a routing bug |
@@ -94,3 +105,8 @@ certificate authority, Kafka authorization policy, Redis high availability, back
 system, SIEM integration, user-facing appeal service, domain policy, fairness study,
 or certified data diode. Those choices are jurisdictional and institutional. Their
 required observable properties belong in the adopter's control contract and tests.
+
+The Compose control plane selects PostgreSQL when both PostgreSQL and Redis URLs
+are present; Redis remains a separately conformable best-effort state profile,
+not a cache secretly participating in the SQL transaction. Do not describe one
+run as simultaneously proving both adapters.

@@ -34,6 +34,11 @@ class RedisObjectStore(ObjectStore):
     def put(self, namespace: str, key: str, value: dict) -> None:
         self.client.hset(self._key(namespace), key, json.dumps(value, sort_keys=True))
 
+    def put_if_absent(self, namespace: str, key: str, value: dict) -> bool:
+        return bool(self.client.hsetnx(
+            self._key(namespace), key, json.dumps(value, sort_keys=True)
+        ))
+
     def get(self, namespace: str, key: str) -> dict | None:
         value = self.client.hget(self._key(namespace), key)
         return None if value is None else json.loads(value)

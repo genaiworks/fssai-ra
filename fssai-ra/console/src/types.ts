@@ -100,10 +100,24 @@ export interface Approval {
   proposal_digest: string;
   approver: string;
   approver_role: string;
+  second_approver: string | null;
+  second_approver_role: string | null;
   audience: string;
   expires_at: number;
   key_id: string;
   signature: string;
+}
+
+export interface ReviewSession {
+  request_id: string;
+  reviewer: string;
+  proposal_digest: string;
+  presented_at: number;
+}
+
+export interface ReviewEndorsement extends ReviewSession {
+  reviewer_role: string;
+  endorsed_at: number;
 }
 
 export interface ExecutionResult {

@@ -2,6 +2,47 @@
 
 ## Unreleased — composition: delegated authority, assisted review, and a contract that measures itself
 
+### Release-readiness hardening
+
+- The HTTP review flow now uses server-recorded presentation times, immutable
+  digest-bound second-review endorsements, authenticated reviewer roles, and a
+  complete console workflow. Operational responses are marked `no-store`.
+- Kafka source offsets are committed only after handler success or acknowledged
+  dead-letter publication. The Spark sink now merges on Kafka partition and
+  offset, making micro-batch replay idempotent at the Iceberg table boundary.
+- The low-side gateway persists quarantine and import intent/outcome records on
+  its own volume. Failed inward publication leaves an inspectable, unclosed
+  intent instead of silently losing the boundary record.
+- OIDC configuration, token mappings, proxy headers, model endpoint locality,
+  model fallback, Iceberg snapshot history, adapter compatibility, request-size
+  limits, and generated developer credentials now fail closed or report their
+  limitations explicitly. Regression checks cover each repaired path.
+
+### The escalation endorsement was carried but never checked
+
+- **Fixed: the executor never validated the second reviewer.** `second_approver`
+  and `second_approver_role` are authenticated inside the signed payload and
+  written to the intent evidence, and the executor accepted both without
+  re-deriving anything about them. A signed approval naming its own primary as
+  the second reviewer would execute, and the evidence would record two names that
+  were one person.
+
+  The oversight monitor does check this — at issue time, in the approval service,
+  which in a real deployment is a different process with different owners. The
+  executor's whole premise is that it re-derives every authority question rather
+  than believing the party that answered it, which is why it rechecks the digest,
+  audience, role, expiry and version that were all correct when the approval was
+  signed. Escalation was the one field it took on trust.
+
+  Now refused with its own code: a second reviewer identical to the primary
+  (`SECOND_APPROVER_NOT_DISTINCT`), identical to the requester
+  (`SECOND_APPROVER_IS_REQUESTER`), named without a role
+  (`SECOND_APPROVER_ROLE_MISSING`), holding a role not permitted for the
+  transition (`SECOND_APPROVER_ROLE_NOT_ALLOWED`) — escalating to someone who
+  could not have approved it alone adds a name, not a control — or a role
+  recorded for a reviewer never named (`SECOND_APPROVER_ROLE_WITHOUT_REVIEWER`).
+  Added as contract requirement **AA-10**, bound and tested.
+
 ### Four defects found by probing the new modules
 
 Written after the modules shipped their own tests green, which is the point: a
@@ -89,6 +130,14 @@ The worst finding in this release, and it was ours.
 - **Fixed: `docs/REVIEWERS.md` told a sceptic to expect `394 passed`** against a
   suite of 477. It was the one front-door document outside the READMEs quoting a
   figure with nothing checking it; it is checked now.
+- **`paper/composition-supplement.md` gained Part III and a defect ledger.** The
+  supplement now covers all three contributions, and closes with a table of every
+  defect these methods have found in the authors' own work — from the
+  second-domain role that was silently unenforced to the oversight monitor that
+  was never attached to a real deployment. A method that has never embarrassed
+  its authors has not been shown to do anything, so the ledger is published
+  rather than described. The abstract's claim that "each of these has caught a
+  defect in our own work" now names the worst one.
 - The browser **oversight calculator** learned about review assistance: a mode
   selector, the three independence checkboxes, the reading time a declaration
   earns, and a warning when the entered time is below it. Its multiplier is

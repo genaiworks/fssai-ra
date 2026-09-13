@@ -45,7 +45,7 @@ make demo                                         # guided walkthrough
 make reviewer                                     # all assurance checks, one command
 
 cd fssai-ra && source .venv/bin/activate          # optional: individual commands
-pytest                                            # 543 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # 588 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
@@ -149,7 +149,7 @@ loader validated that every requirement *had* one and never that the test
 test and binding it to nothing.** Most did have tests; nothing connected them, so
 deleting one would have removed a governance claim in silence. Coverage is now
 three-way — machine-verified, organizationally attested by a named role on a
-declared cadence, or unverified — reading **33, 3, 0** today. A binding naming a
+declared cadence, or unverified — reading **34, 3, 0** today. A binding naming a
 test that does not exist fails the build, because otherwise the report would be a
 file asserting its own correctness.
 

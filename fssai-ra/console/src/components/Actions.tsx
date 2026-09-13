@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { ApiError } from "../types";
-import type { Approval, ExecutionResult, Profile, Proposal, TransitionRule } from "../types";
+import type {
+  Approval, ExecutionResult, Profile, Proposal, ReviewEndorsement, ReviewSession,
+  TransitionRule,
+} from "../types";
 import { Card, Field, Json, Limit, Notice } from "./primitives";
 
 /** The three-step protocol, rendered as three steps.
@@ -17,6 +20,8 @@ export function Actions() {
   const [evidenceVersion, setEvidenceVersion] = useState("snapshot-1");
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [approval, setApproval] = useState<Approval | null>(null);
+  const [review, setReview] = useState<ReviewSession | null>(null);
+  const [endorsement, setEndorsement] = useState<ReviewEndorsement | null>(null);
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [denial, setDenial] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
@@ -41,7 +46,10 @@ export function Actions() {
     }
   };
 
-  const reset = () => { setProposal(null); setApproval(null); setResult(null); setDenial(null); };
+  const reset = () => {
+    setProposal(null); setReview(null); setEndorsement(null);
+    setApproval(null); setResult(null); setDenial(null);
+  };
 
   const seed = () => run(async () => {
     reset();
@@ -51,7 +59,7 @@ export function Actions() {
 
   const propose = () => run(async () => {
     if (!rule) return;
-    setApproval(null); setResult(null);
+    setReview(null); setEndorsement(null); setApproval(null); setResult(null);
     setProposal(await api.propose({
       operation: rule.operation,
       resource_id: resourceId,
@@ -68,8 +76,19 @@ export function Actions() {
     // Idempotent: on the first click this starts the server-side deliberation
     // clock; later clicks keep the original timestamp. A configured floor may
     // therefore refuse the first click and admit a later one after real review.
-    await api.beginReview(proposal.request_id);
+    setReview(await api.beginReview(proposal.request_id));
     setApproval(await api.approve(proposal.request_id));
+  });
+
+  const beginReview = () => run(async () => {
+    if (!proposal) return;
+    setReview(await api.beginReview(proposal.request_id));
+  });
+
+  const endorse = () => run(async () => {
+    if (!proposal) return;
+    setReview(await api.beginReview(proposal.request_id));
+    setEndorsement(await api.endorseReview(proposal.request_id));
   });
 
   const execute = () => run(async () => {
@@ -130,9 +149,15 @@ export function Actions() {
                   action={<button className="action" onClick={propose} disabled={busy || !rule}>Propose</button>} />
             <Step index={2} state={approval ? "done" : "todo"} title="Approve"
                   body={approval
-                    ? `${approval.approver} as ${approval.approver_role}, bound to digest ${approval.proposal_digest.slice(0, 12)}…`
-                    : "A named human approves this exact proposal. The role comes from your token, never from the request."}
-                  action={<button className="action" onClick={approve} disabled={busy || !proposal}>Approve</button>} />
+                    ? `${approval.approver} as ${approval.approver_role}${approval.second_approver ? `, endorsed by ${approval.second_approver}` : ""}, bound to digest ${approval.proposal_digest.slice(0, 12)}…`
+                    : review
+                      ? `Review clock started for ${review.reviewer}${endorsement ? `; ${endorsement.reviewer} endorsed this digest` : ""}.`
+                      : "A named human reviews this exact proposal. Identity and role come from the bearer token."}
+                  action={<div className="row">
+                    <button className="ghost" onClick={beginReview} disabled={busy || !proposal}>Begin review</button>
+                    <button className="ghost" onClick={endorse} disabled={busy || !proposal}>Endorse</button>
+                    <button className="action" onClick={approve} disabled={busy || !proposal}>Issue approval</button>
+                  </div>} />
             <Step index={3} state={result ? "done" : denial ? "blocked" : "todo"} title="Execute"
                   body={result
                     ? `${result.case_id} is now ${result.status} at version ${result.version}${result.replayed ? " (replayed — no second mutation)" : ""}`
@@ -149,6 +174,12 @@ export function Actions() {
             )}
             {denial.code === "OUTCOME_EVIDENCE_PENDING" && (
               <><br />The mutation completed but its outcome record has not landed. Do not retry. Run reconciliation from the Recovery panel.</>
+            )}
+            {denial.code === "DELIBERATION_TOO_SHORT" && (
+              <><br />The server kept the original review start time. Read the proposal, wait for the declared floor, and retry; refreshing cannot reset the clock.</>
+            )}
+            {denial.code === "SECOND_REVIEWER_REQUIRED" && (
+              <><br />Switch to a distinct authorized reviewer's token, begin and complete an endorsement, then switch back to the primary reviewer to issue approval.</>
             )}
           </Notice>
         )}
@@ -168,7 +199,7 @@ export function Actions() {
 
       {(proposal || approval || result) && (
         <Card title="Request artifacts">
-          <Json value={{ proposal, approval, result }} />
+          <Json value={{ proposal, review, endorsement, approval, result }} />
         </Card>
       )}
     </>

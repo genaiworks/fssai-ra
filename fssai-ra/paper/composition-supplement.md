@@ -1,17 +1,23 @@
-# Composition supplement: delegated authority and assisted review
+# Composition supplement: delegated authority, assisted review, and a contract measured against itself
 
-This supplement records the two contributions the extended abstract states in
+This supplement records the three contributions the extended abstract states in
 compressed form: what happens to authority when an agent passes it to another
-agent, and what happens to human oversight when the reviewer also has a model.
+agent, what happens to human oversight when the reviewer also has a model, and
+whether the control contract this project has argued for since its first release
+was ever actually enforced.
 It supports discussion and a future full paper. It is not an additional field to
 paste into the conference form, and it changes no denominator of the earlier
 containment experiment.
 
-Both contributions share a shape worth naming up front. Neither is a *model*
-failure. In both, every component behaves exactly as specified, every mechanism
-passes its tests, and the harm arrives anyway — because the defect is in a
-composition no single component can see. That is precisely the class of problem
-an architecture is for, and precisely the class a better model does not fix.
+Parts I and II share a shape worth naming up front. Neither is a *model* failure.
+In both, every component behaves exactly as specified, every mechanism passes its
+tests, and the harm arrives anyway — because the defect is in a composition no
+single component can see. That is precisely the class of problem an architecture
+is for, and precisely the class a better model does not fix.
+
+Part III turns the same question on this project. It closes with a ledger of
+every defect these methods have found in our own work, because a method that has
+never embarrassed its authors has not been shown to do anything.
 
 ---
 
@@ -295,11 +301,133 @@ pytest tests/test_assisted_review.py -q
 
 ---
 
+## Part III — The contract, measured against itself
+
+### Research question
+
+The seven-field control contract is this project's original contribution, and
+one of the seven fields is an executable failure test. Is that field true?
+
+### What we found
+
+The loader validated that every requirement *had* a `test` field. It had never
+checked that the test **existed**.
+
+> **Eighteen of twenty-eight requirements described a failure test and were bound
+> to nothing.**
+
+Most of them did have tests. Nothing connected the two, so deleting a test would
+have removed a governance claim in silence — no build would have failed, and no
+document would have changed. One requirement, `ET-2`, had no check at all: the
+dead-letter path and idempotent producer were implemented and exercised by
+nothing reachable without a live broker.
+
+The project's own words for this condition are in `profiles.py`, written about a
+different defect: *a control that existed in review and not at runtime is the
+exact failure this project exists to eliminate.*
+
+### Method: three-way coverage
+
+Each requirement resolves to exactly one of three states.
+
+| Status | Means | Counted as |
+|---|---|---|
+| **machine_verified** | an executable check in this repository is bound to it and runs | evidence |
+| **organizationally_attested** | no program can prove it — key custody, a signed interface inventory, a manual fallback a real person staffs — so a named role attests on a declared cadence | a weaker claim, counted separately |
+| **unverified** | neither | the number to watch |
+
+A two-way split forces a dishonest choice. Count attestations as coverage and the
+figure inflates with promises; count them as gaps and it stays permanently bad,
+which trains everyone to ignore it. Publishing all three lets an adopter ask the
+only useful question: *are the attested controls the genuinely unprovable ones,
+or the inconvenient ones?*
+
+Two properties make the report worth reading:
+
+**Bindings are checked to exist.** Every locator naming a file and symbol is
+resolved against the actual source. Without this, coverage would be a YAML file
+asserting its own correctness — a more convincing version of the problem it was
+built to detect. It caught eight fabricated locators on its first run, all ours.
+
+**Attestation cannot grow quietly.** The number of organizationally attested
+requirements is pinned by a test. Nothing otherwise stops a maintainer from
+making coverage look perfect by declaring every inconvenient control unprovable.
+
+### Results
+
+Current figures: **34 machine-verified, 3 attested, 0 unverified**, across 37
+requirements in eight domains. Every figure is regenerated rather than typed.
+
+The three attested requirements are the interface inventory review (`IB-3`), log
+retention against the appeal window (`ET-3`), pinned-snapshot retention (`RD-2`),
+and the manual-fallback owner's awareness (`XC-4`) — each with a named role and a
+review cadence. They are the ones we would expect to be unprovable in code, which
+is the answer an adopter should be checking for.
+
+### Limits
+
+* Coverage measures that a control is **exercised**, never that it is
+  **adequate**. A requirement can be machine-verified by a weak check; the
+  mechanism name is the strength of evidence, not a score.
+* An attestation is a person's word on a schedule. The cadence is declared and is
+  not itself verified here.
+* The split is ours. An adopter who thinks one of our three attested controls
+  should be testable is making exactly the argument the report is designed to
+  provoke.
+
+### Reproduce
+
+```bash
+fssaira coverage
+pytest tests/test_coverage.py -q
+```
+
+---
+
+## What these methods found in our own work
+
+Every method in this project is justified the same way: it caught something the
+authors had missed. A method that has never embarrassed its authors has not been
+shown to do anything, so the ledger is published rather than described.
+
+| Found by | In | What it was |
+|---|---|---|
+| Bounded model checking | the reference profile | authentically-signed approvals pointed at the wrong audience, role, or proposal were reaching checks a tampered approval never exercised |
+| A second domain | `academic_record_correction`, first run | a declared `approval_role` on a routine transition was silently unenforced — the enforcement map was built only from *consequential* rules. A mandatory schema field, visible to every reviewer, doing nothing at runtime |
+| The sensitivity sweep | our own shipped defaults | a quota that bound four times earlier than the deliberation floor, deferring reviewers who *were* reading; and two capacity ceilings computed over different days, inflating the published figure and naming the wrong binding constraint |
+| The adversary corpus | its first run | harm counted by tool name missed records leaving through a tool not classified as egress |
+| **Contract coverage** | **our own contract** | **18 of 28 requirements described a failure test and bound it to nothing; `ET-2` had no check at all; and the first bindings file we wrote named eight locators that did not exist** |
+| **The delegation suite** | **its first run** | **the confused deputy was admitted. Every invariant held on a chain that was authentic, rooted, attenuated, unexpired, acyclic and within depth — and was simply not the requester's. An authority object bound to nobody is a bearer token** |
+| **The delegation model checker** | **its first run** | **an invariant we had stated imprecisely: rootedness asserted at depth 0, where an empty chain *is* the root principal acting directly** |
+| **Probing the shipped modules** | **delegation, assisted review, coverage** | **an unnamed principal could hold authority; a root grant could name no accountable owner; a negative deliberation floor silently disabled the assisted-review gate; and a binding with an empty locator counted as machine-verified — the failure the coverage module exists to detect, reappearing inside the detector** |
+| **Auditing the deployment path** | **`runtime_factory.build_control_plane`** | **the oversight monitor was never attached to the authority a real deployment uses. Review capacity was enforced in the CLI trial and the test suite and nowhere an institution would actually run the platform. Every test that exercised oversight constructed the monitor itself, which is why three releases passed without noticing** |
+| **Auditing the escalation path** | **the executor** | **the second reviewer's identity and role were authenticated and recorded but never re-checked. A signed approval naming its own primary as the second reviewer would execute, and the evidence would record two names that were one person (`AA-10`)** |
+| The lab timetable check | `docs/LAB.md` | the lab had grown to 105 minutes while every document still said ninety — and the check immediately found a second error, an exercise whose stated duration and timetable slot disagreed |
+| The README figure check | `docs/REVIEWERS.md` | a reviewer was told to expect `394 passed` against a suite of 477 |
+
+Two of these are worth separating from the rest.
+
+The **deployment-path defect** is the most serious thing this project has found in
+itself. The oversight contribution is the argument that earns the panel slot, it
+was measured and published and tested, and it was inactive in every deployment
+the platform could build. It is the strongest available evidence for the claim
+the whole project rests on: a control is not enforced because a suite is green,
+and the only way to know is to check where the control actually runs.
+
+The **coverage defect** is the same failure one level up, and the reason the
+coverage module exists at all. We applied a diagnostic to everyone else for three
+releases before applying it to ourselves, and eighteen of twenty-eight
+requirements failed it.
+
+---
+
 ## What both parts argue for the panel
 
 Publish your oversight ceiling before your automation roadmap, and recompute it
 when reviewers get an assistant. Declare the independence of anything that
-reviews a model's work. Verify chains rather than hops.
+reviews a model's work. Verify chains rather than hops. And bind every control
+you have written down to something that runs, because the alternative is what we
+found in our own contract.
 
 None of that requires a budget, a vendor, or a new standard. It requires an
 institution to write down what it has actually delegated and to whom, which is

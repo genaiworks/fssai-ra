@@ -65,11 +65,14 @@ class ApprovalCreate(BaseModel):
     ttl_seconds: int = Field(default=300, ge=1, le=86400)
 
 
+EvidenceText = Annotated[str, Field(min_length=1, max_length=20_000)]
+
+
 class ProposeTask(BaseModel):
     """Ask the configured model for tool-call proposals. Nothing executes."""
 
     task: str = Field(min_length=1, max_length=2000)
-    evidence: list[str] = Field(default_factory=list, max_length=20)
+    evidence: list[EvidenceText] = Field(default_factory=list, max_length=20)
 
 
 # ---------------------------------------------------------------------------
@@ -106,6 +109,14 @@ Caller = Annotated[Principal, Depends(current_principal)]
 def require(principal: Principal, role: str) -> None:
     if not principal.has_role(role):
         raise HTTPException(status_code=403, detail=f"role '{role}' is required")
+
+
+def require_one(principal: Principal, *roles: str) -> None:
+    if not any(principal.has_role(role) for role in roles):
+        raise HTTPException(
+            status_code=403,
+            detail="one of these roles is required: " + ", ".join(roles),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -233,6 +244,16 @@ def create_app(
         allow_headers=["Authorization", "Content-Type", "X-FSSAI-Identity", "X-FSSAI-Role"],
     )
 
+    @app.middleware("http")
+    async def protect_operational_responses(request: Request, call_next):
+        """Keep governed records and authenticated results out of shared caches."""
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        if request.url.path.startswith("/v1/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     # -- error translation -------------------------------------------------
     @app.exception_handler(ExecutionDenied)
     async def denied_handler(_request: Request, exc: ExecutionDenied):
@@ -310,10 +331,14 @@ def create_app(
         }
 
     @app.get("/v1/contract", tags=["governance"])
-    def get_contract(directory: str = Query(default="contract")):
+    def get_contract():
         """The seven-field control contract, as machine-readable YAML."""
         from .contract import ControlContract
 
+        # The contract path is deployment configuration, not caller input. The
+        # former query parameter let remote callers probe arbitrary directories
+        # for YAML files with the expected shape.
+        directory = os.getenv("FSSAI_CONTRACT_DIR", "contract")
         try:
             contract = ControlContract.load(directory)
             contract.validate()
@@ -400,8 +425,10 @@ def create_app(
     def endorse_review(request_id: str, caller: Caller):
         """Record a second authenticated review when the load policy requires one."""
         proposal = plane.get_proposal(request_id)
-        approval_role(proposal, caller)
-        return plane.endorse_review(request_id, reviewer=caller.subject)
+        role = approval_role(proposal, caller)
+        return plane.endorse_review(
+            request_id, reviewer=caller.subject, reviewer_role=role
+        )
 
     @app.post("/v1/proposals/{request_id}/approval", status_code=201, tags=["actions"])
     def approve_proposal(request_id: str, request: ApprovalCreate, caller: Caller):
@@ -409,13 +436,22 @@ def create_app(
         # the request body. A caller may not nominate the authority it is using.
         proposal = plane.get_proposal(request_id)
         role = approval_role(proposal, caller)
+        endorsement = plane.review_endorsement(request_id)
+        if endorsement is not None and endorsement["reviewer"] == caller.subject:
+            raise ExecutionDenied(
+                "SECOND_REVIEWER_NOT_DISTINCT",
+                "the primary approver must differ from the stored second reviewer",
+            )
         return asdict(plane.approve(
             request_id,
             approver=caller.subject,
             approver_role=role,
             ttl_seconds=request.ttl_seconds,
             presented_at=plane.review_started_at(request_id, reviewer=caller.subject),
-            second_approver=plane.review_endorser(request_id),
+            second_approver=None if endorsement is None else endorsement["reviewer"],
+            second_approver_role=(
+                None if endorsement is None else endorsement["reviewer_role"]
+            ),
         ))
 
     @app.post("/v1/proposals/{request_id}/execute", tags=["actions"])
@@ -462,6 +498,7 @@ def create_app(
     @app.get("/v1/verification", tags=["assurance"])
     def run_verification(caller: Caller):
         """Bounded model check of the active profile's authority invariants."""
+        require_one(caller, "platform_operator", "auditor")
         from .verification import verify_profile
 
         return verify_profile(plane.profile).to_dict()
@@ -469,6 +506,7 @@ def create_app(
     @app.get("/v1/conformance", tags=["assurance"])
     def run_conformance_check(caller: Caller):
         """Behavioural conformance of the *configured* backends, not the reference ones."""
+        require_one(caller, "platform_operator", "auditor")
         from .conformance import Bundle, run_conformance
 
         bundle = Bundle(
@@ -492,6 +530,7 @@ def create_app(
         governance claims are backed by something that runs, which rest on a
         named role's attestation, and which rest on nothing.
         """
+        require_one(caller, "platform_operator", "auditor")
         from .coverage import measure_coverage
 
         directory = os.getenv("FSSAI_CONTRACT_DIR", "contract")
@@ -513,6 +552,7 @@ def create_app(
         consequential-delegation rule are declared configuration rather than
         constants.
         """
+        require_one(caller, "platform_operator", "auditor")
         from .delegation import verify_delegation_space
         from .delegation_eval import ablate_delegation, run_delegation_suite
 
@@ -530,6 +570,7 @@ def create_app(
         figures are fixture observations against a declared correlation, never a
         measurement of any model — the response says so in its own limits.
         """
+        require_one(caller, "platform_operator", "auditor")
         from .assisted_review import run_assisted_review_trial
 
         return run_assisted_review_trial(plane.profile)

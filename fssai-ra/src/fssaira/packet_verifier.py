@@ -15,7 +15,7 @@ import math
 import re
 from pathlib import Path
 
-SCHEMA = "fssaira.decision-packet.v1"
+SCHEMA = "fssaira.decision-packet.v2"
 MAX_BYTES = 2_000_000
 LIMITS = [
     "Approval signature not authenticated: never distribute a signing key with a packet.",
@@ -65,18 +65,31 @@ def inspect_packet(packet, expected_sha256: str | None = None) -> dict:
             errors.append("PACKET_DIGEST_MISMATCH")
         proposal, approval, receipt = (payload[name] for name in ("proposal", "approval", "receipt"))
         _fields(proposal, "request_id requester operation case_id expected_version from_status to_status evidence_version")
-        _fields(approval, "approval_id proposal_digest approver approver_role audience expires_at key_id signature")
+        _fields(
+            approval,
+            "approval_id proposal_digest approver approver_role audience expires_at key_id "
+            "signature second_approver second_approver_role",
+        )
         _fields(receipt, "request_id case_id version status receipt_hash replayed proposal_digest")
         for name, value in proposal.items():
             if name == "expected_version":
                 _number(value, integer=True, minimum=1)
             else:
                 _text(value)
-        for name, value in approval.items():
-            if name == "expires_at":
-                _number(value)
-            else:
-                _text(value)
+        _number(approval["expires_at"])
+        for name in (
+            "approval_id", "proposal_digest", "approver", "approver_role",
+            "audience", "key_id", "signature",
+        ):
+            _text(approval[name])
+        if not all(isinstance(approval[name], str) for name in (
+            "second_approver", "second_approver_role",
+        )):
+            raise ValueError("second-review fields must be strings")
+        if bool(approval["second_approver"]) != bool(approval["second_approver_role"]):
+            errors.append("SECOND_REVIEW_INCOMPLETE")
+        if approval["second_approver"] in {approval["approver"], proposal["requester"]}:
+            errors.append("SECOND_REVIEWER_NOT_DISTINCT")
         _number(receipt["version"], integer=True, minimum=1)
         if type(receipt["replayed"]) is not bool:
             raise ValueError("replayed must be boolean")
@@ -129,6 +142,8 @@ def inspect_packet(packet, expected_sha256: str | None = None) -> dict:
             "request_id": proposal["request_id"], "proposal_digest": proposal_hash,
             "approval_id": approval["approval_id"], "approver": approval["approver"],
             "approval_key_id": approval["key_id"], "evidence_version": proposal["evidence_version"],
+            "second_approver": approval["second_approver"],
+            "second_approver_role": approval["second_approver_role"],
         }.items()):
             errors.append("INTENT_BINDING_MISMATCH")
         if any(op.get(key) != receipt[key] for key in ("request_id", "case_id", "version", "status", "receipt_hash")):
@@ -162,9 +177,16 @@ def inspect_packet(packet, expected_sha256: str | None = None) -> dict:
             # skipped routine steps would clear a packet the executor would have
             # refused, which is the worst kind of disagreement between the two.
             errors.append("EXPORT_PROFILE_ROLE_MISMATCH")
+        if (
+            approval["second_approver_role"]
+            and matching
+            and matching[0]["approval_role"] != approval["second_approver_role"]
+        ):
+            errors.append("EXPORT_SECOND_REVIEWER_ROLE_MISMATCH")
         summary = {
             "request_id": proposal["request_id"], "resource_id": proposal["case_id"],
             "requested_by": proposal["requester"], "approved_by": approval["approver"],
+            "second_reviewed_by": approval["second_approver"] or None,
             "recorded_change": f"{proposal['from_status']} -> {receipt['status']}",
             "evidence_reference": proposal["evidence_version"],
             "manual_fallback": profile["manual_fallback"],

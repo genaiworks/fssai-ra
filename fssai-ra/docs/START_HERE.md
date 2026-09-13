@@ -66,8 +66,11 @@ Open [`profiles/student_support.yaml`](../profiles/student_support.yaml). Find:
 - the allowed state transitions;
 - which transitions are consequential;
 - the required reviewer role;
-- the manual fallback;
-- reviewer capacity and deliberation assumptions.
+- the manual fallback.
+
+Reviewer capacity and deliberation assumptions are deployment declarations, not
+domain policy hidden in this file. You will inspect them in Step 8 and
+[`deploy/.env.example`](../deploy/.env.example).
 
 Then open [`src/fssaira/contract.py`](../src/fssaira/contract.py). The seven-field
 control contract links a governance claim to a protected asset, operation,

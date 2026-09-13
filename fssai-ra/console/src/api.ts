@@ -3,6 +3,7 @@ import type {
   Approval, AssistedReviewReport, Capability, ConformanceReport, CoverageReport,
   DelegationReport, EvidencePage, ExecutionResult, Health, InterfaceInventory,
   ModelProposal, Profile, Proposal, Readiness, Requirement, VerificationReport,
+  ReviewEndorsement, ReviewSession,
 } from "./types";
 
 // Resolved defensively: import.meta.env exists under Vite but not in a plain
@@ -12,7 +13,7 @@ const TOKEN_KEY = "fssaira.token";
 
 export function getToken(): string {
   try {
-    return localStorage.getItem(TOKEN_KEY) ?? "";
+    return sessionStorage.getItem(TOKEN_KEY) ?? "";
   } catch {
     return "";
   }
@@ -20,7 +21,8 @@ export function getToken(): string {
 
 export function setToken(token: string): void {
   try {
-    localStorage.setItem(TOKEN_KEY, token);
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    else sessionStorage.removeItem(TOKEN_KEY);
   } catch {
     /* private browsing, or no storage: the token simply is not remembered */
   }
@@ -93,8 +95,12 @@ export const api = {
       body: JSON.stringify({ ttl_seconds }),
     }),
   beginReview: (requestId: string) =>
-    call<{ request_id: string; reviewer: string; proposal_digest: string; presented_at: number }>(
+    call<ReviewSession>(
       `/v1/proposals/${encodeURIComponent(requestId)}/review`, { method: "POST" },
+    ),
+  endorseReview: (requestId: string) =>
+    call<ReviewEndorsement>(
+      `/v1/proposals/${encodeURIComponent(requestId)}/endorsement`, { method: "POST" },
     ),
   execute: (requestId: string) =>
     call<ExecutionResult>(`/v1/proposals/${encodeURIComponent(requestId)}/execute`, { method: "POST" }),

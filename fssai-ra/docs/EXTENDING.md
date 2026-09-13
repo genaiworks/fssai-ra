@@ -100,7 +100,8 @@ Keep the interfaces and observable invariants while replacing in-memory stores:
 
 The repository already supplies reference implementations for the first engineering
 step: `RedisCaseRegister`, `RedisApprovalUseStore`, `RedisPendingOutcomeStore`,
-`RedisEvidenceLedger`, `KafkaEventPublisher`, the FastAPI control plane, and the
+`RedisEvidenceLedger`, `KafkaEventPublisher`/`KafkaEventConsumer`,
+`IcebergSnapshotStore`, the FastAPI control plane, and the idempotent
 Kafka-to-Iceberg Spark job. Extend their interfaces or replace them; do not bypass
 the invariants they enforce. Run `scripts/smoke_stack.py` after every backend change.
 

@@ -17,6 +17,7 @@ one without changing a line.
 """
 from __future__ import annotations
 
+import threading
 import time
 import uuid
 from dataclasses import asdict
@@ -45,16 +46,28 @@ class ObjectStore(Protocol):
 class MemoryObjectStore:
     def __init__(self) -> None:
         self._objects: dict[tuple[str, str], dict] = {}
+        self._lock = threading.RLock()
 
     def put(self, namespace: str, key: str, value: dict) -> None:
-        self._objects[(namespace, key)] = dict(value)
+        with self._lock:
+            self._objects[(namespace, key)] = dict(value)
+
+    def put_if_absent(self, namespace: str, key: str, value: dict) -> bool:
+        with self._lock:
+            identity = (namespace, key)
+            if identity in self._objects:
+                return False
+            self._objects[identity] = dict(value)
+            return True
 
     def get(self, namespace: str, key: str) -> dict | None:
-        value = self._objects.get((namespace, key))
-        return None if value is None else dict(value)
+        with self._lock:
+            value = self._objects.get((namespace, key))
+            return None if value is None else dict(value)
 
     def keys(self, namespace: str) -> list[str]:
-        return [key for space, key in self._objects if space == namespace]
+        with self._lock:
+            return [key for space, key in self._objects if space == namespace]
 
 
 class ControlPlane:
@@ -157,15 +170,22 @@ class ControlPlane:
         allowed = self.profile.transition_rules.get(operation, set())
         if (from_status, to_status) not in allowed:
             raise ExecutionDenied("TRANSITION_NOT_ALLOWED", "transition is not declared by profile")
-        existing = self.objects.get("proposal", proposal.request_id)
-        if existing is not None:
+        put_once = getattr(self.objects, "put_if_absent", None)
+        inserted = (
+            put_once("proposal", proposal.request_id, asdict(proposal))
+            if put_once is not None
+            else self.objects.get("proposal", proposal.request_id) is None
+        )
+        if put_once is None and inserted:
+            self.objects.put("proposal", proposal.request_id, asdict(proposal))
+        if not inserted:
+            existing = self.objects.get("proposal", proposal.request_id)
             existing_proposal = ActionProposal(**existing)
             if existing_proposal.digest == proposal.digest:
                 return existing_proposal
             raise ExecutionDenied(
                 "REQUEST_ID_CONFLICT", "request ID already belongs to another proposal"
             )
-        self.objects.put("proposal", proposal.request_id, asdict(proposal))
         self._emit("action.proposed", asdict(proposal), resource_id)
         return proposal
 
@@ -190,14 +210,21 @@ class ControlPlane:
             "proposal_digest": proposal.digest,
             "presented_at": time.time(),
         }
-        self.objects.put("review_session", key, session)
-        return session
+        put_once = getattr(self.objects, "put_if_absent", None)
+        if put_once is None:
+            self.objects.put("review_session", key, session)
+            return session
+        if put_once("review_session", key, session):
+            return session
+        # Another worker won the first-presentation race. Its time is the one
+        # every worker must now use.
+        return self.objects.get("review_session", key)
 
     def review_started_at(self, request_id: str, *, reviewer: str) -> float | None:
         session = self.objects.get("review_session", f"{request_id}:{reviewer}")
         return None if session is None else float(session["presented_at"])
 
-    def endorse_review(self, request_id: str, *, reviewer: str) -> dict:
+    def endorse_review(self, request_id: str, *, reviewer: str, reviewer_role: str) -> dict:
         """Persist a distinct authenticated reviewer's escalation endorsement."""
         proposal = self.get_proposal(request_id)
         if reviewer == proposal.requester:
@@ -221,12 +248,31 @@ class ControlPlane:
         endorsement = {
             "request_id": request_id,
             "reviewer": reviewer,
+            "reviewer_role": reviewer_role,
             "proposal_digest": proposal.digest,
             "presented_at": presented_at,
             "endorsed_at": now,
         }
-        self.objects.put("review_endorsement", request_id, endorsement)
-        return endorsement
+        put_once = getattr(self.objects, "put_if_absent", None)
+        if put_once is None:
+            existing = self.objects.get("review_endorsement", request_id)
+            if existing is None:
+                self.objects.put("review_endorsement", request_id, endorsement)
+                return endorsement
+        elif put_once("review_endorsement", request_id, endorsement):
+            return endorsement
+        existing = self.objects.get("review_endorsement", request_id)
+        if (
+            existing is not None
+            and existing.get("reviewer") == reviewer
+            and existing.get("reviewer_role") == reviewer_role
+            and existing.get("proposal_digest") == proposal.digest
+        ):
+            return existing
+        raise ExecutionDenied(
+            "REVIEW_ENDORSEMENT_CONFLICT",
+            "this proposal already has a different second-review endorsement",
+        )
 
     def review_endorser(self, request_id: str) -> str | None:
         endorsement = self.objects.get("review_endorsement", request_id)
@@ -239,6 +285,22 @@ class ControlPlane:
             )
         return str(endorsement["reviewer"])
 
+    def review_endorsement(self, request_id: str) -> dict | None:
+        """Return the digest-bound second-review record, if one exists."""
+        endorsement = self.objects.get("review_endorsement", request_id)
+        if endorsement is None:
+            return None
+        proposal = self.get_proposal(request_id)
+        if endorsement.get("proposal_digest") != proposal.digest:
+            raise ExecutionDenied(
+                "REVIEW_SESSION_CONFLICT", "the proposal changed after endorsement"
+            )
+        if not endorsement.get("reviewer") or not endorsement.get("reviewer_role"):
+            raise ExecutionDenied(
+                "REVIEW_ENDORSEMENT_INVALID", "second-review identity or role is missing"
+            )
+        return endorsement
+
     def approve(
         self,
         request_id: str,
@@ -248,6 +310,7 @@ class ControlPlane:
         ttl_seconds: int = 300,
         presented_at: float | None = None,
         second_approver: str | None = None,
+        second_approver_role: str | None = None,
     ) -> Approval:
         """Issue an approval, subject to the review-load policy if one is configured.
 
@@ -270,13 +333,15 @@ class ControlPlane:
             ttl_seconds=ttl_seconds,
             presented_at=presented_at,
             second_approver=second_approver,
+            second_approver_role=second_approver_role,
         )
         self.objects.put("approval", request_id, asdict(approval))
         self._emit(
             "action.approved",
             {"request_id": request_id, "approval_id": approval.approval_id,
              "approver": approver, "approver_role": approver_role,
-             "second_approver": approval.second_approver},
+             "second_approver": approval.second_approver,
+             "second_approver_role": approval.second_approver_role},
             proposal.case_id,
         )
         return approval

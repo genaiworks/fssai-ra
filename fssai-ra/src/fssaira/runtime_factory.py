@@ -30,9 +30,11 @@ Configuration
 """
 from __future__ import annotations
 
+import ipaddress
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 from .assisted_review import AssistanceMode, AssistedReviewPolicy, ReviewAssistance
 from .control_plane import ControlPlane
@@ -235,6 +237,13 @@ def configuration_warnings() -> list[Warning_]:
                 "in-memory state is active; every record is lost on restart",
                 "set FSSAI_DATABASE_URL (postgresql:// or sqlite:///)",
             ))
+    elif os.getenv("FSSAI_REDIS_URL"):
+        warnings.append(Warning_(
+            "info", "REDIS_SHADOWED_BY_SQL",
+            "both SQL and Redis state URLs are configured; the control plane uses SQL "
+            "for state and does not write the Redis state adapters in this process",
+            "remove FSSAI_REDIS_URL, or run a separate Redis-profile conformance deployment",
+        ))
     if not os.getenv("FSSAI_KAFKA_BOOTSTRAP"):
         warnings.append(Warning_(
             "info", "IN_MEMORY_EVENTS",
@@ -250,9 +259,7 @@ def configuration_warnings() -> list[Warning_]:
                                  "see docs/OPERATIONS.md, 'Authentication modes'"))
     model = os.getenv("FSSAI_MODEL", "ollama")
     base_url = os.getenv("FSSAI_MODEL_BASE_URL", "")
-    if base_url and not any(
-        host in base_url for host in ("localhost", "127.0.0.1", "::1", "host.docker.internal")
-    ):
+    if base_url and not _is_local_model_url(base_url):
         warnings.append(Warning_(
             "high", "NON_LOCAL_MODEL",
             f"the model endpoint {base_url} is not local; prompts and retrieved evidence "
@@ -267,6 +274,22 @@ def configuration_warnings() -> list[Warning_]:
         ))
     warnings.extend(_oversight_warnings())
     return warnings
+
+
+def _is_local_model_url(value: str) -> bool:
+    """Classify the parsed endpoint host, never a matching substring."""
+    try:
+        hostname = urlparse(value).hostname
+    except ValueError:
+        return False
+    if not hostname:
+        return False
+    if hostname in {"localhost", "host.docker.internal"}:
+        return True
+    try:
+        return ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        return False
 
 
 def _oversight_warnings() -> list[Warning_]:

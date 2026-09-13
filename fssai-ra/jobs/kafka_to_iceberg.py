@@ -19,15 +19,24 @@ ENVELOPE_SCHEMA = StructType([
 def write_batch(batch, _batch_id: int) -> None:
     """Append one micro-batch.
 
-    Delivery is at-least-once: a failure between the Iceberg commit and the
-    checkpoint commit replays the batch. The table therefore tolerates duplicate
-    rows by design, and readers de-duplicate on ``(kafka_partition,
-    kafka_offset)``, which is unique per delivery. Claiming exactly-once here
-    would be the sort of quiet inaccuracy this architecture exists to avoid.
+    Delivery from ``foreachBatch`` is at-least-once: a failure between the
+    Iceberg commit and checkpoint commit can replay a batch. The sink therefore
+    merges on Kafka's stable ``(partition, offset)`` identity. This makes a
+    replay idempotent at the table boundary instead of merely promising that
+    every future reader will remember to de-duplicate it.
     """
     if batch.rdd.isEmpty():
         return
-    batch.writeTo(f"{CATALOG}.{NAMESPACE}.imported_evidence").append()
+    prepared = batch.dropDuplicates(["kafka_partition", "kafka_offset"])
+    view = "fssaira_import_microbatch"
+    prepared.createOrReplaceTempView(view)
+    batch.sparkSession.sql(f"""
+        MERGE INTO {CATALOG}.{NAMESPACE}.imported_evidence target
+        USING {view} source
+        ON target.kafka_partition = source.kafka_partition
+           AND target.kafka_offset = source.kafka_offset
+        WHEN NOT MATCHED THEN INSERT *
+    """)
 
 
 def main() -> None:

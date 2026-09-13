@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
   "kind": "contract-coverage",
-  "generated_at": "2026-09-13T03:18:23.423996+00:00",
+  "generated_at": "2026-09-13T04:04:06.378171+00:00",
   "totals": {
-    "requirements": 36,
-    "machine_verified": 33,
+    "requirements": 37,
+    "machine_verified": 34,
     "organizationally_attested": 3,
     "unverified": 0,
-    "machine_verified_fraction": 0.9167
+    "machine_verified_fraction": 0.9189
   },
   "unverified_requirements": [],
   "bindings_naming_unknown_requirements": [],
@@ -28,6 +28,12 @@
           "mechanism": "unit_test",
           "locator": "tests/test_import_api.py::test_import_gateway_quarantines_bad_signature_without_publishing",
           "note": ""
+        },
+        {
+          "requirement_id": "IB-1",
+          "mechanism": "unit_test",
+          "locator": "tests/test_import_api.py::test_import_gateway_records_an_unclosed_intent_when_delivery_fails",
+          "note": "the boundary records delivery intent before publication and never reports a failed publish as accepted"
         }
       ]
     },
@@ -71,6 +77,12 @@
         {
           "requirement_id": "IB-4",
           "mechanism": "unit_test",
+          "locator": "tests/test_import_api.py::test_import_gateway_records_an_unclosed_intent_when_delivery_fails",
+          "note": "the boundary records delivery intent before publication and never reports a failed publish as accepted"
+        },
+        {
+          "requirement_id": "IB-4",
+          "mechanism": "unit_test",
           "locator": "tests/test_attacks.py",
           "note": "prompt-injection specimen delivered as evidence, obtaining no authorization"
         }
@@ -98,7 +110,13 @@
           "requirement_id": "ET-2",
           "mechanism": "conformance",
           "locator": "CF-ET-03",
-          "note": "added when coverage found ET-2 bound to nothing. The dead-letter path and idempotent producer were implemented in kafka_backend and exercised by no check reachable without a live broker"
+          "note": ""
+        },
+        {
+          "requirement_id": "ET-2",
+          "mechanism": "unit_test",
+          "locator": "tests/test_kafka_backend.py",
+          "note": "broker-independent message fixtures verify that source offsets remain uncommitted until handler success or acknowledged dead-letter publication"
         }
       ]
     },
@@ -369,6 +387,25 @@
           "mechanism": "ablation",
           "locator": "src/fssaira/oversight.py::sweep_oversight",
           "note": "load-bearing in 16 of the 20 swept cells where harm was possible"
+        }
+      ]
+    },
+    {
+      "requirement_id": "AA-10",
+      "domain": "accountable_action",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "AA-10",
+          "mechanism": "unit_test",
+          "locator": "tests/test_exact_action.py::test_an_escalation_naming_the_primary_as_the_second_reviewer_is_refused",
+          "note": ""
+        },
+        {
+          "requirement_id": "AA-10",
+          "mechanism": "unit_test",
+          "locator": "tests/test_exact_action.py::test_escalating_to_a_role_that_could_not_have_approved_it_alone_is_refused",
+          "note": "the executor re-derives the endorsement rather than trusting the approval service that signed it"
         }
       ]
     },

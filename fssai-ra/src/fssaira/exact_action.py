@@ -58,6 +58,7 @@ class Approval:
     key_id: str
     signature: str
     second_approver: str = ""
+    second_approver_role: str = ""
 
 
 @dataclass(frozen=True)
@@ -240,6 +241,7 @@ class ApprovalAuthority:
         now: float | None = None,
         presented_at: float | None = None,
         second_approver: str | None = None,
+        second_approver_role: str | None = None,
     ) -> Approval:
         if approver == proposal.requester:
             raise ExecutionDenied("SEPARATION_OF_DUTIES", "requester cannot approve their own proposal")
@@ -264,6 +266,7 @@ class ApprovalAuthority:
             key_id=self.key_id,
             signature="",
             second_approver=second_approver or "",
+            second_approver_role=second_approver_role or "",
         )
         return Approval(**{**asdict(unsigned), "signature": self._sign(unsigned)})
 
@@ -286,6 +289,7 @@ def _approval_signing_payload(approval: Approval) -> str:
             "expires_at": approval.expires_at,
             "key_id": approval.key_id,
             "second_approver": approval.second_approver,
+            "second_approver_role": approval.second_approver_role,
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -374,6 +378,63 @@ class AccountableExecutor:
                 "APPROVER_ROLE_NOT_ALLOWED",
                 "the authenticated approver role is not permitted for this transition",
             )
+
+        # The escalation endorsement, re-checked here rather than trusted.
+        #
+        # The oversight monitor refuses to *issue* an approval whose second
+        # reviewer is missing or is the primary. That is a check made by the
+        # approval service, and in a real deployment the approval service is a
+        # different process with different owners. The executor's whole premise
+        # is that it re-derives every authority question independently instead of
+        # believing the party that answered it — which is why it rechecks the
+        # digest, the audience, the role, the expiry and the version even though
+        # all of them were correct when the approval was signed.
+        #
+        # Until this existed, escalation was the one field the executor carried
+        # into evidence without ever checking: a signed approval naming its own
+        # primary as the second reviewer would execute, and the evidence would
+        # record two names that were one person.
+        if not isinstance(approval.second_approver, str) or not isinstance(
+            approval.second_approver_role, str
+        ):
+            raise ExecutionDenied(
+                "SECOND_APPROVER_FIELDS_INVALID",
+                "escalation reviewer identity and role must be strings",
+            )
+        if approval.second_approver:
+            if approval.second_approver == approval.approver:
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_NOT_DISTINCT",
+                    "the escalation reviewer is the primary reviewer; two signatures "
+                    "from one person are not a second judgement",
+                )
+            if approval.second_approver == proposal.requester:
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_IS_REQUESTER",
+                    "the escalation reviewer requested this action; separation of "
+                    "duties applies to the second signature as much as the first",
+                )
+            if not approval.second_approver_role.strip():
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_ROLE_MISSING",
+                    "an escalation reviewer was named without the role they hold; an "
+                    "unattributed signature is not an endorsement",
+                )
+            if (
+                required_roles is not None
+                and approval.second_approver_role not in required_roles
+            ):
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_ROLE_NOT_ALLOWED",
+                    "the escalation reviewer's role is not permitted for this "
+                    "transition; escalating to someone who could not have approved "
+                    "it alone adds a name, not a control",
+                )
+        elif approval.second_approver_role.strip():
+            raise ExecutionDenied(
+                "SECOND_APPROVER_ROLE_WITHOUT_REVIEWER",
+                "a role was recorded for an escalation reviewer who was never named",
+            )
         valid_transitions = self._transition_rules.get(proposal.operation)
         if valid_transitions is not None and (
             proposal.from_status,
@@ -430,6 +491,7 @@ class AccountableExecutor:
                 "approver": approval.approver,
                 "approval_key_id": approval.key_id,
                 "second_approver": approval.second_approver,
+                "second_approver_role": approval.second_approver_role,
                 "evidence_version": proposal.evidence_version,
             },
             token=self._token,

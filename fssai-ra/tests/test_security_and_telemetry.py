@@ -71,6 +71,16 @@ def test_header_identity_works_once_the_operator_accepts_the_risk():
     assert principal.method == "proxy-header"
 
 
+def test_proxy_headers_reject_blank_identity_or_roles():
+    auth = Authenticator(AuthConfig(mode="header", trust_proxy_headers=True))
+
+    for identity, roles in (("   ", "auditor"), ("reviewer", " , , ")):
+        with pytest.raises(AuthenticationError, match="are required"):
+            auth.authenticate(
+                authorization=None, identity_header=identity, role_header=roles,
+            )
+
+
 def test_development_credentials_are_announced_not_hidden():
     assert "development bearer tokens are active" in " ".join(AuthConfig().warnings())
 
@@ -119,6 +129,16 @@ def test_a_non_local_model_endpoint_is_flagged(monkeypatch):
     assert "NON_LOCAL_MODEL" in codes
 
 
+def test_localhost_text_in_remote_url_does_not_hide_sovereignty_warning(monkeypatch):
+    monkeypatch.setenv(
+        "FSSAI_MODEL_BASE_URL", "https://api.some-vendor.com/v1?redirect=localhost"
+    )
+
+    codes = {warning.code for warning in configuration_warnings()}
+
+    assert "NON_LOCAL_MODEL" in codes
+
+
 def test_an_adversarial_fixture_model_is_blocking(monkeypatch):
     monkeypatch.setenv("FSSAI_MODEL", "compromised")
 
@@ -139,6 +159,13 @@ def test_durability_is_graded_not_boolean(monkeypatch):
     monkeypatch.setenv("FSSAI_DATABASE_URL", "sqlite:///:memory:")
     codes = {w.code for w in configuration_warnings()}
     assert "NO_TRANSACTIONAL_DURABILITY" not in codes and "VOLATILE_STATE" not in codes
+
+
+def test_sql_and_redis_together_report_that_sql_shadows_redis(monkeypatch):
+    monkeypatch.setenv("FSSAI_DATABASE_URL", "sqlite:///:memory:")
+    monkeypatch.setenv("FSSAI_REDIS_URL", "redis://redis:6379/0")
+
+    assert "REDIS_SHADOWED_BY_SQL" in {w.code for w in configuration_warnings()}
 
 
 # ------------------------------------------------------------------ telemetry

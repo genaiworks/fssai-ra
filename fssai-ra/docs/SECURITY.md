@@ -117,6 +117,10 @@ nobody has shown to be load-bearing should not appear in a threat model.
 - Teaching mode loses in-memory state on restart. Distributed mode persists state in
   Redis, but production still needs HA, backup/restore tests, protected credentials,
   and a transactional relationship or reconciliation protocol with the real target.
+- The reference API provides coarse role checks, not domain-specific row-level
+  authorization. An institutional adapter must enforce tenant, assignment,
+  cohort, and purpose-of-use policy before exposing real records; authentication
+  alone is not permission to inspect every resource or evidence entry.
 - The `X-FSSAI-*` header adapter is spoofable and is now **refused** unless an
   operator explicitly declares an authenticating proxy
   (`FSSAI_TRUST_PROXY_HEADERS`). Bearer tokens are the default; OIDC is available.
