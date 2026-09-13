@@ -408,3 +408,43 @@ def test_the_reports_are_json_serializable_and_state_their_limits():
 def test_an_invalid_delegation_policy_is_refused():
     with pytest.raises(ValueError):
         DelegationPolicy(max_depth=0)
+
+
+# -- defects found by probing the module after it shipped -------------------
+
+
+def test_an_unnamed_principal_cannot_hold_authority(root, authority):
+    """An empty identifier passes every other check in the module.
+
+    It signs, it attenuates, it matches a requester of the same empty string.
+    What it cannot do is answer the question the chain exists to answer. This
+    was admitted until it was probed for.
+    """
+    with pytest.raises(ExecutionDenied) as denial:
+        authority.issue(
+            delegator="root-principal", delegate="", scope=scope({"read"}),
+            issued_at=NOW, expires_at=NOW + HOUR,
+        )
+    assert denial.value.code == DelegationCode.PRINCIPAL_NOT_NAMED
+
+
+def test_a_hand_built_chain_cannot_smuggle_an_unnamed_principal(root, authority):
+    """Refusing at issue time is not enough; chains arrive from the wire."""
+    from fssaira.delegation import DELEGATION_SIGNING_KEY
+
+    hop = Delegation(
+        "orchestrator", "   ", scope({"read"}, resources={"R-1"}), NOW, NOW + HOUR,
+    ).signed_with(DELEGATION_SIGNING_KEY)
+    with pytest.raises(ExecutionDenied) as denial:
+        authority.admit_strict((hop,), root, now=NOW + 10, requester="   ")
+    assert denial.value.code == DelegationCode.PRINCIPAL_NOT_NAMED
+
+
+def test_a_root_grant_must_name_a_principal_and_an_accountable_owner():
+    """The owner is the point of the type: it is what makes a chain attributable
+    to an institution rather than merely internally consistent."""
+    good = scope({"read"}, resources={"R-1"})
+    with pytest.raises(ValueError, match="name the principal"):
+        RootGrant("", good, "service_owner", NOW + HOUR)
+    with pytest.raises(ValueError, match="accountable owner"):
+        RootGrant("orchestrator", good, "  ", NOW + HOUR)

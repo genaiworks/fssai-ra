@@ -19,6 +19,13 @@ FIVE_DOMAINS = {
     "bounded_intelligence", "accountable_action",
 }
 
+#: The two composition domains. Separate from the five because they govern what
+#: happens *between* components rather than inside one: authority passed from
+#: agent to agent, and a human approval whose independence now depends on a
+#: model. Asserted by name so that deleting either is a deliberate edit — a
+#: subset check alone would let a whole domain disappear without failing.
+COMPOSITION_DOMAINS = {"delegated_authority", "assisted_review"}
+
 
 def test_contract_loads_and_validates():
     contract = ControlContract.load(CONTRACT_DIR)
@@ -35,6 +42,36 @@ def test_every_requirement_is_complete():
 def test_all_five_domains_are_present():
     domains = {requirement.domain for requirement in ControlContract.load(CONTRACT_DIR)}
     assert domains >= FIVE_DOMAINS
+
+
+def test_the_composition_domains_are_present():
+    """The controls that govern what happens between components.
+
+    One agent under one grant, approved by one unaided human, is no longer the
+    shape being deployed. Both halves of that sentence now have a domain, and
+    both are named here so that losing one is a visible edit.
+    """
+    domains = {requirement.domain for requirement in ControlContract.load(CONTRACT_DIR)}
+    missing = sorted(COMPOSITION_DOMAINS - domains)
+    assert not missing, f"the control contract has lost these domains: {missing}"
+
+
+def test_every_composition_requirement_names_an_enforcement_point_not_a_policy():
+    """A composition control that is only a written rule is worth nothing.
+
+    These two domains are the newest and therefore the easiest to fill with
+    aspiration. Each entry must name where the rule is *enforced*, and the
+    enforcement point must not simply restate the permitted operation.
+    """
+    for requirement in ControlContract.load(CONTRACT_DIR):
+        if requirement.domain not in COMPOSITION_DOMAINS:
+            continue
+        point = requirement.enforcement_point.strip()
+        assert len(point) > 40, f"{requirement.id} enforcement point is too thin to locate"
+        assert point.lower() != requirement.permitted_operation.strip().lower(), (
+            f"{requirement.id} restates the permitted operation instead of naming "
+            "where it is enforced"
+        )
 
 
 def test_cross_cutting_controls_are_declared_separately():

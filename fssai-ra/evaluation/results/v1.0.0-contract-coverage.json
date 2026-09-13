@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "contract-coverage",
-  "generated_at": "2026-09-13T03:10:37.652917+00:00",
+  "generated_at": "2026-09-13T03:18:23.423996+00:00",
   "totals": {
     "requirements": 36,
     "machine_verified": 33,

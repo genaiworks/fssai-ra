@@ -19,6 +19,14 @@
 - `/health` → `declared_controls` shows what this deployment has declared about
   review capacity, assistant independence, and delegation depth. A `null` there
   is a posture rather than an omission, and `fssaira doctor` says what it costs.
+- `fssaira_review_capacity_declared` is **0** when no ceiling is declared. Alert
+  on it: a deployment with no ceiling is indistinguishable on every other metric
+  from one running comfortably inside its ceiling, right up to the point where
+  it is not.
+- `fssaira_review_headroom` reaching **0** means a reviewer is saturated and the
+  next arrival takes the manual fallback. That is a capacity signal, not an
+  error, and paging someone to raise the quota is the wrong response — see the
+  fail-secure table below.
 
 ## What this deployment must declare about itself
 

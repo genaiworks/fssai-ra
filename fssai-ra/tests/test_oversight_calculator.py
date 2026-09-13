@@ -138,3 +138,97 @@ def test_the_page_offers_no_fifth_option():
     text = PAGE.read_text(encoding="utf-8")
 
     assert "no fifth option where the reviewers simply go faster" in text
+
+
+# ---------------------------------------------------------------------------
+# The assistance multiplier
+# ---------------------------------------------------------------------------
+#
+# The calculator gained a second formula when it learned about review
+# assistance, and a second formula is a second chance to drift. It is checked on
+# the same terms as the ceiling arithmetic: extracted, executed, and compared
+# against the Python across every mode and every independence score.
+
+#: Every combination a user of the page can produce.
+ASSISTANCE_CASES = [
+    (mode, score)
+    for mode in ("unaided", "summarised", "recommended")
+    for score in (0, 1, 2, 3)
+]
+
+
+def _js_multiplier_source() -> str:
+    text = PAGE.read_text(encoding="utf-8")
+    match = re.search(r"\n  function floorMultiplier\(mode, score\) \{.*?\n  \}\n", text, re.S)
+    assert match, "the calculator no longer exposes floorMultiplier() to check"
+    return match.group(0)
+
+
+@pytest.fixture(scope="module")
+def js_multipliers() -> list[float]:
+    if NODE is None:  # pragma: no cover - environment dependent
+        pytest.skip("node is not available; cannot cross-check the browser calculator")
+    script = (
+        _js_multiplier_source()
+        + "\nconst cases = " + json.dumps(ASSISTANCE_CASES)
+        + ";\nconsole.log(JSON.stringify(cases.map(([m, s]) => floorMultiplier(m, s))));\n"
+    )
+    completed = subprocess.run(
+        [NODE, "--input-type=module", "-e", script],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert completed.returncode == 0, completed.stderr
+    return json.loads(completed.stdout)
+
+
+@pytest.mark.parametrize("index,case", list(enumerate(ASSISTANCE_CASES)), ids=lambda c: str(c))
+def test_the_calculator_earns_the_same_floor_as_the_enforcement_code(index, case, js_multipliers):
+    """A delegate planning against the page must not be refused by the gate.
+
+    The page tells an institution what reading time its declaration earns. If
+    that disagrees with ``AssistedReviewPolicy``, the institution configures a
+    floor the page approved and the deployment refuses to start — which is the
+    correct failure in the wrong place, hours after the decision was made.
+    """
+    from fssaira.assisted_review import AssistanceMode, ReviewAssistance
+
+    if not isinstance(case, tuple):  # parametrize id helper passes the case through
+        return
+    mode, score = case
+    flags = [True] * score + [False] * (3 - score)
+    assistance = ReviewAssistance(
+        mode=AssistanceMode(mode),
+        independent_model=flags[0],
+        independent_evidence=flags[1],
+        adversarial_posture=flags[2],
+        declared_by="test",
+    )
+    assert js_multipliers[index] == pytest.approx(assistance.floor_multiplier, abs=1e-4), (
+        f"the page and the enforcement code disagree for {mode} at {score}/3 independence"
+    )
+
+
+def test_an_unaided_reader_keeps_the_whole_reading_time(js_multipliers):
+    for index, (mode, _score) in enumerate(ASSISTANCE_CASES):
+        if mode == "unaided":
+            assert js_multipliers[index] == 1.0
+
+
+def test_a_fully_dependent_assistant_earns_no_reduction(js_multipliers):
+    """The judgement the page exists to convey: throughput is bought with
+    independence, and a deployment that declared none has bought none."""
+    for index, (mode, score) in enumerate(ASSISTANCE_CASES):
+        if mode != "unaided" and score == 0:
+            assert js_multipliers[index] == 1.0
+
+
+def test_the_page_declares_the_three_independence_properties():
+    """A delegate should leave with the procurement language, not a number."""
+    text = PAGE.read_text(encoding="utf-8")
+    for phrase in ("different model", "different evidence path", "adversarial posture"):
+        assert phrase in text, f"the page no longer names {phrase!r}"
+
+
+def test_the_page_says_assistance_does_not_remove_the_ceiling():
+    text = PAGE.read_text(encoding="utf-8")
+    assert "does not make attention infinite" in text

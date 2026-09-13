@@ -180,6 +180,41 @@ footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule);
     </div>
   </div>
   <div class="actions noprint">
+  </div>
+
+  <div class="assist">
+    <h2 style="margin-top:0">Does a model help your reviewers decide?</h2>
+    <p class="faint" style="margin-top:4px">
+      If it does — and above a certain queue size it will — the reading time you
+      entered above falls, and it should. But the reading time was never really
+      measuring minutes. It stood in for <em>a second mind reaching the same
+      conclusion independently</em>, and that only survives if the assistant is
+      independent of the model writing the proposals.
+    </p>
+
+    <label for="mode">How the assistant is used</label>
+    <select id="mode">
+      <option value="unaided" selected>Not used — reviewers read the case themselves</option>
+      <option value="summarised">It summarises the case; the reviewer reads the summary</option>
+      <option value="recommended">It proposes a decision; the reviewer approves or overrides</option>
+    </select>
+
+    <fieldset id="independence" style="border:1px solid var(--rule); border-radius:8px; padding:12px 14px; margin-top:14px">
+      <legend class="faint" style="padding:0 6px">What you can declare about it, in writing</legend>
+      <label class="check"><input type="checkbox" id="ind-model">
+        A <b>different model</b> from the one that writes proposals — a different
+        family or provider. Two copies of the same model with different prompts
+        do not count; the shared error is in the weights, not the prompt.</label>
+      <label class="check"><input type="checkbox" id="ind-evidence">
+        A <b>different evidence path</b> — it reads the authoritative record, not
+        the packet the proposing agent assembled.</label>
+      <label class="check"><input type="checkbox" id="ind-adversarial">
+        An <b>adversarial posture</b> — it is asked to find grounds to refuse and
+        name what is missing, not to summarise. A summariser is optimised to
+        agree with what it is given.</label>
+    </fieldset>
+
+    <div class="row" style="margin-top:14px"><span class="k">Reading time this declaration earns</span><span class="v" id="r-permitted-floor">—</span></div>
     <button id="reset" class="ghost" type="button">Reset</button>
     <button id="copy" type="button">Copy the result</button>
     <button id="print" class="ghost" type="button">Print</button>
@@ -247,6 +282,14 @@ footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule);
 </footer>
 </div>
 
+<style>
+  .assist select { width:100%; padding:9px 10px; border:1px solid var(--rule); border-radius:8px;
+                   background:var(--inset); color:inherit; font:inherit; }
+  .assist .check { display:flex; gap:10px; align-items:flex-start; margin:10px 0; font-size:14px;
+                   line-height:1.5; font-weight:400; }
+  .assist .check input { margin-top:3px; flex:0 0 auto; }
+  .assist fieldset[disabled] { opacity:.45; }
+</style>
 <script>
 (() => {
   "use strict";
@@ -262,6 +305,25 @@ footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule);
       v[id] = Number.isFinite(raw) ? raw : NaN;
     }
     return v;
+  }
+
+  // Mirrors fssaira.assisted_review.ReviewAssistance.floor_multiplier exactly.
+  // tests/test_oversight_calculator.py extracts this function and checks it
+  // against the Python across every mode and every independence score, for the
+  // same reason the ceiling arithmetic is checked: a take-home tool that
+  // disagrees with the enforcement code teaches the wrong number.
+  function floorMultiplier(mode, score) {
+    if (mode === "unaided") return 1.0;
+    const earned = score / 3.0;
+    const best = mode === "recommended" ? 0.2 : 0.4;
+    return Math.round((1.0 - (1.0 - best) * earned) * 10000) / 10000;
+  }
+
+  function readAssistance() {
+    const mode = $("mode").value;
+    const score = mode === "unaided" ? 3
+      : ["ind-model", "ind-evidence", "ind-adversarial"].filter(id => $(id).checked).length;
+    return { mode, score, multiplier: floorMultiplier(mode, score) };
   }
 
   function compute(v) {
@@ -369,6 +431,38 @@ footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule);
         "policy choice and a reversible one — unlike the reading time, which is not."));
     }
 
+    const a = readAssistance();
+    const unaidedFloor = 0.75;                       // minutes, the shipped default
+    const earned = unaidedFloor * a.multiplier;
+    $("independence").disabled = a.mode === "unaided";
+    $("r-permitted-floor").textContent = a.mode === "unaided"
+      ? "the full reading time — reviewers are unaided"
+      : Math.round(earned * 60) + "s  (" + a.score + "/3 independent)";
+
+    if (a.mode !== "unaided" && a.score < 3) {
+      flags.append(flag("bad", "This assistant is not a second opinion",
+        "You have declared " + a.score + " of 3 independence properties. On the cases where a " +
+        "proposal is substantively wrong — ineligible applicant, evidence that does not support " +
+        "the recommendation — an assistant that shares the proposing model and its evidence is " +
+        "wrong the same way, fluently, and your reviewer ratifies it. Nothing in the record will " +
+        "say so: the chain is intact, the reviewer is inside quota, the approval clears the floor."));
+    }
+    if (a.mode !== "unaided" && v.floor < earned) {
+      flags.append(flag("bad", "That reading time is below what your declaration earns",
+        "You entered " + Math.round(v.floor * 60) + "s against " + Math.round(earned * 60) +
+        "s earned by " + a.score + "/3 independence. The reference implementation refuses to " +
+        "start in this configuration rather than run with an oversight control that has quietly " +
+        "become a formality. Raise the reading time, or establish and declare the independence " +
+        "that buys the throughput."));
+    }
+    if (a.mode !== "unaided" && a.score === 3) {
+      flags.append(flag("good", "Independence declared on all three axes",
+        "A different model, a different evidence path, and an adversarial posture. That earns a " +
+        "reading time of " + Math.round(earned * 60) + "s. It does not earn an unbounded ceiling: " +
+        "assistance multiplies attention, it does not make attention infinite, so the number " +
+        "above is still the number to publish."));
+    }
+
     $("cmd").textContent =
       "fssaira oversight profiles/your_profile.yaml \\\n  --reviewers " + v.reviewers +
       " --max-approvals " + v.quota + " --deliberation-floor " + Math.round(v.floor * 60) + " --sweep";
@@ -397,7 +491,11 @@ footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule);
   }
 
   for (const id of ids) $(id).addEventListener("input", render);
+  for (const id of ["mode", "ind-model", "ind-evidence", "ind-adversarial"])
+    $(id).addEventListener("change", render);
   $("reset").addEventListener("click", () => {
+    $("mode").value = "unaided";
+    for (const id of ["ind-model", "ind-evidence", "ind-adversarial"]) $(id).checked = false;
     for (const id of ids) $(id).value = DEFAULTS[id];
     render();
   });

@@ -199,3 +199,51 @@ def test_the_scaffolded_binding_points_at_the_test_the_scaffold_wrote(tmp_path):
         assert symbol in candidate.read_text(), (
             f"binding names {symbol}, which is not defined in {candidate.name}"
         )
+
+
+def test_a_binding_with_no_locator_is_an_error_not_a_pass(tmp_path):
+    """The failure this module detects, reappearing inside the detector.
+
+    A binding with an empty locator points at nothing and would report its
+    requirement machine-verified on the strength of a YAML entry alone.
+    """
+    (tmp_path / "c.yaml").write_text(
+        "domain: d\nrequirements:\n  - id: A-1\n    protected_asset: a\n"
+        "    permitted_operation: b\n    enforcement_point: c\n    owner: o\n"
+        "    test: t\n    evidence_artifact: e\n    failure_response: f\n"
+    )
+    bindings = tmp_path / "bindings"
+    bindings.mkdir()
+    (bindings / "b.yaml").write_text(
+        "bindings:\n  - requirements: [A-1]\n    mechanism: unit_test\n    locator: ''\n"
+    )
+    with pytest.raises(ValueError, match="names no locator"):
+        measure_coverage(str(tmp_path))
+
+
+def test_a_binding_naming_no_requirement_is_an_error(tmp_path):
+    bindings = tmp_path / "bindings"
+    bindings.mkdir()
+    (bindings / "b.yaml").write_text(
+        "bindings:\n  - requirements: []\n    mechanism: unit_test\n    locator: x.py::y\n"
+    )
+    with pytest.raises(ValueError, match="names no requirement"):
+        load_bindings(str(tmp_path))
+
+
+def test_a_stray_space_in_a_requirement_id_is_not_two_confusing_findings(tmp_path):
+    """Otherwise one typo reports as both 'unknown binding' and 'unverified'."""
+    (tmp_path / "c.yaml").write_text(
+        "domain: d\nrequirements:\n  - id: A-1\n    protected_asset: a\n"
+        "    permitted_operation: b\n    enforcement_point: c\n    owner: o\n"
+        "    test: t\n    evidence_artifact: e\n    failure_response: f\n"
+    )
+    bindings = tmp_path / "bindings"
+    bindings.mkdir()
+    (bindings / "b.yaml").write_text(
+        "bindings:\n  - requirements: ['  A-1  ']\n    mechanism: unit_test\n"
+        "    locator: x.py::y\n"
+    )
+    report = measure_coverage(str(tmp_path))
+    assert report.machine_verified == 1
+    assert not report.unknown_bindings

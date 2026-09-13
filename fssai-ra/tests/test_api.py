@@ -193,3 +193,68 @@ def test_health_reports_a_declared_capacity_once_one_is_configured(monkeypatch):
     declared = client.get("/health").json()["declared_controls"]
     assert declared["review_capacity"]["max_approvals_per_window"] == 30
     assert "enforced" in declared["review_capacity_note"]
+
+
+def test_metrics_expose_whether_a_review_ceiling_is_declared_at_all():
+    """The first thing to alert on, and the one with no other observable.
+
+    A deployment with no declared ceiling looks identical on every other metric
+    to one running comfortably inside its ceiling. The gauge is 0 there so a
+    dashboard can tell the difference.
+    """
+    body = build_client().get("/metrics").text
+    assert "fssaira_review_capacity_declared" in body
+    declared = [
+        line for line in body.splitlines()
+        if line.startswith("fssaira_review_capacity_declared{")
+    ]
+    assert declared and declared[0].endswith(" 0")
+
+
+def test_metrics_expose_headroom_once_a_capacity_is_declared():
+    from fssaira.oversight import OversightMonitor, ReviewLoadPolicy
+
+    profile = ApplicationProfile.load("profiles/student_support.yaml")
+    plane = ControlPlane(profile, oversight=OversightMonitor(ReviewLoadPolicy()))
+    body = TestClient(
+        create_app(plane, authenticator=Authenticator(AuthConfig()))
+    ).get("/metrics").text
+
+    for name in (
+        "fssaira_review_capacity_declared",
+        "fssaira_review_quota_per_window",
+        "fssaira_review_deliberation_floor_seconds",
+        "fssaira_review_headroom",
+        "fssaira_review_refusals_total",
+    ):
+        assert name in body, f"{name} is not exposed"
+
+
+def test_a_saturated_reviewer_shows_as_zero_headroom():
+    """Headroom reaching 0 is a capacity signal, not an error.
+
+    It means the next arrival takes the manual fallback. An operator should see
+    it coming rather than discovering it from a backlog.
+    """
+    from fssaira.exact_action import ActionProposal
+    from fssaira.oversight import OversightMonitor, ReviewLoadPolicy
+
+    profile = ApplicationProfile.load("profiles/student_support.yaml")
+    monitor = OversightMonitor(ReviewLoadPolicy(
+        max_approvals_per_window=1, min_deliberation_seconds=0, second_reviewer_after=None,
+    ))
+    plane = ControlPlane(profile, oversight=monitor)
+    rule = next(r for r in profile.transitions if r.consequential)
+
+    plane.authority.approve(
+        ActionProposal("r-0", "agent-1", rule.operation, "case-0", 1,
+                       rule.from_status, rule.to_status, "snap"),
+        approver="officer-1", approver_role=rule.approval_role, now=1_000.0, presented_at=900.0,
+    )
+    body = TestClient(
+        create_app(plane, authenticator=Authenticator(AuthConfig()))
+    ).get("/metrics").text
+    headroom = [
+        line for line in body.splitlines() if line.startswith("fssaira_review_headroom{")
+    ]
+    assert headroom and headroom[0].endswith(" 0.0"), headroom

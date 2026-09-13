@@ -113,6 +113,40 @@ def require(principal: Principal, role: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+def _oversight_samples(plane) -> dict:
+    """Review-capacity signals, for the alert an operator actually needs.
+
+    ``fssaira_review_capacity_declared`` is 0 when nothing was declared, which is
+    the case worth alerting on first: a deployment with no ceiling looks
+    identical to one inside its ceiling on every other metric, right up to the
+    point where it is not.
+
+    ``fssaira_review_headroom`` is the fraction of the declared per-window
+    ceiling still unused by the busiest reviewer. It reaches 0 when someone is
+    saturated and the next arrival takes the manual fallback — which is a
+    capacity signal, not an error, and should be treated as one.
+    """
+    monitor = getattr(plane.authority, "_oversight", None)
+    if monitor is None:
+        return {"fssaira_review_capacity_declared": 0}
+
+    report = monitor.report()
+    samples = {
+        "fssaira_review_capacity_declared": 1,
+        "fssaira_review_quota_per_window": monitor.policy.max_approvals_per_window,
+        "fssaira_review_deliberation_floor_seconds": monitor.policy.min_deliberation_seconds,
+        "fssaira_review_approvals_admitted": report.approvals,
+        "fssaira_review_escalations": report.escalations,
+        "fssaira_review_headroom": report.headroom,
+        "fssaira_review_refusals_total": report.refusals_total,
+    }
+    # Per-code refusal counters, so an operator can tell "we are at the ceiling"
+    # apart from "approvals are coming back faster than anyone can read".
+    for code, count in report.refusals.items():
+        samples[f"fssaira_review_refusals_{code.lower()}"] = count
+    return samples
+
+
 def _declared_controls(plane) -> dict:
     """The deployment's own declarations, or an explicit statement of absence.
 
@@ -252,6 +286,7 @@ def create_app(
                 "fssaira_pending_outcomes": plane.pending_outcomes,
                 "fssaira_configuration_warnings": len(configuration_warnings()),
                 "fssaira_build_info": 1,
+                **_oversight_samples(plane),
             },
         )
         body = render_prometheus(

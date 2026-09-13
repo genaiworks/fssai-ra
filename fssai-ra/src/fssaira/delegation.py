@@ -114,6 +114,7 @@ class DelegationCode:
     CONSEQUENCE_NOT_DELEGABLE = "CONSEQUENCE_NOT_DELEGABLE"
     OUT_OF_EFFECTIVE_SCOPE = "OUT_OF_EFFECTIVE_SCOPE"
     REQUESTER_NOT_CHAIN_LEAF = "REQUESTER_NOT_CHAIN_LEAF"
+    PRINCIPAL_NOT_NAMED = "PRINCIPAL_NOT_NAMED"
     BENEFICIARY_SCOPE_EXCEEDED = "BENEFICIARY_SCOPE_EXCEEDED"
     ADMITTED = "ADMITTED"
 
@@ -286,6 +287,18 @@ class RootGrant:
     owner: str
     expires_at: float
 
+    def __post_init__(self) -> None:
+        # The owner is the point of the type. A root grant is what makes a chain
+        # attributable to an institution rather than merely internally
+        # consistent, and it cannot do that anonymously.
+        if not self.principal.strip():
+            raise ValueError("a root grant must name the principal it authorises")
+        if not self.owner.strip():
+            raise ValueError(
+                "a root grant must name an accountable owner; that is what "
+                "distinguishes an institutional grant from an agent's assertion"
+            )
+
     def to_dict(self) -> dict:
         return {
             "principal": self.principal,
@@ -440,6 +453,12 @@ class DelegationAuthority:
                 DelegationCode.DELEGATION_KEY_UNTRUSTED,
                 f"no signing key registered for {key_id!r}",
             )
+        if not delegator.strip() or not delegate.strip():
+            raise ExecutionDenied(
+                DelegationCode.PRINCIPAL_NOT_NAMED,
+                "both the delegator and the delegate must be named; an unnamed "
+                "principal cannot be held accountable for anything it does",
+            )
         return Delegation(
             delegator=delegator,
             delegate=delegate,
@@ -519,6 +538,20 @@ class DelegationAuthority:
 
         for index, hop in enumerate(chain):
             depth = index + 1
+
+            # D2b — every principal is named.
+            #
+            # An empty or whitespace-only identifier passes every other check in
+            # this module: it signs, it attenuates, it matches a requester of the
+            # same empty string. What it cannot do is answer the question the
+            # whole chain exists to answer. Authority held by nobody is not a
+            # narrower kind of authority, it is an unaccountable one.
+            if not hop.delegator.strip() or not hop.delegate.strip():
+                return refuse(
+                    DelegationCode.PRINCIPAL_NOT_NAMED,
+                    f"hop {depth} names an empty principal; a chain that cannot say who "
+                    "holds the authority cannot answer who decided",
+                )
 
             # D6 — provenance. A hop whose signature does not verify is not a
             # hop; nothing behind it is worth checking.

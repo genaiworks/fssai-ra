@@ -45,7 +45,7 @@ make demo                                         # guided walkthrough
 make reviewer                                     # all assurance checks, one command
 
 cd fssai-ra && source .venv/bin/activate          # optional: individual commands
-pytest                                            # 513 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # 543 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation

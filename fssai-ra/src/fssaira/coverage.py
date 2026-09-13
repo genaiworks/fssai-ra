@@ -217,11 +217,32 @@ def load_bindings(directory: str) -> list:
                     f"{os.path.basename(path)}: unknown mechanism {mechanism!r}; "
                     f"expected one of {', '.join(MECHANISMS)}"
                 )
-            for requirement_id in item.get("requirements", []) or []:
+            locator = str(item.get("locator", "")).strip()
+            if not locator:
+                # A binding with no locator points at nothing, and would report
+                # its requirement as machine-verified on the strength of a YAML
+                # entry. That is the failure this module exists to detect,
+                # reappearing inside the detector, so it is an error rather than
+                # a silent pass.
+                raise ValueError(
+                    f"{os.path.basename(path)}: a binding for "
+                    f"{', '.join(str(r) for r in item.get('requirements', [])) or '(no requirement)'} "
+                    "names no locator; a binding that points at nothing is not evidence"
+                )
+            requirement_ids = item.get("requirements", []) or []
+            if not requirement_ids:
+                raise ValueError(
+                    f"{os.path.basename(path)}: a binding names no requirement"
+                )
+            for requirement_id in requirement_ids:
+                # Stripped, because an id that differs from the contract's only
+                # by whitespace is a typo that would otherwise be reported as
+                # "unknown requirement" alongside "unverified requirement" —
+                # two confusing findings for one stray space.
                 bindings.append(Binding(
-                    requirement_id=str(requirement_id),
+                    requirement_id=str(requirement_id).strip(),
                     mechanism=mechanism,
-                    locator=str(item.get("locator", "")).strip(),
+                    locator=locator,
                     note=str(item.get("note", "")).strip(),
                 ))
     return bindings

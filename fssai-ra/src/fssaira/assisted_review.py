@@ -240,6 +240,18 @@ class AssistedReviewPolicy:
     #: is derived from; :class:`~fssaira.oversight.ReviewLoadPolicy` ships 45s.
     unaided_floor_seconds: float = 45.0
 
+    def __post_init__(self) -> None:
+        # A negative baseline makes every derived floor negative, so every
+        # proposed floor clears it and the gate silently stops being a gate.
+        # Zero is permitted and means something real — no deliberation floor is
+        # declared at all — which `ReviewLoadPolicy.declared_consistency` already
+        # reports. Below zero is not a weaker declaration, it is a broken one.
+        if self.unaided_floor_seconds < 0:
+            raise ValueError(
+                "unaided_floor_seconds must not be negative; a negative baseline "
+                "disables the gate rather than relaxing it"
+            )
+
     def permitted_floor(self, assistance: ReviewAssistance) -> float:
         """The lowest deliberation floor this declaration earns."""
         return round(self.unaided_floor_seconds * assistance.floor_multiplier, 4)
@@ -256,6 +268,12 @@ class AssistedReviewPolicy:
                 AssistedReviewCode.ASSISTANCE_NOT_DECLARED,
                 "review assistance is in use but no accountable owner declared its "
                 "independence properties",
+            )
+        if proposed_floor < 0:
+            raise ExecutionDenied(
+                AssistedReviewCode.FLOOR_BELOW_DECLARED_INDEPENDENCE,
+                f"a deliberation floor of {proposed_floor:.1f}s is not a declaration; "
+                "a floor cannot be negative",
             )
         permitted = self.permitted_floor(assistance)
         if proposed_floor < permitted:

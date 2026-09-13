@@ -2,6 +2,32 @@
 
 ## Unreleased — composition: delegated authority, assisted review, and a contract that measures itself
 
+### Four defects found by probing the new modules
+
+Written after the modules shipped their own tests green, which is the point: a
+suite proves the cases someone wrote down, and these were four nobody had.
+
+- **Fixed: an unnamed principal could hold delegated authority.** An empty or
+  whitespace-only identifier passed every check in the module — it signed, it
+  attenuated, it matched a requester of the same empty string. What it could not
+  do is answer the question the chain exists to answer. Authority held by nobody
+  is not a narrower authority, it is an unaccountable one. Refused now at issue
+  time *and* at verification, because chains arrive from the wire as well as
+  from this API, with a new `PRINCIPAL_NOT_NAMED` code.
+- **Fixed: a `RootGrant` could name no accountable owner.** The owner is the
+  point of the type: it is what makes a chain attributable to an institution
+  rather than merely internally consistent.
+- **Fixed: a negative `unaided_floor_seconds` disabled the assisted-review
+  gate.** Every derived floor went negative, so every proposed floor cleared it
+  and the gate silently stopped being a gate. Zero remains legitimate and means
+  something real — no deliberation floor is declared — which
+  `declared_consistency` already reports.
+- **Fixed: a binding with an empty locator counted as machine-verified.** The
+  exact failure `fssaira coverage` exists to detect, reappearing inside the
+  detector: a governance claim backed by a YAML entry pointing at nothing. Now
+  an error, along with a binding naming no requirement. Requirement ids are also
+  stripped, so one stray space no longer reports as two contradictory findings.
+
 ### The oversight control was not active in any real deployment
 
 The worst finding in this release, and it was ours.
@@ -63,6 +89,23 @@ The worst finding in this release, and it was ours.
 - **Fixed: `docs/REVIEWERS.md` told a sceptic to expect `394 passed`** against a
   suite of 477. It was the one front-door document outside the READMEs quoting a
   figure with nothing checking it; it is checked now.
+- The browser **oversight calculator** learned about review assistance: a mode
+  selector, the three independence checkboxes, the reading time a declaration
+  earns, and a warning when the entered time is below it. Its multiplier is
+  extracted and cross-checked against `ReviewAssistance.floor_multiplier` across
+  every mode and score, for the same reason the ceiling arithmetic already was —
+  a take-home tool that disagrees with the enforcement code teaches the wrong
+  number, and the institution finds out in production.
+- `deploy/compose.yaml` passes the thirteen declaration variables through with
+  no compose-level default, so an unset value still means "not declared".
+- `/metrics` exposes `fssaira_review_capacity_declared` (0 when no ceiling is
+  declared — the first thing to alert on, and the one with no other observable),
+  plus quota, floor, admitted approvals, escalations, headroom, and refusals by
+  code.
+- The contract's two composition domains are asserted by name, so losing one is
+  a visible edit rather than a passing subset check. Issue templates ask whether
+  the agent delegates and whether a model helps the reviewer; the PR template and
+  `CONTRIBUTING.md` require `fssaira coverage` to report 0 unverified.
 - `PROCUREMENT.md` gained §8 delegated authority and §9 review-assistant
   independence with blocking-finding rows, because the paper claims independence
   is procurement language and it was not in the questionnaire. `SECURITY.md`

@@ -23,6 +23,22 @@ tests fail if a file becomes orphaned or a local link breaks.
 4. Add an ablation in `tests/test_ablations.py` showing the harm returns when
    the control is removed.
 5. Add a benign-path test and record false denials or operational burden.
+6. **Bind the requirement in `contract/bindings/`** to the check you just wrote,
+   naming the mechanism and a locator. Run `fssaira coverage`: it must report
+   **0 unverified**, and it resolves your locator against the real source, so a
+   binding pointing at a test that does not exist fails the build.
+
+   If the control genuinely cannot be proved in code — key custody, a signed
+   interface inventory, a manual fallback a real person staffs — declare
+   `verified_by: organizational` on the requirement with an `attested_by` role
+   and an `attestation_cadence`. That is a weaker claim than a test and is
+   counted separately for exactly that reason; the number of such entries is
+   pinned so that growing it is a deliberate edit.
+
+   This step exists because we skipped it ourselves. Eighteen of twenty-eight
+   requirements described a failure test and were bound to nothing: the tests
+   mostly existed, nothing connected them, and deleting one would have removed a
+   governance claim in silence.
 
 ## Add a new application domain
 Reuse the five domains; add tools to the registry, define a least-privilege

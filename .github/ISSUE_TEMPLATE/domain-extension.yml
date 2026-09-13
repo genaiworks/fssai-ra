@@ -26,6 +26,38 @@ body:
         - Hardware-isolated profile
     validations:
       required: true
+  - type: dropdown
+    id: delegation
+    attributes:
+      label: Does the agent ask anything else to act for it?
+      description: >-
+        A tool server, a plugin, a sub-agent, or any component your team did not
+        write counts as delegation, whether or not it has been called that. If it
+        does, the chain controls apply and the single-agent ones are not enough.
+      options:
+        - "No: one agent calls tools this project governs directly"
+        - "Yes: it calls a tool server or plugin we did not write"
+        - "Yes: it spawns sub-agents"
+        - "Yes: it calls another institution's agent"
+        - Not yet determined
+    validations:
+      required: true
+  - type: dropdown
+    id: assistance
+    attributes:
+      label: Will a model help the human reviewer decide?
+      description: >-
+        If yes, the proposal should say whether that model is independent of the
+        one writing proposals — a different model, a different evidence path, and
+        an adversarial posture. A dependent assistant reintroduces exactly the
+        class of harm the named-approver control exists to catch.
+      options:
+        - "No: reviewers read the case themselves"
+        - "Yes, and it is independent of the proposing model"
+        - "Yes, and it shares the proposing model or its evidence"
+        - Not yet determined
+    validations:
+      required: true
   - type: textarea
     id: people
     attributes:
@@ -57,4 +89,8 @@ body:
         - label: I will include an attack test and a benign-path test.
           required: true
         - label: I will state assumptions, exclusions, and profile limits.
+        - label: >-
+            Every contract requirement I add will be bound in `contract/bindings/`
+            to a check that runs, or declared `verified_by: organizational` with a
+            named attesting role — `fssaira coverage` will report 0 unverified.
           required: true

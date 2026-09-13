@@ -220,3 +220,23 @@ def test_the_trial_is_json_serializable_and_states_its_limits(trial):
 def test_the_declaration_states_that_it_is_not_a_measurement():
     payload = independent().to_dict()
     assert "not a measurement" in payload["status"]
+
+
+def test_a_negative_baseline_floor_is_refused():
+    """A negative baseline makes every derived floor negative, so every proposed
+    floor clears it and the gate silently stops being a gate."""
+    with pytest.raises(ValueError, match="must not be negative"):
+        AssistedReviewPolicy(unaided_floor_seconds=-5.0)
+
+
+def test_a_negative_proposed_floor_is_not_a_declaration():
+    gate = AssistedReviewPolicy()
+    with pytest.raises(ExecutionDenied) as denial:
+        gate.check(dependent(), proposed_floor=-1.0)
+    assert denial.value.code == AssistedReviewCode.FLOOR_BELOW_DECLARED_INDEPENDENCE
+
+
+def test_a_zero_baseline_stays_legitimate():
+    """Zero means something real — no deliberation floor is declared at all —
+    and `ReviewLoadPolicy.declared_consistency` already reports that."""
+    AssistedReviewPolicy(unaided_floor_seconds=0.0).check(dependent(), proposed_floor=0.0)
