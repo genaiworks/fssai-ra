@@ -357,6 +357,20 @@ def create_app(
             raise HTTPException(status_code=404, detail="resource not found") from exc
 
     # -- the three-step protocol ------------------------------------------
+    def approval_role(proposal, caller: Principal) -> str:
+        allowed = plane.profile.required_approval_roles.get(
+            (proposal.operation, proposal.from_status, proposal.to_status), frozenset()
+        )
+        for role in caller.roles:
+            if role in allowed:
+                return role
+        if not allowed and caller.role:
+            return caller.role
+        raise HTTPException(
+            status_code=403,
+            detail="one of the profile's approval roles is required for this transition",
+        )
+
     @app.post("/v1/proposals", status_code=201, tags=["actions"])
     def create_proposal(request: ProposalCreate, caller: Caller):
         try:
@@ -375,15 +389,33 @@ def create_app(
             "result": plane.get_result(request_id),
         }
 
+    @app.post("/v1/proposals/{request_id}/review", status_code=201, tags=["actions"])
+    def begin_review(request_id: str, caller: Caller):
+        """Start an idempotent, server-timed review session for this proposal."""
+        proposal = plane.get_proposal(request_id)
+        approval_role(proposal, caller)
+        return plane.begin_review(request_id, reviewer=caller.subject)
+
+    @app.post("/v1/proposals/{request_id}/endorsement", status_code=201, tags=["actions"])
+    def endorse_review(request_id: str, caller: Caller):
+        """Record a second authenticated review when the load policy requires one."""
+        proposal = plane.get_proposal(request_id)
+        approval_role(proposal, caller)
+        return plane.endorse_review(request_id, reviewer=caller.subject)
+
     @app.post("/v1/proposals/{request_id}/approval", status_code=201, tags=["actions"])
     def approve_proposal(request_id: str, request: ApprovalCreate, caller: Caller):
         # The approver's role comes from the authenticated principal, never from
         # the request body. A caller may not nominate the authority it is using.
+        proposal = plane.get_proposal(request_id)
+        role = approval_role(proposal, caller)
         return asdict(plane.approve(
             request_id,
             approver=caller.subject,
-            approver_role=caller.role,
+            approver_role=role,
             ttl_seconds=request.ttl_seconds,
+            presented_at=plane.review_started_at(request_id, reviewer=caller.subject),
+            second_approver=plane.review_endorser(request_id),
         ))
 
     @app.post("/v1/proposals/{request_id}/execute", tags=["actions"])

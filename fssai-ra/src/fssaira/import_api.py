@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from typing import Protocol
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from . import __version__
 from .diode import OneWayChannel
 from .evidence import EvidenceLedger
 from .import_boundary import ImportBoundary, QuarantineError, RawInput
@@ -45,6 +47,10 @@ def create_import_app(
     token = os.getenv("FSSAI_EVIDENCE_TOKEN", "teaching-evidence-writer")
     diode = OneWayChannel()
     last_offset = {"value": None}
+    # The boundary report and response offset live on shared objects. Serialise
+    # ingest plus response capture so concurrent callers cannot receive each
+    # other's broker acknowledgement.
+    ingest_lock = threading.RLock()
 
     def inward_handler(item: dict) -> None:
         last_offset["value"] = publisher.append(item, key=item["source"])
@@ -61,7 +67,7 @@ def create_import_app(
     )
     app = FastAPI(
         title="FSSAI-RA Inward Import Gateway",
-        version="0.5.0",
+        version=__version__,
         description=(
             "Logical low-side gateway. It exposes no read-back endpoint. Replace its "
             "inward publisher with a certified data-diode receiver for physical assurance."
@@ -78,13 +84,14 @@ def create_import_app(
 
     @app.post("/v1/imports", status_code=202)
     def import_item(request: ImportRequest):
-        boundary.ingest(RawInput(
-            source=request.source,
-            content_type=request.content_type,
-            size=len(request.data.encode()),
-            data=request.data,
-            signature=request.signature,
-        ))
-        return {"status": "accepted", "broker_offset": last_offset["value"]}
+        with ingest_lock:
+            boundary.ingest(RawInput(
+                source=request.source,
+                content_type=request.content_type,
+                size=len(request.data.encode()),
+                data=request.data,
+                signature=request.signature,
+            ))
+            return {"status": "accepted", "broker_offset": last_offset["value"]}
 
     return app

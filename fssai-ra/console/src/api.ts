@@ -92,6 +92,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ ttl_seconds }),
     }),
+  beginReview: (requestId: string) =>
+    call<{ request_id: string; reviewer: string; proposal_digest: string; presented_at: number }>(
+      `/v1/proposals/${encodeURIComponent(requestId)}/review`, { method: "POST" },
+    ),
   execute: (requestId: string) =>
     call<ExecutionResult>(`/v1/proposals/${encodeURIComponent(requestId)}/execute`, { method: "POST" }),
   proposalEvidence: (requestId: string) =>

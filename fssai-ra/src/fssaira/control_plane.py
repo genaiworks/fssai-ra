@@ -17,6 +17,7 @@ one without changing a line.
 """
 from __future__ import annotations
 
+import time
 import uuid
 from dataclasses import asdict
 from typing import Protocol, TypeVar
@@ -137,12 +138,18 @@ class ControlPlane:
         evidence_version: str,
         request_id: str | None = None,
     ) -> ActionProposal:
+        current = self.register.get(resource_id)
+        if current["status"] != from_status:
+            raise ExecutionDenied(
+                "CASE_STATE_CONFLICT",
+                "the proposed starting state is not the current authoritative state",
+            )
         proposal = ActionProposal(
             request_id=request_id or str(uuid.uuid4()),
             requester=requester,
             operation=operation,
             case_id=resource_id,
-            expected_version=self.register.get(resource_id)["version"],
+            expected_version=current["version"],
             from_status=from_status,
             to_status=to_status,
             evidence_version=evidence_version,
@@ -150,9 +157,87 @@ class ControlPlane:
         allowed = self.profile.transition_rules.get(operation, set())
         if (from_status, to_status) not in allowed:
             raise ExecutionDenied("TRANSITION_NOT_ALLOWED", "transition is not declared by profile")
+        existing = self.objects.get("proposal", proposal.request_id)
+        if existing is not None:
+            existing_proposal = ActionProposal(**existing)
+            if existing_proposal.digest == proposal.digest:
+                return existing_proposal
+            raise ExecutionDenied(
+                "REQUEST_ID_CONFLICT", "request ID already belongs to another proposal"
+            )
         self.objects.put("proposal", proposal.request_id, asdict(proposal))
         self._emit("action.proposed", asdict(proposal), resource_id)
         return proposal
+
+    def begin_review(self, request_id: str, *, reviewer: str) -> dict:
+        """Record when this server first presented a proposal to one reviewer.
+
+        The operation is idempotent: refreshing a page cannot reset the clock and
+        manufacture a shorter or ambiguous deliberation interval.
+        """
+        proposal = self.get_proposal(request_id)
+        key = f"{request_id}:{reviewer}"
+        existing = self.objects.get("review_session", key)
+        if existing is not None:
+            if existing.get("proposal_digest") != proposal.digest:
+                raise ExecutionDenied(
+                    "REVIEW_SESSION_CONFLICT", "the proposal changed after review began"
+                )
+            return existing
+        session = {
+            "request_id": request_id,
+            "reviewer": reviewer,
+            "proposal_digest": proposal.digest,
+            "presented_at": time.time(),
+        }
+        self.objects.put("review_session", key, session)
+        return session
+
+    def review_started_at(self, request_id: str, *, reviewer: str) -> float | None:
+        session = self.objects.get("review_session", f"{request_id}:{reviewer}")
+        return None if session is None else float(session["presented_at"])
+
+    def endorse_review(self, request_id: str, *, reviewer: str) -> dict:
+        """Persist a distinct authenticated reviewer's escalation endorsement."""
+        proposal = self.get_proposal(request_id)
+        if reviewer == proposal.requester:
+            raise ExecutionDenied(
+                "SEPARATION_OF_DUTIES", "requester cannot endorse their own proposal"
+            )
+        presented_at = self.review_started_at(request_id, reviewer=reviewer)
+        if presented_at is None:
+            raise ExecutionDenied(
+                "DELIBERATION_UNVERIFIABLE", "begin the second review before endorsing it"
+            )
+        monitor = getattr(self.authority, "_oversight", None)
+        now = time.time()
+        floor = 0.0 if monitor is None else monitor.policy.min_deliberation_seconds
+        if now - presented_at < floor:
+            raise ExecutionDenied(
+                "DELIBERATION_TOO_SHORT",
+                f"second review returned in {now - presented_at:.1f}s, below the declared "
+                f"deliberation floor of {floor:.1f}s",
+            )
+        endorsement = {
+            "request_id": request_id,
+            "reviewer": reviewer,
+            "proposal_digest": proposal.digest,
+            "presented_at": presented_at,
+            "endorsed_at": now,
+        }
+        self.objects.put("review_endorsement", request_id, endorsement)
+        return endorsement
+
+    def review_endorser(self, request_id: str) -> str | None:
+        endorsement = self.objects.get("review_endorsement", request_id)
+        if endorsement is None:
+            return None
+        proposal = self.get_proposal(request_id)
+        if endorsement.get("proposal_digest") != proposal.digest:
+            raise ExecutionDenied(
+                "REVIEW_SESSION_CONFLICT", "the proposal changed after endorsement"
+            )
+        return str(endorsement["reviewer"])
 
     def approve(
         self,
@@ -190,7 +275,8 @@ class ControlPlane:
         self._emit(
             "action.approved",
             {"request_id": request_id, "approval_id": approval.approval_id,
-             "approver": approver, "approver_role": approver_role},
+             "approver": approver, "approver_role": approver_role,
+             "second_approver": approval.second_approver},
             proposal.case_id,
         )
         return approval

@@ -57,6 +57,7 @@ class Approval:
     expires_at: float
     key_id: str
     signature: str
+    second_approver: str = ""
 
 
 @dataclass(frozen=True)
@@ -262,6 +263,7 @@ class ApprovalAuthority:
             expires_at=issued_at + ttl_seconds,
             key_id=self.key_id,
             signature="",
+            second_approver=second_approver or "",
         )
         return Approval(**{**asdict(unsigned), "signature": self._sign(unsigned)})
 
@@ -283,6 +285,7 @@ def _approval_signing_payload(approval: Approval) -> str:
             "audience": approval.audience,
             "expires_at": approval.expires_at,
             "key_id": approval.key_id,
+            "second_approver": approval.second_approver,
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -426,6 +429,7 @@ class AccountableExecutor:
                 "approval_id": approval.approval_id,
                 "approver": approval.approver,
                 "approval_key_id": approval.key_id,
+                "second_approver": approval.second_approver,
                 "evidence_version": proposal.evidence_version,
             },
             token=self._token,

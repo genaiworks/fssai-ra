@@ -70,7 +70,9 @@ class KafkaEventPublisher:
             delivered.append(error if error is not None else message.offset())
 
         self.producer.produce(self.topic, value=envelope, key=key.encode() or None, callback=callback)
-        self.producer.flush(self.flush_timeout)
+        remaining = self.producer.flush(self.flush_timeout)
+        if remaining:
+            raise RuntimeError(f"Kafka publish timed out with {remaining} message(s) undelivered")
         if not delivered or not isinstance(delivered[0], int):
             raise RuntimeError(f"Kafka publish failed: {delivered[0] if delivered else 'timeout'}")
         return delivered[0]
@@ -126,24 +128,33 @@ class KafkaEventConsumer:
 
     def poll(self, timeout: float = 1.0) -> ConsumedEvent | None:
         message = self.consumer.poll(timeout)
-        if message is None or message.error():
+        if message is None:
             return None
+        error = message.error()
+        if error:
+            kafka = _require_kafka()
+            if error.code() == kafka.KafkaError._PARTITION_EOF:
+                return None
+            raise RuntimeError(f"Kafka consume failed: {error}")
         return self._parse(message)
 
     @staticmethod
     def _parse(message) -> ConsumedEvent | None:
         try:
             envelope = json.loads(message.value())
-        except (json.JSONDecodeError, TypeError):
+            if not isinstance(envelope, dict) or not isinstance(envelope.get("value"), dict):
+                return None
+            published_at = float(envelope.get("published_at", 0.0))
+        except (json.JSONDecodeError, TypeError, ValueError):
             return None
         return ConsumedEvent(
             topic=message.topic(),
             partition=message.partition(),
             offset=message.offset(),
             key=(message.key() or b"").decode(errors="replace"),
-            value=envelope.get("value", {}),
+            value=envelope["value"],
             trace_id=envelope.get("trace_id", ""),
-            published_at=float(envelope.get("published_at", 0.0)),
+            published_at=published_at,
         )
 
     def stream(self, timeout: float = 1.0) -> Iterator[ConsumedEvent]:
@@ -173,31 +184,43 @@ class KafkaEventConsumer:
                     continue
                 if message.error():
                     continue
-                event = self._parse(message)
-                if event is None:
-                    self._to_dead_letter({"raw": repr(message.value())[:2000]}, "unparseable")
-                    self.consumer.commit(message, asynchronous=False)
-                    continue
-                try:
-                    handler(event)
-                except Exception as exc:
-                    self._to_dead_letter(
-                        {"value": event.value, "trace_id": event.trace_id,
-                         "offset": event.offset, "partition": event.partition},
-                        f"{type(exc).__name__}: {exc}",
-                    )
-                self.processed += 1
-                self.consumer.commit(message, asynchronous=False)
+                self._process_message(message, handler)
         finally:
             self.close()
 
+    def _process_message(self, message, handler: Callable[[ConsumedEvent], None]) -> None:
+        """Process and commit one message only after success or durable DLQ publication."""
+        event = self._parse(message)
+        if event is None:
+            self._to_dead_letter({"raw": repr(message.value())[:2000]}, "unparseable")
+        else:
+            try:
+                handler(event)
+            except Exception as exc:
+                self._to_dead_letter(
+                    {"value": event.value, "trace_id": event.trace_id,
+                     "offset": event.offset, "partition": event.partition},
+                    f"{type(exc).__name__}: {exc}",
+                )
+        # Reaching this line means the handler succeeded or a DLQ publisher
+        # acknowledged the failure record. Otherwise _to_dead_letter raises and
+        # the source offset remains uncommitted for recovery.
+        self.consumer.commit(message, asynchronous=False)
+        self.processed += 1
+
     def _to_dead_letter(self, payload: dict, reason: str) -> None:
-        self.dead_lettered += 1
         if self._dead_letter is None:
-            return
-        # The dead-letter path must never be able to stop the stream it protects.
-        with contextlib.suppress(Exception):  # pragma: no cover
+            raise RuntimeError(
+                "message processing failed and no dead-letter publisher is configured; "
+                "source offset was not committed"
+            )
+        try:
             self._dead_letter.append({"reason": reason, **payload}, key="dlq")
+        except Exception as exc:
+            raise RuntimeError(
+                "dead-letter publication failed; source offset was not committed"
+            ) from exc
+        self.dead_lettered += 1
 
     def stop(self) -> None:
         self._running = False

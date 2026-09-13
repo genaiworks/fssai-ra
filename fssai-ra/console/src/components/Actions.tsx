@@ -65,6 +65,10 @@ export function Actions() {
 
   const approve = () => run(async () => {
     if (!proposal) return;
+    // Idempotent: on the first click this starts the server-side deliberation
+    // clock; later clicks keep the original timestamp. A configured floor may
+    // therefore refuse the first click and admit a later one after real review.
+    await api.beginReview(proposal.request_id);
     setApproval(await api.approve(proposal.request_id));
   });
 

@@ -37,6 +37,19 @@ def test_an_unknown_or_absent_token_is_refused():
             auth.authenticate(authorization=credential)
 
 
+def test_an_unknown_authentication_mode_is_refused_instead_of_becoming_token_mode():
+    with pytest.raises(ValueError, match="FSSAI_AUTH_MODE"):
+        AuthConfig(mode="typo")
+
+
+def test_oidc_requires_issuer_audience_and_jwks_before_verification():
+    auth = Authenticator(AuthConfig(mode="oidc"))
+
+    assert len(auth.warnings) == 3
+    with pytest.raises(AuthenticationError, match="verification is incomplete"):
+        auth.authenticate(authorization="Bearer not-even-parsed")
+
+
 def test_header_identity_is_refused_unless_a_proxy_is_declared():
     """The v0.5.0 adapter still exists, but can no longer be used by accident."""
     auth = Authenticator(AuthConfig(mode="header"))

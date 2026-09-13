@@ -4,6 +4,7 @@ import hmac
 from fastapi.testclient import TestClient
 
 from fssaira.import_api import create_import_app
+from fssaira import __version__
 
 
 class RecordingPublisher:
@@ -68,3 +69,9 @@ def test_import_gateway_has_no_readback_route():
 
     assert paths == {"/health", "/v1/imports"}
     assert set(app.openapi()["paths"]["/v1/imports"]) == {"post"}
+
+
+def test_import_gateway_schema_uses_the_package_version():
+    app = create_import_app(publisher=RecordingPublisher(), trusted_keys={})
+
+    assert app.openapi()["info"]["version"] == __version__

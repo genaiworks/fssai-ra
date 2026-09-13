@@ -182,12 +182,16 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
 
 
 def _build_model():
-    """Select a model backend, never letting it stop the control plane starting."""
+    """Select a model backend while honouring the fail-closed setting."""
     from .models import ModelSelection, select_model
 
     try:
         return select_model(probe=os.getenv("FSSAI_MODEL_PROBE", "1") != "0")
-    except Exception as exc:  # ModelUnavailable with FALLBACK=deny, or a bad name
+    except Exception as exc:
+        # ``select_model`` already refuses an unreachable backend when fallback
+        # is denied. Do not defeat that decision at the final assembly boundary.
+        if os.getenv("FSSAI_MODEL_FALLBACK", "allow").strip().lower() == "deny":
+            raise
         from .models.deterministic import DeterministicModel
 
         return ModelSelection(
@@ -237,7 +241,11 @@ def configuration_warnings() -> list[Warning_]:
             "in-memory event transport is active; events are not replayable across processes",
             "set FSSAI_KAFKA_BOOTSTRAP",
         ))
-    for issue in AuthConfig.from_env().warnings():
+    try:
+        auth_issues = AuthConfig.from_env().warnings()
+    except ValueError as exc:
+        auth_issues = [f"invalid authentication configuration: {exc}"]
+    for issue in auth_issues:
         warnings.append(Warning_("blocking", "AUTHENTICATION", issue,
                                  "see docs/OPERATIONS.md, 'Authentication modes'"))
     model = os.getenv("FSSAI_MODEL", "ollama")

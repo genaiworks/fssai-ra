@@ -78,12 +78,31 @@ class AuthConfig:
     using_development_credentials: bool = False
 
     def __post_init__(self) -> None:
+        self.mode = self.mode.strip().lower()
+        if self.mode not in {"token", "header", "oidc"}:
+            raise ValueError(
+                f"FSSAI_AUTH_MODE must be token, header, or oidc; got {self.mode!r}"
+            )
         # An empty token map would fail every request closed, which sounds safe
         # and is actually just broken: nobody could configure the system. Fall
         # back to the published development credentials and say so loudly.
-        if not self.tokens:
+        if self.mode == "token" and not self.tokens:
             self.tokens = dict(DEV_TOKENS)
             self.using_development_credentials = True
+        for token, identity in self.tokens.items():
+            if not isinstance(token, str) or not token:
+                raise ValueError("authentication token names must be non-empty strings")
+            if (
+                not isinstance(identity, (tuple, list))
+                or len(identity) != 2
+                or not isinstance(identity[0], str)
+                or not identity[0]
+                or not isinstance(identity[1], (tuple, list))
+                or not all(isinstance(role, str) and role for role in identity[1])
+            ):
+                raise ValueError(
+                    "each authentication token must map to a non-empty subject and a role list"
+                )
 
     @classmethod
     def from_env(cls) -> AuthConfig:
@@ -91,13 +110,26 @@ class AuthConfig:
         raw = os.getenv("FSSAI_AUTH_TOKENS_JSON", "")
         development = False
         if raw:
-            parsed = json.loads(raw)
-            tokens = {
-                token: (value["subject"], tuple(value.get("roles", [])))
-                for token, value in parsed.items()
-            }
-        else:
+            try:
+                parsed = json.loads(raw)
+                if not isinstance(parsed, dict):
+                    raise ValueError("the top-level value must be an object")
+                tokens = {}
+                for token, value in parsed.items():
+                    if not isinstance(value, dict):
+                        raise ValueError("each token value must be an object")
+                    roles = value.get("roles", [])
+                    if not isinstance(roles, list):
+                        raise ValueError("roles must be a list")
+                    tokens[token] = (value["subject"], tuple(roles))
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+                raise ValueError(
+                    "FSSAI_AUTH_TOKENS_JSON must map tokens to {subject, roles} objects"
+                ) from exc
+        elif mode == "token":
             tokens, development = dict(DEV_TOKENS), True
+        else:
+            tokens = {}
         return cls(
             mode=mode,
             tokens=tokens,
@@ -119,8 +151,14 @@ class AuthConfig:
             )
         if self.mode == "token" and self.using_development_credentials:
             issues.append("development bearer tokens are active; set FSSAI_AUTH_TOKENS_JSON")
-        if self.mode == "oidc" and not self.jwks_url:
-            issues.append("oidc mode selected without FSSAI_OIDC_JWKS_URL")
+        if self.mode == "oidc":
+            for value, name in (
+                (self.jwks_url, "FSSAI_OIDC_JWKS_URL"),
+                (self.oidc_issuer, "FSSAI_OIDC_ISSUER"),
+                (self.oidc_audience, "FSSAI_OIDC_AUDIENCE"),
+            ):
+                if not value:
+                    issues.append(f"oidc mode selected without {name}")
         return issues
 
 
@@ -170,6 +208,17 @@ class Authenticator:
         if not authorization or not authorization.lower().startswith("bearer "):
             raise AuthenticationError("a bearer JWT is required")
         token = authorization.split(" ", 1)[1].strip()
+        missing = [
+            name for value, name in (
+                (self.config.jwks_url, "FSSAI_OIDC_JWKS_URL"),
+                (self.config.oidc_issuer, "FSSAI_OIDC_ISSUER"),
+                (self.config.oidc_audience, "FSSAI_OIDC_AUDIENCE"),
+            ) if not value
+        ]
+        if missing:
+            raise AuthenticationError(
+                "oidc verification is incomplete; configure " + ", ".join(missing)
+            )
         try:
             import jwt
             from jwt import PyJWKClient
@@ -190,6 +239,10 @@ class Authenticator:
             raise AuthenticationError(f"token rejected: {exc}") from exc
         roles = claims.get("roles") or claims.get("realm_access", {}).get("roles") or []
         subject = claims.get("preferred_username") or claims.get("sub", "")
+        if not subject:
+            raise AuthenticationError("token rejected: subject claim is missing")
+        if not isinstance(roles, list) or not all(isinstance(role, str) for role in roles):
+            raise AuthenticationError("token rejected: roles claim must be a list of strings")
         return Principal(subject, tuple(roles), method="oidc")
 
 

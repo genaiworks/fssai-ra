@@ -76,6 +76,157 @@ def test_api_requires_authentication_and_the_operator_role():
     ).status_code == 403
 
 
+def test_approval_role_is_checked_before_the_authority_signs():
+    client = build_client()
+    client.post(
+        "/v1/resources",
+        json={"resource_id": "S-role", "status": "draft", "version": 1},
+        headers=OPERATOR,
+    )
+    proposal = client.post(
+        "/v1/proposals",
+        json={
+            "operation": "prepare_case_for_review",
+            "resource_id": "S-role",
+            "from_status": "draft",
+            "to_status": "ready_for_officer_review",
+            "evidence_version": "snap-1",
+        },
+        headers=AGENT,
+    ).json()
+
+    response = client.post(
+        f"/v1/proposals/{proposal['request_id']}/approval",
+        json={"ttl_seconds": 300},
+        headers=OPERATOR,
+    )
+
+    assert response.status_code == 403
+
+
+def test_declared_deliberation_floor_is_operable_through_server_timed_review(monkeypatch):
+    from fssaira.oversight import OversightMonitor, ReviewLoadPolicy
+
+    clock = {"now": 1_000.0}
+    monkeypatch.setattr("fssaira.control_plane.time.time", lambda: clock["now"])
+    monkeypatch.setattr("fssaira.exact_action.time.time", lambda: clock["now"])
+    profile = ApplicationProfile.load("profiles/student_support.yaml")
+    plane = ControlPlane(
+        profile,
+        oversight=OversightMonitor(ReviewLoadPolicy(
+            max_approvals_per_window=10,
+            min_deliberation_seconds=45,
+            second_reviewer_after=None,
+        )),
+    )
+    client = TestClient(create_app(plane, authenticator=Authenticator(AuthConfig())))
+    client.post(
+        "/v1/resources",
+        json={"resource_id": "S-review", "status": "draft", "version": 1},
+        headers=OPERATOR,
+    )
+    proposal = client.post(
+        "/v1/proposals",
+        json={
+            "operation": "prepare_case_for_review",
+            "resource_id": "S-review",
+            "from_status": "draft",
+            "to_status": "ready_for_officer_review",
+            "evidence_version": "snap-1",
+        },
+        headers=AGENT,
+    ).json()
+    path = f"/v1/proposals/{proposal['request_id']}"
+
+    assert client.post(f"{path}/approval", json={}, headers=OFFICER).json()["error"] == (
+        "DELIBERATION_UNVERIFIABLE"
+    )
+    first = client.post(f"{path}/review", headers=OFFICER).json()
+    clock["now"] = 1_020.0
+    assert client.post(f"{path}/review", headers=OFFICER).json() == first, (
+        "refreshing the review must not reset its server-side clock"
+    )
+    assert client.post(f"{path}/approval", json={}, headers=OFFICER).json()["error"] == (
+        "DELIBERATION_TOO_SHORT"
+    )
+    clock["now"] = 1_046.0
+    approval = client.post(f"{path}/approval", json={}, headers=OFFICER)
+
+    assert approval.status_code == 201
+    assert approval.json()["approver"] == "officer.díaz"
+
+
+def test_second_review_is_authenticated_bound_and_persisted(monkeypatch):
+    from fssaira.oversight import OversightMonitor, ReviewLoadPolicy
+
+    clock = {"now": 1_000.0}
+    monkeypatch.setattr("fssaira.control_plane.time.time", lambda: clock["now"])
+    monkeypatch.setattr("fssaira.exact_action.time.time", lambda: clock["now"])
+    profile = ApplicationProfile.load("profiles/student_support.yaml")
+    plane = ControlPlane(
+        profile,
+        oversight=OversightMonitor(ReviewLoadPolicy(
+            max_approvals_per_window=10,
+            min_deliberation_seconds=0,
+            second_reviewer_after=1,
+        )),
+    )
+    auth = Authenticator(AuthConfig(tokens={
+        "agent": ("agent", ("proposer",)),
+        "primary": ("officer.primary", ("student_support_officer",)),
+        "second": ("officer.second", ("student_support_officer",)),
+        "operator": ("operator", ("platform_operator",)),
+    }))
+    client = TestClient(create_app(plane, authenticator=auth))
+    def headers(token: str) -> dict[str, str]:
+        return {"Authorization": f"Bearer {token}"}
+
+    request_ids = []
+    for suffix in ("one", "two"):
+        client.post(
+            "/v1/resources",
+            json={"resource_id": f"S-{suffix}", "status": "draft", "version": 1},
+            headers=headers("operator"),
+        )
+        request_ids.append(client.post(
+            "/v1/proposals",
+            json={
+                "operation": "prepare_case_for_review",
+                "resource_id": f"S-{suffix}",
+                "from_status": "draft",
+                "to_status": "ready_for_officer_review",
+                "evidence_version": "snap-1",
+            },
+            headers=headers("agent"),
+        ).json()["request_id"])
+
+    first, second = request_ids
+    client.post(f"/v1/proposals/{first}/review", headers=headers("primary"))
+    assert client.post(
+        f"/v1/proposals/{first}/approval", json={}, headers=headers("primary")
+    ).status_code == 201
+
+    client.post(f"/v1/proposals/{second}/review", headers=headers("primary"))
+    missing = client.post(
+        f"/v1/proposals/{second}/approval", json={}, headers=headers("primary")
+    )
+    assert missing.json()["error"] == "SECOND_REVIEWER_REQUIRED"
+
+    client.post(f"/v1/proposals/{second}/review", headers=headers("second"))
+    endorsement = client.post(
+        f"/v1/proposals/{second}/endorsement", headers=headers("second")
+    )
+    assert endorsement.status_code == 201
+    approval = client.post(
+        f"/v1/proposals/{second}/approval", json={}, headers=headers("primary")
+    )
+
+    assert approval.status_code == 201
+    assert approval.json()["second_approver"] == "officer.second"
+    stored = plane.objects.get("approval", second)
+    assert stored["second_approver"] == "officer.second"
+
+
 def test_spoofable_headers_are_refused_unless_a_proxy_is_declared():
     """The v0.5.0 header adapter no longer works by accident."""
     profile = ApplicationProfile.load("profiles/student_support.yaml")

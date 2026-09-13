@@ -113,6 +113,23 @@ def test_a_declared_capacity_reaches_the_authority_the_deployment_uses(clean_env
     assert monitor.policy.max_approvals_per_window == 2
 
 
+def test_runtime_factory_honours_model_fallback_deny(clean_env, monkeypatch):
+    """The final factory must not undo the backend selector's fail-closed choice."""
+    from fssaira.models import ModelUnavailable
+    from fssaira.models.ollama import OllamaModel
+
+    clean_env.setenv("FSSAI_MODEL", "ollama")
+    clean_env.setenv("FSSAI_MODEL_FALLBACK", "deny")
+    monkeypatch.setattr(
+        OllamaModel,
+        "health",
+        lambda self: {"reachable": False, "detail": "simulated outage"},
+    )
+
+    with pytest.raises(ModelUnavailable, match="FSSAI_MODEL_FALLBACK=deny"):
+        build_control_plane(profile_path="profiles/student_support.yaml")
+
+
 def test_the_declared_ceiling_actually_refuses_the_next_approval(clean_env):
     """Wiring it in is only worth anything if it binds on the real path."""
     clean_env.setenv("FSSAI_REVIEW_MAX_PER_WINDOW", "1")
@@ -303,6 +320,15 @@ def test_doctor_reports_malformed_declarations_without_a_traceback(clean_env):
     assert findings["INVALID_REVIEW_POLICY"].severity == "blocking"
     assert findings["INVALID_REVIEW_ASSISTANCE"].severity == "blocking"
     assert findings["INVALID_DELEGATION_POLICY"].severity == "blocking"
+
+
+def test_doctor_reports_malformed_authentication_without_a_traceback(clean_env):
+    clean_env.setenv("FSSAI_AUTH_TOKENS_JSON", '{"token":{"roles":"operator"}}')
+
+    findings = [item for item in configuration_warnings() if item.code == "AUTHENTICATION"]
+
+    assert findings and findings[0].severity == "blocking"
+    assert "invalid authentication configuration" in findings[0].message
 
 
 # -- the documentation and the code must name the same variables ------------

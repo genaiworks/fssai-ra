@@ -109,6 +109,7 @@ class AtomicExecutor(AccountableExecutor):
                     "approval_id": approval.approval_id,
                     "approver": approval.approver,
                     "approval_key_id": approval.key_id,
+                    "second_approver": approval.second_approver,
                     "evidence_version": proposal.evidence_version,
                 },
                 token=self._token,
