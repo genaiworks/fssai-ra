@@ -24,6 +24,24 @@ governance:
     data: accountable_data_owner
     privacy: privacy_officer
     security: security_officer
+# Optional: govern what a model may read and what may leave. Uncomment and
+# replace, then run `fssaira disclosure` on your pack. Every class must appear
+# in governance.data_classes and every role in a transition below.
+# disclosure:
+#   subject_kind: person
+#   purposes: [approved-purpose]
+#   fields:
+#     identifier: {class: restricted}
+#     case_notes: {class: restricted}
+#   model_endpoints:
+#     institution_model: institution-private
+#   class_zones:
+#     restricted: [institution-private]
+#   recipients:
+#     authorized_reviewer:
+#       classes: [restricted]
+#       purposes: [approved-purpose]
+#       zone: institution-private
 transitions:
   - operation: prepare_for_human_review
     from_status: draft

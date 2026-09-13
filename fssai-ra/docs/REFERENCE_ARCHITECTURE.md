@@ -46,6 +46,23 @@ fairness method, production security approval, or hardware-isolation proof. A
 domain owner must supply applicable law, legitimate purpose, affected-person
 protections, operational controls, and evidence for the actual deployment.
 
+## The two constitutional rules
+
+The first rule governs the write path. Its companion governs the read path:
+
+> **A model may request information. It cannot manufacture the entitlement to
+> see it, and it cannot launder what it saw.**
+
+A system over corporate or medical data can cause serious harm without executing
+a single state change. It reads, summarises, and sends. The authority plane
+therefore issues two kinds of institutional permission. Exact-action approvals
+govern effects. Purpose-bound disclosure grants govern what may enter a model
+context. The boundary plane labels every derived output from what its session
+received, so a model can never lower the sensitivity of its own output.
+[`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) specifies the lattice, the
+thirteen checks, and invariants DX-1 to DX-6. [`PATTERNS.md`](PATTERNS.md) turns
+both rules into a reusable pattern language.
+
 ## The constitutional model
 
 An institution should govern a consequential AI system more like an institution

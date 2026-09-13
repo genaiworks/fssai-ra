@@ -2,6 +2,40 @@
 
 ## Unreleased — composition: delegated authority, assisted review, and a contract that measures itself
 
+### Governed disclosure: the second constitutional rule
+
+- Added `fssaira.disclosure`, a read-path kernel for AI systems over sensitive
+  data: *a model may request information; it cannot manufacture the entitlement
+  to see it, and it cannot launder what it saw.* It provides signed purpose-bound
+  grants, a context gate that alone holds the record-store credential, a label
+  lattice whose join only tightens, session-taint output labels, exact-output
+  declassification by an independent declared role, live consent and revocation,
+  model-endpoint residency, bounded break-glass with review obligations, and
+  evidence that never contains protected values.
+- Added `fssaira.disclosure_eval` and `fssaira disclosure PACK`: generated hostile
+  and benign flows against unguarded, conventionally access-controlled, and
+  governed gates; per-check ablation; and a bounded model check over reads and
+  releases against an independent reference predicate. Results are written to
+  `evaluation/results/v1.0.0-governed-disclosure.json`.
+- Domain packs may declare a validated `disclosure` section. The corporate and
+  healthcare packs now do, and `/v1/profile` and `fssaira profiles --verify`
+  report it. Contract domain 9 adds seven bound requirements, GD-1 to GD-7.
+- Added `threats/catalogue.yaml`, `fssaira.threats`, and `fssaira threats`: 32
+  alignment, AI-security, secure-data, and systemic failure classes, each marked
+  contained, bounded, or residual. Contained and bounded entries must cite
+  evidence that exists; a catalogue without residuals is refused.
+- Revised both abstracts around two constitutional rules and a safety case that
+  does not rest on alignment, with every new figure checked by
+  `tests/test_paper_alignment.py`. Both still fit their word and form limits.
+- Added `docs/PATTERNS.md`, a pattern language with anti-patterns, blueprints,
+  maturity levels, and a design review checklist, and `docs/GOVERNED_DISCLOSURE.md`.
+- Fixed the healthcare pack: its break-glass review state was unreachable. A new
+  `declare_break_glass_access` transition reaches it, and every pack is now tested
+  for unreachable statuses. Domain-pack and coverage figures were regenerated.
+- Fixed decision-packet export so profile additions outside schema v3 cannot make
+  every packet malformed, and corrected the stale paper title in the root
+  citation file and the Word abstract.
+
 ### Cross-sector secure-data domain packs
 
 - Reframed the implementation as a sector-neutral authority and data-governance
@@ -19,8 +53,8 @@
   triage, prescribing, and clinical-record alteration.
 - Added `fssaira profiles --verify`, fail-closed catalog discovery, duplicate-id
   checks, and generated cross-domain evidence. Four independently reported packs
-  cover 31,360 bounded configurations, contain 120/120 hostile scenarios,
-  complete 36/36 benign tasks, and produce zero unauthorized mutations. These
+  cover 33,600 bounded configurations, contain 120/120 hostile scenarios,
+  complete 37/37 benign tasks, and produce zero unauthorized mutations. These
   fixture results demonstrate kernel reuse, not sector compliance or safety.
 - Generalized the public worksheet, documentation routes, abstract, Word
   submission artifact, presentation, and citation metadata around domain packs.

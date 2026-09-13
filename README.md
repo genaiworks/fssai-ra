@@ -51,6 +51,8 @@ reviewers, and adopters.
 - [Procurement questions](fssai-ra/docs/PROCUREMENT.md) — the seven fields as a supplier questionnaire, plus delegated authority and review-assistant independence
 - [Project overview and architecture](fssai-ra/README.md)
 - [Cross-sector reference architecture](fssai-ra/docs/REFERENCE_ARCHITECTURE.md) — seven planes, twelve invariants, lifecycle, adoption gates, and technology mapping
+- [Pattern language for AI over sensitive data](fssai-ra/docs/PATTERNS.md) — two constitutional rules, seven laws, patterns, anti-patterns, blueprints, and maturity levels
+- [Governed disclosure](fssai-ra/docs/GOVERNED_DISCLOSURE.md) — purpose-bound grants, context gate, session labels, declassification, consent, residency, break-glass
 - [Reusable domain packs](fssai-ra/docs/DOMAIN_PACKS.md) — education, corporate confidential data, and healthcare record access
 - [Extension guide](fssai-ra/docs/EXTENDING.md) · [Distributed platform](fssai-ra/docs/PLATFORM.md) · [Threat model](fssai-ra/docs/SECURITY.md)
 
@@ -76,6 +78,8 @@ fssaira delegation                                # authority that travels: 10 c
 fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
 fssaira profiles --verify                         # check every education, corporate, and healthcare pack
+fssaira disclosure profiles/healthcare_record_access.yaml  # what may a model read, and what may leave?
+fssaira threats                                   # alignment failures and AI threats: contained, bounded, residual
 fssaira init my-domain                            # scaffold your own
 ```
 
@@ -114,9 +118,11 @@ What the current branch adds, each answering a question the release could not:
 | Oversight capacity | How much review can an institution actually supply? | 11 reviewers sustain 2,640 actions/day; 4 → 0 merit failures under load |
 | **Assisted review** | **What happens when the reviewer also has a model?** | **5 → 1 merit failures, dependent vs independent assistant, at the same lowered floor — and no runtime signal distinguishes them** |
 | **Delegated authority** | **Does authority survive being passed to another agent?** | **10/10 chains contained where per-hop validation contains 2/10; 768 states, 0 violations** |
-| **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 34 machine-verified, 3 attested, 0 unverified** |
+| **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 41 machine-verified, 3 attested, 0 unverified** |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
-| **Cross-sector domain packs** | **Does one kernel work across distinct governed-data shapes?** | **4 packs; 31,360 states; 120/120 hostile contained; 36/36 benign completed; 0 unauthorized mutations** |
+| **Cross-sector domain packs** | **Does one kernel work across distinct governed-data shapes?** | **4 packs; 33,600 states; 120/120 hostile contained; 37/37 benign completed; 0 unauthorized mutations** |
+| **Governed disclosure** | **Can a model see only what it is entitled to, and never launder it?** | **44/44 hostile data flows contained where conventional access control contains 16; 13/13 checks load-bearing; 6,900 states, 0 violations** |
+| **Threat and alignment catalogue** | **Does the safety case depend on the model being aligned?** | **32 failure classes: 17 contained, 10 bounded, 5 residual, each bound to evidence checked to exist** |
 | Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 
 Plus single-transaction execution on PostgreSQL, privilege invariance, real

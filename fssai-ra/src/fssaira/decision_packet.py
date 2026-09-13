@@ -20,6 +20,10 @@ def export_decision_packet(plane, request_id: str) -> dict:
     if receipt is None:
         raise ExecutionDenied("PACKET_OUTCOME_MISSING", "a completed action receipt is required")
     profile = asdict(plane.profile)
+    # A decision packet documents one exact action. The read-path disclosure
+    # policy is not part of that decision and is deliberately outside packet
+    # schema v3, whose offline verifier rejects keys it does not recognise.
+    profile.pop("disclosure", None)
     profile["transitions"] = [asdict(rule) for rule in plane.profile.transitions]
     if plane.profile.governance is not None:
         governance = asdict(plane.profile.governance)

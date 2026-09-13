@@ -60,6 +60,27 @@ real interface could attempt it. The same is true of every lifecycle statement:
 metadata makes an omission visible; only an adapter, policy engine, test, and
 operational owner make the statement enforceable.
 
+## Governing the read path
+
+A pack may also declare a `disclosure` section. It names purposes, the class of
+every field, the zone of every model endpoint, where each class may be processed,
+recipients and their clearances, declassification rules, and emergency access.
+The corporate and healthcare packs ship complete sections. The loader rejects a
+section that references undeclared classes, purposes, or roles.
+
+```bash
+fssaira disclosure profiles/healthcare_record_access.yaml
+fssaira disclosure profiles/corporate_confidential_data.yaml
+```
+
+The suite is generated from the pack itself, so a new pack receives the same
+hostile flows, per-check ablations, and bounded model check. See
+[`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md).
+
+The healthcare pack previously declared a break-glass review transition that no
+transition could reach. It now declares `declare_break_glass_access`, and
+`tests/test_disclosure.py` checks that every status in every pack is reachable.
+
 ## The sector-independent architecture
 
 | Duty | Small/offline implementation | Distributed seam | Invariant that must survive replacement |

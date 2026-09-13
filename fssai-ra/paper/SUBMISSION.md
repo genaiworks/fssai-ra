@@ -33,11 +33,16 @@ Before opening the form:
 
 The submission should remain clear if a reviewer reads only four elements:
 
-1. **Problem:** an agent must not turn its own proposal into authority.
-2. **Contribution:** a seven-field executable control contract.
+1. **Problem:** an agent must not turn its own proposal into authority, or its own
+   request into an entitlement to see data, and the safety case must not depend on
+   the model being aligned.
+2. **Contribution:** two constitutional rules made executable: a seven-field control
+   contract for actions and a governed-disclosure gate for reads and releases.
 3. **Evidence:** comparative attacks, utility, ablations, bounded model checking,
    conformance, a narrowly stated replay race, a queue-pressure trial of review
-   capacity, and four independently reported domain packs carrying their own evidence.
+   capacity, four independently reported domain packs, hostile data flows against
+   conventional access control, and a threat catalogue whose evidence must exist and
+   whose residuals are stated.
 4. **Boundary:** fixture results are neither certification nor proof of educational
    benefit, hardware isolation, or distributed linearizability — and **no reviewer
    was observed**, so the oversight curve is a declared parameter throughout.
@@ -45,9 +50,10 @@ The submission should remain clear if a reviewer reads only four elements:
 ## If the form enforces a hard 1,500 words
 
 `form-ready-abstract.md` is written to the form's four capped fields and already
-validates. `extended-abstract.md` is the proceedings-style version and now runs
-to about 1,880 words of body text, up from 1,580 when it argued three
-contributions rather than six.
+validates. `extended-abstract.md` is the proceedings-style version and runs to about
+1,890 words of body text. Governed disclosure and the threat catalogue were added
+by compressing the planes, technology, domain-pack, and comparison paragraphs
+rather than by raising the bound.
 
 If a hard cap must be met there, cut in this order, stopping as soon as it fits:
 
@@ -61,7 +67,7 @@ If a hard cap must be met there, cut in this order, stopping as soon as it fits:
 3. **§6's second paragraph** — the lab — to two sentences, keeping "no learning
    gain is claimed".
 
-Never cut §3 (oversight, including its assisted-review extension) or §8 (limits).
+Never cut §3 (secure data and governed disclosure), §4's oversight paragraphs, or §8 (limits).
 §3 is the contribution that earns the panel slot; §8 is the section that earns a
 reviewer's trust. The coverage finding in §2 is four sentences and stays: a paper
 that applies a diagnostic to everyone else and not itself invites exactly one

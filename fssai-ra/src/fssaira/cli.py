@@ -833,6 +833,13 @@ def cmd_profiles(args) -> int:
                 "benign_completed": evaluation.benign_completed,
                 "benign_total": len(evaluation.utility),
             }
+            if profile.disclosure is not None:
+                from .disclosure_eval import run_disclosure_suite
+
+                disclosure = run_disclosure_suite(
+                    profile.disclosure, profile_id=profile.profile_id
+                ).to_dict()["summary"]
+                summary["assurance"]["disclosure"] = disclosure
     payload = {"profiles": profiles, "count": len(profiles)}
     if args.output:
         emit(payload, args.output)
@@ -855,6 +862,92 @@ def cmd_profiles(args) -> int:
             ))
     print(dim("\n  External frameworks are applicability declarations, not compliance claims."))
     return 0
+
+
+def cmd_disclosure(args) -> int:
+    """Govern what a model may read and what may leave: containment, ablation, model check."""
+    from .disclosure_eval import run_disclosure_suite
+    from .profiles import ApplicationProfile, ProfileError
+
+    try:
+        profile = ApplicationProfile.load(args.profile)
+    except ProfileError as exc:
+        print(red(f"  profile error: {exc}"))
+        return 2
+    if profile.disclosure is None:
+        print(red(f"  {profile.profile_id} declares no disclosure section; "
+                  "nothing governs what its model may read or release"))
+        return 2
+
+    report = run_disclosure_suite(profile.disclosure, profile_id=profile.profile_id)
+    payload = report.to_dict()
+    heading(f"Governed disclosure — {profile.profile_id}: "
+            f"{report.hostile_total} hostile flows, 3 architectures")
+    arms = tuple(report.arms)
+    print(dim("  " + " " * 42 + "  ".join(f"{arm:>18}" for arm in arms)))
+    for name in report.arms["this_architecture"]:
+        cells = []
+        for arm in arms:
+            row = report.arms[arm][name]
+            cells.append(f"{(red('LEAKED') if row['reached'] else green('contained')):>27}")
+        print(f"  {name:42}" + "".join(cells))
+    heading("Containment by architecture")
+    for arm in arms:
+        count = report.contained(arm)
+        print(f"  {arm:20} {count}/{report.hostile_total}   {count / report.hostile_total:.0%}")
+    print(dim("  'access_controlled' is signed, expiring, class-cleared grants plus an output"))
+    print(dim("  check on the label the model claims: a conscientious conventional design."))
+
+    heading("Legitimate work still completes")
+    for name, row in report.benign.items():
+        print(f"  {name:48} " + (green("completed") if row["reached"] else red("REFUSED")))
+    for name in report.not_applicable:
+        print(dim(f"  {name:48} not applicable to this pack"))
+
+    heading("Is each check load-bearing?")
+    for row in report.ablations:
+        mark = green("load-bearing") if row["load_bearing"] else yellow("did not bind")
+        print(f"  {row['check']:32} {mark:<24}" + dim(f"  {len(row['harms_restored'])} harm(s) return"))
+
+    summary = payload["verification"]["summary"]
+    heading("Bounded model check over reads and releases")
+    print(f"  states explored   {summary['states_explored']:,}")
+    print(f"  violations        {summary['violations'] and red(str(summary['violations'])) or green('0')}")
+    print("  evidence holds no protected values   "
+          + (green("yes") if report.evidence_minimized else red("NO")))
+    for line in payload["limits"]:
+        print(dim(f"  - {line}"))
+    emit(payload, args.output)
+    return 0 if report.holds else 1
+
+
+def cmd_threats(args) -> int:
+    """Alignment failures and AI threats: what contains each, and what remains."""
+    from .threats import STATUSES, ThreatCatalogueError, check_catalogue
+
+    try:
+        report = check_catalogue(args.catalogue)
+    except ThreatCatalogueError as exc:
+        print(red(f"  catalogue error: {exc}"))
+        return 2
+    payload = report.to_dict()
+    heading(f"Threat and alignment catalogue — {len(report.threats)} failure classes")
+    marks = {"contained": green, "bounded": yellow, "residual": red}
+    for family in ("alignment", "security", "data", "systemic"):
+        print(bold(f"  {family}"))
+        for threat in (t for t in report.threats if t.family == family):
+            print(f"    {threat.id:6} {marks[threat.status](f'{threat.status:9}')}  {threat.title}")
+    heading("Totals")
+    for status in STATUSES:
+        print(f"  {status:10} {report.count(status)}")
+    if report.missing_locators:
+        heading("Evidence that does not exist")
+        for line in report.missing_locators:
+            print(red(f"  {line}"))
+    print(dim("\n  contained: the governed harm did not occur through a governed interface in"))
+    print(dim("  tested fixtures, whatever the model intended. It is not a probability."))
+    emit(payload, args.output)
+    return 0 if report.holds else 1
 
 
 # ---------------------------------------------------------------------------
@@ -1060,6 +1153,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="also run bounded verification, adversarial scenarios, and benign tasks",
     )
     profiles.set_defaults(func=cmd_profiles)
+
+    disclosure = add_output(sub.add_parser(
+        "disclosure",
+        help="what may a model read, and what may leave? containment, ablation, model check",
+    ))
+    disclosure.add_argument("profile", type=Path)
+    disclosure.set_defaults(func=cmd_disclosure)
+
+    threats = add_output(sub.add_parser(
+        "threats", help="alignment failures and AI threats: what contains each, what remains",
+    ))
+    threats.add_argument("--catalogue", type=Path, default=Path("threats/catalogue.yaml"))
+    threats.set_defaults(func=cmd_threats)
 
     return parser
 

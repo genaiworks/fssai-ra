@@ -417,33 +417,33 @@ const SLIDES = [
   <p>That sentence is the whole argument. Everything that follows is about making it something you can <em>test</em> rather than something we assert.</p>`
 },
 {
-  eyebrow: ["The stake", "Start with a person, not a system"],
+  eyebrow: ["The stake", "One pattern across consequential domains"],
   time: "0:40",
   html: `
-    <h2>A student’s support application is refused. She asks why.</h2>
+    <h2>Different sectors. The same unanswered questions.</h2>
     <div class="body">
-      <p class="lead">Somewhere in the process, an agent read her file, interpreted the eligibility guidance, drafted a recommendation, and called an administrative tool.</p>
+      <p class="lead">A company releases confidential data. A hospital permits secondary use of a record. A university corrects a transcript. A public body changes access to support.</p>
       <div class="cols">
         <div class="body">
-          <h3>Three questions she is entitled to ask</h3>
+          <h3>Every affected person or institution must be able to ask</h3>
           <div class="entries">
-            <div class="entry"><span class="k">who</span><p>Which person decided this, and were they allowed to?</p></div>
-            <div class="entry"><span class="k">what</span><p>What did they see when they decided?</p></div>
-            <div class="entry"><span class="k">how</span><p>How do I contest it?</p></div>
+            <div class="entry"><span class="k">who</span><p>Who or what acted, and under whose authority?</p></div>
+            <div class="entry"><span class="k">what</span><p>Which data, policy, model, and version shaped the action?</p></div>
+            <div class="entry"><span class="k">then</span><p>What happened, and how can it be challenged or reversed?</p></div>
           </div>
         </div>
         <div class="body">
           <div class="callout refuse">
-            <p><strong>In most agentic systems shipping today, there is no answer to any of the three.</strong> Not because anyone intended that — because nothing was built to produce one.</p>
+            <p><strong>A safe model cannot answer these questions for an unsafe system.</strong> The evidence and authority must exist outside the model.</p>
           </div>
-          <p class="faint">A sentence inside an uploaded document could have redirected that workflow. So could an ordinary mistake, with no attacker anywhere. From where she stands, the two are indistinguishable: an outcome, and no way in.</p>
+          <p class="faint">A hidden instruction, stale policy, over-broad grant, rushed review, retry race, or ordinary mistake can all produce the same external fact: a consequential action with no reliable path back.</p>
         </div>
       </div>
     </div>
-    <div class="foot"><span>Education is where agentic AI reaches people soonest — and where a wrong decision arrives as an unexplained one.</span></div>`,
-  notes: `Do not start with architecture. Start with her. Say the first line, then wait — this is the only slide where silence does real work.
-  <p>The three questions are the moral core of the whole talk: <em>who decided, what did they see, how do I contest it.</em> Everything technical afterwards exists to make those three answerable.</p>
-  <p>The last line matters most: to the person affected, a malicious injection and an honest mistake produce exactly the same experience. A control that only handles the attacker is half a control.</p>`
+    <div class="foot"><span>The domain changes. The need to bound data, authority, execution, evidence, and recovery does not.</span></div>`,
+  notes: `Name all four domains and then slow down for the questions.
+  <p>This establishes the paper's unit of analysis: the complete system that moves data and exercises institutional power. Education remains one application, not the limit of the pattern.</p>
+  <p>The questions are the moral and engineering core of the talk. Everything technical afterwards exists to make them answerable.</p>`
 },
 {
   eyebrow: ["Framing", "The move this talk makes"],
@@ -944,8 +944,8 @@ const SLIDES = [
       <p class="lead">The same authority kernel now runs four independently reported packs: student support, academic-record correction, corporate-confidential data, and healthcare-record access. Each declares its own purpose, data classes, lifecycle rules, prohibited uses, owners, workflow, and evidence.</p>
       <div class="figures">
         <div class="fig"><span class="k">Domain packs</span><b>4</b><span class="note">education, corporate, healthcare</span></div>
-        <div class="fig"><span class="k">Model check</span><b>31,360</b><span class="note">bounded configurations, 0 violations</span></div>
-        <div class="fig"><span class="k">Behaviour</span><b>120/120</b><span class="note">hostile contained, 36/36 benign</span></div>
+        <div class="fig"><span class="k">Model check</span><b>33,600</b><span class="note">bounded configurations, 0 violations</span></div>
+        <div class="fig"><span class="k">Behaviour</span><b>120/120</b><span class="note">hostile contained, 37/37 benign</span></div>
       </div>
       <div class="callout">
         <p><strong>The first transfer still failed—and the defect was real.</strong> The academic pack exposed an approval role silently ignored on a routine transition because enforcement was built only from <em>consequential</em> rules. A mandatory field was visible in review and absent at runtime.</p>
@@ -1025,27 +1025,27 @@ const SLIDES = [
   eyebrow: ["Who this is for", "Named, with the evidence status attached"],
   time: "9:40",
   html: `
-    <h2>Back to her.</h2>
+    <h2>Who can use this pattern?</h2>
     <div class="body">
       <div class="cols wide-left">
         <div class="entries">
-          <div class="entry"><span class="k">the applicant</span><p>A consequential decision about her cannot happen without a named person authorizing <em>that exact change</em> — and the record of it cannot be quietly edited by whoever runs the system. <span class="faint">Demonstrated.</span></p></div>
-          <div class="entry"><span class="k">the caseworker</span><p>Assistance that drafts and assembles and <em>cannot decide</em>. What they approve is what happens; a network failure never executes it twice. <span class="faint">Demonstrated.</span></p></div>
+          <div class="entry"><span class="k">affected people</span><p>A consequential action becomes traceable to an exact authority, evidence version, and route to challenge. <span class="faint">Mechanism demonstrated.</span></p></div>
+          <div class="entry"><span class="k">professionals</span><p>AI can draft and assemble while an independent boundary controls the protected action and uncertain outcomes enter recovery. <span class="faint">Mechanism demonstrated.</span></p></div>
           <div class="entry"><span class="k">the institution</span><p>A capability-by-capability basis for what to automate, and the ability to replace a vendor without losing the argument that it is safe. <span class="faint">Demonstrated.</span></p></div>
-          <div class="entry"><span class="k">institutions with no cloud budget</span><p>Every claim here verifiable offline, on a laptop, in under two seconds. They can <em>audit us</em> rather than trust us. <span class="faint">Demonstrated.</span></p></div>
+          <div class="entry"><span class="k">resource-limited teams</span><p>The checks run offline on a laptop. A team can inspect and extend the evidence without sharing its sensitive data. <span class="faint">Demonstrated.</span></p></div>
         </div>
         <div class="body">
           <div class="callout ok">
-            <p><strong>Her three questions become answerable.</strong> Who decided, what they saw, and how to contest it stop being matters of institutional goodwill and become properties of the system.</p>
+            <p><strong>The common questions become answerable.</strong> Authority, evidence, outcome, and redress become system properties rather than matters of goodwill.</p>
           </div>
           <p class="faint">Every line on the left is labelled. Time saved, reviewer accuracy, appeal quality, cost and fairness are <strong>not</strong> on this slide, because they are not measured — they are in <code>docs/IMPACT.md</code> marked as hypotheses, with the experiment each would need.</p>
         </div>
       </div>
     </div>
     <div class="foot"><span>A perfectly governed agent enforcing an unjust policy produces well-documented injustice, faster. This makes harm attributable. It does not make a rule fair.</span></div>`,
-  notes: `The slide that connects the engineering back to the person from slide 2. Do not rush it and do not embellish it — the labels are doing the persuading.
+  notes: `This slide connects the engineering to the four domains from slide 2. Do not rush it; the evidence labels are doing the persuading.
   <p>Say the footer line out loud. It is the most important sentence in the deck for a UN audience, because it is the limit an advocate would otherwise raise for you: governance is not justice. Owning it is what makes the rest credible.</p>
-  <p>If time is short, cut everything except the applicant row and the footer.</p>`
+  <p>If time is short, keep the affected-people row, the institution row, and the footer.</p>`
 },
 {
   eyebrow: ["Theme", "Both directions"],

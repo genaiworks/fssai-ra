@@ -166,7 +166,7 @@ about a *mechanism* rather than about people. Nothing here measures a human.
 
 | Public claim | Enforcement or mechanism | Executable evidence | Limit |
 |---|---|---|---|
-| One authority kernel is reusable across different secure-data workflows | Four independently reported packs: student support, academic-record correction, corporate-confidential data, and healthcare-record access; 31,360 total bounded configurations, 120/120 hostile scenarios contained, 36/36 benign tasks completed, zero unauthorized mutations | `tests/test_domain_packs.py`; `fssaira profiles --verify`; `evaluation/results/v1.0.0-domain-pack-matrix.json` | All packs and fixtures were authored here. They demonstrate reuse of the authority mechanism, not sector compliance, privacy, fairness, clinical safety, or production readiness |
+| One authority kernel is reusable across different secure-data workflows | Four independently reported packs: student support, academic-record correction, corporate-confidential data, and healthcare-record access; 33,600 total bounded configurations, 120/120 hostile scenarios contained, 37/37 benign tasks completed, zero unauthorized mutations | `tests/test_domain_packs.py`; `fssaira profiles --verify`; `evaluation/results/v1.0.0-domain-pack-matrix.json` | All packs and fixtures were authored here. They demonstrate reuse of the authority mechanism, not sector compliance, privacy, fairness, clinical safety, or production readiness |
 | The original transfer test remains independently reproducible | `academic_record_correction` added through the documented extension path; 4,800 configurations, 0 violations, 30/30 contained, 9/9 benign, 26 conformance checks, **no library change** | `tests/test_generalization.py` | One cross-profile transfer is not universal generalization; each domain still requires its own evidence |
 | Neither domain borrows the other's evidence | Separate reports, separate result files, separate denominators; asserted rather than assumed | `test_the_second_domain_carries_its_own_evidence_and_borrows_none` | Equal scores on both domains are a coincidence of these fixtures, not a property |
 | A second domain finds what one domain cannot | The first run failed: a declared `approval_role` on a non-consequential transition was silently unenforced, because the enforcement map was built only from consequential rules | `test_a_declared_role_is_enforced_on_every_transition` (regression); `test_the_offline_packet_checker_agrees_with_the_executor_on_routine_steps` | One defect is an anecdote. It is reported because it is evidence *against* single-domain results, including ours |
@@ -227,6 +227,22 @@ requirement *had* that field and never that the test *existed*.
 | The measurement itself is audited | The corpus's first run exposed that harm counted by tool name missed records leaving through a non-egress tool; the counter now detects harm by effect | `test_harm_is_counted_by_effect_not_only_by_tool_name`; `test_correcting_the_harm_counter_did_not_move_the_published_figures` | The published comparison figures were unchanged and are now pinned, so a future correction cannot move them quietly |
 
 ---
+
+### Does governance cover what a model reads?
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| A model cannot see data outside a holder-bound, purpose-bound, current grant | Disclosure gate holds the record-store credential and intersects grant, request, live consent, and endpoint zone before release | `tests/test_disclosure.py::test_disclosure_bounded_model_check_holds`; `fssaira disclosure` | Synthetic records and an in-process gate; the reference HTTP API does not yet route context assembly through the gate |
+| A model cannot lower the label of its own output | Session-taint labels computed by the gate; claimed labels recorded and ignored; declassification needs an exact-output approval from an independent declared role | `test_model_claimed_label_cannot_launder_a_summary`; `test_declassification_requires_exact_independent_approval` | Paraphrased or inferred content is governed only through session labels; redaction is not de-identification |
+| Conventional access control is not enough | The same hostile flows run against unguarded, access-controlled, and governed gates | `test_conventional_access_control_leaves_harms_this_architecture_contains`; `evaluation/results/v1.0.0-governed-disclosure.json` | The conventional arm is this project's model of a careful design, not a measurement of any product |
+| Every disclosure check is load-bearing | Each of thirteen checks is removed in turn | `test_every_disclosure_check_is_load_bearing` | Load-bearing against the declared flows only |
+| The disclosure log is not a second copy of the data | Evidence holds field names, codes, and digests; no intent, no release | `test_evidence_never_contains_protected_values`; `test_intent_evidence_failure_releases_nothing` | Metadata such as subject identifiers can itself be sensitive |
+
+### Does the safety case depend on the model being aligned?
+
+| Public claim | Enforcement or mechanism | Executable evidence | Limit |
+|---|---|---|---|
+| Each catalogued alignment, security, data, and systemic failure names its control and evidence, or says what remains | `threats/catalogue.yaml` checked by `fssaira.threats`; contained and bounded entries must cite evidence that exists; residual entries are required | `tests/test_threats.py`; `fssaira threats`; `evaluation/results/v1.0.0-threat-catalogue.json` | Contained means the governed harm did not occur through a governed interface in tested fixtures. It is not a probability, and it says nothing about harm within granted authority, evaluation-aware models, covert channels, re-identification, or compromised administrators |
 
 ## What is not evidenced
 

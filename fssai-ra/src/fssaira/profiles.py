@@ -61,6 +61,10 @@ class ApplicationProfile:
     manual_fallback: str
     transitions: tuple[TransitionRule, ...]
     governance: GovernanceContext | None = None
+    #: Optional information-flow policy (``fssaira.disclosure.DisclosurePolicy``).
+    #: Governs what may be read into a model context and released afterwards,
+    #: the half of a secure-data system that no state transition ever sees.
+    disclosure: Any = None
 
     @property
     def allowed_operations(self) -> set[str]:
@@ -169,6 +173,23 @@ class ApplicationProfile:
             rules.append(TransitionRule(**{key: item[key] for key in (*fields, "consequential")}))
 
         governance = _governance_context(raw.get("governance"))
+        disclosure = None
+        if raw.get("disclosure") is not None:
+            if governance is None:
+                raise ProfileError(
+                    "a disclosure section requires a governance context; data classes "
+                    "must be declared before a flow policy can reference them"
+                )
+            from .disclosure import DisclosurePolicy, DisclosurePolicyError
+
+            try:
+                disclosure = DisclosurePolicy.from_dict(
+                    raw["disclosure"],
+                    data_classes=governance.data_classes,
+                    approval_roles={rule.approval_role for rule in rules},
+                )
+            except DisclosurePolicyError as exc:
+                raise ProfileError(str(exc)) from exc
 
         return cls(
             profile_id=str(raw["profile_id"]),
@@ -179,6 +200,7 @@ class ApplicationProfile:
             manual_fallback=str(raw["manual_fallback"]),
             transitions=tuple(rules),
             governance=governance,
+            disclosure=disclosure,
         )
 
 
@@ -299,6 +321,7 @@ def discover_profiles(directory: str | Path) -> list[dict]:
             "transitions": len(profile.transitions),
             "consequential_transitions": sum(rule.consequential for rule in profile.transitions),
             "approval_roles": sorted({rule.approval_role for rule in profile.transitions}),
+            "disclosure": profile.disclosure.summary() if profile.disclosure else None,
             "path": str(path),
         })
     if not summaries:

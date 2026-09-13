@@ -331,6 +331,9 @@ def create_app(
             "governance": (
                 asdict(plane.profile.governance) if plane.profile.governance else None
             ),
+            "disclosure": (
+                plane.profile.disclosure.summary() if plane.profile.disclosure else None
+            ),
         }
 
     @app.get("/v1/contract", tags=["governance"])

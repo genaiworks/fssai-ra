@@ -216,3 +216,33 @@ bindings:
   - requirements: [AR-3]
     mechanism: unit_test
     locator: tests/test_assisted_review.py::test_independence_moves_the_ceiling_rather_than_removing_it
+
+  # -- governed disclosure -----------------------------------------------
+  - requirements: [GD-1, GD-2, GD-3, GD-4, GD-5, GD-6, GD-7]
+    mechanism: model_check
+    locator: tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+    note: reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant
+  - requirements: [GD-1, GD-2, GD-3, GD-4, GD-5, GD-6]
+    mechanism: ablation
+    locator: tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing
+  - requirements: [GD-1, GD-3, GD-4]
+    mechanism: scenario
+    locator: tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains
+  - requirements: [GD-2]
+    mechanism: unit_test
+    locator: tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read
+  - requirements: [GD-4]
+    mechanism: unit_test
+    locator: tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary
+  - requirements: [GD-5]
+    mechanism: unit_test
+    locator: tests/test_disclosure.py::test_declassification_requires_exact_independent_approval
+  - requirements: [GD-6]
+    mechanism: unit_test
+    locator: tests/test_disclosure.py::test_break_glass_opens_review_obligation_and_blocks_repeat
+  - requirements: [GD-7]
+    mechanism: unit_test
+    locator: tests/test_disclosure.py::test_evidence_never_contains_protected_values
+  - requirements: [GD-7]
+    mechanism: unit_test
+    locator: tests/test_disclosure.py::test_intent_evidence_failure_releases_nothing

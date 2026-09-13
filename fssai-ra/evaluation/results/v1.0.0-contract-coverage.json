@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
   "kind": "contract-coverage",
-  "generated_at": "2026-09-13T11:27:35.413238+00:00",
+  "generated_at": "2026-09-13T12:31:08.553813+00:00",
   "totals": {
-    "requirements": 37,
-    "machine_verified": 34,
+    "requirements": 44,
+    "machine_verified": 41,
     "organizationally_attested": 3,
     "unverified": 0,
-    "machine_verified_fraction": 0.9189
+    "machine_verified_fraction": 0.9318
   },
   "unverified_requirements": [],
   "bindings_naming_unknown_requirements": [],
@@ -624,6 +624,187 @@
           "requirement_id": "AR-3",
           "mechanism": "unit_test",
           "locator": "tests/test_assisted_review.py::test_independence_moves_the_ceiling_rather_than_removing_it",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "GD-1",
+      "domain": "governed_disclosure",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "GD-1",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_disclosure_bounded_model_check_holds",
+          "note": "reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant"
+        },
+        {
+          "requirement_id": "GD-1",
+          "mechanism": "ablation",
+          "locator": "tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-1",
+          "mechanism": "scenario",
+          "locator": "tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "GD-2",
+      "domain": "governed_disclosure",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "GD-2",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_disclosure_bounded_model_check_holds",
+          "note": "reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant"
+        },
+        {
+          "requirement_id": "GD-2",
+          "mechanism": "ablation",
+          "locator": "tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-2",
+          "mechanism": "unit_test",
+          "locator": "tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "GD-3",
+      "domain": "governed_disclosure",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "GD-3",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_disclosure_bounded_model_check_holds",
+          "note": "reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant"
+        },
+        {
+          "requirement_id": "GD-3",
+          "mechanism": "ablation",
+          "locator": "tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-3",
+          "mechanism": "scenario",
+          "locator": "tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "GD-4",
+      "domain": "governed_disclosure",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "GD-4",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_disclosure_bounded_model_check_holds",
+          "note": "reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant"
+        },
+        {
+          "requirement_id": "GD-4",
+          "mechanism": "ablation",
+          "locator": "tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-4",
+          "mechanism": "scenario",
+          "locator": "tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-4",
+          "mechanism": "unit_test",
+          "locator": "tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "GD-5",
+      "domain": "governed_disclosure",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "GD-5",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_disclosure_bounded_model_check_holds",
+          "note": "reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant"
+        },
+        {
+          "requirement_id": "GD-5",
+          "mechanism": "ablation",
+          "locator": "tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-5",
+          "mechanism": "unit_test",
+          "locator": "tests/test_disclosure.py::test_declassification_requires_exact_independent_approval",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "GD-6",
+      "domain": "governed_disclosure",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "GD-6",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_disclosure_bounded_model_check_holds",
+          "note": "reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant"
+        },
+        {
+          "requirement_id": "GD-6",
+          "mechanism": "ablation",
+          "locator": "tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-6",
+          "mechanism": "unit_test",
+          "locator": "tests/test_disclosure.py::test_break_glass_opens_review_obligation_and_blocks_repeat",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "requirement_id": "GD-7",
+      "domain": "governed_disclosure",
+      "status": "machine_verified",
+      "bindings": [
+        {
+          "requirement_id": "GD-7",
+          "mechanism": "model_check",
+          "locator": "tests/test_disclosure.py::test_disclosure_bounded_model_check_holds",
+          "note": "reads enumerated over grant defect, purpose, subject, field, clearance, consent, endpoint, break-glass, and evidence state; releases over claimed label, recipient, purpose, and declassification variant"
+        },
+        {
+          "requirement_id": "GD-7",
+          "mechanism": "unit_test",
+          "locator": "tests/test_disclosure.py::test_evidence_never_contains_protected_values",
+          "note": ""
+        },
+        {
+          "requirement_id": "GD-7",
+          "mechanism": "unit_test",
+          "locator": "tests/test_disclosure.py::test_intent_evidence_failure_releases_nothing",
           "note": ""
         }
       ]

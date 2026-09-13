@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-13T11:27:35.503159+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-13T12:31:08.642236+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -18,22 +18,25 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Attacks contained — this architecture | `100%` | 0 harmful actions, at no cost to benign completion |
 | Conformance checks | `26` | passed on 2 independent backend profiles |
 | Concurrent replay race | `1 mutation from 32 callers` | 31 replay responses, 1 distinct receipt; bounded to one process |
-| Control-contract requirements | `37` | 7 fields each |
+| Control-contract requirements | `44` | 7 fields each |
 | Delegation — chains contained | `10/10` | unguarded arm contained 0; per-hop validation contained 2; the benign two-hop chain completes |
 | Delegation — invariants load-bearing | `9/9` | each removed in turn; every removal restored its harm |
 | Delegation — states explored | `768` | 5 invariants, 0 violations, over the declared chain space |
 | Assisted review — merit failures | `5 → 1` | dependent then independent review assistant, identical lowered floor; every runtime mechanism passed in both |
 | Assisted review — benign completed | `7 → 35` | unaided then assisted: assistance is worth 5.0x in completed legitimate work, which is why institutions will buy it |
-| Contract coverage — machine-verified | `34/37` | 3 organizationally attested, 0 unverified; every requirement bound to a check that is itself checked to exist |
-| Deterministic tests | `601` | no network, no model weights |
+| Contract coverage — machine-verified | `41/44` | 3 organizationally attested, 0 unverified; every requirement bound to a check that is itself checked to exist |
+| Deterministic tests | `648` | no network, no model weights |
 | Oversight — sustainable review | `2,640/day` | for a roster of 11, bound by the policy quota; declared capacity, not a measurement of reviewers |
 | Oversight — merit failures executed | `4 → 0` | without load control, then with it, on a queue at 5.0x declared attentive capacity |
 | Oversight — sensitivity sweep | `16/20` | cells where the control was load-bearing out of those where harm was possible; harm reached zero in 16; 4 did not bind (no deliberation floor configured); 5 had no harm to contain |
 | Oversight — false-positive cost | `0` | deferrals across the whole sweep where there was no harm to contain; an attentive reviewer is not throttled by the shipped policy |
 | Oversight — smallest floor that fully contains | `5s` | across every swept cell where harm was possible; the number an institution needs to set its own policy |
 | Oversight — deferred to manual review | `32` | the cost of the control, and a measurement of demand against declared capacity |
-| Domain packs — independently verified | `4` | 31,360 total bounded states; education, corporate confidential data, and healthcare record access; synthetic fixtures, not sector-compliance evidence |
-| Domain packs — containment and utility | `120/120, 36/36` | separate denominators per pack; 0 unauthorized mutations |
+| Domain packs — independently verified | `4` | 33,600 total bounded states; education, corporate confidential data, and healthcare record access; synthetic fixtures, not sector-compliance evidence |
+| Domain packs — containment and utility | `120/120, 37/37` | separate denominators per pack; 0 unauthorized mutations |
+| Governed disclosure — flows contained | `44/44` | across 2 packs; conventional access control contained 16, unguarded retrieval 0; 5/5 legitimate flows completed |
+| Governed disclosure — checks load-bearing and states explored | `13/13, 6,900` | 0 violations; synthetic records, and redaction is not de-identification |
+| Threat and alignment catalogue | `17 contained, 10 bounded, 5 residual` | of 32 failure classes, 12 of them alignment failures; every evidence locator is checked to exist; containment is a fixture observation, not a probability |
 | Second domain — states explored | `4,800` | 0 violations; the identical suite, no library change |
 | Second domain — containment and utility | `30/30, 9/9` | its own evidence, borrowed from no other domain; 26 conformance checks |
 | Second domain — defects it exposed | `1` | a declared approval role ignored on non-consequential transitions; unreachable with one domain |
@@ -49,7 +52,7 @@ Each row has its own denominator. These synthetic checks demonstrate reuse of th
 | `student-support` | education-support | 240 | 30/30 | 6/6 | 0 |
 | `academic-record-correction` | education-records | 4,800 | 30/30 | 9/9 | 0 |
 | `corporate-confidential-data` | corporate-data | 8,400 | 30/30 | 10/10 | 0 |
-| `healthcare-record-access` | healthcare-data | 17,920 | 30/30 | 11/11 | 0 |
+| `healthcare-record-access` | healthcare-data | 20,160 | 30/30 | 12/12 | 0 |
 
 ## Verdicts
 

@@ -29,7 +29,7 @@ cd fssai-ra && source .venv/bin/activate
 |---|---|---|---|
 | 0 | `make reviewer` | **All of the below, in one command** | every check, regenerated rather than typed |
 | 1 | `python scripts/demo.py --fast` | Whether the system does what the paper says | Six acts: quarantine, denial, execution, refusal, tamper detection, comparison |
-| 2 | `pytest` | Whether the code works at all | `601 passed` in a few seconds |
+| 2 | `pytest` | Whether the code works at all | `648 passed` in a few seconds |
 | 3 | `fssaira verify profiles/student_support.yaml` | Whether the authority invariants hold across the whole declared space | 240 states, 5 invariants, **0 violations** |
 | 4 | `fssaira evaluate profiles/student_support.yaml` | Containment **and** its cost | 30/30 contained, 0 unauthorized mutations, false-denial rate **0.0** |
 | 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 26/26, conformant |
@@ -39,11 +39,13 @@ cd fssai-ra && source .venv/bin/activate
 | 9 | `fssaira race-test profiles/student_support.yaml` | Whether simultaneous retries duplicate the action | 32 callers, **1 mutation**, **1 receipt** |
 | 10 | `fssaira oversight profiles/student_support.yaml --sweep` | Whether "a human approved it" survives the queue, across 25 parameter combinations | 11 reviewers sustain 2,640/day; 4 → **0** merit failures; the control never increases harm in any cell |
 | 11 | `fssaira verify profiles/academic_record_correction.yaml` | Whether the method works on a domain it was not designed for | 4,800 states, **0 violations**, no library change |
-| 12 | `fssaira profiles --verify` | Whether one kernel runs across education, corporate-confidential, and healthcare-record workflows | 4 packs; 31,360 states; 120/120 hostile contained; 36/36 benign completed; **0 unauthorized mutations** |
+| 12 | `fssaira profiles --verify` | Whether one kernel runs across education, corporate-confidential, and healthcare-record workflows | 4 packs; 33,600 states; 120/120 hostile contained; 37/37 benign completed; **0 unauthorized mutations** |
 | 13 | `fssaira challenge` | Whether the adversary is ever someone other than us | 7/7 live entries contained; **externally contributed: 0**, printed |
-| 14 | `fssaira coverage` | Whether each contract requirement is *enforced* or only written down | 34 machine-verified, 3 attested, **0 unverified** — it was 18 unverified when this check was written |
+| 14 | `fssaira coverage` | Whether each contract requirement is *enforced* or only written down | 41 machine-verified, 3 attested, **0 unverified** — it was 18 unverified when this check was written |
 | 15 | `fssaira assisted-review` | What a review assistant does to claim 10 | **5 → 1** merit failures, dependent vs independent, at the same lowered floor; no runtime signal separates them |
 | 16 | `fssaira delegation` | Whether authority survives being passed to another agent | 10/10 chains contained where per-hop validation contains 2/10; 768 states, **0 violations** |
+| 17 | `fssaira disclosure profiles/healthcare_record_access.yaml` | Whether a model can see only what it is entitled to, and never launder it | 23/23 hostile flows contained for this pack; conventional access control leaks some; 13/13 checks load-bearing; **0 violations** |
+| 18 | `fssaira threats` | Whether each alignment and security claim has evidence that exists | 32 failure classes: 17 contained, 10 bounded, 5 residual; **0 missing locators** |
 
 If any of these disagrees with the paper, **the paper is wrong** and we would like
 to know. That is the point of building alignment as a test.

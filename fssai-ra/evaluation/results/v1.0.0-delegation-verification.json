@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "delegation-verification",
-  "generated_at": "2026-09-13T11:27:35.372540+00:00",
+  "generated_at": "2026-09-13T12:31:08.069614+00:00",
   "states_explored": 768,
   "admitted": 12,
   "invariants": [

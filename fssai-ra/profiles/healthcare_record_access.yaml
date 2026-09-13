@@ -16,7 +16,7 @@ governance:
   domain: healthcare-data
   purpose: Govern purpose-bound access, research disclosure, revocation, and emergency-access review for synthetic health records.
   deployment_profile: teaching
-  data_classes: [synthetic-health-record, highly-restricted, research-sensitive]
+  data_classes: [synthetic-health-record, highly-restricted, research-sensitive, de-identified]
   applicable_frameworks:
     - Applicable health-information privacy and security obligations
     - Applicable research ethics, consent, and institutional review requirements
@@ -36,6 +36,58 @@ governance:
     data: health_information_management
     privacy: healthcare_privacy_officer
     security: healthcare_information_security_officer
+# What may be read into a model context, where, for whom, and what may leave.
+# Enforced by fssaira.disclosure.DisclosureGate; verified by `fssaira disclosure`.
+disclosure:
+  subject_kind: patient
+  purposes: [treatment, research, emergency-treatment, patient-access]
+  fields:
+    patient_name: {class: synthetic-health-record}
+    date_of_birth: {class: synthetic-health-record}
+    medications: {class: synthetic-health-record}
+    allergies: {class: synthetic-health-record}
+    diagnosis: {class: highly-restricted}
+    mental_health_notes: {class: highly-restricted}
+    genomic_markers: {class: research-sensitive}
+  model_endpoints:
+    on_premises_model: on-premises
+    approved_cloud_model: approved-cloud
+    public_model_api: external
+  class_zones:
+    synthetic-health-record: [on-premises, approved-cloud]
+    highly-restricted: [on-premises]
+    research-sensitive: [on-premises]
+    de-identified: [on-premises, approved-cloud]
+  recipients:
+    treating_clinician:
+      classes: [synthetic-health-record, highly-restricted]
+      purposes: [treatment, emergency-treatment]
+      zone: on-premises
+    patient_portal:
+      classes: [synthetic-health-record, highly-restricted]
+      purposes: [patient-access]
+      zone: on-premises
+      subject_scope: self
+    research_team:
+      classes: [de-identified]
+      purposes: [research]
+      zone: approved-cloud
+    external_email:
+      classes: []
+      purposes: []
+      zone: external
+  declassification:
+    - name: deidentify_for_research
+      from_classes: [synthetic-health-record, highly-restricted, research-sensitive]
+      to_class: de-identified
+      purposes: [research]
+      approval_role: research_review_authority
+      removes_subject_identity: true
+  break_glass:
+    purposes: [emergency-treatment]
+    max_ttl_seconds: 3600
+    max_unreviewed_per_holder: 1
+    review_role: emergency_access_reviewer
 transitions:
   - operation: verify_request_identity
     from_status: draft
@@ -72,6 +124,15 @@ transitions:
     to_status: access_revoked
     consequential: true
     approval_role: healthcare_privacy_officer
+
+  # Earlier releases declared the review of emergency access but no way to
+  # enter it: emergency_access_pending_review was unreachable, so break-glass
+  # review existed in the pack and could never happen at runtime.
+  - operation: declare_break_glass_access
+    from_status: identity_verified
+    to_status: emergency_access_pending_review
+    consequential: false
+    approval_role: emergency_access_clinician
 
   - operation: record_break_glass_review
     from_status: emergency_access_pending_review

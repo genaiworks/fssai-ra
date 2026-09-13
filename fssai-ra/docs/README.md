@@ -14,6 +14,12 @@ Its central rule is:
 > **A model may propose an action. It cannot manufacture the authority to
 > execute it.**
 
+Its second rule governs the read path, where most harm in systems over
+corporate and medical data occurs:
+
+> **A model may request information. It cannot manufacture the entitlement to
+> see it, and it cannot launder what it saw.**
+
 The repository turns that rule into three connected layers:
 
 | Layer | Question for a policy leader | Question for an AI engineer | What the repository supplies |
@@ -35,9 +41,13 @@ Everyone should take the same opening route before specialising:
    trace one decision, and learn the repository vocabulary.
 2. **Understand the pattern:** [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) —
    learn the seven planes, invariants, governed lifecycle, and cross-sector gates.
-3. **See it:** [`DEMO.md`](DEMO.md) — understand the six-act demonstration and
+3. **Learn the design language:** [`PATTERNS.md`](PATTERNS.md) — two
+   constitutional rules, seven laws, a pattern catalogue, anti-patterns,
+   blueprints for corporate, clinical, agentic, and research systems, and a
+   maturity scale.
+4. **See it:** [`DEMO.md`](DEMO.md) — understand the six-act demonstration and
    the observation each act supports.
-4. **Choose your role:** continue through one of the routes below. Return to the
+5. **Choose your role:** continue through one of the routes below. Return to the
    [glossary](GLOSSARY.md) whenever policy and engineering terms stop matching.
 
 ## Policy leader route
@@ -77,21 +87,24 @@ component.
    planes and twelve invariants before selecting implementation components.
 3. [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — see how the same security kernel is
    applied to education, corporate-confidential, and healthcare data.
+   Then read [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) — the read-path
+   rule: purpose-bound grants, a context gate, session labels, exact-output
+   declassification, live consent, residency, and bounded break-glass.
 4. [`PLATFORM.md`](PLATFORM.md) — map the teaching implementation to FastAPI,
    PostgreSQL/Redis, Kafka, Spark, Iceberg, object storage, and local models.
-4. [`SECURITY.md`](SECURITY.md) — understand trusted components, attacker
+5. [`SECURITY.md`](SECURITY.md) — understand trusted components, attacker
    capabilities, egress, identity, keys, and administrative limits.
-5. [`DIODE_DEPLOYMENT.md`](DIODE_DEPLOYMENT.md) — locate the one-way seam and
+6. [`DIODE_DEPLOYMENT.md`](DIODE_DEPLOYMENT.md) — locate the one-way seam and
    distinguish a software interface from certified hardware isolation.
-6. [`RESILIENCE.md`](RESILIENCE.md) — study request identity, process races,
+7. [`RESILIENCE.md`](RESILIENCE.md) — study request identity, process races,
    crash points, replay, and reconciliation.
-7. [`OPERATIONS.md`](OPERATIONS.md) — connect failure states to operational
+8. [`OPERATIONS.md`](OPERATIONS.md) — connect failure states to operational
    ownership and recovery procedures.
-8. [`EXTENDING.md`](EXTENDING.md) — add a new domain or adapter without inheriting
+9. [`EXTENDING.md`](EXTENDING.md) — add a new domain or adapter without inheriting
    evidence the new deployment has not generated.
-9. [`ASSURANCE.md`](ASSURANCE.md) — verify that each engineering mechanism is
+10. [`ASSURANCE.md`](ASSURANCE.md) — verify that each engineering mechanism is
    attached to a bounded public claim.
-10. [`openapi.json`](openapi.json) — inspect the generated HTTP contract after the
+11. [`openapi.json`](openapi.json) — inspect the generated HTTP contract after the
    conceptual and security model are clear.
 
 **Engineering outcome:** you should be able to trace grant → check → state
@@ -157,6 +170,7 @@ current Word abstract is [`extended-abstract.docx`](extended-abstract.docx).
 | Check implementation | `make test` | deterministic engineering tests |
 | Check public claims | `make reviewer` | evaluation, verification, transfer, oversight, delegation, assisted review, resilience, and result-drift checks |
 | Inspect deployment honesty | `fssaira doctor` | active defaults and readiness blockers; not certification |
+| Check the read path | `fssaira disclosure profiles/healthcare_record_access.yaml` | what a model may see and what may leave, against three architectures |
 | Extend a domain | `fssaira init my_domain --output PATH` | new structure with intentionally empty assurance |
 
 Always activate the virtual environment first. On macOS, the initial interpreter
@@ -169,6 +183,8 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`README.md`](README.md) — this map.
 - [`START_HERE.md`](START_HERE.md) — self-directed repository walkthrough.
 - [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — seven-plane cross-sector pattern, invariants, lifecycle, adoption sequence, and policy and engineering gates.
+- [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.
+- [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) — the second constitutional rule: what a model may read and what may leave.
 - [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — reusable corporate, healthcare, and education domain packs.
 - [`GLOSSARY.md`](GLOSSARY.md) — policy and engineering vocabulary in one table.
 - [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) — education framework and rubric.

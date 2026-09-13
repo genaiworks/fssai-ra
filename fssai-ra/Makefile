@@ -2,7 +2,7 @@ PYTHON ?= python3
 
 .PHONY: help install test lint results figures demo check api gateway console dev-env \
         stack-up stack-down verify evaluate conformance doctor openapi clean \
-        reviewer oversight challenge second-domain domain-packs lab
+        reviewer oversight challenge second-domain domain-packs disclosure threats lab
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -34,6 +34,13 @@ second-domain:  ## The identical suite against a domain it was not designed for
 	$(PYTHON) -m fssaira.cli evaluate profiles/academic_record_correction.yaml
 	$(PYTHON) -m fssaira.cli conformance --profile profiles/academic_record_correction.yaml
 
+threats:  ## Alignment failures and AI threats: contained, bounded, residual, with evidence checked to exist
+	$(PYTHON) -m fssaira.cli threats
+
+disclosure:  ## What may a model read and release? Every pack that declares a disclosure policy
+	$(PYTHON) -m fssaira.cli disclosure profiles/healthcare_record_access.yaml
+	$(PYTHON) -m fssaira.cli disclosure profiles/corporate_confidential_data.yaml
+
 domain-packs:  ## Validate and verify every reusable education, corporate, and healthcare pack
 	$(PYTHON) -m fssaira.cli profiles --verify
 
@@ -57,6 +64,10 @@ reviewer:  ## Everything a reviewer should check, in one command
 	@$(MAKE) second-domain PYTHON="$(PYTHON)"
 	@echo "── 7/14  every reusable domain pack, independently reported ──────"
 	@$(MAKE) domain-packs PYTHON="$(PYTHON)"
+	@echo "── 7b/14  the read path: governed disclosure ─────────────────────"
+	@$(MAKE) disclosure PYTHON="$(PYTHON)"
+	@echo "── 7c/14  does the safety case depend on alignment? ──────────────"
+	@$(MAKE) threats PYTHON="$(PYTHON)"
 	@echo "── 8/14  portable conformance on memory and SQL backends ─────────"
 	@$(MAKE) conformance PYTHON="$(PYTHON)"
 	@echo "── 9/14  how much oversight can actually be supplied ─────────────"

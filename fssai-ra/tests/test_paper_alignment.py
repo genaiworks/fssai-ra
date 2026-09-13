@@ -88,6 +88,19 @@ CLAIMS = [
     ("delegation arms", "contains {delegation_contained_caller_checked} of "
      "{delegation_hostile_chains} risk classes where verifying the chain contains "
      "{delegation_contained_this_architecture}"),
+    # Added with governed disclosure and the threat catalogue: the second rule
+    # and the claim that the safety case does not rest on alignment.
+    ("disclosure containment", "**{disclosure_contained} of {disclosure_hostile_total} "
+     "hostile data flows were contained**"),
+    ("disclosure conventional arm", "**contained {disclosure_contained_access_controlled}**"),
+    ("disclosure ablation", "**All {disclosure_checks_load_bearing} checks were load-bearing**"),
+    ("disclosure model check", "**{disclosure_states_explored_display} read and release "
+     "configurations showed zero violations**"),
+    ("disclosure utility", "{disclosure_benign_completed} of {disclosure_benign_total} "
+     "legitimate flows completed"),
+    ("threat catalogue", "A catalogue of {threats_total} failure classes"),
+    ("threat statuses", "**{threats_contained} contained, {threats_bounded} bounded, and "
+     "{threats_residual} residual**"),
 ]
 
 
@@ -487,6 +500,14 @@ SUBMITTED_CLAIMS = [
      "{domain_pack_states_explored_display} bounded configurations, contains "
      "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios, "
      "completes {domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks"),
+    ("disclosure containment", "{disclosure_contained} of {disclosure_hostile_total} hostile "
+     "data flows"),
+    ("disclosure conventional arm", "contained {disclosure_contained_access_controlled}"),
+    ("disclosure model check", "{disclosure_states_explored_display} configurations showed "
+     "zero violations"),
+    ("threat catalogue", "{threats_total} failure classes"),
+    ("threat statuses", "{threats_contained} are contained, {threats_bounded} bounded, and "
+     "{threats_residual} residual"),
 ]
 
 

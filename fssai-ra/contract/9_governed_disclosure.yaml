@@ -1,0 +1,68 @@
+# Domain 9 — governed disclosure.
+#
+# Domains 1-8 govern what an AI system may do. This one governs what it may
+# see and what may leave, which is where most harm in a corporate copilot or a
+# clinical-record assistant actually occurs: nothing is executed, something is
+# read, summarised, and sent. None of that is a state transition, so none of it
+# reaches the exact-action executor.
+#
+# The rule mirrors the first: a model may request information; it cannot
+# manufacture the entitlement to see it, and it cannot launder what it saw.
+domain: governed_disclosure
+requirements:
+  - id: GD-1
+    protected_asset: Protected records and fields that could enter a model context
+    permitted_operation: Release only the subjects and fields a trusted, holder-bound, unexpired, unrevoked grant names, for the grant's declared purpose and cleared data classes
+    enforcement_point: Disclosure gate that holds the record-store credential, verifies the grant signature and holder, and intersects the request with the grant before any value is read into a context
+    owner: Data Protection Officer
+    test: Request another subject than the grant names; add a field beyond the grant; switch purpose on a valid grant; present another agent's grant, a self-issued grant, an expired or revoked grant, and a grant whose fields were widened after signing; confirm each releases nothing
+    evidence_artifact: Disclosure intent and outcome records naming requester, grant, purpose, subjects, fields, endpoint, denial code, and a digest of released values
+    failure_response: Release nothing, record the denial, and route the requester to the staffed access-request process
+  - id: GD-2
+    protected_asset: A data subject's current choice about how their data is used
+    permitted_operation: Consent withdrawal and grant revocation take effect at the next read, not at the next grant renewal
+    enforcement_point: Disclosure gate consults the live consent register and revocation list on every read rather than trusting state captured when the grant was issued
+    owner: Privacy Office
+    test: Issue a grant, read successfully, withdraw consent for that subject and purpose, and confirm the next read with the unchanged grant is refused; repeat with revocation
+    evidence_artifact: Consent-withdrawn and grant-revoked records, followed by the refused disclosure outcome carrying its code
+    failure_response: Refuse the read, preserve both records, and notify the data owner that an active workflow depended on withdrawn consent
+  - id: GD-3
+    protected_asset: The location where sensitive data is processed by a model
+    permitted_operation: A model endpoint receives only classes its declared processing zone may handle
+    enforcement_point: Disclosure gate resolves the endpoint to a declared zone and refuses any class whose declared zones exclude it; an undeclared endpoint has no zone and receives nothing
+    owner: Chief Information Security Officer
+    test: Send restricted fields to an endpoint in an external zone and to an undeclared endpoint; confirm both are refused while an on-premises endpoint succeeds
+    evidence_artifact: Disclosure outcome naming the endpoint, zone, and the blocked classes
+    failure_response: Refuse the read and treat an undeclared model endpoint as an unreviewed data-transfer path
+  - id: GD-4
+    protected_asset: Derived outputs such as summaries, drafts, and answers built from protected data
+    permitted_operation: An output carries the join of every label released into its session and reaches only recipients whose clearance, purpose, zone, and subject scope dominate that label
+    enforcement_point: Gate labels each output from session state, ignores and records the model's claimed label, and checks the recipient against the gate-held label at release
+    owner: Data Protection Officer
+    test: Have a model claim an unrestricted label for a summary of restricted data and release it to an uncleared recipient; alter a label on an issued output; release an honest output to an external recipient; confirm all are refused
+    evidence_artifact: Output-labelled record with the claimed label and downgrade flag, and release intent and outcome records
+    failure_response: Withhold the output, record the attempted downgrade, and route release through the declassification or manual disclosure process
+  - id: GD-5
+    protected_asset: The authority to lower the sensitivity of an output
+    permitted_operation: A label is lowered only by a declared declassification rule, approved for that exact output digest by a person holding the declared role who is not the output's holder
+    enforcement_point: Gate verifies the declassification approval's signature, output digest, rule, role, expiry, and approver independence, and applies the transform itself
+    owner: Research Review Authority
+    test: Declassify without approval, with the holder's own approval, with the wrong role, and with an approval issued for a different output; confirm refusal, then confirm a valid approval removes released values and subject identifiers
+    evidence_artifact: Declassification intent and outcome records naming the rule, approver, and new label
+    failure_response: Keep the original label and route the request to the named declassification authority
+  - id: GD-6
+    protected_asset: Emergency access that bypasses prior approval
+    permitted_operation: Break-glass access is permitted only for declared emergency purposes, with a justification and bounded duration, opens a review obligation, and is refused while the holder's earlier emergency access remains unreviewed beyond the declared limit
+    enforcement_point: Gate checks the break-glass rule on every emergency grant and maintains the open review obligations; the review transition is enforced by the profile executor
+    owner: Health Information Management
+    test: Use break-glass for a non-emergency purpose, for longer than the maximum, and repeatedly without review; confirm refusal; confirm that the holder cannot review their own access and that an independent review restores access
+    evidence_artifact: Break-glass review-due and break-glass reviewed records naming holder, reviewer, role, and finding
+    failure_response: Refuse further emergency access for that holder, notify the emergency-access reviewer, and keep clinical service on the staffed manual route
+  - id: GD-7
+    protected_asset: The disclosure log itself
+    permitted_operation: Evidence records identify what was disclosed without reproducing protected values, and no read proceeds when its intent cannot be recorded
+    enforcement_point: Gate writes digests, field names, and codes rather than values, and writes intent before any check so that an unavailable evidence store refuses the read
+    owner: Audit and Assurance
+    test: Run every scenario against one ledger and search it for every protected value; make the ledger unavailable and confirm nothing is released
+    evidence_artifact: Hash-chained disclosure ledger that verifies and contains no protected values
+    failure_response: Refuse disclosure until evidence is available and treat any value found in the log as a data incident

@@ -355,7 +355,7 @@ making coverage look perfect by declaring every inconvenient control unprovable.
 
 ### Results
 
-Current figures: **34 machine-verified, 3 attested, 0 unverified**, across 37
+Current figures: **41 machine-verified, 3 attested, 0 unverified**, across 44
 requirements in eight domains. Every figure is regenerated rather than typed.
 
 The three attested requirements are the interface inventory review (`IB-3`), log

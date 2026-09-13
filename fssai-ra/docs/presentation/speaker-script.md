@@ -38,9 +38,9 @@ is solved has not yet considered what happens when the loop's human is reading a
 model's summary. Cut the architecture
 before you cut them.
 
-The arc is deliberate. It opens on a person who cannot find out why a decision
-was made about her, spends the middle earning the right to be believed, and
-returns to her before the close. If you find yourself running long, cut from the
+The arc is deliberate. It opens on four consequential domains that expose the
+same unanswered questions, spends the middle earning the right to be believed,
+and returns to the people and institutions affected before the close. If you find yourself running long, cut from the
 middle — never from either end.
 
 ---
@@ -50,7 +50,7 @@ middle — never from either end.
 | Time | Slide | The one thing this slide has to do |
 |---|---|---|
 | 0:00 | 1 · The rule | Say the sentence. Then stop for a beat. |
-| 0:40 | 2 · The stake | Put **her** in the room. Three questions she is entitled to ask. |
+| 0:40 | 2 · The stake | Name all four domains, then ask the common authority, evidence, and redress questions. |
 | 1:25 | 3 · Sovereignty | Reframe sovereignty as capabilities, not location. |
 | 2:00 | 4 · Architecture | The only diagram. Point at three things, then stop. |
 | 2:40 | 5 · The contract | Show a filled-in contract, never an empty template. |
@@ -70,7 +70,7 @@ middle — never from either end.
 | 11:20 | 19 · The corpus | The invitation. Say the ask: contribute one attack. |
 | 11:55 | 20 · Evidence | Numbers with denominators. |
 | 12:30 | 21 · Limits | **Never cut this.** |
-| 13:05 | 22 · Who this is for | **Never cut this.** Return to her. |
+| 13:05 | 22 · Who this is for | **Never cut this.** Connect the pattern to affected people, professionals, and institutions. |
 | 13:40 | 23 · Both directions | Earn the panel slot on the conference theme. |
 | 14:10 | 24 · The ask | Something the room can do — hand them the worksheet. |
 | 14:40 | 25 · Close | The rule, then the stake. Then stop. |

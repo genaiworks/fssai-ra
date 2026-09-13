@@ -123,6 +123,23 @@ def generate(output_dir: Path, tag: str) -> dict:
     # also has a model.
     assisted = run_assisted_review_trial(profile)
 
+    # Governed disclosure: the read path. Every pack that declares a disclosure
+    # policy gets the same generated suite, ablation, and bounded model check.
+    from fssaira.disclosure_eval import run_disclosure_suite
+    from fssaira.threats import check_catalogue
+
+    threat_report = check_catalogue(ROOT / "threats" / "catalogue.yaml", ROOT)
+
+    disclosure_reports = []
+    for pack_path in sorted((ROOT / "profiles").glob("*.yaml")):
+        if pack_path.name == "template.yaml":
+            continue
+        pack = ApplicationProfile.load(pack_path)
+        if pack.disclosure is not None:
+            disclosure_reports.append(
+                run_disclosure_suite(pack.disclosure, profile_id=pack.profile_id).to_dict()
+            )
+
     # The contract's own coverage: is each requirement enforced, or written down?
     coverage = measure_coverage(str(ROOT / "contract"))
 
@@ -176,6 +193,11 @@ def generate(output_dir: Path, tag: str) -> dict:
         json.dumps(assisted, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-contract-coverage.json").write_text(
         json.dumps(coverage.to_dict(), indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-threat-catalogue.json").write_text(
+        json.dumps(threat_report.to_dict(), indent=2) + "\n", encoding="utf-8")
+    (output_dir / f"{tag}-governed-disclosure.json").write_text(
+        json.dumps({"schema_version": "1.0", "kind": "governed-disclosure-matrix",
+                    "profiles": disclosure_reports}, indent=2) + "\n", encoding="utf-8")
 
     payload = evaluation.to_dict()
     summary = {
@@ -353,6 +375,36 @@ def generate(output_dir: Path, tag: str) -> dict:
             "corpus_contained_arm_a": corpus["contained_by_arm"]["A · unguarded"],
             "corpus_contained_arm_c": corpus["contained_by_arm"]["C · FSSAI-RA"],
             "corpus_externally_contributed": len(corpus["externally_contributed"]),
+            # governed disclosure: the read path, across packs that declare it
+            "disclosure_packs": len(disclosure_reports),
+            "disclosure_hostile_total": sum(
+                r["summary"]["hostile_scenarios"] for r in disclosure_reports),
+            "disclosure_contained": sum(
+                r["summary"]["contained_by_arm"]["this_architecture"] for r in disclosure_reports),
+            "disclosure_contained_access_controlled": sum(
+                r["summary"]["contained_by_arm"]["access_controlled"] for r in disclosure_reports),
+            "disclosure_contained_unguarded": sum(
+                r["summary"]["contained_by_arm"]["unguarded"] for r in disclosure_reports),
+            "disclosure_benign_completed": sum(
+                r["summary"]["benign_completed"] for r in disclosure_reports),
+            "disclosure_benign_total": sum(
+                r["summary"]["benign_total"] for r in disclosure_reports),
+            "disclosure_checks_load_bearing": min(
+                (r["summary"]["checks_load_bearing"] for r in disclosure_reports), default=0),
+            "disclosure_checks_ablated": max(
+                (r["summary"]["checks_ablated"] for r in disclosure_reports), default=0),
+            "disclosure_states_explored": sum(
+                r["verification"]["summary"]["states_explored"] for r in disclosure_reports),
+            "threats_total": len(threat_report.threats),
+            "threats_contained": threat_report.count("contained"),
+            "threats_bounded": threat_report.count("bounded"),
+            "threats_residual": threat_report.count("residual"),
+            "threats_alignment_total": sum(
+                1 for t in threat_report.threats if t.family == "alignment"),
+            "threats_alignment_contained": threat_report.count("contained", "alignment"),
+            "disclosure_states_explored_display": f"{sum(r['verification']['summary']['states_explored'] for r in disclosure_reports):,}",
+            "disclosure_violations": sum(
+                r["verification"]["summary"]["violations"] for r in disclosure_reports),
             # timings, so a reader knows the cost of reproducing this
             "evaluation_seconds": round(evaluation_seconds, 2),
             "verification_seconds": round(verification_seconds, 2),
@@ -399,6 +451,9 @@ def generate(output_dir: Path, tag: str) -> dict:
             "dependent_assistance_reintroduces_harm": assisted["summary"][
                 "dependent_assistance_reintroduced_harm"],
             "every_contract_requirement_is_bound_or_attested": coverage.holds,
+            "every_threat_catalogue_locator_resolves": threat_report.holds,
+            "governed_disclosure_holds_in_every_declaring_pack": bool(disclosure_reports) and all(
+                r["summary"]["holds"] for r in disclosure_reports),
         },
         "limits": [
             (
@@ -587,6 +642,24 @@ def render_markdown(summary: dict) -> str:
          f"{figures['domain_pack_benign_total']}",
          f"separate denominators per pack; {figures['domain_pack_unauthorized_mutations']} "
          "unauthorized mutations"),
+        ("Governed disclosure — flows contained",
+         f"{figures['disclosure_contained']}/{figures['disclosure_hostile_total']}",
+         f"across {figures['disclosure_packs']} packs; conventional access control contained "
+         f"{figures['disclosure_contained_access_controlled']}, unguarded retrieval "
+         f"{figures['disclosure_contained_unguarded']}; "
+         f"{figures['disclosure_benign_completed']}/{figures['disclosure_benign_total']} "
+         "legitimate flows completed"),
+        ("Governed disclosure — checks load-bearing and states explored",
+         f"{figures['disclosure_checks_load_bearing']}/{figures['disclosure_checks_ablated']}, "
+         f"{figures['disclosure_states_explored']:,}",
+         f"{figures['disclosure_violations']} violations; synthetic records, and redaction is "
+         "not de-identification"),
+        ("Threat and alignment catalogue",
+         f"{figures['threats_contained']} contained, {figures['threats_bounded']} bounded, "
+         f"{figures['threats_residual']} residual",
+         f"of {figures['threats_total']} failure classes, {figures['threats_alignment_total']} of "
+         "them alignment failures; every evidence locator is checked to exist; containment is "
+         "a fixture observation, not a probability"),
         ("Second domain — states explored",
          f"{figures['second_domain_states_explored']:,}",
          f"{figures['second_domain_violations']} violations; the identical suite, no library change"),

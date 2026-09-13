@@ -16,7 +16,7 @@ governance:
   domain: corporate-data
   purpose: Govern classification, approved internal use, external release, revocation, and legal hold for sensitive corporate datasets.
   deployment_profile: teaching
-  data_classes: [internal, confidential, restricted, trade-secret]
+  data_classes: [internal, confidential, restricted, trade-secret, approved-aggregate]
   applicable_frameworks:
     - Organization-specific information classification and acceptable-use policy
     - Applicable privacy, contractual, records-retention, and breach-notification obligations
@@ -35,6 +35,53 @@ governance:
     data: enterprise_data_governance
     privacy: data_protection_officer
     security: chief_information_security_officer
+# What may be read into a model context, where, for whom, and what may leave.
+# Enforced by fssaira.disclosure.DisclosureGate; verified by `fssaira disclosure`.
+disclosure:
+  subject_kind: customer-account
+  purposes: [internal-analysis, external-release, legal-review]
+  fields:
+    account_name: {class: internal}
+    headcount_by_team: {class: internal}
+    revenue_forecast: {class: confidential}
+    pipeline_value: {class: confidential}
+    contract_terms: {class: restricted}
+    customer_contacts: {class: restricted}
+    product_roadmap: {class: trade-secret}
+  model_endpoints:
+    private_model: corporate-private
+    contracted_vendor_model: vendor-contracted
+    public_model_api: external
+  class_zones:
+    internal: [corporate-private, vendor-contracted]
+    confidential: [corporate-private, vendor-contracted]
+    restricted: [corporate-private]
+    trade-secret: [corporate-private]
+    approved-aggregate: [corporate-private, vendor-contracted, external]
+  recipients:
+    finance_analyst:
+      classes: [internal, confidential]
+      purposes: [internal-analysis]
+      zone: corporate-private
+    legal_counsel:
+      classes: [internal, confidential, restricted, trade-secret]
+      purposes: [legal-review]
+      zone: corporate-private
+    external_partner:
+      classes: [approved-aggregate]
+      purposes: [external-release]
+      zone: external
+    personal_email:
+      classes: []
+      purposes: []
+      zone: external
+  declassification:
+    - name: aggregate_for_external_release
+      from_classes: [internal, confidential]
+      to_class: approved-aggregate
+      purposes: [external-release]
+      approval_role: data_protection_officer
+      removes_subject_identity: true
 transitions:
   - operation: classify_dataset
     from_status: draft

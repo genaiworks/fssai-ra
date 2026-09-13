@@ -175,8 +175,8 @@ file asserting its own correctness.
 **One kernel, four independently reported domain packs.**
 The framework now exercises student support, academic-record correction,
 corporate-confidential data, and healthcare-record access through the same
-verifier and evaluator: 31,360 bounded configurations, 120/120 hostile scenarios
-contained, 36/36 benign tasks completed, and zero unauthorized mutations. These
+verifier and evaluator: 33,600 bounded configurations, 120/120 hostile scenarios
+contained, 37/37 benign tasks completed, and zero unauthorized mutations. These
 are synthetic executable specifications, not evidence of sector compliance,
 privacy, fairness, clinical safety, or production readiness.
 
@@ -225,7 +225,7 @@ And on current source, three questions `v1.0.0` could not answer at all:
 |---|---|---|
 | **Oversight capacity** | How much review can this institution actually supply? | 11 reviewers sustain 2,640 actions/day; 4 → 0 merit failures under load |
 | **A second domain** | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
-| **Cross-sector domain packs** | Does one kernel support distinct governed-data workflows? | 4 packs; 31,360 states; 120/120 hostile contained; 36/36 benign; 0 unauthorized mutations |
+| **Cross-sector domain packs** | Does one kernel support distinct governed-data workflows? | 4 packs; 33,600 states; 120/120 hostile contained; 37/37 benign; 0 unauthorized mutations |
 | **Open adversary corpus** | Is the adversary ever someone other than the author? | 10 entries across 3 arms; 0 contributed externally, and we say so |
 
 Plus: **single-transaction execution** on PostgreSQL, which removes — rather than
