@@ -17,8 +17,8 @@ Kafka, PySpark, Apache Iceberg, S3-compatible storage, a local model through
 Ollama, and a React operator console. A low-side gateway and a working
 unidirectional transport model the seam a certified one-way data diode occupies.
 
-**Companion paper:** *From Model Literacy to System Literacy: A Cross-Sector
-Authority Kernel for Agentic AI* — extended abstract in
+**Companion paper:** *Trust by Construction: A Cross-Sector Reference
+Architecture for Governed Agentic AI* — extended abstract in
 [`paper/extended-abstract.md`](paper/extended-abstract.md), prepared for the
 **UNU Macau AI Conference 2026** (*AI × Education: AI for Learning, Learning for
 AI*) and its UNU–Springer proceedings.
@@ -69,8 +69,9 @@ reproduce the observations on a disconnected laptop.
 
 ## One kernel, multiple governed-data domains
 
-[`docs/DOMAIN_PACKS.md`](docs/DOMAIN_PACKS.md) explains the generalization
-model. Each pack combines an executable state-transition allowlist with purpose,
+[`docs/REFERENCE_ARCHITECTURE.md`](docs/REFERENCE_ARCHITECTURE.md) defines the
+seven-plane cross-sector design pattern. [`docs/DOMAIN_PACKS.md`](docs/DOMAIN_PACKS.md)
+explains its generalization model. Each pack combines an executable state-transition allowlist with purpose,
 data classifications, prohibited uses, applicable obligations, separate
 data/privacy/security owners, and a manual fallback. `fssaira profiles` validates
 and inventories the shipped packs.
@@ -404,8 +405,8 @@ UN Global Digital Compact.
 
 ## Citation
 
-> R. Srivastava, *From Model Literacy to System Literacy: A Cross-Sector Authority
-> Kernel for Agentic AI* (UNU Macau AI Conference 2026). Reference implementation:
+> R. Srivastava, *Trust by Construction: A Cross-Sector Reference Architecture
+> for Governed Agentic AI* (UNU Macau AI Conference 2026). Reference implementation:
 > this repository, release `v1.0.0`.
 
 Machine-readable metadata in [`CITATION.cff`](CITATION.cff).

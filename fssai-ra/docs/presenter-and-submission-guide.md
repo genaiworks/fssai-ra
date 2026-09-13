@@ -6,9 +6,9 @@
 
 ## Recommended positioning
 
-**Paper title:** From Model Literacy to System Literacy: A Cross-Sector Authority Kernel for Agentic AI
+**Paper title:** Trust by Construction: A Cross-Sector Reference Architecture for Governed Agentic AI
 
-**Spoken title:** From Model Literacy to System Literacy
+**Spoken title:** Trust by Construction
 
 **One-sentence contribution:** We propose a way for institutions to specify, test, and teach the boundaries of an AI agent's authority, using a student-support workflow and a reproducible open testbed.
 

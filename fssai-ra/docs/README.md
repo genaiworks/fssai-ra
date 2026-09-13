@@ -33,9 +33,11 @@ Everyone should take the same opening route before specialising:
 
 1. **Orient:** [`START_HERE.md`](START_HERE.md) — install, run one workflow,
    trace one decision, and learn the repository vocabulary.
-2. **See it:** [`DEMO.md`](DEMO.md) — understand the six-act demonstration and
+2. **Understand the pattern:** [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) —
+   learn the seven planes, invariants, governed lifecycle, and cross-sector gates.
+3. **See it:** [`DEMO.md`](DEMO.md) — understand the six-act demonstration and
    the observation each act supports.
-3. **Choose your role:** continue through one of the routes below. Return to the
+4. **Choose your role:** continue through one of the routes below. Return to the
    [glossary](GLOSSARY.md) whenever policy and engineering terms stop matching.
 
 ## Policy leader route
@@ -71,9 +73,11 @@ component.
 
 1. [`START_HERE.md`](START_HERE.md) — follow the exact source-reading order from
    profile to decision packet.
-2. [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — see how the same security kernel is
+2. [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — map the seven
+   planes and twelve invariants before selecting implementation components.
+3. [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — see how the same security kernel is
    applied to education, corporate-confidential, and healthcare data.
-3. [`PLATFORM.md`](PLATFORM.md) — map the teaching implementation to FastAPI,
+4. [`PLATFORM.md`](PLATFORM.md) — map the teaching implementation to FastAPI,
    PostgreSQL/Redis, Kafka, Spark, Iceberg, object storage, and local models.
 4. [`SECURITY.md`](SECURITY.md) — understand trusted components, attacker
    capabilities, egress, identity, keys, and administrative limits.
@@ -164,6 +168,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 
 - [`README.md`](README.md) — this map.
 - [`START_HERE.md`](START_HERE.md) — self-directed repository walkthrough.
+- [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — seven-plane cross-sector pattern, invariants, lifecycle, adoption sequence, and policy and engineering gates.
 - [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — reusable corporate, healthcare, and education domain packs.
 - [`GLOSSARY.md`](GLOSSARY.md) — policy and engineering vocabulary in one table.
 - [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) — education framework and rubric.

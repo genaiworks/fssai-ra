@@ -15,8 +15,8 @@ in memory on a laptop, or as a reference deployment with
 FastAPI, PostgreSQL, Redis, Kafka, PySpark, Iceberg, object storage, a local
 model through Ollama, and a React operator console.
 
-The companion paper is *From Model Literacy to System Literacy: A Cross-Sector
-Authority Kernel for Agentic AI*, prepared for the **UNU Macau AI Conference
+The companion paper is *Trust by Construction: A Cross-Sector Reference
+Architecture for Governed Agentic AI*, prepared for the **UNU Macau AI Conference
 2026** — *AI × Education: AI for Learning, Learning for AI* — and its
 UNU–Springer proceedings.
 
@@ -50,6 +50,7 @@ reviewers, and adopters.
 - [Adoption playbook](fssai-ra/docs/ADOPTION.md) — a 30/60/90-day path
 - [Procurement questions](fssai-ra/docs/PROCUREMENT.md) — the seven fields as a supplier questionnaire, plus delegated authority and review-assistant independence
 - [Project overview and architecture](fssai-ra/README.md)
+- [Cross-sector reference architecture](fssai-ra/docs/REFERENCE_ARCHITECTURE.md) — seven planes, twelve invariants, lifecycle, adoption gates, and technology mapping
 - [Reusable domain packs](fssai-ra/docs/DOMAIN_PACKS.md) — education, corporate confidential data, and healthcare record access
 - [Extension guide](fssai-ra/docs/EXTENDING.md) · [Distributed platform](fssai-ra/docs/PLATFORM.md) · [Threat model](fssai-ra/docs/SECURITY.md)
 

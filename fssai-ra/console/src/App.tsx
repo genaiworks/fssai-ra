@@ -97,7 +97,7 @@ export function App() {
       </main>
 
       <footer className="bottom">
-        Apache-2.0 · Companion to <em>From Model Literacy to System Literacy: Teaching Trust
+        Apache-2.0 · Companion to <em>Trust by Construction: Teaching Trust
         by Construction for Agentic AI</em> · Results shown here are fixture observations in a declared
         environment, not a security certification.
       </footer>

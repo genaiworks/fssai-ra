@@ -275,12 +275,16 @@ def test_the_abstract_points_at_the_supplement(prose):
     )
 
 
-def test_the_abstract_opens_on_a_person(prose):
-    """A reviewer decides in the first 150 words, and an architecture is not a
-    reason to care. The opening must name someone the decision happens to."""
-    opening = prose[prose.index("## 1."):][:700]
-    assert "She asks why" in opening
-    assert "who decided this" in opening, "her three questions are the moral frame"
+def test_the_abstract_opens_on_a_cross_sector_system_problem(prose):
+    """The architecture must not collapse back into one education narrative.
+
+    A reviewer should encounter multiple consequential domains immediately and
+    understand that the governed object is the complete system, not its model.
+    """
+    opening = prose[prose.index("## 1."):][:1_200]
+    for phrase in ("company", "hospital", "university", "public body"):
+        assert phrase in opening, f"the opening no longer establishes the {phrase} domain"
+    assert "A safe model cannot answer those questions on behalf of an unsafe system" in opening
 
 
 def test_the_abstract_states_what_governance_does_not_fix(prose):
