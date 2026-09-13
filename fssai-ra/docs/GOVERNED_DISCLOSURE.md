@@ -264,6 +264,24 @@ A refusal returns `403` with the stable denial code. Configure
 or unset endpoint receives nothing. Set `FSSAI_DISCLOSURE_GRANT_KEY` and
 `FSSAI_DISCLOSURE_DECLASSIFICATION_KEY` outside teaching use.
 
+## Running it for real
+
+The teaching defaults are in-memory state, synthetic records, shared signing keys,
+and session labels. Each has a production replacement, and each fails closed.
+
+| Concern | Production configuration | What is tested |
+|---|---|---|
+| Durable, shared state | `FSSAI_DISCLOSURE_STORE=postgresql://...` or `sqlite:///path` | a restart forgets no revocation, consent withdrawal, session, output, or break-glass obligation; the store holds no protected values |
+| Real records | `FhirRecordSource` for FHIR R4, `SqlTableRecordSource` for an existing table | fields map to resources or columns; the source is read only after authorization; outages refuse |
+| Institutional grants | `FSSAI_DISCLOSURE_TOKEN_ISSUER`, `_AUDIENCE`, `_JWKS_URL`, and `POST /v1/disclosure/grants/token` | asymmetric keys only, strict claims, holder-only registration, and grant fields bound to the token |
+| Live consent | `FSSAI_DISCLOSURE_CONSENT_URL` for `HttpConsentService` | checked at every read and release; timeouts, errors, and malformed answers refuse |
+| Precision | `derive_from_values` with the value identifiers the orchestrator used | outputs built from less sensitive values reach recipients a session label would refuse; omitted sources over-label |
+| Concurrency | the transactional store with per-holder locking | threads and independent processes never commit a release after a revocation or exceed the break-glass limit |
+| Field evidence | `fssaira pilot-report` and [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) | indicators computed from evidence, with the outcomes they cannot measure listed |
+
+A refusal never reveals whether a subject exists: the record source is read only
+after every authorization check passes.
+
 ## Mapping to real systems
 
 The gate is an interface, not a product. A deployment keeps the checks and replaces
@@ -285,14 +303,18 @@ the mechanisms.
 
 - Redacting released values is not de-identification. Re-identification risk is
   not measured.
-- Session taint labels whole sessions. It over-restricts outputs that ignored most
-  of their context, and that utility cost is reported rather than hidden.
+- Value-level labels depend on a trusted orchestrator naming the values it used.
+  The gate recomputes the label, refuses values it did not issue, and falls back
+  to the session label when an unnamed value appears verbatim, but it cannot see a
+  value the model paraphrased. Session labels remain the default.
 - A model can paraphrase, encode, or infer values. Those are governed only because
   the whole session is labelled. Nothing here detects them in content.
 - Purposes, consent semantics, and recipient clearances are institutional
   declarations. They are not validated against any law.
 - All results come from synthetic records and an in-process gate. No real record
   system, model endpoint, or delivery channel is exercised.
-- The reference HTTP API holds grants in process memory and loads synthetic
-  records. It has not been qualified against a real record system, consent
-  service, or identity provider. That remains open in [`GAPS.md`](GAPS.md).
+- The durable store, record sources, consent service, and token grants are tested
+  against local fixtures. They have not been qualified against a named
+  institution's systems or a production database under load. That remains open in
+  [`GAPS.md`](GAPS.md), and [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) describes how
+  to close it.

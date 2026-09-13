@@ -127,8 +127,8 @@ def generate(output_dir: Path, tag: str) -> dict:
 
     # Governed disclosure: the read path. Every pack that declares a disclosure
     # policy gets the same generated suite, ablation, and bounded model check.
-    from fssaira.disclosure_eval import run_disclosure_suite
     from fssaira.disclosure_concurrency import run_process_race, run_thread_race
+    from fssaira.disclosure_eval import run_disclosure_suite
     from fssaira.thesis import run_thesis
     from fssaira.threats import check_catalogue
 

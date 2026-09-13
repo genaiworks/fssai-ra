@@ -192,6 +192,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`START_HERE.md`](START_HERE.md) — self-directed repository walkthrough.
 - [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — seven-plane cross-sector pattern, invariants, lifecycle, adoption sequence, and policy and engineering gates.
 - [`THESIS.md`](THESIS.md) — the Mediation Thesis: intelligence is untrusted; power and data are mediated. Three commitments, precise invariants, six falsifiers, predictions, and what an institution does next.
+- [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) — the study that closes the field-evidence gap: pre-conditions, evidence indicators, human-judged outcomes, and stop criteria.
 - [`SPECIFICATION.md`](SPECIFICATION.md) — normative requirements in six conformance classes, each tied to an executable test, attestation, or measurement.
 - [`RELATED_WORK.md`](RELATED_WORK.md) — foundations inherited, overlap with CaMeL, FIDES, agent design patterns, and AI control, and the contribution stated narrowly.
 - [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.

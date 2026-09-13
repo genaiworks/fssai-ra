@@ -128,9 +128,10 @@ What the current branch adds, each answering a question the release could not:
 | **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 41 machine-verified, 3 attested, 0 unverified** |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
 | **Cross-sector domain packs** | **Does one kernel work across distinct governed-data shapes?** | **6 packs across education, corporate, healthcare, finance, and government; 55,440 states; 180/180 hostile contained; 58/58 benign completed; 0 unauthorized mutations** |
-| **Governed disclosure** | **Can a model see only what it is entitled to, and never launder it?** | **98/98 hostile data flows contained where conventional access control contains 32; 14/14 checks load-bearing; 22,220 states, 0 violations; 32,000 random stateful operations agree with a reference model after fixing the defect they found** |
-| **The Mediation Thesis** | **Can anyone refute the foundation?** | **6 falsifiers, 102,933 bounded attempts, 0 counterexamples, after the first run caught 5 contract bindings that named nothing** |
-| **Threat and alignment catalogue** | **Does the safety case depend on the model being aligned?** | **33 failure classes: 18 contained, 10 bounded, 5 residual, each bound to evidence checked to exist** |
+| **Governed disclosure** | **Can a model see only what it is entitled to, and never launder it?** | **106/106 hostile data flows contained where conventional access control contains 32; 14/14 checks load-bearing; 24,272 states, 0 violations; 32,000 random stateful operations agree with a reference model after fixing the defect they found** |
+| **Production-ready disclosure state** | **Does it survive restarts, real systems, and concurrency?** | **transactional SQLite or PostgreSQL store; FHIR and SQL record sources; institutional token grants; live consent; value-level labels; 0 violations under thread and 4-process races** |
+| **The Mediation Thesis** | **Can anyone refute the foundation?** | **6 falsifiers, 104,997 bounded attempts, 0 counterexamples, after the first run caught 5 contract bindings that named nothing** |
+| **Threat and alignment catalogue** | **Does the safety case depend on the model being aligned?** | **36 failure classes: 21 contained, 10 bounded, 5 residual, each bound to evidence checked to exist** |
 | Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 
 Plus single-transaction execution on PostgreSQL, privilege invariance, real

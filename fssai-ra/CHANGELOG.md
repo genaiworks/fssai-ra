@@ -20,6 +20,21 @@
 - Domain packs may declare a validated `disclosure` section. The corporate and
   healthcare packs now do, and `/v1/profile` and `fssaira profiles --verify`
   report it. Contract domain 9 adds seven bound requirements, GD-1 to GD-7.
+- **Production gaps closed in software.** The disclosure gate now keeps its state
+  in a store: in memory for teaching, or a transactional SQLite or PostgreSQL store
+  where each decision is one transaction, restarts forget nothing, and the store
+  holds no protected values. Records come from pluggable sources, including FHIR
+  R4 and existing SQL tables, read only after authorization so refusals do not
+  reveal whether a subject exists. Grants can be issued by an institutional
+  authorization server and verified with its published asymmetric keys. Consent
+  can come from a live service, and every source, service, or store outage refuses.
+  Value-level labels let an orchestrator release outputs built from less sensitive
+  values, with verbatim fallback to the session label. Thread and multi-process
+  races show no release after revocation and no break-glass limit exceeded.
+  `fssaira pilot-report` computes field indicators from evidence, and
+  `docs/PILOT_PROTOCOL.md` defines the study that closes the field-evidence gap.
+  New precision recipients were added to the corporate, healthcare, financial, and
+  government packs.
 - **The Mediation Thesis.** Added `docs/THESIS.md`: intelligence is untrusted; power
   and data are mediated. Three commitments, precise invariants, predictions, an
   institutional action plan, and six falsifiers run by `fssaira thesis` and

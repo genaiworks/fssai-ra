@@ -29,7 +29,7 @@ cd fssai-ra && source .venv/bin/activate
 |---|---|---|---|
 | 0 | `make reviewer` | **All of the below, in one command** | every check, regenerated rather than typed |
 | 1 | `python scripts/demo.py --fast` | Whether the system does what the paper says | Six acts: quarantine, denial, execution, refusal, tamper detection, comparison |
-| 2 | `pytest` | Whether the code works at all | `699 passed` in a few seconds |
+| 2 | `pytest` | Whether the code works at all | `724 passed` in a few seconds |
 | 3 | `fssaira verify profiles/student_support.yaml` | Whether the authority invariants hold across the whole declared space | 240 states, 5 invariants, **0 violations** |
 | 4 | `fssaira evaluate profiles/student_support.yaml` | Containment **and** its cost | 30/30 contained, 0 unauthorized mutations, false-denial rate **0.0** |
 | 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 26/26, conformant |
@@ -44,9 +44,10 @@ cd fssai-ra && source .venv/bin/activate
 | 14 | `fssaira coverage` | Whether each contract requirement is *enforced* or only written down | 41 machine-verified, 3 attested, **0 unverified** — it was 18 unverified when this check was written |
 | 15 | `fssaira assisted-review` | What a review assistant does to claim 10 | **5 → 1** merit failures, dependent vs independent, at the same lowered floor; no runtime signal separates them |
 | 16 | `fssaira delegation` | Whether authority survives being passed to another agent | 10/10 chains contained where per-hop validation contains 2/10; 768 states, **0 violations** |
-| 17 | `fssaira disclosure profiles/healthcare_record_access.yaml` | Whether a model can see only what it is entitled to, and never launder it, across whole sessions | 25/25 hostile flows contained for this pack; 14/14 checks load-bearing; **0 violations**; 8,000 stateful operations agree with the reference model |
-| 18 | `fssaira threats` | Whether each alignment and security claim has evidence that exists | 33 failure classes: 18 contained, 10 bounded, 5 residual; **0 missing locators** |
-| 20 | `fssaira thesis` | Whether anyone can refute the foundation across every pack | 6 falsifiers, 102,933 attempts, **0 counterexamples** |
+| 17 | `fssaira disclosure profiles/healthcare_record_access.yaml` | Whether a model can see only what it is entitled to, and never launder it, across whole sessions | 27/27 hostile flows contained for this pack; 14/14 checks load-bearing; **0 violations**; 8,000 stateful operations agree with the reference model |
+| 18 | `fssaira threats` | Whether each alignment and security claim has evidence that exists | 36 failure classes: 21 contained, 10 bounded, 5 residual; **0 missing locators** |
+| 20 | `fssaira thesis` | Whether anyone can refute the foundation across every pack | 6 falsifiers, 104,997 attempts, **0 counterexamples** |
+| 21 | `pytest tests/test_disclosure_production.py tests/test_disclosure_tokens_and_concurrency.py` | Whether durable state, real record sources, token grants, live consent, value labels, and concurrency hold | restarts forget nothing; outages refuse; **0 violations** under thread and process races |
 | 19 | `pytest tests/test_specification.py` | Whether every requirement in the specification cites evidence that exists | every cited test resolves |
 
 If any of these disagrees with the paper, **the paper is wrong** and we would like

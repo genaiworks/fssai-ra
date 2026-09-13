@@ -202,3 +202,17 @@ portable framework.
 
 These links inform the reference configuration; they do not imply endorsement or
 certification by those projects.
+
+## Governed disclosure configuration
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `FSSAI_DISCLOSURE_STORE` | `memory`, `sqlite:///PATH`, or a `postgresql://` DSN for grants, revocations, consent, sessions, outputs, and emergency-access obligations | `memory` |
+| `FSSAI_MODEL_ENDPOINT` | the model endpoint name declared in the domain pack; undeclared endpoints receive nothing | unset |
+| `FSSAI_DISCLOSURE_TOKEN_ISSUER`, `FSSAI_DISCLOSURE_TOKEN_AUDIENCE`, `FSSAI_DISCLOSURE_TOKEN_JWKS_URL` | verify grants issued by the institutional authorization server | unset |
+| `FSSAI_DISCLOSURE_CONSENT_URL` | live consent service, checked at every read and release | store-held consent |
+| `FSSAI_DISCLOSURE_FHIR_URL`, `FSSAI_DISCLOSURE_FHIR_FIELDS` | FHIR R4 record source and its JSON field map | synthetic records loaded by an operator |
+| `FSSAI_DISCLOSURE_GRANT_KEY`, `FSSAI_DISCLOSURE_DECLASSIFICATION_KEY` | teaching HMAC keys, replaced by institutional tokens in production | teaching keys |
+
+See [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md#running-it-for-real) for what each is tested against.
+

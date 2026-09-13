@@ -60,8 +60,10 @@ and evidence.
 
 ## What prior work does better, today
 
-- CaMeL and FIDES track dependencies of individual values through agent plans. This
-  gate labels whole sessions, which is simpler, conservative, and less useful.
+- CaMeL and FIDES track dependencies of individual values automatically through
+  program execution. This gate labels whole sessions by default, and value by value
+  only when a trusted orchestrator names the values it used; the gate recomputes
+  those labels and over-labels when an unnamed value appears verbatim.
 - The AI control literature measures protocols against actively adversarial
   models. Nothing here evaluates a real model.
 - Standards bodies provide consensus, certification pathways, and organisational

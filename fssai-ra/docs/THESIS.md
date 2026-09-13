@@ -115,7 +115,7 @@ The foundation is only useful if it changes what a team does on Monday.
 | **This week** | Pick one consequential capability and one sensitive read. Name the mediator and the credential only it holds. | a filled [worksheet](worksheet/) and a trusted-base list |
 | **This month** | Write the seven-field contract and a domain pack with purposes, classes, zones, recipients, and fallback. Run `fssaira thesis` on it. | falsifier results with denominators, residuals stated |
 | **This quarter** | Place the mediators in front of a synthetic copy of the real system. Claim conformance by class. | a conformance claim against [`SPECIFICATION.md`](SPECIFICATION.md) with local evidence |
-| **Before production** | Independent assessment, field evidence, operational drills. | the evidence bundle in [`GAPS.md`](GAPS.md) and a go or no-go decision |
+| **Before production** | Configure durable state, institutional grants, live consent, and real record sources; run the pilot protocol; independent assessment and drills. | `fssaira pilot-report` indicators, the outcomes in [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md), and a go or no-go decision |
 
 ## What the field should build next
 

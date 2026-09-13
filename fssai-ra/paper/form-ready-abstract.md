@@ -47,9 +47,9 @@ Review capacity shows why human oversight is a system resource, not a slogan. Wi
 
 Across six synthetic packs, the identical kernel covers 55,440 bounded configurations, contains 180 of 180 hostile scenarios, completes 58 of 58 benign tasks, and records zero unauthorised mutations. This demonstrates reuse, not sector compliance or safety. The academic pack retains the transfer baseline: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. Its first run exposed a role declared in the pack but ignored at runtime.
 
-Reads were tested the same way. Across corporate, health, finance, and government packs, 98 of 98 hostile data flows were contained, including wrong-patient injections, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control contained 32. All 14 checks were load-bearing, and 22,220 configurations showed zero violations. Stateful testing, 32,000 random operations against an independent model, found that release skipped the consent recheck; fixed, it agrees everywhere.
+Reads were tested the same way. Across corporate, health, finance, and government packs, 106 of 106 hostile data flows were contained, including wrong-patient injections, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control contained 32. All 14 checks were load-bearing, and 24,272 configurations showed zero violations. Stateful testing, 32,000 random operations against an independent model, found that release skipped the consent recheck; fixed, it agrees everywhere.
 
-The design assumes the model may be misaligned. Of 33 failure classes, from specification gaming and deceptive risk reports to oversight flooding and compromised signers, 18 are contained, 10 bounded, and 5 residual. Six falsifiers made 102,933 bounded attempts to refute the thesis and found no counterexample.
+The design assumes the model may be misaligned. Of 36 failure classes, from specification gaming and deceptive risk reports to oversight flooding and compromised signers, 21 are contained, 10 bounded, and 5 residual. Six falsifiers made 104,997 bounded attempts to refute the thesis and found no counterexample.
 
 An open adversary corpus scores YAML attacks without records or code and reports external contributions; today that number is zero.
 
