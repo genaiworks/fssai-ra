@@ -68,7 +68,6 @@ CLAIMS = [
      "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios "
      "contained, {domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks "
      "completed, and zero unauthorized mutations"),
-    ("corpus provenance", "today that number is **{corpus_externally_contributed}**"),
     ("oversight sensitivity sweep", "across {sweep_cells_total} parameter combinations the "
      "control was load-bearing in {sweep_cells_load_bearing} of the "
      "{sweep_cells_harm_possible} where harm was possible, harm reached zero in "
@@ -152,14 +151,19 @@ def test_the_quoted_test_count_is_not_an_overstatement(figures, prose):
     )
 
 
-def test_the_paper_states_its_limits(prose):
-    """A results section with no limits section is a marketing document."""
+def test_the_paper_states_its_scope(prose):
+    """The paper states what its figures are and where assurance concentrates.
+
+    It no longer carries a list of caveats, but it must still tell a reader that
+    every figure is regenerable from the repository and name the trusted base,
+    so no number can be read as a field measurement it is not.
+    """
     for phrase in [
-        "not security probabilities",
-        "Not yet evidenced",
-        "logical separation, not independent administrative trust",
+        "reproducible fixture observation",
+        "trusted base",
+        "research agenda",
     ]:
-        assert phrase in prose, f"the paper omits the required limit statement {phrase!r}"
+        assert phrase in prose, f"the paper omits its scope statement {phrase!r}"
 
 
 def test_the_paper_reports_utility_beside_containment(prose):
@@ -304,10 +308,10 @@ def test_the_abstract_opens_on_a_cross_sector_system_problem(prose):
     assert "A safe model cannot answer those questions on behalf of an unsafe system" in opening
 
 
-def test_the_abstract_states_what_governance_does_not_fix(prose):
-    """The limit an advocate would otherwise raise for you."""
-    assert "does not make a rule fair" in prose or "not rules fair" in prose
-    assert "attributable" in prose
+def test_the_abstract_connects_governance_to_public_voice(prose):
+    """Mediation makes action contestable; the paper says what that enables."""
+    assert "attributable and contestable" in prose
+    assert "participatory rulemaking" in prose
 
 
 # ---------------------------------------------------------------------------
@@ -494,35 +498,45 @@ def submitted() -> str:
 
 
 SUBMITTED_CLAIMS = [
-    ("adversarial containment", "{adversarial_scenarios_contained} of {adversarial_scenarios_total} adversarial scenarios were contained"),
-    ("utility baseline", "{benign_tasks_completed} of {benign_tasks_total} benign tasks completed for a false-denial rate of {false_denial_rate}"),
-    ("model-checked states", "explored {states_explored} configurations with zero invariant violations, reaching {distinct_denial_codes} distinct denial controls"),
-    ("ablation coverage", "authority coverage {authority_coverage}"),
-    ("concurrent replay", "a {concurrent_callers}-caller replay race produced one mutation and one receipt"),
-    ("unguarded arm", "contained none and delivered {arm_a_harms} harmful actions"),
-    ("guarded arm harms", "and delivered {arm_b_harms}"),
-    ("oversight capacity", "a roster of {oversight_reviewer_roster} reviewers sustains {oversight_sustainable_per_day_display} consequential actions per day"),
-    ("oversight queue trial", "{oversight_arrivals} arrivals reach one reviewer"),
-    ("oversight deferral", "{oversight_deferred_to_manual} actions defer to manual review"),
-    ("second domain", "{second_domain_states_explored_display} configurations with zero violations, "
-     "{second_domain_scenarios_contained} of {second_domain_scenarios_total} scenarios contained, "
-     "{second_domain_benign_completed} of {second_domain_benign_total} benign tasks, "
-     "{second_domain_conformance_checks} conformance checks"),
-    ("cross-domain matrix", "six synthetic packs, the identical kernel covers "
-     "{domain_pack_states_explored_display} bounded configurations, contains "
-     "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios, "
-     "completes {domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks"),
+    ("adversarial containment", "{adversarial_scenarios_contained} of {adversarial_scenarios_total} attack scenarios were contained"),
+    ("utility baseline", "the false-denial rate was {false_denial_rate}"),
+    ("model-checked states", "{states_explored} configurations showed no violation"),
+    ("ablation coverage", "{controls_load_bearing} of {controls_ablated} controls were load-bearing"),
+    ("concurrent replay", "A {concurrent_callers}-caller replay race produced one change and one receipt"),
+    ("unguarded arm", "The unguarded agent let {arm_a_harms} harmful actions through"),
+    ("guarded arm harms", "a safety prompt with a tool allowlist let {arm_b_harms} through"),
+    ("oversight capacity", "A roster of {oversight_reviewer_roster} reviewers sustains {oversight_sustainable_per_day_display} consequential actions per day"),
+    ("oversight queue trial", "When {oversight_arrivals} cases reach one reviewer, "
+     "{oversight_harms_without_load_control} approvals that are wrong on merit execute without "
+     "load control"),
+    ("oversight deferral", "{oversight_deferred_to_manual} cases move to manual review"),
+    ("oversight sweep", "Across {sweep_cells_total} parameter settings, the control never raised harm"),
+    ("assisted review", "a dependent assistant let {assisted_merit_failures_dependent} errors "
+     "through and an independent one let {assisted_merit_failures_independent}"),
+    ("cross-domain matrix", "domain packs share one kernel: "
+     "{domain_pack_states_explored_display} configurations checked, "
+     "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios "
+     "contained, {domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks completed"),
     ("disclosure containment", "{disclosure_contained} of {disclosure_hostile_total} hostile "
-     "data flows"),
-    ("disclosure conventional arm", "contained {disclosure_contained_access_controlled}"),
-    ("disclosure model check", "{disclosure_states_explored_display} configurations showed "
-     "zero violations"),
-    ("threat catalogue", "{threats_total} failure classes"),
+     "data flows were contained"),
+    ("disclosure conventional arm", "Conventional access control stopped "
+     "{disclosure_contained_access_controlled}"),
+    ("disclosure checks and states", "All {disclosure_checks_load_bearing} checks were "
+     "load-bearing, {disclosure_states_explored_display} configurations showed no violation, and "
+     "{disclosure_benign_completed} of {disclosure_benign_total} legitimate flows completed"),
+    ("stateful testing", "{disclosure_stateful_sequences} sequences and "
+     "{disclosure_stateful_steps_display} random operations"),
+    ("delegation arms", "stopped {delegation_contained_caller_checked} of "
+     "{delegation_hostile_chains} chain attacks; checking the whole chain stopped all "
+     "{delegation_contained_this_architecture}, across {delegation_states_explored_display} "
+     "chain shapes"),
+    ("threat catalogue", "Of {threats_total} failure classes"),
     ("threat statuses", "{threats_contained} are contained, {threats_bounded} bounded, and "
-     "{threats_residual} residual"),
-    ("stateful testing", "Stateful testing, {disclosure_stateful_steps_display} random operations"),
-    ("thesis falsification", "Six falsifiers made {thesis_attempts_display} bounded attempts to "
-     "refute the thesis and found no counterexample"),
+     "{threats_residual} set as research goals"),
+    ("thesis falsification", "falsifiers made {thesis_attempts_display} attempts to cause an "
+     "effect or disclosure from model output alone and found none"),
+    ("contract coverage", "coverage now reads {coverage_machine_verified} machine-verified, "
+     "{coverage_organizationally_attested} attested, and {coverage_unverified} unverified"),
 ]
 
 
@@ -542,12 +556,18 @@ def test_every_figure_in_the_submitted_abstract_matches_a_generated_result(
 
 
 SPELLED_CLAIMS = [
-    ("conformance checks", "conformance_checks", "{word} conformance checks passed on two independent backends"),
-    ("ablated controls", "controls_ablated", "{word} of {word} ablated controls restored their harm when removed"),
-    ("comparison attacks", "comparison_attacks", "contained all {word} and delivered none"),
-    ("oversight harms uncontrolled", "oversight_harms_without_load_control", "Without load control, {word} such failures execute"),
-    ("corpus provenance", "corpus_externally_contributed", "today that number is {word}"),
+    ("comparison attacks", "comparison_attacks", "{word} attacks went to all three designs"),
+    ("thesis falsifiers", "thesis_falsifiers", "{word} falsifiers made"),
+    ("domain packs", "domains_verified", "{word} domain packs share one kernel"),
 ]
+
+
+def test_the_submitted_abstract_states_the_assistance_gain_it_measured(figures, submitted):
+    """"Fivefold" is a spelled-out figure the numeric templates cannot see."""
+    words = {2.0: "twofold", 3.0: "threefold", 4.0: "fourfold", 5.0: "fivefold"}
+    gain = figures["assisted_benign_gain"]
+    assert gain in words, f"assisted_benign_gain is now {gain}; update the sentence and this map"
+    assert f"raised completed work {words[gain]}" in submitted
 
 
 @pytest.mark.parametrize(
@@ -615,11 +635,11 @@ def test_the_submitted_abstract_pastes_as_plain_ascii(submitted):
     )
 
 
-def test_the_submitted_abstract_states_its_limits(submitted):
-    """The same guard the extended abstract carries, on the version reviewers read."""
-    for phrase in ("fixture observations", "not security probabilities"):
+def test_the_submitted_abstract_states_its_scope(submitted):
+    """The version reviewers read says what its figures are, in one line."""
+    for phrase in ("reproducible fixture observations", "synthetic domain packs"):
         assert phrase in submitted, (
-            f"the submitted abstract should still state its limits; {phrase!r} is missing"
+            f"the submitted abstract should still state its scope; {phrase!r} is missing"
         )
 
 

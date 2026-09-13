@@ -1,0 +1,651 @@
+<title>Trust by Construction: A Cross-Sector Reference Architecture for Governed Agentic AI</title>
+<style>
+@page { size: A4; margin: 21mm 20mm 22mm 20mm; }
+:root { color-scheme: light; }
+html { background: #ffffff; }
+body { margin: 0 auto; max-width: 170mm; padding-block: 12mm; padding-inline: 16px;
+  background: #ffffff; color: #111111;
+  font: 10.3pt/1.42 "Times New Roman", Times, "Nimbus Roman", "Liberation Serif", serif;
+  hyphens: auto; -webkit-hyphens: auto; }
+@media print { body { padding: 0; max-width: none; } }
+h1 { font: 700 17pt/1.2 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 0 0 6pt; letter-spacing: -.01em; }
+.byline { font-size: 11pt; margin: 0 0 2pt; }
+.meta { font-size: 8.8pt; color: #444; margin: 0 0 1.5pt; text-align: left; }
+.meta a { color: inherit; }
+.abstract { margin: 12pt 0 10pt; padding: 8pt 11pt; border-block: 0.8pt solid #999; }
+.abstract h2 { margin: 0 0 3pt; font-size: 9.5pt; text-transform: uppercase;
+  letter-spacing: .06em; }
+.abstract p { margin: 0 0 4pt; font-size: 9.7pt; }
+h2 { font: 700 11.6pt/1.25 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 14pt 0 4pt; break-after: avoid; }
+h3 { font: 700 10.2pt/1.25 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 10pt 0 3pt; break-after: avoid; }
+p { margin: 0 0 6pt; text-align: justify; orphans: 3; widows: 3; }
+ol { margin: 0 0 6pt; padding-left: 18pt; }
+li { margin-bottom: 2.5pt; text-align: justify; }
+code { font: 8.6pt "SFMono-Regular", Menlo, Consolas, monospace; }
+a { color: #184f95; text-decoration: none; overflow-wrap: anywhere; }
+figure { margin: 10pt 0 11pt; break-inside: avoid; page-break-inside: avoid; }
+figure svg { display: block; width: 100%; height: auto; max-width: 100%; }
+figcaption, .table-caption { font-size: 8.8pt; line-height: 1.35; text-align: justify; }
+figcaption { margin-top: 5pt; }
+figcaption b, .table-caption b { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.table-caption { margin: 10pt 0 4pt; break-after: avoid; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 11pt; font-size: 8.4pt;
+  line-height: 1.3; break-inside: avoid; page-break-inside: avoid; }
+th { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 8pt;
+  text-align: left; vertical-align: bottom; border-bottom: 0.9pt solid #555;
+  padding: 3pt 4pt; }
+td { vertical-align: top; padding: 3pt 4pt; border-bottom: 0.5pt solid #d6d5cf; }
+td:first-child { font-weight: 700; }
+.references p { font-size: 8.6pt; line-height: 1.3; margin: 0 0 2.5pt;
+  padding-left: 16pt; text-indent: -16pt; text-align: left; }
+.note { font-size: 8.8pt; color: #444; }
+</style>
+<h1>Trust by Construction: A Cross-Sector Reference Architecture for Governed Agentic AI</h1>
+<p class="byline">R. Srivastava</p>
+<p class="meta"><b>Submission:</b> Full paper, UNU Macau AI Conference 2026 — <i>AI × Education: AI for Learning, Learning for AI</i>, 25–26 November 2026, Macau SAR, China.</p>
+<p class="meta"><b>Proposed panel:</b> Agentic AI in the Loop — From Autonomous Tools to Shared Capacity.</p>
+<p class="meta"><b>Keywords:</b> agentic AI; reference architecture; secure data governance; privacy by construction; institutional sovereignty; fail-secure systems; system literacy; digital public goods.</p>
+<p class="meta"><b>Reference implementation:</b> Apache-2.0, <a href="https://github.com/genaiworks/fssai-ra">https://github.com/genaiworks/fssai-ra</a>, release <code>v1.0.0</code>; every figure in this paper regenerates offline from the repository with <code>make results</code>.</p>
+<section class="abstract">
+<h2>Abstract</h2>
+<p>AI governance still centres on models, yet harm arises in systems: an agent reads a record it should not see, sends a summary it should not release, or turns a plausible proposal into an irreversible action. This paper presents Trust by Construction, a sector-neutral reference architecture and development method for agentic AI, built on one falsifiable thesis: <b>intelligence is untrusted; power and data are mediated.</b> Two constitutional rules follow. A model may propose an action, but it cannot manufacture the authority to execute it. A model may request information, but it cannot manufacture the entitlement to see it, or launder what it saw.</p>
+<p>The architecture enforces both rules outside the model through a seven-field control contract, seven logical planes, and two mediators that alone hold write credentials, record access, and data keys. A privacy pipeline replaces personal data with vault tokens before any model sees it, encrypts records under per-subject keys, routes restricted work to attested local models, and restores identity only for entitled recipients. A seven-stage lifecycle shows teams in any sector how to frame, contract, bind, falsify, promote, and operate a new AI capability. Across six domain packs spanning education, corporate data, healthcare, consumer finance, and public benefits, the reference implementation contained 180 of 180 hostile scenarios and 106 of 106 hostile data flows while completing every legitimate task, and 104,997 bounded attempts found no counterexample to the thesis.</p>
+</section>
+<section>
+<h2>1. Introduction</h2>
+<p>A company releases a confidential dataset; a hospital shares a record; a university corrects a transcript; a public body decides support. Different laws apply, yet each institution must answer the same questions: <b>what was allowed, who or what had authority, which evidence was used, what actually happened, and how can the outcome be challenged or reversed?</b> A safe model cannot answer those questions on behalf of an unsafe system.</p>
+<p>Model-centred governance faces four structural problems that grow with capability. First, a model's intentions cannot be verified, and more capable models are more persuasive and harder to evaluate. Second, agents compose: an assistant delegates to a tool that calls another agent, and local correctness at every hop does not make a chain correct. Third, most harm in a corporate copilot or clinical assistant changes no state at all; it reads, summarises, and sends. Fourth, human review is a finite resource, and an approval given faster than a reviewer can think is a signature, not oversight.</p>
+<p>Trust by Construction answers all four with one thesis and three commitments. <i>Untrusted intelligence:</i> treat every model as capable, persuasive, and possibly misaligned or manipulated. <i>Mediated power:</i> every effect and every flow of protected data passes a mediator the model cannot bypass, influence, or impersonate. <i>Evidenced trust:</i> every mediation is contracted, tested, and evidenced where it is relied on. As capability grows, verifying intentions gets harder; verifying boundaries stays tractable. The thesis is falsifiable: one configuration in which model output alone causes a governed effect or disclosure refutes it.</p>
+<p>The paper makes five contributions:</p>
+<ol><li><b>A reference architecture</b> that separates seven planes around an executable control contract and two mediators (Section 3).</li><li><b>A governed request path in ten steps</b>, including a privacy pipeline of tokenization, envelope encryption, sensitivity-aware routing, and model attestation (Section 4).</li><li><b>A transfer method</b>: domain packs that carry institutional meaning over one shared kernel, illustrated across five sectors (Section 5), and a seven-stage lifecycle for building any future AI capability (Section 6).</li><li><b>Evidence that tests the architecture instead of restating it</b>: comparisons with conventional controls, ablation of every control, bounded model checking, stateful testing, and falsifiers, all regenerable offline (Section 7).</li><li><b>A teaching method for system literacy</b>, so that policymakers, engineers, and learners can inspect the same boundaries (Section 8).</li></ol>
+</section>
+<section>
+<h2>2. Background and related work</h2>
+<p>The architecture deliberately inherits rather than invents its mechanisms. The reference monitor and the principles of least privilege, complete mediation, and fail-safe defaults [12] place every access behind a mediator. Lattice information flow [13] lets restriction accumulate as data moves. Well-formed transactions and separation of duties [14] make integrity a property of the process, not of the actor. Zero trust architecture [1] removes implicit trust from network location.</p>
+<p>Recent work applies these ideas to language-model agents. CaMeL separates control flow from untrusted data and attaches capabilities to values [15]; FIDES tracks confidentiality and integrity labels through an agent's planner [16]; AI control designs protocols that remain safe when the model actively tries to subvert them [17]. Governance frameworks supply the vocabulary of risk and management: the NIST AI RMF generative AI profile [2], ISO/IEC 42001 [6], the OWASP agentic top ten [3] and agent control standard [4], and MITRE ATLAS [5]. Data-protection law adds purpose limitation, pseudonymisation, and the right to erasure [18], and the EU AI Act adds obligations for high-risk systems [19].</p>
+<p>What remains missing is an executable architecture that institutions can adopt across sectors: one that governs actions, reads, releases, delegation, review capacity, and evidence together, protects personal data before any model sees it, and carries a method for transferring all of it to a new domain. Standards say what must be achieved; agent-security research protects a single agent's control flow. Trust by Construction composes both with institutional purpose, consent, review capacity, and evidence, and measures itself.</p>
+</section>
+<section>
+<h2>3. The architecture</h2>
+<h3>3.1 Two constitutional rules</h3>
+<p><b>A model may propose an action; it cannot manufacture the authority to execute it. A model may request information; it cannot manufacture the entitlement to see it, or launder what it saw.</b> Both rules are enforced by components that alone hold write credentials, record access, and data keys, and that recheck purpose, consent, and revocation at every use. Authority only narrows as agents delegate; restriction only accumulates as data flows. Trustworthiness becomes an institutional capability that can be specified and tested, not a property bought with a model, a region, or a certificate.</p>
+<h3>3.2 The control contract</h3>
+<p>The narrow waist of the architecture is an executable contract between policy and implementation. For each consequential capability, its <b>seven fields</b> name the protected asset, permitted operation, independent enforcement point, accountable owner, failure test, evidence artifact, and failure response (Table 1). If an institution cannot fill every field, it has found an unresolved governance decision rather than a capability ready for automation. The contract is machine-readable, and each requirement is bound to a check that is itself checked to exist.</p>
+<p class="table-caption"><b>Table 1.</b> The seven fields of the control contract, with one capability from the healthcare domain pack.</p>
+<div class="scroll"><table><thead><tr><th>Field</th><th>Question it answers</th><th>Example: authorize treatment access</th></tr></thead><tbody><tr><td>Protected asset</td><td>What could be harmed?</td><td>A patient's treatment record</td></tr><tr><td>Permitted operation</td><td>Exactly what may happen?</td><td><code>identity_verified</code> → <code>treatment_access_active</code>, nothing else</td></tr><tr><td>Enforcement point</td><td>Which component outside the model refuses?</td><td>The executor, sole holder of the write credential</td></tr><tr><td>Accountable owner</td><td>Who answers for the outcome?</td><td>Healthcare privacy officer</td></tr><tr><td>Failure test</td><td>Which test proves the refusal?</td><td>Wrong-patient, purpose-switch, and self-approval scenarios</td></tr><tr><td>Evidence artifact</td><td>What proves what happened?</td><td>Receipt bound to the exact proposal digest</td></tr><tr><td>Failure response</td><td>What happens when something fails?</td><td>Revoke, reconcile, and route to the manual fallback</td></tr></tbody></table></div>
+<h3>3.3 Seven planes and two mediators</h3>
+<p>Around the contract, the pattern separates seven planes (Fig. 1). The <b>boundary</b> plane authenticates ingress and egress, quarantines untrusted input, and exposes a no-read-back seam that certified one-way hardware can replace. The <b>governed data</b> plane keeps stable identifiers, replayable events, and versioned snapshots, encrypted at rest under per-subject keys. The <b>intelligence</b> plane holds a semantic router, replaceable attested models, agents, and retrieval, but no credential or key. The <b>authority</b> plane issues purpose-, time-, and holder-bound grants and approvals, holds model manifests, and provides key custody. The <b>execution</b> plane rechecks policy, identity, version, approval, and replay before using the write credential. The <b>evidence</b> plane binds intent to outcome. The <b>resilience</b> plane fails securely, reconciles uncertain effects, revokes, and routes work to fallback.</p>
+<figure id="fig1"><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 566" width="760" height="566" role="img" aria-label="Seven-plane reference architecture with two mediators around a control contract" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Seven-plane reference architecture with two mediators around a control contract</title>
+<rect width="760" height="566" fill="#ffffff"/>
+<defs><marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52514e"/></marker></defs>
+<rect x="0" y="0" width="58" height="538" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
+<text x="0" y="0" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="middle" transform="translate(24,269) rotate(-90)">BOUNDARY PLANE</text>
+<text x="0" y="0" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="middle" transform="translate(41,269) rotate(-90)">authenticated ingress and egress, quarantine, one-way seam</text>
+<rect x="76" y="0" width="684" height="96" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
+<text x="92" y="22" font-size="12" font-weight="700" fill="#0b0b0b" text-anchor="start">INTELLIGENCE PLANE  -  untrusted</text>
+<text x="92" y="40" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">Sees vault tokens, never identities. May propose and request; holds no credential or key.</text>
+<rect x="92" y="50" width="155.5" height="36" rx="5" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<text x="101" y="65" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="start">Semantic router</text>
+<text x="101" y="79" font-size="8.8" font-weight="400" fill="#77756f" text-anchor="start">advisory: intent + sensitivity</text>
+<rect x="257.5" y="50" width="155.5" height="36" rx="5" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<text x="266.5" y="65" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="start">Attested local model</text>
+<text x="266.5" y="79" font-size="8.8" font-weight="400" fill="#77756f" text-anchor="start">default for restricted data</text>
+<rect x="423" y="50" width="155.5" height="36" rx="5" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<text x="432" y="65" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="start">Approved cloud model</text>
+<text x="432" y="79" font-size="8.8" font-weight="400" fill="#77756f" text-anchor="start">low-sensitivity work only</text>
+<rect x="588.5" y="50" width="155.5" height="36" rx="5" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<text x="597.5" y="65" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="start">Agents and retrieval</text>
+<text x="597.5" y="79" font-size="8.8" font-weight="400" fill="#77756f" text-anchor="start">retrieved text is data</text>
+<rect x="76" y="126" width="684" height="58" rx="6" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="92" y="146" font-size="11.5" font-weight="700" fill="#184f95" text-anchor="start">CONTROL CONTRACT  -  7 fields per consequential capability</text>
+<rect x="92" y="156" width="43" height="19" rx="9.5" fill="#ffffff" stroke="#6da7ec" stroke-width="1"/>
+<text x="113.5" y="169" font-size="9.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">asset</text>
+<rect x="143" y="156" width="64.6" height="19" rx="9.5" fill="#ffffff" stroke="#6da7ec" stroke-width="1"/>
+<text x="175.3" y="169" font-size="9.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">operation</text>
+<rect x="215.6" y="156" width="107.8" height="19" rx="9.5" fill="#ffffff" stroke="#6da7ec" stroke-width="1"/>
+<text x="269.5" y="169" font-size="9.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">enforcement point</text>
+<rect x="331.4" y="156" width="43" height="19" rx="9.5" fill="#ffffff" stroke="#6da7ec" stroke-width="1"/>
+<text x="352.9" y="169" font-size="9.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">owner</text>
+<rect x="382.4" y="156" width="80.8" height="19" rx="9.5" fill="#ffffff" stroke="#6da7ec" stroke-width="1"/>
+<text x="422.8" y="169" font-size="9.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">failure test</text>
+<rect x="471.2" y="156" width="59.2" height="19" rx="9.5" fill="#ffffff" stroke="#6da7ec" stroke-width="1"/>
+<text x="500.8" y="169" font-size="9.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">evidence</text>
+<rect x="538.4" y="156" width="102.4" height="19" rx="9.5" fill="#ffffff" stroke="#6da7ec" stroke-width="1"/>
+<text x="589.6" y="169" font-size="9.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">failure response</text>
+<rect x="76" y="216" width="180" height="120" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
+<text x="90" y="237" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">AUTHORITY PLANE</text>
+<text x="90" y="256" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Purpose-, time-, and</text>
+<text x="90" y="271" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">holder-bound grants;</text>
+<text x="90" y="286" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">approvals; model manifests;</text>
+<text x="90" y="301" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">key custody; delegation</text>
+<text x="90" y="316" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">only narrows</text>
+<rect x="276" y="216" width="232" height="120" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
+<text x="290" y="237" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">EXECUTION PLANE  -  Rule 1</text>
+<text x="290" y="256" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Rechecks policy, identity, version,</text>
+<text x="290" y="271" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">approval, and replay; binds the</text>
+<text x="290" y="286" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">exact proposal digest; one write,</text>
+<text x="290" y="301" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">one receipt.</text>
+<text x="290" y="325" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Sole holder of the write credential</text>
+<rect x="528" y="216" width="232" height="120" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
+<text x="542" y="237" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">CONTEXT GATE  -  Rule 2</text>
+<text x="542" y="256" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Checks grant, purpose, consent,</text>
+<text x="542" y="271" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">zone, and model attestation;</text>
+<text x="542" y="286" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">tokenizes PII; labels every output;</text>
+<text x="542" y="301" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">restores identity only if entitled.</text>
+<text x="542" y="325" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Sole holder of record access and keys</text>
+<rect x="76" y="384" width="180" height="82" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
+<text x="90" y="405" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">EVIDENCE PLANE</text>
+<text x="90" y="425" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Binds intent to outcome;</text>
+<text x="90" y="440" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">receipts from both mediators;</text>
+<text x="90" y="455" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">digests, never values</text>
+<rect x="276" y="384" width="484" height="82" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
+<text x="290" y="405" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">GOVERNED DATA PLANE</text>
+<text x="290" y="425" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Encrypted at rest under per-subject keys; erased by destroying the key.</text>
+<text x="290" y="440" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Stable identifiers, replayable events, versioned snapshots.</text>
+<text x="290" y="455" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Read only through the gate; changed only by the executor.</text>
+<rect x="76" y="486" width="684" height="52" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
+<text x="92" y="517" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">RESILIENCE PLANE</text>
+<text x="222" y="517" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Fails secure, revokes, reconciles uncertain effects, and routes work to a manual fallback.</text>
+<path d="M392,96 V125" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<path d="M392,184 V215" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<text x="384" y="115" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="end">proposes an action</text>
+<path d="M600,96 V125" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<path d="M600,184 V215" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<text x="592" y="115" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="end">requests data</text>
+<path d="M700,216 V97" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<text x="692" y="204" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="end">labelled output</text>
+<path d="M256,276 H275" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<path d="M166,336 V354 H600 V337" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<text x="470" y="349" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="middle">grants, approvals, keys</text>
+<path d="M392,336 V383" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<text x="400" y="377" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">one checked write</text>
+<path d="M720,384 V337" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#arch-arrow)"/>
+<text x="712" y="377" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="end">decrypt after authorization</text>
+<text x="76" y="558" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">Heavy blue outline: a mediator holding what the model lacks. Mediators, contract, keys, and evidence store form the declared trusted base.</text>
+</svg>
+</div><figcaption><b>Fig. 1.</b> The Trust by Construction reference architecture. Untrusted intelligence works on vault tokens and can only propose actions and request data. Every request crosses the 7-field control contract to one of two mediators, each the sole holder of what the model lacks: the execution plane holds the write credential (Rule 1); the context gate holds record access and data keys (Rule 2). The semantic router advises which attested model to use; the gate decides where data may go. Planes are logical responsibilities, not products.</figcaption></figure>
+<p>Two components are mediators in the reference-monitor sense. The <b>executor</b> enforces the first rule; the <b>context gate</b> enforces the second. Together with the contract, signing keys, key custody, evidence store, and identity provider, they form a small, declared trusted base. This is the architecture's central economy: assurance effort concentrates on a handful of named components rather than on every model an institution will ever adopt.</p>
+<p>Planes are logical responsibilities, not products. The reference stack maps them to FastAPI, PostgreSQL or Redis, Kafka, PySpark, Iceberg, object storage, Ollama-served local models, signing, and a software one-way seam. Adopters may replace any component, but a replacement inherits no assurance until the same conformance and falsification suites pass on it, so the reference stack cannot become a vendor dependency disguised as sovereignty.</p>
+</section>
+<section>
+<h2>4. One governed request in ten steps</h2>
+<p>A single request passes through ten steps (Fig. 2). They run identically in every domain; only the domain pack changes what each step checks.</p>
+<figure id="fig2"><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 486" width="760" height="486" role="img" aria-label="Ten steps of one governed request, from admission to recovery" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Ten steps of one governed request, from admission to recovery</title>
+<rect width="760" height="486" fill="#ffffff"/>
+<defs><marker id="steps-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52514e"/></marker></defs>
+<rect x="0" y="0" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="22" cy="22" r="13" fill="#2a78d6"/>
+<text x="22" y="26.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+<text x="44" y="23" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Admit</text>
+<text x="358" y="22" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">BOUNDARY PLANE</text>
+<text x="44" y="42" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Authenticate every caller and source; quarantine</text>
+<text x="44" y="56.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">untrusted content so it is handled as data, not code.</text>
+<text x="44" y="76" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Nothing unauthenticated enters.</text>
+<path d="M22,86 V99" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="0" y="100" width="370" height="86" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
+<circle cx="22" cy="122" r="13" fill="#184f95"/>
+<text x="22" y="126.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+<text x="44" y="123" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Protect</text>
+<text x="358" y="122" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">GOVERNED DATA PLANE</text>
+<text x="44" y="142" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Detect personal data and replace it with vault tokens;</text>
+<text x="44" y="156.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">encrypt sensitive fields under per-subject keys.</text>
+<text x="44" y="176" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Identities never reach a model.</text>
+<path d="M22,186 V199" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="0" y="200" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="22" cy="222" r="13" fill="#2a78d6"/>
+<text x="22" y="226.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+<text x="44" y="223" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Route</text>
+<text x="358" y="222" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">INTELLIGENCE PLANE, ADVISORY</text>
+<text x="44" y="242" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Classify intent and sensitivity; choose the cheapest</text>
+<text x="44" y="256.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">attested model whose zone may process every class.</text>
+<text x="44" y="276" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Restricted data stays on local models.</text>
+<path d="M22,286 V299" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="0" y="300" width="370" height="86" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
+<circle cx="22" cy="322" r="13" fill="#184f95"/>
+<text x="22" y="326.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+<text x="44" y="323" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Entitle</text>
+<text x="358" y="322" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">CONTEXT GATE</text>
+<text x="44" y="342" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Check signed grant, purpose, consent, revocation,</text>
+<text x="44" y="356.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">zone, and attestation; decrypt the minimum fields.</text>
+<text x="44" y="376" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">No entitlement, no read.</text>
+<path d="M22,386 V399" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="0" y="400" width="370" height="86" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="22" cy="422" r="13" fill="#77756f"/>
+<text x="22" y="426.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+<text x="44" y="423" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Reason</text>
+<text x="358" y="422" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">INTELLIGENCE PLANE, UNTRUSTED</text>
+<text x="44" y="442" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">The model drafts or proposes over tokens and labelled</text>
+<text x="44" y="456.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">context. It holds no key, token map, or credential.</text>
+<text x="44" y="476" font-size="10" font-weight="700" fill="#77756f" text-anchor="start">An output is a proposal, never a power.</text>
+<rect x="390" y="0" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="412" cy="22" r="13" fill="#2a78d6"/>
+<text x="412" y="26.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+<text x="434" y="23" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Authorize</text>
+<text x="748" y="22" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">AUTHORITY PLANE</text>
+<text x="434" y="42" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Approve the exact proposal digest within declared</text>
+<text x="434" y="56.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">review capacity; delegated authority only narrows.</text>
+<text x="434" y="76" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Authority cannot be manufactured.</text>
+<path d="M412,86 V99" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="390" y="100" width="370" height="86" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
+<circle cx="412" cy="122" r="13" fill="#184f95"/>
+<text x="412" y="126.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+<text x="434" y="123" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Execute</text>
+<text x="748" y="122" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">EXECUTION PLANE</text>
+<text x="434" y="142" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Recheck policy, identity, version, approval, and</text>
+<text x="434" y="156.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">replay; make one write and issue one receipt.</text>
+<text x="434" y="176" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Exactly one checked effect.</text>
+<path d="M412,186 V199" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="390" y="200" width="370" height="86" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
+<circle cx="412" cy="222" r="13" fill="#184f95"/>
+<text x="412" y="226.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">8</text>
+<text x="434" y="223" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Release</text>
+<text x="748" y="222" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">CONTEXT GATE</text>
+<text x="434" y="242" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Label the output by everything it used; restore real</text>
+<text x="434" y="256.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">values only for a recipient entitled to see them.</text>
+<text x="434" y="276" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Nothing is laundered out.</text>
+<path d="M412,286 V299" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="390" y="300" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="412" cy="322" r="13" fill="#2a78d6"/>
+<text x="412" y="326.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">9</text>
+<text x="434" y="323" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Record</text>
+<text x="748" y="322" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">EVIDENCE PLANE</text>
+<text x="434" y="342" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Bind intent to outcome in an append-only chain that</text>
+<text x="434" y="356.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">stores digests, never the protected values.</text>
+<text x="434" y="376" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Every outcome can be reconstructed.</text>
+<path d="M412,386 V399" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+<rect x="390" y="400" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="412" cy="422" r="13" fill="#2a78d6"/>
+<text x="412" y="426.5" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">10</text>
+<text x="434" y="423" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Recover</text>
+<text x="748" y="422" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">RESILIENCE PLANE</text>
+<text x="434" y="442" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Revoke, reconcile uncertain effects, fall back to</text>
+<text x="434" y="456.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">manual work, and erase a subject by destroying its key.</text>
+<text x="434" y="476" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Failure is safe; erasure is real.</text>
+<path d="M370,443.0 H380 V43.0 H389" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
+</svg>
+</div><figcaption><b>Fig. 2.</b> One governed request in ten steps. The sequence is identical in every domain; only the domain pack changes what each step checks. Steps outlined in dark blue are enforced by a mediator the model cannot bypass. The grey step is the only one performed by untrusted intelligence, and it produces a proposal or a draft, never an effect or a disclosure.</figcaption></figure>
+<p><b>Steps 1–2: admit and protect.</b> The boundary authenticates every caller and source and wraps retrieved content as untrusted data, so an injected instruction is text to be reasoned about, never a command. The privacy pipeline then detects personal data and replaces it with vault tokens. Tokens are keyed, scoped to a session, and never reproduce the identifier they stand for; the token map lives with the gate. Sensitive fields are stored under envelope encryption: each subject has a data key, wrapped by a key-encryption key for its data class and held by key custody [10], and each ciphertext is bound to its subject and field so it cannot be moved to another record. Tokenization is chosen over redaction because a model needs to reason about <i>which</i> patient or applicant a fact concerns without learning <i>who</i> they are.</p>
+<p><b>Steps 3–4: route and entitle.</b> A semantic router classifies each request's intent and the sensitivity of the data classes it needs, and chooses the cheapest attested model whose processing zone may handle every class; restricted classes default to a local model on institutional hardware. Routing is advisory. The context gate then decides: it verifies a signed grant binding holder, purpose, subjects, fields, classes, and expiry; checks live consent and revocation; confirms that the chosen endpoint's zone may process every class; and confirms that the model presents a registered, signed manifest whose artifact digest matches. Only then does the gate read the record source and decrypt the minimum necessary fields. A subverted router can therefore choose a worse model, never a more exposed one.</p>
+<p><b>Steps 5–6: reason and authorize.</b> The model drafts or proposes over tokens and labelled context. It holds no key, no token map, and no write credential, so its output is a proposal, never a power. An approval binds to the exact proposal digest covering target, transition, evidence and resource versions, requester, role, audience, and expiry; any change needs new authorization. No principal may pass on authority it does not itself hold, so delegation chains only attenuate. Human review is declared as capacity with a deliberation floor, escalation, and fallback, so demand beyond capacity defers instead of turning approval into ritual.</p>
+<p><b>Steps 7–8: execute and release.</b> The executor rechecks policy, identity, version, approval, and replay, then makes one write and issues one receipt; a retry returns the same receipt or enters reconciliation. Every output carries the join of the labels of everything its session received, so a model cannot declassify its own summary. At release the gate rechecks consent, revocation, and expiry, requires the recipient to dominate the output's label, and restores real values in place of tokens only for a recipient entitled to that subject. Lowering a label requires an exact-output declassification by an independent declared role.</p>
+<p><b>Steps 9–10: record and recover.</b> The evidence plane binds intent to outcome in an append-only chain that stores digests, never protected values. Resilience revokes grants, reconciles uncertain effects, and routes work to a manual fallback. Erasure is implemented by destroying a subject's data key, a cryptographic erase [11] that renders every stored copy unreadable, including snapshots and backups.</p>
+</section>
+<section>
+<h2>5. One kernel, many domains</h2>
+<p>The kernel is complete only with a <b>domain pack</b>: a declarative file that supplies purposes, data classes and their processing zones, recipients, transitions and their approvers, declassification rules, emergency access, and fallback. Policy leaders author its meaning; engineers bind it to enforcement. A new sector replaces the pack, not the kernel, and regenerates its own evidence. Table 2 shows the same steps expressed in five sectors, drawn directly from the released packs.</p>
+<p class="table-caption"><b>Table 2.</b> The same architecture in five sectors. Each cell is declared in that sector's domain pack and enforced by the shared kernel.</p>
+<div class="scroll"><table><thead><tr><th>Step</th><th>Healthcare</th><th>Corporate data</th><th>Consumer finance</th><th>Public benefits</th><th>Education</th></tr></thead><tbody><tr><td>Declared purposes (4, 8)</td><td>treatment, research, emergency treatment, patient access</td><td>internal analysis, external release, legal review</td><td>credit decision, fraud investigation, customer access, regulatory reporting</td><td>eligibility, appeal, applicant access, statistics, urgent safeguarding</td><td>student-support casework, academic record correction</td></tr><tr><td>Most restricted data and where it may be processed (2–4)</td><td>diagnosis, mental-health notes, genomic markers: on-premises model only</td><td>contract terms, customer contacts, product roadmap: private model only</td><td>identifiers, credit score, transactions, fraud signals: bank-private model only</td><td>national ID, disability and immigration status: sovereign model only</td><td>governed through action rules and exact approvals</td></tr><tr><td>Consequential action and independent approver (6–7)</td><td>treatment access: healthcare privacy officer</td><td>external release: data protection officer</td><td>credit-limit change: credit risk officer</td><td>benefit decision: benefit approver; appeal: independent appeals officer</td><td>transcript correction: registrar, after instructor confirmation</td></tr><tr><td>Governed release (8)</td><td>clinician; de-identified to researchers after research review</td><td>aggregates to partners after data protection approval</td><td>aggregates to the regulator after compliance approval</td><td>aggregates to the statistics office after data protection approval</td><td>decision returned through the case record</td></tr><tr><td>Exception path (10)</td><td>break-glass for emergency treatment, one hour, reviewed</td><td>legal hold freezes the dataset</td><td>fraud break-glass, thirty minutes, compliance review</td><td>urgent safeguarding, one hour, reviewed</td><td>appeal reopens a rejected correction</td></tr><tr><td>Refused by construction</td><td>public model API; external email</td><td>public model API; personal email</td><td>marketing partner receives nothing</td><td>enforcement agency receives nothing</td><td>a correction no instructor confirmed</td></tr></tbody></table></div>
+</section>
+<section>
+<h2>6. Building future AI systems: a seven-stage lifecycle</h2>
+<p>An architecture becomes a practice only when a team knows what to do on Monday. Figure 3 gives the lifecycle every new AI capability follows, in any sector (Fig. 3). Each stage produces an artifact and passes a gate before the next begins.</p>
+<figure id="fig3"><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 316" width="760" height="316" role="img" aria-label="Seven-stage lifecycle for building and operating a governed AI capability" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Seven-stage lifecycle for building and operating a governed AI capability</title>
+<rect width="760" height="316" fill="#ffffff"/>
+<defs><marker id="life-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52514e"/></marker></defs>
+<rect x="0" y="0" width="178" height="138" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="20" cy="21" r="12" fill="#2a78d6"/>
+<text x="20" y="25.5" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+<text x="40" y="26" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Frame</text>
+<text x="12" y="51" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">Name one consequential</text>
+<text x="12" y="65" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">capability, its asset,</text>
+<text x="12" y="79" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">harm, and owner.</text>
+<line x1="12" y1="92" x2="166" y2="92" stroke="#e8e7e1" stroke-width="1"/>
+<text x="12" y="108" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">Artifact: capability card</text>
+<text x="12" y="124" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Gate: an owner accepts it</text>
+<path d="M178,69.0 H193" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#life-arrow)"/>
+<rect x="194" y="0" width="178" height="138" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="214" cy="21" r="12" fill="#2a78d6"/>
+<text x="214" y="25.5" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+<text x="234" y="26" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Contract</text>
+<text x="206" y="51" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">Fill all seven fields;</text>
+<text x="206" y="65" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">an empty field is an</text>
+<text x="206" y="79" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">open governance decision.</text>
+<line x1="206" y1="92" x2="360" y2="92" stroke="#e8e7e1" stroke-width="1"/>
+<text x="206" y="108" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">Artifact: control contract</text>
+<text x="206" y="124" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Gate: no field left empty</text>
+<path d="M372,69.0 H387" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#life-arrow)"/>
+<rect x="388" y="0" width="178" height="138" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="408" cy="21" r="12" fill="#2a78d6"/>
+<text x="408" y="25.5" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+<text x="428" y="26" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Pack</text>
+<text x="400" y="51" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">Declare purposes, data</text>
+<text x="400" y="65" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">classes, zones, recipients,</text>
+<text x="400" y="79" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">transitions, and fallback.</text>
+<line x1="400" y1="92" x2="554" y2="92" stroke="#e8e7e1" stroke-width="1"/>
+<text x="400" y="108" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">Artifact: domain pack</text>
+<text x="400" y="124" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Gate: the pack validates</text>
+<path d="M566,69.0 H581" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#life-arrow)"/>
+<rect x="582" y="0" width="178" height="138" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="602" cy="21" r="12" fill="#2a78d6"/>
+<text x="602" y="25.5" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+<text x="622" y="26" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Bind</text>
+<text x="594" y="51" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">Give credentials only to</text>
+<text x="594" y="65" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">mediators; register and</text>
+<text x="594" y="79" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">attest every model.</text>
+<line x1="594" y1="92" x2="748" y2="92" stroke="#e8e7e1" stroke-width="1"/>
+<text x="594" y="108" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">Artifact: bindings, manifests</text>
+<text x="594" y="124" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Gate: no model holds a key</text>
+<rect x="0" y="178" width="178" height="138" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
+<circle cx="20" cy="199" r="12" fill="#2a78d6"/>
+<text x="20" y="203.5" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+<text x="40" y="204" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Falsify</text>
+<text x="12" y="229" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">Attack it on synthetic data:</text>
+<text x="12" y="243" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">hostile scenarios, ablation,</text>
+<text x="12" y="257" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">bounded checks.</text>
+<line x1="12" y1="270" x2="166" y2="270" stroke="#e8e7e1" stroke-width="1"/>
+<text x="12" y="286" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">Artifact: evidence run</text>
+<text x="12" y="302" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Gate: zero counterexamples</text>
+<path d="M178,247.0 H193" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#life-arrow)"/>
+<rect x="194" y="178" width="178" height="138" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="214" cy="199" r="12" fill="#2a78d6"/>
+<text x="214" y="203.5" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+<text x="234" y="204" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Promote</text>
+<text x="206" y="229" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">Rerun conformance on the</text>
+<text x="206" y="243" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">target stack; deploy only</text>
+<text x="206" y="257" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">on current evidence.</text>
+<line x1="206" y1="270" x2="360" y2="270" stroke="#e8e7e1" stroke-width="1"/>
+<text x="206" y="286" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">Artifact: release evidence</text>
+<text x="206" y="302" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Gate: fresh run matches</text>
+<path d="M372,247.0 H387" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#life-arrow)"/>
+<rect x="388" y="178" width="178" height="138" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
+<circle cx="408" cy="199" r="12" fill="#2a78d6"/>
+<text x="408" y="203.5" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+<text x="428" y="204" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Operate</text>
+<text x="400" y="229" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">Watch review capacity;</text>
+<text x="400" y="243" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">revoke, reconcile, erase;</text>
+<text x="400" y="257" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="start">exit any vendor.</text>
+<line x1="400" y1="270" x2="554" y2="270" stroke="#e8e7e1" stroke-width="1"/>
+<text x="400" y="286" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">Artifact: evidence ledger</text>
+<text x="400" y="302" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Gate: redress works</text>
+<path d="M671.0,138 V158.0 H89.0 V177" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#life-arrow)"/>
+<path d="M566,247.0 H581" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#life-arrow)"/>
+<rect x="582" y="178" width="178" height="138" rx="6" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="671" y="206" font-size="11.5" font-weight="700" fill="#184f95" text-anchor="middle">Any change returns to 5</text>
+<text x="671" y="232" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="middle">A new model, vendor, pack,</text>
+<text x="671" y="247" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="middle">or backend inherits no</text>
+<text x="671" y="262" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="middle">assurance. The same</text>
+<text x="671" y="277" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="middle">falsifiers run again and</text>
+<text x="671" y="292" font-size="9.8" font-weight="400" fill="#52514e" text-anchor="middle">the evidence is regenerated.</text>
+</svg>
+</div><figcaption><b>Fig. 3.</b> Building any new AI capability. Each stage produces an artifact and must pass a gate before the next begins. Falsification happens on synthetic data before real records or keys are connected, and any later change to a model, vendor, pack, or backend returns to stage 5, so assurance is regenerated rather than inherited.</figcaption></figure>
+<ol><li><b>Frame.</b> Name one consequential capability, the asset it touches, the harm it could cause, and its owner. Start with one capability and a manual fallback.</li><li><b>Contract.</b> Fill the seven fields. An empty field is an open governance decision, returned to its owner rather than engineered around.</li><li><b>Pack.</b> Declare purposes, data classes and zones, recipients, transitions, declassification, emergency access, and fallback in a domain pack that validates.</li><li><b>Bind.</b> Give write credentials, record access, and keys only to mediators; register and sign a manifest for every model endpoint.</li><li><b>Falsify.</b> Before real records or keys are connected, run hostile scenarios, ablate every control, enumerate bounded configurations, and run the falsifiers on synthetic data. Proceed only with zero counterexamples and every control load-bearing.</li><li><b>Promote.</b> Rerun conformance on the target stack and deploy only when a fresh run matches the committed evidence.</li><li><b>Operate.</b> Watch review capacity, revoke and reconcile, honour erasure, and keep the ability to replace any model or vendor. Any such change returns to stage 5.</li></ol>
+<p>The lifecycle gives each audience a concrete role. Policymakers and procurement officers can demand the seven fields, the trusted base, and the regenerated evidence before a contract is signed. Engineers can map each duty to an enforced interface. Auditors can rerun the evidence rather than trust a report.</p>
+</section>
+<section>
+<h2>7. Evaluation</h2>
+<h3>7.1 Method</h3>
+<p>The evaluation asks distinct questions of the reference implementation. Property and bounded checks compare real enforcement against independent predicates over declared configuration spaces; ablation asks whether harm returns when a control is removed; conformance reruns the properties on substituted backends; stateful testing drives random sequences against an independent reference model; comparison arms send identical hostile inputs to weaker designs; and falsifiers try to refute the thesis directly. Utility is always reported beside containment, because a system that denies everything scores perfectly on containment and remains useless. The repository runs <b>724 deterministic tests</b> offline, with no network access and no model weights, so a second institution can check every number rather than trust it.</p>
+<h3>7.2 Mediation against conventional controls</h3>
+<p>Against an unguarded agent, a safety prompt with a per-agent tool allowlist, and this architecture, the same seven attacks delivered 28, 8, and 0 harmful actions, with every benign task completed in all three arms (Fig. 4a). Against the reference profile, <b>30 of 30 adversarial scenarios contained</b>, <b>240 configurations with zero violations</b>, <b>11 distinct denial controls</b> were reached, <b>8 of 8 ablated controls restored their harm when removed</b>, and <b>26 conformance checks passing on 2 backend profiles</b>; utility held at <b>6 of 6 benign tasks completed, false-denial rate 0.0</b>. A <b>32-caller race produced 1 mutation and 1 receipt</b>.</p>
+<figure id="fig4"><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 180" width="760" height="180" role="img" aria-label="Share of hostile actions, data flows, and delegation chains contained by architecture" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Share of hostile actions, data flows, and delegation chains contained by architecture</title>
+<rect width="760" height="180" fill="#ffffff"/>
+<text x="138" y="74.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">No mediation</text>
+<text x="138" y="108.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Conventional control</text>
+<text x="138" y="142.5" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="end">Mediated (this work)</text>
+<text x="158" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(a) Hostile actions</text>
+<text x="158" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">n = 7 attacks</text>
+<line x1="158" y1="52" x2="158" y2="156" stroke="#c3c2b7" stroke-width="1"/>
+<text x="158" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0%</text>
+<line x1="222" y1="52" x2="222" y2="156" stroke="#e8e7e1" stroke-width="1"/>
+<text x="222" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">50%</text>
+<line x1="286" y1="52" x2="286" y2="156" stroke="#e8e7e1" stroke-width="1"/>
+<text x="286" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">100%</text>
+<rect x="158" y="62" width="2" height="16" fill="#c3c2b7"><title>No mediation: 0 of 7 contained</title></rect>
+<text x="166" y="74.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">0/7</text>
+<path d="M158,96 H190.6 Q194.6,96 194.6,100 V108 Q194.6,112 190.6,112 H158 Z" fill="#a8a79f"><title>Conventional control: 2 of 7 contained</title></path>
+<text x="200.571" y="108.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">2/7</text>
+<path d="M158,130 H282.0 Q286.0,130 286.0,134 V142 Q286.0,146 282.0,146 H158 Z" fill="#2a78d6"><title>Mediated (this work): 7 of 7 contained</title></path>
+<text x="292" y="142.5" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="start">7/7</text>
+<text x="361" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(b) Hostile data flows</text>
+<text x="361" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">n = 106 flows, 4 packs</text>
+<line x1="361" y1="52" x2="361" y2="156" stroke="#c3c2b7" stroke-width="1"/>
+<text x="361" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0%</text>
+<line x1="425" y1="52" x2="425" y2="156" stroke="#e8e7e1" stroke-width="1"/>
+<text x="425" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">50%</text>
+<line x1="489" y1="52" x2="489" y2="156" stroke="#e8e7e1" stroke-width="1"/>
+<text x="489" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">100%</text>
+<rect x="361" y="62" width="2" height="16" fill="#c3c2b7"><title>No mediation: 0 of 106 contained</title></rect>
+<text x="369" y="74.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">0/106</text>
+<path d="M361,96 H395.6 Q399.6,96 399.6,100 V108 Q399.6,112 395.6,112 H361 Z" fill="#a8a79f"><title>Conventional control: 32 of 106 contained</title></path>
+<text x="405.642" y="108.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">32/106</text>
+<path d="M361,130 H485.0 Q489.0,130 489.0,134 V142 Q489.0,146 485.0,146 H361 Z" fill="#2a78d6"><title>Mediated (this work): 106 of 106 contained</title></path>
+<text x="495" y="142.5" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="start">106/106</text>
+<text x="564" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(c) Hostile delegation chains</text>
+<text x="564" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">n = 10 risk classes</text>
+<line x1="564" y1="52" x2="564" y2="156" stroke="#c3c2b7" stroke-width="1"/>
+<text x="564" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0%</text>
+<line x1="628" y1="52" x2="628" y2="156" stroke="#e8e7e1" stroke-width="1"/>
+<text x="628" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">50%</text>
+<line x1="692" y1="52" x2="692" y2="156" stroke="#e8e7e1" stroke-width="1"/>
+<text x="692" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">100%</text>
+<rect x="564" y="62" width="2" height="16" fill="#c3c2b7"><title>No mediation: 0 of 10 contained</title></rect>
+<text x="572" y="74.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">0/10</text>
+<path d="M564,96 H585.6 Q589.6,96 589.6,100 V108 Q589.6,112 585.6,112 H564 Z" fill="#a8a79f"><title>Conventional control: 2 of 10 contained</title></path>
+<text x="595.6" y="108.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">2/10</text>
+<path d="M564,130 H688.0 Q692.0,130 692.0,134 V142 Q692.0,146 688.0,146 H564 Z" fill="#2a78d6"><title>Mediated (this work): 10 of 10 contained</title></path>
+<text x="698" y="142.5" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="start">10/10</text>
+<text x="138" y="170" font-size="9" font-weight="400" fill="#77756f" text-anchor="end">share contained</text>
+</svg>
+</div><figcaption><b>Fig. 4.</b> Containment across three independent suites. Each panel sends identical hostile inputs to no mediation, a conventional control, and this architecture. (a) Actions: the conventional arm is a safety prompt with a per-agent tool allowlist; 28, 8, and 0 harmful actions reached the protected asset, and every arm completed 2 of 2 benign tasks. (b) Data flows: the conventional arm uses signed class-cleared grants and checks the model&#x27;s claimed output label; 15 of 15 legitimate flows completed under the context gate. (c) Delegation: the conventional arm validates each hop against its immediate caller; a benign two-hop chain completes in every arm.</figcaption></figure>
+<p>Reads were tested the same way. Across corporate, healthcare, financial, and government packs, <b>106 of 106 hostile data flows were contained</b>, including wrong-patient injections, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control, with signed class-cleared grants and an output check on the model's claimed label, <b>contained 32</b> (Fig. 4b). <b>All 14 checks were load-bearing</b>, <b>24,272 read and release configurations showed zero violations</b>, and 15 of 15 legitimate flows completed. Stateful testing, <b>800 sequences and 32,000 operations</b> against an independent reference model, found a defect single-step enumeration missed: a summary drafted before consent was withdrawn could still be released. Release now rechecks consent, revocation, and expiry, and the sequences agree.</p>
+<p>Composition was tested with delegation chains. Nine invariants, from attenuation and rootedness to holder binding, are all load-bearing across <b>768 enumerated chain shapes and zero violations</b>. Validating each hop against its immediate caller, a plausible design, <b>contains 2 of 10 risk classes where verifying the chain contains 10</b> (Fig. 4c). Local correctness at every service is not chain correctness.</p>
+<h3>7.3 Review capacity</h3>
+<p>With the reference assumptions, <b>a roster of 11 reviewers sustains 2,640 consequential actions per day</b>. In a queue trial where 40 arrivals reach one reviewer, <b>Without load control, 4 such merit failures execute. With it, 0 do, and 32 actions defer to manual review</b> (Fig. 5). Across 25 parameter combinations the control was load-bearing in 16 of the 20 where harm was possible, harm reached zero in 16, and repairing contradictory defaults <b>drove the false-positive cost to 0</b>. Automation bias makes a hurried reviewer ratify what an assistant recommends [9]. A model-assisted reviewer multiplies throughput, but only independence keeps it safe: the trial observed <b>5 merit failures with a dependent assistant, 1 with an independent one</b>, so the architecture refuses to start a dependent assistant at a lowered deliberation floor.</p>
+<figure id="fig5"><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 202" width="760" height="202" role="img" aria-label="Merit failures executed and legitimate work completed under four review configurations" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Merit failures executed and legitimate work completed under four review configurations</title>
+<rect width="760" height="202" fill="#ffffff"/>
+<text x="222" y="70.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Unaided, no load control</text>
+<text x="222" y="102.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Unaided, declared load control</text>
+<text x="222" y="134.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Assisted at 10 s floor, dependent</text>
+<text x="222" y="166.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Assisted at 10 s floor, independent</text>
+<line x1="0" y1="114" x2="760" y2="114" stroke="#e8e7e1" stroke-width="1"/>
+<text x="242" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(a) Merit failures executed</text>
+<text x="242" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">lower is better</text>
+<line x1="242" y1="48" x2="242" y2="178" stroke="#c3c2b7" stroke-width="1"/>
+<line x1="412" y1="48" x2="412" y2="178" stroke="#e8e7e1" stroke-width="1"/>
+<text x="242" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0</text>
+<text x="412" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">5</text>
+<path d="M242,58 H374.0 Q378.0,58 378.0,62 V70 Q378.0,74 374.0,74 H242 Z" fill="#2a78d6"><title>Unaided, no load control: 4</title></path>
+<text x="384" y="70.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">4</text>
+<rect x="242" y="90" width="2" height="16" fill="#c3c2b7"><title>Unaided, declared load control: 0</title></rect>
+<text x="250" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">0</text>
+<path d="M242,122 H408.0 Q412.0,122 412.0,126 V134 Q412.0,138 408.0,138 H242 Z" fill="#2a78d6"><title>Assisted at 10 s floor, dependent: 5</title></path>
+<text x="418" y="134.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">5</text>
+<path d="M242,154 H272.0 Q276.0,154 276.0,158 V166 Q276.0,170 272.0,170 H242 Z" fill="#2a78d6"><title>Assisted at 10 s floor, independent: 1</title></path>
+<text x="282" y="166.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">1</text>
+<text x="494" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(b) Legitimate work completed</text>
+<text x="494" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">of 35 benign arrivals</text>
+<line x1="494" y1="48" x2="494" y2="178" stroke="#c3c2b7" stroke-width="1"/>
+<line x1="644" y1="48" x2="644" y2="178" stroke="#e8e7e1" stroke-width="1"/>
+<text x="494" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0</text>
+<text x="644" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">35</text>
+<path d="M494,58 H640.0 Q644.0,58 644.0,62 V70 Q644.0,74 640.0,74 H494 Z" fill="#2a78d6"><title>Unaided, no load control: 35</title></path>
+<text x="650" y="70.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">35</text>
+<path d="M494,90 H520.0 Q524.0,90 524.0,94 V102 Q524.0,106 520.0,106 H494 Z" fill="#2a78d6"><title>Unaided, declared load control: 7  (32 deferred to manual)</title></path>
+<text x="530" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">7  (32 deferred to manual)</text>
+<path d="M494,122 H640.0 Q644.0,122 644.0,126 V134 Q644.0,138 640.0,138 H494 Z" fill="#2a78d6"><title>Assisted at 10 s floor, dependent: 35</title></path>
+<text x="650" y="134.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">35</text>
+<path d="M494,154 H640.0 Q644.0,154 644.0,158 V166 Q644.0,170 640.0,170 H494 Z" fill="#2a78d6"><title>Assisted at 10 s floor, independent: 35</title></path>
+<text x="650" y="166.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">35</text>
+</svg>
+</div><figcaption><b>Fig. 5.</b> Human review as a bounded resource. In the queue trial, 40 arrivals reach one reviewer with a declared attentive capacity of 8; 5 proposals are valid in form but wrong on merit. Declared load control stops 4 merit failures from executing at the cost of 32 deferrals. Adding a review assistant and lowering the floor to 10 s restores throughput; a dependent assistant lets 5 failures through and an independent one 1, so the dependent configuration is refused before it starts. Reviewer behaviour is modelled by declared, adjustable parameters.</figcaption></figure>
+<h3>7.4 Transfer across sectors</h3>
+<p>One successful domain cannot establish transfer (Fig. 6). <b>6 independently reported domain packs cover 55,440 bounded configurations, 180 of 180 hostile scenarios contained, 58 of 58 benign tasks completed, and zero unauthorized mutations.</b> The academic-record pack independently reports <b>4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks</b>; its first run exposed a role declared in the pack but ignored at runtime, a defect invisible with a single domain.</p>
+<figure id="fig6"><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 270" width="760" height="270" role="img" aria-label="Bounded configurations and scenario outcomes for six domain packs" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Bounded configurations and scenario outcomes for six domain packs</title>
+<rect width="760" height="270" fill="#ffffff"/>
+<text x="210" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(a) Bounded configurations explored</text>
+<text x="210" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">zero invariant violations in every pack</text>
+<text x="522" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(b) Scenario outcomes</text>
+<text x="560" y="38" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="middle">Hostile</text>
+<text x="560" y="50" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="middle">contained</text>
+<text x="640" y="38" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="middle">Benign</text>
+<text x="640" y="50" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="middle">completed</text>
+<text x="722" y="38" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="middle">Unauthorized</text>
+<text x="722" y="50" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="middle">mutations</text>
+<line x1="210" y1="54" x2="210" y2="224" stroke="#c3c2b7" stroke-width="1"/>
+<text x="210" y="238" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0</text>
+<line x1="294" y1="54" x2="294" y2="224" stroke="#e8e7e1" stroke-width="1"/>
+<text x="294" y="238" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">10,000</text>
+<line x1="378" y1="54" x2="378" y2="224" stroke="#e8e7e1" stroke-width="1"/>
+<text x="378" y="238" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">20,000</text>
+<text x="192" y="74.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Student support</text>
+<path d="M210,62 H211.0 Q212.0,62 212.0,63.008 V76.992 Q212.0,78 211.0,78 H210 Z" fill="#2a78d6"><title>Student support: 240 configurations</title></path>
+<text x="218.016" y="74.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">240</text>
+<text x="560" y="74.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">30/30</text>
+<text x="640" y="74.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">6/6</text>
+<text x="722" y="74.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">0</text>
+<text x="192" y="102.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Academic record correction</text>
+<path d="M210,90 H246.3 Q250.3,90 250.3,94 V102 Q250.3,106 246.3,106 H210 Z" fill="#2a78d6"><title>Academic record correction: 4,800 configurations</title></path>
+<text x="256.32" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">4,800</text>
+<text x="560" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">30/30</text>
+<text x="640" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">9/9</text>
+<text x="722" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">0</text>
+<text x="192" y="130.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Corporate confidential data</text>
+<path d="M210,118 H276.6 Q280.6,118 280.6,122 V130 Q280.6,134 276.6,134 H210 Z" fill="#2a78d6"><title>Corporate confidential data: 8,400 configurations</title></path>
+<text x="286.56" y="130.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">8,400</text>
+<text x="560" y="130.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">30/30</text>
+<text x="640" y="130.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">10/10</text>
+<text x="722" y="130.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">0</text>
+<text x="192" y="158.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Healthcare record access</text>
+<path d="M210,146 H375.3 Q379.3,146 379.3,150 V158 Q379.3,162 375.3,162 H210 Z" fill="#2a78d6"><title>Healthcare record access: 20,160 configurations</title></path>
+<text x="385.344" y="158.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">20,160</text>
+<text x="560" y="158.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">30/30</text>
+<text x="640" y="158.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">12/12</text>
+<text x="722" y="158.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">0</text>
+<text x="192" y="186.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Consumer financial data</text>
+<path d="M210,174 H276.6 Q280.6,174 280.6,178 V186 Q280.6,190 276.6,190 H210 Z" fill="#2a78d6"><title>Consumer financial data: 8,400 configurations</title></path>
+<text x="286.56" y="186.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">8,400</text>
+<text x="560" y="186.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">30/30</text>
+<text x="640" y="186.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">10/10</text>
+<text x="722" y="186.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">0</text>
+<text x="192" y="214.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Government benefits</text>
+<path d="M210,202 H318.9 Q322.9,202 322.9,206 V214 Q322.9,218 318.9,218 H210 Z" fill="#2a78d6"><title>Government benefits: 13,440 configurations</title></path>
+<text x="328.896" y="214.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">13,440</text>
+<text x="560" y="214.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">30/30</text>
+<text x="640" y="214.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">11/11</text>
+<text x="722" y="214.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="middle">0</text>
+<line x1="0" y1="242" x2="760" y2="242" stroke="#c3c2b7" stroke-width="1"/>
+<text x="192" y="258" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="end">All six packs</text>
+<text x="210" y="258" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="start">55,440 configurations</text>
+<text x="560" y="258" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="middle">180/180</text>
+<text x="640" y="258" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="middle">58/58</text>
+<text x="722" y="258" font-size="10.5" font-weight="700" fill="#0b0b0b" text-anchor="middle">0</text>
+</svg>
+</div><figcaption><b>Fig. 6.</b> One kernel, 6 domain packs. Each pack is verified independently against its own denominators: bounded configurations explored with zero invariant violations (a), and hostile scenarios contained, benign tasks completed, and unauthorized mutations (b). Across all packs: 55,440 configurations, 180 of 180 hostile scenarios contained, and 58 of 58 benign tasks completed. A new sector replaces the pack and regenerates its own evidence; the kernel is unchanged.</figcaption></figure>
+<h3>7.5 A safety case that does not rest on alignment</h3>
+<p>A catalogue of 36 failure classes, including specification gaming, deceptive risk reporting, oversight flooding, collusion, authority laundering, injection, poisoning, and compromised signers, records <b>21 contained, 10 bounded, and 5 residual</b>, each bound to evidence checked to exist (Fig. 7a). Six falsifiers then try to refute the thesis across every pack. Their first run did: five contract bindings named functions that did not exist. Repaired, <b>104,997 bounded attempts found zero counterexamples</b>, and removing a single mediator check produces them (Fig. 7b). Because containment rests on enforcement code rather than model behaviour, the result does not depend on how any model behaves.</p>
+<figure id="fig7"><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 222" width="760" height="222" role="img" aria-label="Threat catalogue status by family and falsification attempts per falsifier" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Threat catalogue status by family and falsification attempts per falsifier</title>
+<rect width="760" height="222" fill="#ffffff"/>
+<text x="0" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(a) Threat and alignment catalogue</text>
+<text x="0" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">36 failure classes by family</text>
+<rect x="0" y="44" width="10" height="10" rx="2" fill="#184f95" stroke="none" stroke-width="1"/>
+<text x="14" y="53" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">contained</text>
+<rect x="78.6" y="44" width="10" height="10" rx="2" fill="#6da7ec" stroke="none" stroke-width="1"/>
+<text x="92.6" y="53" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">bounded</text>
+<rect x="146.4" y="44" width="10" height="10" rx="2" fill="#eb6834" stroke="none" stroke-width="1"/>
+<text x="160.4" y="53" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="start">research agenda</text>
+<text x="92" y="88.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Alignment (12)</text>
+<rect x="104.0" y="76" width="105.1" height="16" fill="#184f95"><title>alignment: 6 contained</title></rect>
+<text x="156.538" y="88" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+<rect x="211.1" y="76" width="87.2" height="16" fill="#6da7ec"><title>alignment: 5 bounded</title></rect>
+<text x="254.692" y="88" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="middle">5</text>
+<rect x="300.3" y="76" width="15.8" height="16" fill="#eb6834"><title>alignment: 1 residual</title></rect>
+<text x="308.231" y="88" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="middle">1</text>
+<text x="92" y="122.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Security (13)</text>
+<rect x="104.0" y="110" width="140.8" height="16" fill="#184f95"><title>security: 8 contained</title></rect>
+<text x="174.385" y="122" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">8</text>
+<rect x="246.8" y="110" width="51.5" height="16" fill="#6da7ec"><title>security: 3 bounded</title></rect>
+<text x="272.538" y="122" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="middle">3</text>
+<rect x="300.3" y="110" width="33.7" height="16" fill="#eb6834"><title>security: 2 residual</title></rect>
+<text x="317.154" y="122" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="middle">2</text>
+<text x="92" y="156.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Data (8)</text>
+<rect x="104.0" y="144" width="122.9" height="16" fill="#184f95"><title>data: 7 contained</title></rect>
+<text x="165.462" y="156" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+<rect x="228.9" y="144" width="15.8" height="16" fill="#eb6834"><title>data: 1 residual</title></rect>
+<text x="236.846" y="156" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="middle">1</text>
+<text x="92" y="190.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Systemic (3)</text>
+<rect x="104.0" y="178" width="33.7" height="16" fill="#6da7ec"><title>systemic: 2 bounded</title></rect>
+<text x="120.846" y="190" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="middle">2</text>
+<rect x="139.7" y="178" width="15.8" height="16" fill="#eb6834"><title>systemic: 1 residual</title></rect>
+<text x="147.615" y="190" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="middle">1</text>
+<line x1="104" y1="68" x2="104" y2="204" stroke="#c3c2b7" stroke-width="1"/>
+<text x="412" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(b) Attempts to refute the thesis</text>
+<text x="412" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">0 counterexamples in every falsifier; log scale</text>
+<line x1="620" y1="52" x2="620" y2="198" stroke="#e8e7e1" stroke-width="1"/>
+<text x="620" y="211" font-size="8.5" font-weight="400" fill="#77756f" text-anchor="middle">100</text>
+<line x1="650" y1="52" x2="650" y2="198" stroke="#e8e7e1" stroke-width="1"/>
+<text x="650" y="211" font-size="8.5" font-weight="400" fill="#77756f" text-anchor="middle">1k</text>
+<line x1="680" y1="52" x2="680" y2="198" stroke="#e8e7e1" stroke-width="1"/>
+<text x="680" y="211" font-size="8.5" font-weight="400" fill="#77756f" text-anchor="middle">10k</text>
+<line x1="710" y1="52" x2="710" y2="198" stroke="#e8e7e1" stroke-width="1"/>
+<text x="710" y="211" font-size="8.5" font-weight="400" fill="#77756f" text-anchor="middle">100k</text>
+<line x1="590" y1="52" x2="590" y2="198" stroke="#c3c2b7" stroke-width="1"/>
+<text x="578" y="69" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="end">F1 Unmediated effect</text>
+<path d="M590,58 H698.4 Q702.4,58 702.4,62 V68 Q702.4,72 698.4,72 H590 Z" fill="#2a78d6"><title>F1: 55,620 attempts, 0 counterexamples</title></path>
+<text x="707.357" y="69" font-size="10" font-weight="400" fill="#0b0b0b" text-anchor="start">55,620</text>
+<text x="578" y="93" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="end">F2 Unentitled read</text>
+<path d="M590,82 H680.7 Q684.7,82 684.7,86 V92 Q684.7,96 680.7,96 H590 Z" fill="#2a78d6"><title>F2: 14,336 attempts, 0 counterexamples</title></path>
+<text x="689.693" y="93" font-size="10" font-weight="400" fill="#0b0b0b" text-anchor="start">14,336</text>
+<text x="578" y="117" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="end">F3 Laundered release</text>
+<path d="M590,106 H691.9 Q695.9,106 695.9,110 V116 Q695.9,120 691.9,120 H590 Z" fill="#2a78d6"><title>F3: 33,936 attempts, 0 counterexamples</title></path>
+<text x="700.92" y="117" font-size="10" font-weight="400" fill="#0b0b0b" text-anchor="start">33,936</text>
+<text x="578" y="141" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="end">F4 Amplified delegation</text>
+<path d="M590,130 H642.6 Q646.6,130 646.6,134 V140 Q646.6,144 642.6,144 H590 Z" fill="#2a78d6"><title>F4: 768 attempts, 0 counterexamples</title></path>
+<text x="651.561" y="141" font-size="10" font-weight="400" fill="#0b0b0b" text-anchor="start">768</text>
+<text x="578" y="165" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="end">F5 Decorative control</text>
+<path d="M590,154 H617.6 Q621.6,154 621.6,158 V164 Q621.6,168 617.6,168 H590 Z" fill="#2a78d6"><title>F5: 113 attempts, 0 counterexamples</title></path>
+<text x="626.592" y="165" font-size="10" font-weight="400" fill="#0b0b0b" text-anchor="start">113</text>
+<text x="578" y="189" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="end">F6 Phantom evidence</text>
+<path d="M590,178 H626.5 Q630.5,178 630.5,182 V188 Q630.5,192 626.5,192 H590 Z" fill="#2a78d6"><title>F6: 224 attempts, 0 counterexamples</title></path>
+<text x="635.507" y="189" font-size="10" font-weight="400" fill="#0b0b0b" text-anchor="start">224</text>
+</svg>
+</div><figcaption><b>Fig. 7.</b> The safety case does not rest on alignment. (a) Of 36 failure classes, including 12 alignment failures, 21 are contained, 10 bounded, and 5 assigned to the research agenda; every evidence locator is checked to exist. (b) Six falsifiers made 104,997 bounded attempts to produce a governed effect or disclosure from model output alone and found none; removing a single mediator check produces counterexamples.</figcaption></figure>
+<p>The method also applies to itself. Applying the contract to the repository's own requirements found that <b>eighteen of twenty-eight were prose bound to nothing.</b> Coverage is now published as machine-verified, organizationally attested, or unverified, <b>reading 41, 3, 0 today</b>, and a named test that does not exist fails the build. Every defect reported in this section was found by the method, not by its authors' review.</p>
+</section>
+<section>
+<h2>8. Education as the dissemination mechanism</h2>
+<p>The conference theme matters because this architecture requires <b>system literacy</b>: distinguishing proposals from powers and requests from entitlements, locating the mediator, following a token back to the entitlement that permits it, and reconstructing an outcome and its redress. A two-hour offline lab has participants break a boundary, remove a control, watch the harm return, and transfer the contract to their own domain.</p>
+<p>For <i>AI for Learning</i>, the education packs govern institutional workflows such as student support and transcript correction with the same rules as a hospital or a benefits agency. For <i>Learning for AI</i>, the contribution is a reusable method for learning how AI systems acquire and exercise power. The repository is offered as a digital public good [8]: any institution can inspect the rules, replace the pack, and publish its own evidence, and educators can teach the same boundaries to policymakers, engineers, and students [7].</p>
+</section>
+<section>
+<h2>9. Scope and research agenda</h2>
+<p>Every figure is a reproducible fixture observation: any institution can regenerate it offline from the released repository and rerun it in its own environment. The architecture names its trusted base, so assurance effort concentrates on a small, declared set of components rather than on every model an institution adopts.</p>
+<p>The research agenda moves the pattern from reproducible evidence to field evidence: institutional pilots, certified hardware one-way deployments, independent red teaming and audit, measured reviewer performance with and without assistants, and studies of de-identification, fairness, accessibility, cost, and energy. Because every governed action is attributable and contestable, the same records give institutions a foundation for participatory rulemaking over the rules their agents enforce.</p>
+</section>
+<section>
+<h2>10. Conclusion: directions for future AI systems</h2>
+<ol><li><b>Build on the Mediation Thesis.</b> Treat intelligence as untrusted, mediate every effect and data flow, and publish the attempts to refute it.</li><li><b>Govern reads as strictly as writes.</b> Bind every context to purpose, subject, field, consent, and location, and label every output by what produced it.</li><li><b>Keep identities out of models.</b> Tokenize personal data before inference, hold keys with the mediator, and restore identity only for an entitled recipient.</li><li><b>Make every consequential capability contractable.</b> No capability ships without the seven fields, a test bound to something that runs, a recovery owner, and a conformance claim.</li><li><b>Treat sovereignty as a demonstrable lifecycle capability.</b> Measure control of keys, data movement, model replacement, evidence, recovery, and exit, not hosting location.</li><li><b>Publish authority and oversight ceilings before automation roadmaps.</b> Delegation depth and review capacity are safety limits, not staffing footnotes.</li><li><b>Build sectors as domain packs over a shared kernel,</b> and trade failure cases, not sensitive data.</li></ol>
+<p>An AI system should be governed less like an application and more like an institution: with a constitution, separated powers, a memory it cannot rewrite, and a safe way to stop. The reference implementation shows that this direction can be built today.</p>
+</section>
+<section class="references">
+<h2>References</h2>
+<p>[1] Rose, S., Borchert, O., Mitchell, S., and Connelly, S. (2020). <i>Zero Trust Architecture</i>. NIST SP 800-207. <a href="https://doi.org/10.6028/NIST.SP.800-207">https://doi.org/10.6028/NIST.SP.800-207</a></p>
+<p>[2] Autio, C., et al. (2024). <i>Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile</i>. NIST AI 600-1. <a href="https://doi.org/10.6028/NIST.AI.600-1">https://doi.org/10.6028/NIST.AI.600-1</a></p>
+<p>[3] OWASP GenAI Security Project (2025). <i>OWASP Top 10 for Agentic Applications 2026</i>. <a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/">https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/</a></p>
+<p>[4] OWASP GenAI Security Project (2026). <i>Agent Control Standard</i>. <a href="https://genai.owasp.org/resource/agent-control-standard-acs/">https://genai.owasp.org/resource/agent-control-standard-acs/</a></p>
+<p>[5] MITRE (2024). <i>ATLAS: Adversarial Threat Landscape for Artificial-Intelligence Systems</i>. <a href="https://atlas.mitre.org/">https://atlas.mitre.org/</a></p>
+<p>[6] ISO/IEC (2023). <i>ISO/IEC 42001:2023 — Information technology, Artificial intelligence, Management system</i>. <a href="https://www.iso.org/standard/81230.html">https://www.iso.org/standard/81230.html</a></p>
+<p>[7] Miao, F., and Cukurova, M. (2024). <i>AI competency framework for teachers</i>. UNESCO. <a href="https://unesdoc.unesco.org/ark:/48223/pf0000391104">https://unesdoc.unesco.org/ark:/48223/pf0000391104</a></p>
+<p>[8] United Nations (2024). <i>Global Digital Compact</i>. <a href="https://www.un.org/pact-for-the-future/en/annex-i-global-digital-compact">https://www.un.org/pact-for-the-future/en/annex-i-global-digital-compact</a></p>
+<p>[9] Parasuraman, R., and Manzey, D. (2010). Complacency and bias in human use of automation: an attentional integration. <i>Human Factors</i>, 52(3), 381–410. <a href="https://doi.org/10.1177/0018720810376055">https://doi.org/10.1177/0018720810376055</a></p>
+<p>[10] Barker, E. (2020). <i>Recommendation for Key Management: Part 1 — General</i>. NIST SP 800-57 Part 1 Rev. 5. <a href="https://doi.org/10.6028/NIST.SP.800-57pt1r5">https://doi.org/10.6028/NIST.SP.800-57pt1r5</a></p>
+<p>[11] Kissel, R., Regenscheid, A., Scholl, M., and Stine, K. (2014). <i>Guidelines for Media Sanitization</i>. NIST SP 800-88 Rev. 1. <a href="https://doi.org/10.6028/NIST.SP.800-88r1">https://doi.org/10.6028/NIST.SP.800-88r1</a></p>
+<p>[12] Saltzer, J. H., and Schroeder, M. D. (1975). The protection of information in computer systems. <i>Proceedings of the IEEE</i>, 63(9), 1278–1308. <a href="https://doi.org/10.1109/PROC.1975.9939">https://doi.org/10.1109/PROC.1975.9939</a></p>
+<p>[13] Denning, D. E. (1976). A lattice model of secure information flow. <i>Communications of the ACM</i>, 19(5), 236–243. <a href="https://doi.org/10.1145/360051.360056">https://doi.org/10.1145/360051.360056</a></p>
+<p>[14] Clark, D. D., and Wilson, D. R. (1987). A comparison of commercial and military computer security policies. <i>IEEE Symposium on Security and Privacy</i>, 184–194.</p>
+<p>[15] Debenedetti, E., et al. (2025). <i>Defeating Prompt Injections by Design</i>. <a href="https://arxiv.org/abs/2503.18813">https://arxiv.org/abs/2503.18813</a></p>
+<p>[16] Costa, M., et al. (2025). <i>Securing AI Agents with Information-Flow Control</i>. <a href="https://arxiv.org/abs/2505.23643">https://arxiv.org/abs/2505.23643</a></p>
+<p>[17] Greenblatt, R., Shlegeris, B., Sachan, K., and Roger, F. (2024). AI control: Improving safety despite intentional subversion. <i>Proceedings of the 41st International Conference on Machine Learning</i>. <a href="https://arxiv.org/abs/2312.06942">https://arxiv.org/abs/2312.06942</a></p>
+<p>[18] European Parliament and Council (2016). <i>Regulation (EU) 2016/679 (General Data Protection Regulation)</i>. <a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj">https://eur-lex.europa.eu/eli/reg/2016/679/oj</a></p>
+<p>[19] European Parliament and Council (2024). <i>Regulation (EU) 2024/1689 (Artificial Intelligence Act)</i>. <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">https://eur-lex.europa.eu/eli/reg/2024/1689/oj</a></p>
+</section>

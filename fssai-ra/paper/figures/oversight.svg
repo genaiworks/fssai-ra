@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 202" width="760" height="202" role="img" aria-label="Merit failures executed and legitimate work completed under four review configurations" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Merit failures executed and legitimate work completed under four review configurations</title>
+<rect width="760" height="202" fill="#ffffff"/>
+<text x="222" y="70.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Unaided, no load control</text>
+<text x="222" y="102.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Unaided, declared load control</text>
+<text x="222" y="134.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Assisted at 10 s floor, dependent</text>
+<text x="222" y="166.5" font-size="11" font-weight="400" fill="#0b0b0b" text-anchor="end">Assisted at 10 s floor, independent</text>
+<line x1="0" y1="114" x2="760" y2="114" stroke="#e8e7e1" stroke-width="1"/>
+<text x="242" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(a) Merit failures executed</text>
+<text x="242" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">lower is better</text>
+<line x1="242" y1="48" x2="242" y2="178" stroke="#c3c2b7" stroke-width="1"/>
+<line x1="412" y1="48" x2="412" y2="178" stroke="#e8e7e1" stroke-width="1"/>
+<text x="242" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0</text>
+<text x="412" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">5</text>
+<path d="M242,58 H374.0 Q378.0,58 378.0,62 V70 Q378.0,74 374.0,74 H242 Z" fill="#2a78d6"><title>Unaided, no load control: 4</title></path>
+<text x="384" y="70.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">4</text>
+<rect x="242" y="90" width="2" height="16" fill="#c3c2b7"><title>Unaided, declared load control: 0</title></rect>
+<text x="250" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">0</text>
+<path d="M242,122 H408.0 Q412.0,122 412.0,126 V134 Q412.0,138 408.0,138 H242 Z" fill="#2a78d6"><title>Assisted at 10 s floor, dependent: 5</title></path>
+<text x="418" y="134.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">5</text>
+<path d="M242,154 H272.0 Q276.0,154 276.0,158 V166 Q276.0,170 272.0,170 H242 Z" fill="#2a78d6"><title>Assisted at 10 s floor, independent: 1</title></path>
+<text x="282" y="166.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">1</text>
+<text x="494" y="16" font-size="11.5" font-weight="700" fill="#0b0b0b" text-anchor="start">(b) Legitimate work completed</text>
+<text x="494" y="33" font-size="9.5" font-weight="400" fill="#77756f" text-anchor="start">of 35 benign arrivals</text>
+<line x1="494" y1="48" x2="494" y2="178" stroke="#c3c2b7" stroke-width="1"/>
+<line x1="644" y1="48" x2="644" y2="178" stroke="#e8e7e1" stroke-width="1"/>
+<text x="494" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">0</text>
+<text x="644" y="192" font-size="9" font-weight="400" fill="#77756f" text-anchor="middle">35</text>
+<path d="M494,58 H640.0 Q644.0,58 644.0,62 V70 Q644.0,74 640.0,74 H494 Z" fill="#2a78d6"><title>Unaided, no load control: 35</title></path>
+<text x="650" y="70.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">35</text>
+<path d="M494,90 H520.0 Q524.0,90 524.0,94 V102 Q524.0,106 520.0,106 H494 Z" fill="#2a78d6"><title>Unaided, declared load control: 7  (32 deferred to manual)</title></path>
+<text x="530" y="102.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">7  (32 deferred to manual)</text>
+<path d="M494,122 H640.0 Q644.0,122 644.0,126 V134 Q644.0,138 640.0,138 H494 Z" fill="#2a78d6"><title>Assisted at 10 s floor, dependent: 35</title></path>
+<text x="650" y="134.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">35</text>
+<path d="M494,154 H640.0 Q644.0,154 644.0,158 V166 Q644.0,170 640.0,170 H494 Z" fill="#2a78d6"><title>Assisted at 10 s floor, independent: 35</title></path>
+<text x="650" y="166.5" font-size="10.5" font-weight="400" fill="#0b0b0b" text-anchor="start">35</text>
+</svg>

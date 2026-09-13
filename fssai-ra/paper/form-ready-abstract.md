@@ -1,7 +1,7 @@
 # Trust by Construction: A Cross-Sector Reference Architecture for Governed Agentic AI
 
 **Proposed panel:** Agentic AI in the Loop - From Autonomous Tools to Shared Capacity
-**Keywords:** agentic AI; system literacy; secure data governance; institutional sovereignty; reference architecture; fail-secure systems; verifiable governance; digital public goods
+**Keywords:** agentic AI; reference architecture; secure data governance; privacy by design; institutional sovereignty; fail-secure systems; system literacy; digital public goods
 **Reference implementation:** https://github.com/genaiworks/fssai-ra (release v1.0.0 for baseline figures, plus current-source supplements; record the reviewed commit at submission)
 
 > Paste each section below into the matching form field. Headings are field
@@ -9,67 +9,59 @@
 
 ## Introduction
 
-AI governance still centres on models. The governed object is the whole system that moves data, grants power, acts, records effects, and recovers. Corporate, medical, and academic systems face different laws yet the same questions: who held power, what was seen, what happened, and how can it be challenged?
+An AI agent can now read a patient file, draft a credit decision, or change a transcript in seconds. Most AI governance still asks whether the model is safe. Yet harm happens in the system: a record read without need, a summary sent to the wrong person, a plausible plan turned into an act no one approved. As models grow more capable, their intent gets harder to verify, while a boundary stays easy to test.
 
-This work presents Trust by Construction and one foundational thesis: intelligence is untrusted; power and data are mediated. Treat every model as capable, persuasive, and possibly misaligned. Route every effect and every flow of protected data through mediators the model cannot bypass. Trust only what is contracted, tested, and evidenced where it is relied on. Two rules follow. A model may propose an action; it cannot manufacture the authority to execute it. A model may request information; it cannot manufacture the entitlement to see it, or launder what it saw.
+This paper proposes Trust by Construction, an open reference architecture and build method for agentic AI in any sector. It rests on one testable thesis: intelligence is untrusted; power and data are mediated. Two rules follow. A model may propose an act, but it cannot grant itself the right to do it. It may ask for data, but it cannot grant itself the right to see it, or pass on what it saw.
 
-Mediators alone hold write and record credentials, recheck purpose, consent, and revocation at every use, and label outputs by what built them. Authority only narrows; restriction only accumulates. The thesis is falsifiable: one model output that alone causes a governed effect or disclosure refutes it. Building on reference monitors, information-flow control, and AI control, the paper offers an open, testable foundation; education spreads it as system literacy.
+We show how both rules become running code: a control contract, seven planes, a privacy pipeline that keeps identities out of models, and domain packs from schools to hospitals. The code is open, and every figure in this paper can be rerun offline. For AI x Education, the design is also a tool for system literacy: learners see where power sits, who holds the keys, and how to contest a decision.
 
 ## Development Section 1 Methodology Core Argument and Case Context
 
-The method treats an agentic AI system less like an application and more like a governed institution. It needs separated powers, a memory it cannot rewrite, and a safe way to stop. Its mechanisms are not new: reference monitors, lattice information flow, separation of duties, and recent capability and flow control for agents precede it. The contribution is composing them with institutional purpose, consent, review capacity, and evidence.
+We treat the whole AI system, not the model, as the unit of trust, and we test it the way a safety case is tested: by trying to break it. The design joins proven ideas, namely reference monitors, least privilege, lattice information flow, separation of duties, and recent capability and flow control for agents, with institutional purpose, consent, review capacity, and evidence.
 
-The contract is machine-readable; each check names the requirement it defends. Teams begin with one consequential capability and a manual fallback, writing the failure test before connecting real data or keys. If any field cannot be filled, the team has found an unresolved governance choice rather than a function ready to automate.
+Contract. Each consequential capability gets a seven-field contract: asset, operation, enforcement point, owner, failure test, evidence, and failure response. A treatment-access capability, for example, names the patient record, one state change, the executor, a privacy officer, a wrong-patient test, a signed receipt, and revoke with manual fallback. A field that cannot be filled is an open policy choice, not a task for engineers. Each field is bound to a check that must exist and run.
 
-Seven logical planes implement the pattern. The boundary plane authenticates ingress and egress, quarantines untrusted input, and exposes a no-read-back seam that certified one-way hardware can replace. The data plane keeps stable IDs, replayable events, and versioned snapshots. The intelligence plane contains replaceable models and retrieval but no write power. The authority plane issues purpose-, time-, and holder-bound grants. The execution plane rechecks identity, policy, version, approval, and replay before writing. The evidence plane binds intent to outcome. The resilience plane revokes, reconciles uncertain effects, fails securely, and routes work to fallback.
+Planes. Seven planes split duties. The boundary plane admits and quarantines input. The data plane keeps records encrypted, versioned, and replayable. The intelligence plane holds models and agents but no keys. The authority plane issues grants bound to holder, purpose, and time. The execution plane rechecks each act before one write. The evidence plane links intent to outcome. The resilience plane revokes, reconciles, and falls back to manual work. Two mediators, the executor and the context gate, alone hold write rights, record access, and keys.
 
-The open stack maps these duties to FastAPI, PostgreSQL or Redis, Kafka, PySpark, Iceberg, object storage, local models, signing, and a software one-way seam. They are replaceable adapters: a new stack inherits no assurance until the same failure cases pass in its environment.
+Privacy pipeline. Before any model sees data, personal details become vault tokens, so the model can reason about which case a fact concerns without learning who it is. Fields are sealed under per-person keys held by the gate; erasing a person means destroying one key, which also voids backups. A semantic router reads the intent and data class of each request and picks the cheapest model allowed for that class, so restricted data stays on an attested local model. The router only advises: the gate checks grant, purpose, consent, zone, and model signature, then decrypts only the fields needed. Outputs carry the labels of all inputs, and real names return only for an entitled recipient.
 
-Reading is governed like acting. A context gate alone holds the record-store credential. A signed grant binds holder, purpose, subjects, fields, classes, and expiry; consent and revocation are checked at every read; each class reaches only model endpoints in approved zones. Every output inherits the labels of all data its session received, so a model cannot declassify its own summary. Only an independent role approving that exact output can.
+Ten steps. Every request runs the same path: admit, protect, route, entitle, reason, authorize, execute, release, record, recover. Only one step is done by the model, and it yields a proposal, never an effect. Approval binds to the exact proposal, authority can only narrow as agents delegate, and human review is declared as capacity with a minimum time to decide, so overload defers work instead of turning approval into a rubber stamp.
 
-An approval signs an exact proposal digest covering the operation, target, before and after state, evidence version, requester, resource version, role, audience, and expiry. A change needs new authority. The executor reads the review class from a deployment pack, never from the model. A retry returns the same receipt or enters reconciliation; it cannot improvise a second action.
+Cases. Domain packs carry local meaning over one shared kernel. In health, diagnosis stays on premises and a privacy officer approves access. In corporate data, trade secrets stay private and a data protection officer approves release. In finance, credit and fraud data stay in the bank and a risk officer approves limits. In public benefits, identity and immigration data stay sovereign and appeals go to an independent officer. In education, a registrar applies a transcript fix only after the instructor confirms it.
 
-Authority may cross agent chains, but no principal may pass power it does not hold. Chain invariants cover roots, scope, holder, beneficiary, depth, time, cycles, provenance, and non-delegable acts. Human review is one authorization source, not the architecture. When used, declared capacity, a deliberation floor, escalation, and fallback stop excess demand from becoming empty approval. An AI review assistant must differ in model, evidence path, and adversarial posture from the proposing agent.
+Build method. Teams follow seven stages: frame one capability, fill the contract, write the pack, bind keys to mediators, falsify on synthetic data, promote only on fresh evidence, then operate. Any change of model, vendor, or backend returns to falsify. The reference stack uses FastAPI, PostgreSQL, Kafka, Iceberg, and Ollama; each part can be replaced once the same tests pass again.
 
-Domain packs supply institutional meaning: purpose, basis, data classes, duties, bans, lifecycle rules, owners, transitions, disclosure policy, fallback, tests, and limits. The corporate pack governs classification, internal use, external release, revocation, and legal hold. The health pack governs record access and secondary use while excluding diagnosis, treatment, triage, prescribing, and record alteration. Education packs govern support and record correction. New sectors replace the pack, not the kernel.
-
-Assurance combines randomized properties, bounded state checks, ablation, backend conformance, race tests, an open adversary corpus, and a threat catalogue whose evidence must exist. Each asks whether an unimagined state breaks an invariant, a control is load-bearing, or a replacement preserves behavior.
+Evaluation. The same attacks go to three designs: no mediation, a careful conventional control, and this architecture. We remove each control to see whether harm returns, enumerate bounded state spaces, run random stateful sequences against a reference model, and run six falsifiers that try to refute the thesis.
 
 ## Development Section 2 Results Analysis and Impact
 
-All results are fixture observations in declared local environments: not security probabilities, a certification, or evidence of production readiness.
+All figures are reproducible fixture observations from synthetic domain packs, and utility is shown next to safety, since a system that refuses everything is safe and useless.
 
-Against the synthetic student-support profile, 30 of 30 adversarial scenarios were contained with zero unauthorised mutations, and 6 of 6 benign tasks completed for a false-denial rate of 0.0. Bounded model checking explored 240 configurations with zero invariant violations, reaching 11 distinct denial controls. Eight of eight ablated controls restored their harm when removed: authority coverage 1.0. Twenty-six conformance checks passed on two independent backends, and a 32-caller replay race produced one mutation and one receipt.
+Acts. Seven attacks went to all three designs. The unguarded agent let 28 harmful actions through, a safety prompt with a tool allowlist let 8 through, and this architecture let none through; every benign task completed in all three, and the false-denial rate was 0.0. On the reference profile, 30 of 30 attack scenarios were contained, 240 configurations showed no violation, and 8 of 8 controls were load-bearing: removing any one brought its harm back. A 32-caller replay race produced one change and one receipt.
 
-The same hostile proposals and legitimate work went to three architectures. An unguarded agent contained none and delivered 28 harmful actions. A prompt-guarded arm, adding a safety prompt and per-agent tool allowlist, contained 29 percent and delivered 8. The full architecture contained all seven and delivered none, at no cost to benign completion.
+Data. Across health, corporate, finance, and government packs, 106 of 106 hostile data flows were contained, including wrong-patient requests, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control stopped 32. All 14 checks were load-bearing, 24,272 configurations showed no violation, and 15 of 15 legitimate flows completed. Stateful testing over 800 sequences and 32,000 random operations found a flaw single-step checks missed: a draft made before consent was withdrawn could still be released. Release now rechecks consent.
 
-Review capacity shows why human oversight is a system resource, not a slogan. With the reference assumptions, a roster of 11 reviewers sustains 2,640 consequential actions per day. In a queue trial, 40 arrivals reach one reviewer budgeted for 8. Some proposals are structurally valid yet wrong on merit. Without load control, four such failures execute. With it, none do, and 32 actions defer to manual review. The degradation curve is a declared parameter, not a measure of real officers; field study remains open.
+Agents. Checking only the calling agent stopped 2 of 10 chain attacks; checking the whole chain stopped all 10, across 768 chain shapes with no violation. Each service being correct does not make the chain correct.
 
-Across six synthetic packs, the identical kernel covers 55,440 bounded configurations, contains 180 of 180 hostile scenarios, completes 58 of 58 benign tasks, and records zero unauthorised mutations. This demonstrates reuse, not sector compliance or safety. The academic pack retains the transfer baseline: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. Its first run exposed a role declared in the pack but ignored at runtime.
+Human review. Oversight is a finite resource. A roster of 11 reviewers sustains 2,640 consequential actions per day. When 40 cases reach one reviewer, 4 approvals that are wrong on merit execute without load control and none with it, while 32 cases move to manual review. Across 25 parameter settings, the control never raised harm. An AI assistant raised completed work fivefold, but a dependent assistant let 5 errors through and an independent one let 1, so a dependent setup is refused.
 
-Reads were tested the same way. Across corporate, health, finance, and government packs, 106 of 106 hostile data flows were contained, including wrong-patient injections, purpose switches, withdrawn consent, and self-labelled summaries. Conventional access control contained 32. All 14 checks were load-bearing, and 24,272 configurations showed zero violations. Stateful testing, 32,000 random operations against an independent model, found that release skipped the consent recheck; fixed, it agrees everywhere.
+Transfer. Six domain packs share one kernel: 55,440 configurations checked, 180 of 180 hostile scenarios contained, 58 of 58 benign tasks completed, and no unauthorised change. Each pack reports its own denominators, so no sector borrows another's evidence. The academic records pack exposed a declared role the runtime ignored, a flaw one domain could never show.
 
-The design assumes the model may be misaligned. Of 36 failure classes, from specification gaming and deceptive risk reports to oversight flooding and compromised signers, 21 are contained, 10 bounded, and 5 residual. Six falsifiers made 104,997 bounded attempts to refute the thesis and found no counterexample.
+Alignment. The safety case does not assume a well-behaved model. Of 36 failure classes, from specification gaming and deceptive risk reports to collusion and poisoned inputs, 21 are contained, 10 bounded, and 5 set as research goals. Six falsifiers made 104,997 attempts to cause an effect or disclosure from model output alone and found none; removing one mediator check makes them succeed. Their first run did find something: five contract entries named code that did not exist. The method was also turned on itself: 18 of 28 early requirements were prose bound to no test, and coverage now reads 41 machine-verified, 3 attested, and 0 unverified.
 
-An open adversary corpus scores YAML attacks without records or code and reports external contributions; today that number is zero.
-
-Composition adds two findings. Checking only an immediate delegator contained 2 of 10 hostile chain classes; full-chain checks contained all 10. Model-assisted review completed five times the valid work of the unaided arm, but a dependent assistant repeated more merit errors than an independent one.
-
-For AI for Learning, an education pack governs an institutional workflow. For Learning for AI, the architecture teaches system literacy: trace data, bound delegation, locate independent enforcement, calculate capacity, and reconstruct accountability. No learning gain is claimed; none has been measured.
-
-Open questions include the trusted base itself, hardware isolation, covert channels, re-identification, reviewer accuracy, fairness, cost, and independent audit. Containers on one host are logical separation, not independent administrative trust.
+Impact. For institutions, trust becomes something a buyer can demand and an auditor can rerun: named mediators, filled contracts, declared review limits, and fresh evidence. Procurement officers can require the seven fields before signing, and regulators can check purpose, consent, and erasure as running controls rather than policy text. Sovereignty is measured as control of keys, data flow, model swap, and exit, not server location. For education, a two-hour offline lab lets learners break a boundary, remove a control, watch harm return, and rebuild the contract for their own field. Code, tests, and figures are open as a digital public good.
 
 ## Conclusion
 
-Trust by Construction moves AI governance from models to systems on one thesis: intelligence is untrusted; power and data are mediated. A model may reason, but cannot change a protected record, see beyond its grant, launder what it saw, approve its own proposal, rewrite evidence, or hide an uncertain outcome. Safety rests on verifiable boundaries, not on trusted intentions.
+Trust by Construction moves AI governance from the model to the system. Its claim is simple and testable: intelligence is untrusted; power and data are mediated. A model may reason, draft, and propose, but it cannot act without granted authority, see data without entitlement, learn identities it does not need, or rewrite the record of what happened.
 
-Five actions follow for any institution building AI: name each mediator and the credential only it holds; bind every consequential action and sensitive read to a purpose, an owner, and a failure test; declare the trusted base and review capacity; claim conformance by class with locally regenerated evidence; and share failure cases, not sensitive data.
+Five steps follow for any institution adopting AI. Name the mediators and the keys only they hold. Keep identities out of models and restricted data on attested local models. Bind every consequential act and sensitive read to a purpose, an owner, and a failure test. Declare review capacity before automation targets. Rerun the evidence whenever a model, vendor, or backend changes.
 
-Policymakers and procurement officers can then demand named powers, limits, fallback, and proof. Engineers can map each duty to an enforced interface and rerun the falsifiers after replacing any model or product. Education supplies the literacy to inspect both, in every sector.
-
-The claim is bounded. A governed agent can enforce an unjust rule faster; mediation makes action attributable and contestable, not fair. The prototype proves neither production security nor compliance. It offers a falsifiable foundation for law, public voice, hardware assurance, and independent evidence to build on.
+Policy makers and buyers can then ask for proof, not promises. Engineers get a pattern they can build in any stack. Educators get a way to teach how AI systems gain and use power. For AI for Learning, a school can govern its agents with the same kernel as a hospital; for Learning for AI, learners get a concrete map of power, data, and redress. The next stage is field pilots with partner institutions, independent audit, and certified hardware. Governance built this way does not ask anyone to trust a model; it lets everyone check the system.
 
 ## References
+
+Clark, D. D., and Wilson, D. R. (1987). A comparison of commercial and military computer security policies. IEEE Symposium on Security and Privacy, 184-194.
 
 Costa, M., et al. (2025). Securing AI agents with information-flow control. https://arxiv.org/abs/2505.23643
 
@@ -77,20 +69,24 @@ Debenedetti, E., et al. (2025). Defeating prompt injections by design. https://a
 
 Denning, D. E. (1976). A lattice model of secure information flow. Communications of the ACM, 19(5), 236-243. https://doi.org/10.1145/360051.360056
 
+European Parliament and Council. (2016). Regulation (EU) 2016/679 (General Data Protection Regulation). https://eur-lex.europa.eu/eli/reg/2016/679/oj
+
 Greenblatt, R., Shlegeris, B., Sachan, K., and Roger, F. (2024). AI control: Improving safety despite intentional subversion. Proceedings of the 41st International Conference on Machine Learning. https://arxiv.org/abs/2312.06942
-
-Saltzer, J. H., and Schroeder, M. D. (1975). The protection of information in computer systems. Proceedings of the IEEE, 63(9), 1278-1308. https://doi.org/10.1109/PROC.1975.9939
-
-Autio, C., et al. (2024). Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile. NIST AI 600-1. https://doi.org/10.6028/NIST.AI.600-1
 
 ISO/IEC. (2023). ISO/IEC 42001:2023 - Information technology, Artificial intelligence, Management system. https://www.iso.org/standard/81230.html
 
+Kissel, R., Regenscheid, A., Scholl, M., and Stine, K. (2014). Guidelines for Media Sanitization. NIST SP 800-88 Rev. 1. https://doi.org/10.6028/NIST.SP.800-88r1
+
 Miao, F., and Cukurova, M. (2024). AI competency framework for teachers. UNESCO. https://unesdoc.unesco.org/ark:/48223/pf0000391104
+
+National Institute of Standards and Technology. (2024). Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile. NIST AI 600-1. https://doi.org/10.6028/NIST.AI.600-1
 
 OWASP GenAI Security Project. (2025). OWASP Top 10 for Agentic Applications 2026. https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/
 
 Parasuraman, R., and Manzey, D. (2010). Complacency and bias in human use of automation: an attentional integration. Human Factors, 52(3), 381-410. https://doi.org/10.1177/0018720810376055
 
 Rose, S., Borchert, O., Mitchell, S., and Connelly, S. (2020). Zero Trust Architecture. NIST SP 800-207. https://doi.org/10.6028/NIST.SP.800-207
+
+Saltzer, J. H., and Schroeder, M. D. (1975). The protection of information in computer systems. Proceedings of the IEEE, 63(9), 1278-1308. https://doi.org/10.1109/PROC.1975.9939
 
 United Nations. (2024). Global Digital Compact. https://www.un.org/pact-for-the-future/en/annex-i-global-digital-compact
