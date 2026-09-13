@@ -71,6 +71,10 @@ disclosure:
       purposes: [applicant-access]
       zone: government-sovereign
       subject_scope: self
+    payments_system:
+      classes: [household-financial]
+      purposes: [eligibility-assessment]
+      zone: accredited-cloud
     statistics_office:
       classes: [statistical-aggregate]
       purposes: [statistical-reporting]

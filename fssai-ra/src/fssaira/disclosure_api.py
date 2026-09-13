@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 
 from .disclosure import (
     DataLabel,
+    DisclosureCode,
     DeclassificationAuthority,
     DisclosureDenied,
     DisclosureGate,
@@ -87,8 +88,49 @@ class ReleaseRequest(BaseModel):
     recipient_id: str = Field(default="", max_length=200)
 
 
+class TokenGrant(BaseModel):
+    token: str = Field(min_length=20, max_length=16_000)
+
+
 class BreakGlassReview(BaseModel):
     finding: str = Field(min_length=1, max_length=2000)
+
+
+def token_verifier_from_env():
+    """``FSSAI_DISCLOSURE_TOKEN_ISSUER``, ``_AUDIENCE``, and ``_JWKS_URL``, or nothing."""
+    issuer = os.getenv("FSSAI_DISCLOSURE_TOKEN_ISSUER", "")
+    if not issuer:
+        return None
+    from .disclosure_tokens import JwtGrantVerifier
+
+    return JwtGrantVerifier(issuer=issuer,
+                            audience=os.getenv("FSSAI_DISCLOSURE_TOKEN_AUDIENCE", ""),
+                            jwks_url=os.getenv("FSSAI_DISCLOSURE_TOKEN_JWKS_URL") or None)
+
+
+def consent_from_env():
+    """``FSSAI_DISCLOSURE_CONSENT_URL`` selects a live institutional consent service."""
+    url = os.getenv("FSSAI_DISCLOSURE_CONSENT_URL", "")
+    if not url:
+        return None
+    import httpx
+
+    from .disclosure_sources import HttpConsentService
+
+    return HttpConsentService(url, httpx.Client())
+
+
+def records_from_env():
+    """``FSSAI_DISCLOSURE_FHIR_URL`` and ``FSSAI_DISCLOSURE_FHIR_FIELDS`` (JSON field map)."""
+    url = os.getenv("FSSAI_DISCLOSURE_FHIR_URL", "")
+    if not url:
+        return None
+    import httpx
+
+    from .disclosure_sources import FhirRecordSource
+
+    fields = json.loads(os.getenv("FSSAI_DISCLOSURE_FHIR_FIELDS", "{}"))
+    return FhirRecordSource(url, httpx.Client(), fields=fields)
 
 
 def _label(label: DataLabel) -> dict:
@@ -99,7 +141,10 @@ class DisclosureRuntime:
     """The gate, its signing authorities, and the server-held grant store."""
 
     def __init__(self, profile, evidence, evidence_token: str, *,
-                 model_endpoint: str | None = None) -> None:
+                 model_endpoint: str | None = None, store=None, records=None,
+                 consent=None, token_verifier=None) -> None:
+        from .disclosure_store import open_disclosure_store
+
         if profile.disclosure is None:
             raise ValueError("profile declares no disclosure policy")
         self.profile = profile
@@ -109,14 +154,33 @@ class DisclosureRuntime:
         self.declassifier = DeclassificationAuthority(
             secret=os.getenv("FSSAI_DISCLOSURE_DECLASSIFICATION_KEY",
                              "teaching-declassification-key-not-secret"))
+        self.store = store if store is not None else open_disclosure_store(
+            os.getenv("FSSAI_DISCLOSURE_STORE", "memory"))
+        self.token_verifier = token_verifier if token_verifier is not None else token_verifier_from_env()
+        consent = consent if consent is not None else consent_from_env()
+        if records is None:
+            records = records_from_env()
         self.gate = DisclosureGate(
-            self.policy, {}, evidence, evidence_token,
+            self.policy, records if records is not None else {}, evidence, evidence_token,
             grant_keys=self.grant_authority.trusted_keys,
             declassification_keys=self.declassifier.trusted_keys,
+            store=self.store, consent=consent, token_verifier=self.token_verifier,
         )
         self.model_endpoint = model_endpoint if model_endpoint is not None else os.getenv(
             "FSSAI_MODEL_ENDPOINT", "")
-        self.grants: dict[str, DisclosureGrant] = {}
+
+    def put_grant(self, grant: DisclosureGrant) -> None:
+        with self.store.atomic() as tx:
+            tx.put_grant(grant.grant_id, grant.to_record())
+
+    def get_grant(self, grant_id: str) -> DisclosureGrant | None:
+        with self.store.atomic() as tx:
+            body = tx.get_grant(grant_id)
+        return DisclosureGrant.from_record(body) if body else None
+
+    def grant_count(self) -> int:
+        with self.store.atomic() as tx:
+            return tx.grant_count()
 
     @property
     def owner_roles(self) -> set[str]:
@@ -126,7 +190,7 @@ class DisclosureRuntime:
     def assemble(self, caller: Principal, request: ContextRequest, now: float):
         return self.gate.assemble_context(
             requester=caller.subject, session_id=request.session_id,
-            grant=self.grants.get(request.grant_id), purpose=request.purpose,
+            grant=self.get_grant(request.grant_id), purpose=request.purpose,
             subjects=request.subjects, fields=request.fields,
             model_endpoint=self.model_endpoint, now=now,
         )
@@ -158,7 +222,8 @@ def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, 
             "policy": rt.policy.summary(),
             "model_endpoint": rt.model_endpoint or None,
             "model_endpoint_zone": rt.policy.endpoints.get(rt.model_endpoint),
-            "grants_held_by_server": len(rt.grants),
+            "grants_held_by_server": rt.grant_count(),
+            "state_store": rt.store.kind,
             "open_break_glass_reviews": sorted(rt.gate.open_break_glass),
             "rule": "a model may request information; it cannot manufacture the entitlement "
                     "to see it, and it cannot launder what it saw",
@@ -192,14 +257,34 @@ def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, 
             basis=request.basis, break_glass=request.break_glass,
             justification=request.justification,
         )
-        rt.grants[grant.grant_id] = grant
+        rt.put_grant(grant)
+        return grant.to_dict()
+
+    @app.post("/v1/disclosure/grants/token", status_code=201, tags=["disclosure"])
+    def register_token_grant(request: TokenGrant, caller: caller_type):
+        """Register a grant issued by the institutional authorization server."""
+        rt = need()
+        if rt.token_verifier is None:
+            raise HTTPException(status_code=501,
+                                detail="no authorization server is configured for disclosure grants")
+        from .disclosure_tokens import TokenRejected
+
+        try:
+            grant = rt.token_verifier.grant_from_token(request.token)
+        except TokenRejected as exc:
+            raise DisclosureDenied(DisclosureCode.GRANT_SIGNATURE_INVALID,
+                                   f"grant token rejected: {exc}") from exc
+        if grant.holder != caller.subject:
+            raise HTTPException(status_code=403,
+                                detail="only the holder named in the token may register it")
+        rt.put_grant(grant)
         return grant.to_dict()
 
     @app.post("/v1/disclosure/grants/{grant_id}/revoke", tags=["disclosure"])
     def revoke_grant(grant_id: str, request: RevocationCreate, caller: caller_type):
         rt = need()
         require_any(caller, rt.owner_roles, "revoking a grant")
-        if grant_id not in rt.grants:
+        if rt.get_grant(grant_id) is None:
             raise HTTPException(status_code=404, detail="unknown grant")
         rt.gate.revoke_grant(grant_id, by=caller.subject, reason=request.reason)
         return {"grant_id": grant_id, "revoked": True}

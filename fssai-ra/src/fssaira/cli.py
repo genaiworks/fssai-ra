@@ -981,6 +981,38 @@ def cmd_thesis(args) -> int:
     return 0 if report.holds else 1
 
 
+def cmd_pilot_report(args) -> int:
+    """Field indicators for a governed-disclosure pilot, from exported evidence."""
+    from .disclosure_metrics import disclosure_metrics
+
+    raw = json.loads(Path(args.path).read_text(encoding="utf-8"))
+    records = raw.get("records", []) if isinstance(raw, dict) else raw
+    report = disclosure_metrics(records)
+    heading(f"Pilot indicators — {report['evidence']['records']} evidence records")
+    intact = report["evidence"]["intact"]
+    print("  evidence chain   " + (green("intact") if intact else
+                                   yellow("not verifiable") if intact is None else red("BROKEN")))
+    for name in ("reads", "releases", "declassifications"):
+        row = report[name]
+        print(f"  {name:17} {row['attempts']:>6} attempts  {row['released']:>6} released  "
+              f"{row['refused']:>6} refused")
+        for code, count in row["refusals_by_code"].items():
+            print(dim(f"      {code:40} {count}"))
+    glass = report["break_glass"]
+    print(f"  break-glass       {glass['opened']} opened, {glass['reviewed']} reviewed, "
+          f"{glass['awaiting_review']} awaiting; median review "
+          f"{glass['review_latency_seconds']['median']} s")
+    outputs = report["outputs"]
+    print(f"  outputs           {outputs['labelled']} labelled; "
+          f"{outputs['claimed_downgrade_attempts']} claimed downgrades; "
+          f"{outputs['value_label_fell_back_to_session']} value labels fell back to session")
+    heading("What these indicators cannot tell you")
+    for line in report["cannot_measure"]:
+        print(dim(f"  - {line}"))
+    emit(report, args.output)
+    return 2 if intact is False else 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -1202,6 +1234,12 @@ def build_parser() -> argparse.ArgumentParser:
         "thesis", help="try to refute the Mediation Thesis: six falsifiers, every domain pack",
     ))
     thesis.set_defaults(func=cmd_thesis)
+
+    pilot = add_output(sub.add_parser(
+        "pilot-report", help="field indicators for a governed-disclosure pilot, from exported evidence",
+    ))
+    pilot.add_argument("path", type=Path)
+    pilot.set_defaults(func=cmd_pilot_report)
 
     return parser
 

@@ -232,7 +232,7 @@ def test_intent_evidence_failure_releases_nothing():
     with pytest.raises(DisclosureDenied) as denied:
         fx.read(gate, fx.grant())
     assert denied.value.code == DisclosureCode.EVIDENCE_UNAVAILABLE
-    assert not gate._sessions
+    assert gate.session_label("session-1") is None
 
 
 def test_requests_must_name_subjects_and_fields_and_endpoints_must_be_declared():

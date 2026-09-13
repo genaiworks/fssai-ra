@@ -217,6 +217,7 @@ def create_app(
     *,
     authenticator: Authenticator | None = None,
     model_endpoint: str | None = None,
+    disclosure_options: dict | None = None,
 ) -> FastAPI:
     from .disclosure import DisclosureDenied
     from .disclosure_api import DisclosureRuntime, proposals_output, register_disclosure_routes
@@ -226,7 +227,7 @@ def create_app(
     disclosure = (
         DisclosureRuntime(plane.profile, plane.evidence,
                           getattr(plane, "evidence_token", "teaching-evidence-writer"),
-                          model_endpoint=model_endpoint)
+                          model_endpoint=model_endpoint, **(disclosure_options or {}))
         if plane.profile.disclosure is not None else None
     )
 

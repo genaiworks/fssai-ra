@@ -71,6 +71,10 @@ disclosure:
       classes: [approved-aggregate]
       purposes: [external-release]
       zone: external
+    vendor_analytics:
+      classes: [internal]
+      purposes: [internal-analysis]
+      zone: vendor-contracted
     personal_email:
       classes: []
       purposes: []

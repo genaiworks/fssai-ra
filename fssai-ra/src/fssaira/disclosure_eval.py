@@ -156,6 +156,24 @@ class DisclosureFixture:
             return name, sorted(rule.purposes)[0]
         raise NotApplicable("no declared recipient is both purposeful and uncleared")
 
+    def precision_path(self):
+        """A recipient cleared for some granted fields but not others.
+
+        Session labels refuse every output of such a session to this recipient;
+        value labels release what was built only from the fields it may receive.
+        """
+        policy = self.policy
+        granted = self.granted_fields()
+        for name, rule in sorted(policy.recipients.items()):
+            if rule.subject_scope != "any" or self.purpose not in rule.purposes:
+                continue
+            fits = [f for f in granted if policy.field_classes[f] in rule.classes
+                    and rule.zone in policy.class_zones[policy.field_classes[f]]]
+            misfits = [f for f in granted if f not in fits]
+            if fits and misfits:
+                return name, fits[0], misfits[0]
+        raise NotApplicable("no recipient is cleared for only part of the granted fields")
+
     def declassification_path(self):
         policy = self.policy
         for rule in sorted(policy.declassification.values(), key=lambda r: r.name):
@@ -381,6 +399,36 @@ def _r_external_exfiltration(fx, gate):
     return gate.release(output, recipient=target, purpose=fx.purpose, now=NOW + 2)
 
 
+def _v_omitted_source(fx, gate):
+    recipient, low, high = fx.precision_path()
+    context = fx.read(gate, fx.grant())
+    low_key, high_key = f"{SUBJECT_A}.{low}", f"{SUBJECT_A}.{high}"
+    output = gate.derive_from_values(
+        requester=AGENT, session_id="session-1",
+        content=f"{context.values[low_key]} {context.values[high_key]}",
+        sources=[context.value_ids[low_key]], claimed_label=DataLabel.bottom(fx.policy))
+    return gate.release(output, recipient=recipient, purpose=fx.purpose, now=NOW + 2)
+
+
+def _v_value_not_issued(fx, gate):
+    recipient, _low, _high = fx.precision_path()
+    fx.read(gate, fx.grant())
+    output = gate.derive_from_values(
+        requester=AGENT, session_id="session-1", content="a summary",
+        sources=["value-that-was-never-issued"], claimed_label=DataLabel.bottom(fx.policy))
+    return gate.release(output, recipient=recipient, purpose=fx.purpose, now=NOW + 2)
+
+
+def _b_value_level_precision(fx, gate):
+    recipient, low, _high = fx.precision_path()
+    context = fx.read(gate, fx.grant())
+    key = f"{SUBJECT_A}.{low}"
+    output = gate.derive_from_values(requester=AGENT, session_id="session-1",
+                                     content=f"Summary: {context.values[key]}",
+                                     sources=[context.value_ids[key]])
+    return gate.release(output, recipient=recipient, purpose=fx.purpose, now=NOW + 2)
+
+
 def _declassify_scenario(variant: str):
     def build(fx, gate):
         rule, recipient, purpose, fields, endpoint = fx.declassification_path()
@@ -457,6 +505,8 @@ HOSTILE = {
     "honest_output_to_uncleared_recipient": (_release_scenario(_r_uncleared_recipient), "recipient_clearance"),
     "exfiltration_to_external_recipient": (_release_scenario(_r_external_exfiltration), "recipient_clearance"),
     "release_after_consent_withdrawn": (_release_scenario(_r_release_after_consent_withdrawn), "release_recheck"),
+    "value_label_omits_a_source": (_release_scenario(_v_omitted_source), "session_taint"),
+    "value_id_not_issued": (_release_scenario(_v_value_not_issued), "session_taint"),
     "release_after_grant_revoked": (_release_scenario(_r_release_after_grant_revoked), "release_recheck"),
     "declassify_without_approval": (_release_scenario(_declassify_scenario("absent")), "exact_output_declassification"),
     "declassify_self_approved": (_release_scenario(_declassify_scenario("self_approved")), "exact_output_declassification"),
@@ -468,6 +518,7 @@ BENIGN = {
     "context_then_release_to_cleared_recipient": _release_scenario(_b_primary_flow),
     "approved_declassification_then_release": _release_scenario(_declassify_scenario("valid")),
     "break_glass_reviewed_then_reused": _context_scenario(_b_break_glass_then_review),
+    "value_level_release_of_a_less_sensitive_summary": _release_scenario(_b_value_level_precision),
 }
 
 
@@ -808,8 +859,8 @@ def verify_disclosure_space(policy: DisclosurePolicy, *,
                     or label.purposes != {request_purpose} or label.zones != zones):
                 violations.append(DisclosureViolation(
                     DX_INVARIANTS[2], key, f"label {label.to_dict()} does not match contents"))
-            session = gate._sessions[context.session_id]
-            if not session.label.dominates(label):
+            session_label = gate.session_label(context.session_id)
+            if session_label is None or not session_label.dominates(label):
                 violations.append(DisclosureViolation(
                     DX_INVARIANTS[2], key, "session label is less restrictive than its context"))
             if bg_v != "none":

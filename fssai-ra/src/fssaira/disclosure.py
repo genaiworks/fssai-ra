@@ -79,7 +79,9 @@ import hashlib
 import hmac
 import json
 import threading
-from collections.abc import Callable, Iterable
+import uuid
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -154,6 +156,11 @@ class DisclosureCode:
     DECLASSIFICATION_EXPIRED = "DECLASSIFICATION_EXPIRED"
     DECLASSIFICATION_OUT_OF_RULE = "DECLASSIFICATION_OUT_OF_RULE"
     REVIEW_NOT_PERMITTED = "REVIEW_NOT_PERMITTED"
+    STORE_UNAVAILABLE = "STORE_UNAVAILABLE"
+    RECORD_SOURCE_UNAVAILABLE = "RECORD_SOURCE_UNAVAILABLE"
+    RECORD_SOURCE_READ_ONLY = "RECORD_SOURCE_READ_ONLY"
+    CONSENT_SERVICE_UNAVAILABLE = "CONSENT_SERVICE_UNAVAILABLE"
+    VALUE_NOT_ISSUED = "VALUE_NOT_ISSUED"
     EVIDENCE_UNAVAILABLE = "EVIDENCE_UNAVAILABLE"
 
 
@@ -210,6 +217,11 @@ class DataLabel:
     def to_dict(self) -> dict:
         return {key: sorted(getattr(self, key))
                 for key in ("classes", "subjects", "purposes", "zones")}
+
+    @classmethod
+    def from_dict(cls, body: dict) -> DataLabel:
+        return cls(*(frozenset(body.get(key, ())) for key in
+                     ("classes", "subjects", "purposes", "zones")))
 
 
 # ---------------------------------------------------------------------------
@@ -513,6 +525,22 @@ class DisclosureGrant:
             "justification": self.justification, "key_id": self.key_id,
         }, sort_keys=True)
 
+    def to_record(self) -> dict:
+        """Everything needed to present this grant again after a restart."""
+        return {**json.loads(self.signing_payload()), "signature": self.signature}
+
+    @classmethod
+    def from_record(cls, body: dict) -> DisclosureGrant:
+        return cls(
+            grant_id=body["grant_id"], holder=body["holder"], purpose=body["purpose"],
+            subjects=frozenset(body["subjects"]), fields=frozenset(body["fields"]),
+            classes=frozenset(body["classes"]), issued_by=body["issued_by"],
+            issued_at=float(body["issued_at"]), expires_at=float(body["expires_at"]),
+            basis=body["basis"], break_glass=bool(body["break_glass"]),
+            justification=body.get("justification", ""), key_id=body.get("key_id", ""),
+            signature=body.get("signature", ""),
+        )
+
     def to_dict(self) -> dict:
         return {
             "grant_id": self.grant_id, "holder": self.holder, "purpose": self.purpose,
@@ -608,7 +636,8 @@ class DeclassificationAuthority:
 
 
 class ConsentRegister:
-    """Live consent state. Checked at every release, never cached into a grant."""
+    """In-process consent state, for tests and teaching. Deployments use the store
+    or an institutional consent service, both checked live on every use."""
 
     def __init__(self) -> None:
         self._withdrawn: set[tuple[str, str]] = set()
@@ -628,6 +657,20 @@ class ConsentRegister:
 
 
 @dataclass(frozen=True)
+class LabelledValue:
+    """One released value with its own identity and label.
+
+    A trusted orchestrator passes these, not raw strings, to the model, and names
+    the identifiers it used when it asks the gate to label the result.
+    """
+
+    value_id: str
+    key: str
+    text: str
+    label: DataLabel
+
+
+@dataclass(frozen=True)
 class GovernedContext:
     """What the model is allowed to see, with the label it carries."""
 
@@ -636,6 +679,11 @@ class GovernedContext:
     holder: str
     values: dict[str, str]
     label: DataLabel
+    labelled: dict = field(default_factory=dict)
+
+    @property
+    def value_ids(self) -> dict[str, str]:
+        return {key: item.value_id for key, item in self.labelled.items()}
 
 
 @dataclass(frozen=True)
@@ -651,10 +699,32 @@ class GovernedOutput:
     #: Grants whose releases fed this output. Release re-checks them, because a
     #: revocation or expiry after a read must also stop what was built from it.
     grants: frozenset = frozenset()
+    #: ``session`` when labelled by everything its session read, ``values`` when
+    #: labelled by the issued values a trusted orchestrator named.
+    provenance: str = "session"
+    sources: frozenset = frozenset()
 
     @property
     def digest(self) -> str:
         return hashlib.sha256(self.content.encode("utf-8")).hexdigest()
+
+    def to_record(self) -> dict:
+        return {
+            "output_id": self.output_id, "session_id": self.session_id, "holder": self.holder,
+            "content": self.content, "label": self.label.to_dict(),
+            "declassified_by": self.declassified_by, "grants": sorted(self.grants),
+            "provenance": self.provenance, "sources": sorted(self.sources),
+        }
+
+    @classmethod
+    def from_record(cls, body: dict) -> GovernedOutput:
+        return cls(
+            output_id=body["output_id"], session_id=body["session_id"], holder=body["holder"],
+            content=body["content"], label=DataLabel.from_dict(body["label"]),
+            declassified_by=body.get("declassified_by", ""),
+            grants=frozenset(body.get("grants", ())), provenance=body.get("provenance", "session"),
+            sources=frozenset(body.get("sources", ())),
+        )
 
 
 @dataclass(frozen=True)
@@ -671,73 +741,76 @@ class ReleaseReceipt:
 # ---------------------------------------------------------------------------
 
 
-@dataclass
-class _Session:
-    holder: str
-    label: DataLabel
-    released_values: set[str] = field(default_factory=set)
-    grants: set[str] = field(default_factory=set)
-
-
 class DisclosureGate:
     """The policy enforcement point for every read and every release.
 
-    The gate holds the record store. A model runtime holds none of it and can
-    obtain protected values only through :meth:`assemble_context`. Every attempt,
-    released or refused, writes an intent record before any check and an outcome
-    record after; if the intent cannot be written, nothing is released. Evidence
-    records carry field names, subjects, codes, and digests, never the protected
-    values themselves: a disclosure log that reproduces the disclosure is a
-    second copy of the data under weaker control.
+    The gate holds the record-source credential. A model runtime holds none of it
+    and can obtain protected values only through :meth:`assemble_context`. Every
+    attempt, released or refused, writes an intent record before any check and an
+    outcome record after; if the intent cannot be written, nothing is released.
+    Evidence records carry field names, subjects, codes, and digests, never the
+    protected values themselves.
+
+    State lives in a store. Each decision runs in one store transaction, so with a
+    SQL store the checks and the writes they justify commit together, restarts
+    forget nothing, and replicas agree. The record source is read only after every
+    authorization check passes, so a refused request cannot learn whether a
+    subject exists.
     """
 
     def __init__(
         self,
         policy: DisclosurePolicy,
-        records: dict[str, dict[str, str]],
+        records: Any,
         evidence: EvidenceLedger,
         evidence_token: str,
         *,
         grant_keys: dict[str, str],
         declassification_keys: dict[str, str] | None = None,
-        consent: ConsentRegister | None = None,
+        consent: Any = None,
         enforce: Iterable[str] = ALL_CHECKS,
+        store: Any = None,
+        token_verifier: Any = None,
     ) -> None:
+        from .disclosure_sources import as_record_source
+        from .disclosure_store import MemoryDisclosureStore, StoreConsent
+
         self.policy = policy
-        self._records = {subject: dict(fields) for subject, fields in records.items()}
+        self._source = as_record_source(records)
         self._evidence = evidence
         self._token = evidence_token
         self._grant_keys = dict(grant_keys)
         self._declassification_keys = dict(declassification_keys or {})
-        self.consent = consent or ConsentRegister()
+        self.store = store if store is not None else MemoryDisclosureStore()
+        self.consent = consent if consent is not None else StoreConsent(self.store)
+        self._token_verifier = token_verifier
         self.enforce = frozenset(enforce)
         unknown = sorted(self.enforce - set(ALL_CHECKS))
         if unknown:
             raise ValueError(f"unknown disclosure checks: {', '.join(unknown)}")
-        self._revoked: set[str] = set()
-        self._sessions: dict[str, _Session] = {}
-        self._outputs: dict[str, GovernedOutput] = {}
-        self._open_break_glass: dict[str, str] = {}     # grant_id -> holder
-        self._seen_break_glass: set[str] = set()
-        self._grant_expiry: dict[str, float] = {}
-        self._sequence = 0
-        self._lock = threading.RLock()
 
     # -- helpers -------------------------------------------------------------
     def _on(self, check: str) -> bool:
         return check in self.enforce
 
-    def _next(self, prefix: str) -> str:
-        self._sequence += 1
-        return f"{prefix}-{self._sequence}"
-
     def _record(self, kind: str, payload: dict) -> None:
         self._evidence.append(kind, payload, token=self._token)
 
-    def _guarded(self, kind: str, intent: dict, body: Callable[[], Any],
+    @contextmanager
+    def _state(self) -> Iterator[Any]:
+        from .disclosure_store import StoreUnavailable
+
+        try:
+            with self.store.atomic() as tx:
+                yield tx
+        except StoreUnavailable as exc:
+            raise DisclosureDenied(DisclosureCode.STORE_UNAVAILABLE,
+                                   f"disclosure state unavailable; nothing released ({exc})") from exc
+
+    def _guarded(self, kind: str, intent: dict, body: Callable[[Any], Any],
                  describe: Callable[[Any], dict]) -> Any:
-        """Intent, then the decision, then the outcome. No intent, no release."""
-        attempt = self._next("attempt")
+        """Intent, then the decision in one transaction, then the outcome."""
+        attempt = f"attempt-{uuid.uuid4().hex[:16]}"
         try:
             self._record(f"{kind}_intent", {"attempt": attempt, **intent})
         except EvidenceError as exc:
@@ -746,7 +819,8 @@ class DisclosureGate:
                 f"intent evidence could not be written; nothing released ({exc})",
             ) from exc
         try:
-            result = body()
+            with self._state() as tx:
+                result = body(tx)
         except DisclosureDenied as denied:
             self._record(f"{kind}_outcome", {
                 "attempt": attempt, "released": False, "code": denied.code,
@@ -756,55 +830,123 @@ class DisclosureGate:
                                          **describe(result)})
         return result
 
-    # -- records and outputs ---------------------------------------------------
-    def load_records(self, subject: str, fields: dict[str, str], *, loaded_by: str) -> list[str]:
-        """Place synthetic or adapter-supplied values behind the gate.
+    def _fetch(self, subjects: Iterable[str], fields: Iterable[str]) -> dict[str, dict[str, str]]:
+        from .disclosure_sources import RecordNotFound, RecordSourceUnavailable
 
-        Only declared fields are accepted. The evidence record names the subject
-        and field names and never the values.
-        """
+        fetched: dict[str, dict[str, str]] = {}
+        for subject in subjects:
+            try:
+                fetched[subject] = self._source.fetch(subject, list(fields))
+            except RecordNotFound as exc:
+                raise DisclosureDenied(DisclosureCode.SUBJECT_NOT_FOUND,
+                                       f"no record for {subject}") from exc
+            except RecordSourceUnavailable as exc:
+                raise DisclosureDenied(DisclosureCode.RECORD_SOURCE_UNAVAILABLE,
+                                       f"record source unavailable; nothing released ({exc})") from exc
+        return fetched
+
+    def _texts(self, keys: Iterable[str]) -> dict[str, str]:
+        """Current values for released keys, refetched for redaction and scanning."""
+        by_subject: dict[str, list[str]] = {}
+        for key in keys:
+            subject, _, name = key.rpartition(".")
+            by_subject.setdefault(subject, []).append(name)
+        texts: dict[str, str] = {}
+        for subject, names in by_subject.items():
+            row = self._fetch([subject], sorted(set(names)))[subject]
+            texts.update({f"{subject}.{name}": row.get(name, "") for name in names})
+        return texts
+
+    def _consent_permits(self, subject: str, purpose: str) -> bool:
+        from .disclosure_sources import ConsentServiceUnavailable
+
+        try:
+            return self.consent.permits(subject, purpose)
+        except ConsentServiceUnavailable as exc:
+            raise DisclosureDenied(DisclosureCode.CONSENT_SERVICE_UNAVAILABLE,
+                                   f"consent could not be confirmed; nothing released ({exc})") from exc
+
+    def _verify_grant_signature(self, grant: DisclosureGrant) -> None:
+        if grant.key_id.startswith("jwt"):
+            if self._token_verifier is None:
+                raise DisclosureDenied(DisclosureCode.GRANT_KEY_UNTRUSTED,
+                                       "token grants require a configured token verifier")
+            try:
+                verified = self._token_verifier.grant_from_token(grant.signature)
+            except Exception as exc:
+                raise DisclosureDenied(DisclosureCode.GRANT_SIGNATURE_INVALID,
+                                       f"grant token rejected: {exc}") from exc
+            if verified.signing_payload() != grant.signing_payload():
+                raise DisclosureDenied(DisclosureCode.GRANT_SIGNATURE_INVALID,
+                                       "grant fields differ from the token that authorizes them")
+            return
+        secret = self._grant_keys.get(grant.key_id)
+        if secret is None:
+            raise DisclosureDenied(DisclosureCode.GRANT_KEY_UNTRUSTED,
+                                   f"grant key {grant.key_id!r} is not trusted")
+        if not hmac.compare_digest(_sign(secret, grant.signing_payload()), grant.signature):
+            raise DisclosureDenied(DisclosureCode.GRANT_SIGNATURE_INVALID,
+                                   "grant fields do not match their signature")
+
+    # -- records, sessions, outputs ---------------------------------------------
+    def load_records(self, subject: str, fields: dict[str, str], *, loaded_by: str) -> list[str]:
+        """Place synthetic values behind the gate, when the source is writable."""
         if not isinstance(subject, str) or not subject.strip():
             raise DisclosureDenied(DisclosureCode.SUBJECT_NOT_FOUND, "a subject is required")
         undeclared = sorted(set(fields) - set(self.policy.field_classes))
         if undeclared:
             raise DisclosureDenied(DisclosureCode.FIELD_UNDECLARED,
                                    f"undeclared fields: {', '.join(undeclared)}")
-        with self._lock:
-            self._records.setdefault(subject, {}).update(
-                {name: str(value) for name, value in fields.items()})
-            names = sorted(fields)
-            self._record("disclosure_records_loaded",
-                         {"subject": subject, "fields": names, "loaded_by": loaded_by})
-            return names
+        loader = getattr(self._source, "load", None)
+        if loader is None:
+            raise DisclosureDenied(DisclosureCode.RECORD_SOURCE_READ_ONLY,
+                                   "records come from the configured institutional source")
+        loader(subject, {name: str(value) for name, value in fields.items()})
+        names = sorted(fields)
+        self._record("disclosure_records_loaded",
+                     {"subject": subject, "fields": names, "loaded_by": loaded_by})
+        return names
 
     def output(self, output_id: str) -> GovernedOutput:
-        with self._lock:
-            known = self._outputs.get(output_id)
-        if known is None:
+        with self._state() as tx:
+            body = tx.get_output(output_id)
+        if body is None:
             raise DisclosureDenied(DisclosureCode.OUTPUT_UNKNOWN, f"no output {output_id!r}")
-        return known
+        return GovernedOutput.from_record(body)
+
+    def session_label(self, session_id: str) -> DataLabel | None:
+        with self._state() as tx:
+            state = tx.get_session(session_id)
+        return DataLabel.from_dict(state["label"]) if state else None
 
     # -- grant lifecycle -----------------------------------------------------
     def revoke_grant(self, grant_id: str, *, by: str, reason: str) -> None:
-        with self._lock:
-            self._revoked.add(grant_id)
-            self._record("disclosure_grant_revoked",
-                         {"grant_id": grant_id, "by": by, "reason": reason})
+        with self._state() as tx:
+            seq = tx.tick()
+            tx.revoke(grant_id, seq)
+            tx.record_event(seq, "revoke", {"grant_id": grant_id})
+        self._record("disclosure_grant_revoked",
+                     {"grant_id": grant_id, "by": by, "reason": reason, "store_seq": seq})
 
     def withdraw_consent(self, subject: str, purpose: str, *, recorded_by: str) -> None:
-        with self._lock:
+        from .disclosure_sources import ConsentServiceUnavailable
+
+        try:
             self.consent.withdraw(subject, purpose)
-            self._record("consent_withdrawn", {"subject": subject, "purpose": purpose,
-                                               "recorded_by": recorded_by})
+        except ConsentServiceUnavailable as exc:
+            raise DisclosureDenied(DisclosureCode.CONSENT_SERVICE_UNAVAILABLE, str(exc)) from exc
+        self._record("consent_withdrawn", {"subject": subject, "purpose": purpose,
+                                           "recorded_by": recorded_by})
 
     @property
     def open_break_glass(self) -> dict[str, str]:
-        return dict(self._open_break_glass)
+        with self._state() as tx:
+            return tx.open_break_glass_map()
 
     def record_break_glass_review(self, grant_id: str, *, reviewer: str,
                                   reviewer_role: str, finding: str) -> None:
-        with self._lock:
-            holder = self._open_break_glass.get(grant_id)
+        with self._state() as tx:
+            holder = tx.open_break_glass_holder(grant_id)
             rule = self.policy.break_glass
             if holder is None or rule is None:
                 raise DisclosureDenied(DisclosureCode.REVIEW_NOT_PERMITTED,
@@ -815,11 +957,11 @@ class DisclosureGate:
             if reviewer == holder:
                 raise DisclosureDenied(DisclosureCode.REVIEW_NOT_PERMITTED,
                                        "the holder cannot review their own emergency access")
-            del self._open_break_glass[grant_id]
-            self._record("break_glass_reviewed", {
-                "grant_id": grant_id, "holder": holder, "reviewer": reviewer,
-                "reviewer_role": reviewer_role, "finding": finding,
-            })
+            tx.close_break_glass(grant_id)
+        self._record("break_glass_reviewed", {
+            "grant_id": grant_id, "holder": holder, "reviewer": reviewer,
+            "reviewer_role": reviewer_role, "finding": finding,
+        })
 
     # -- read path -----------------------------------------------------------
     def assemble_context(
@@ -835,22 +977,21 @@ class DisclosureGate:
             "subjects": list(subjects), "fields": list(fields),
             "model_endpoint": model_endpoint,
         }
-        with self._lock:
-            return self._guarded(
-                "disclosure", intent,
-                lambda: self._assemble(requester, session_id, grant, purpose,
-                                       subjects, fields, model_endpoint, now),
-                lambda ctx: {
-                    "receipt_id": ctx.receipt_id, "label": ctx.label.to_dict(),
-                    "values_digest": _digest(sorted(ctx.values.items())),
-                    "value_count": len(ctx.values),
-                },
-            )
+        return self._guarded(
+            "disclosure", intent,
+            lambda tx: self._assemble(tx, requester, session_id, grant, purpose,
+                                      subjects, fields, model_endpoint, now),
+            lambda ctx: {
+                "receipt_id": ctx.receipt_id, "label": ctx.label.to_dict(),
+                "values_digest": _digest(sorted(ctx.values.items())),
+                "value_count": len(ctx.values),
+            },
+        )
 
     def _deny(self, code: str, detail: str) -> DisclosureDenied:
         return DisclosureDenied(code, detail)
 
-    def _assemble(self, requester, session_id, grant, purpose, subjects, fields,
+    def _assemble(self, tx, requester, session_id, grant, purpose, subjects, fields,
                   model_endpoint, now) -> GovernedContext:
         policy = self.policy
         if grant is None:
@@ -860,22 +1001,14 @@ class DisclosureGate:
         for name in fields:
             if name not in policy.field_classes:
                 raise self._deny(DisclosureCode.FIELD_UNDECLARED, f"field {name} is undeclared")
-        for subject in subjects:
-            if subject not in self._records:
-                raise self._deny(DisclosureCode.SUBJECT_NOT_FOUND, f"no record for {subject}")
         if not subjects or not fields:
             raise self._deny(DisclosureCode.FIELD_NOT_MINIMUM_NECESSARY,
                              "a request must name its subjects and fields; there is no 'all'")
 
         if self._on("grant_signature"):
-            secret = self._grant_keys.get(grant.key_id)
-            if secret is None:
-                raise self._deny(DisclosureCode.GRANT_KEY_UNTRUSTED,
-                                 f"grant key {grant.key_id!r} is not trusted")
-            if not hmac.compare_digest(_sign(secret, grant.signing_payload()), grant.signature):
-                raise self._deny(DisclosureCode.GRANT_SIGNATURE_INVALID,
-                                 "grant fields do not match their signature")
+            self._verify_grant_signature(grant)
 
+        existing = tx.get_session(session_id)
         if self._on("holder_binding"):
             if grant.holder != requester:
                 raise self._deny(DisclosureCode.GRANT_HOLDER_MISMATCH,
@@ -883,13 +1016,12 @@ class DisclosureGate:
             if grant.issued_by == grant.holder and not grant.break_glass:
                 raise self._deny(DisclosureCode.GRANT_SELF_ISSUED,
                                  "a holder cannot issue their own non-emergency grant")
-            existing = self._sessions.get(session_id)
-            if existing is not None and existing.holder != requester:
+            if existing is not None and existing["holder"] != requester:
                 raise self._deny(DisclosureCode.SESSION_HOLDER_MISMATCH,
                                  "the session belongs to another principal")
 
         if self._on("grant_currency"):
-            if grant.grant_id in self._revoked:
+            if tx.is_revoked(grant.grant_id):
                 raise self._deny(DisclosureCode.GRANT_REVOKED, "grant has been revoked")
             if now >= grant.expires_at:
                 raise self._deny(DisclosureCode.GRANT_EXPIRED, "grant has expired")
@@ -916,7 +1048,7 @@ class DisclosureGate:
 
         if self._on("consent"):
             for subject in subjects:
-                if not self.consent.permits(subject, purpose):
+                if not self._consent_permits(subject, purpose):
                     raise self._deny(DisclosureCode.CONSENT_WITHDRAWN,
                                      f"{subject} does not currently permit {purpose}")
 
@@ -951,75 +1083,156 @@ class DisclosureGate:
             if not grant.justification.strip():
                 raise self._deny(DisclosureCode.BREAK_GLASS_UNJUSTIFIED,
                                  "emergency access requires a recorded justification")
-            unreviewed = sum(
-                1 for gid, holder in self._open_break_glass.items()
-                if holder == grant.holder and gid != grant.grant_id
-            )
+            tx.lock_holder(grant.holder)
+            unreviewed = tx.unreviewed_count(grant.holder, grant.grant_id)
             if unreviewed >= rule.max_unreviewed_per_holder:
                 raise self._deny(DisclosureCode.BREAK_GLASS_REVIEW_OVERDUE,
                                  f"{unreviewed} earlier emergency access(es) still unreviewed")
 
-        # Release: the label is computed here, from policy, never supplied.
+        # Authorised. Only now does the gate touch the record source, so a request
+        # that fails any check cannot learn whether a subject exists.
+        fetched = self._fetch(subjects, fields)
+
         values: dict[str, str] = {}
+        labelled: dict[str, LabelledValue] = {}
         label = DataLabel.bottom(policy)
         for subject in subjects:
             for name in fields:
                 cls = policy.field_classes[name]
-                values[f"{subject}.{name}"] = self._records[subject].get(name, "")
-                label = label.join(DataLabel(
+                key = f"{subject}.{name}"
+                text = fetched[subject].get(name, "")
+                value_label = DataLabel(
                     classes=frozenset({cls}), subjects=frozenset({subject}),
                     purposes=frozenset({purpose}),
                     zones=frozenset(policy.class_zones.get(cls, frozenset())),
-                ))
+                )
+                value_id = tx.next_id("value")
+                tx.put_value(value_id, {
+                    "session_id": session_id, "holder": requester, "key": key,
+                    "label": value_label.to_dict(), "digest": _digest(text),
+                    "grant_id": grant.grant_id,
+                })
+                values[key] = text
+                labelled[key] = LabelledValue(value_id, key, text, value_label)
+                label = label.join(value_label)
 
-        session = self._sessions.get(session_id)
-        if session is None:
-            session = self._sessions[session_id] = _Session(requester, DataLabel.bottom(policy))
-        session.label = session.label.join(label)
-        session.released_values.update(v for v in values.values() if v)
-        session.grants.add(grant.grant_id)
-        self._grant_expiry[grant.grant_id] = grant.expires_at
+        previous = DataLabel.from_dict(existing["label"]) if existing else DataLabel.bottom(policy)
+        tx.put_session(session_id, {
+            "holder": existing["holder"] if existing else requester,
+            "label": previous.join(label).to_dict(),
+            "keys": sorted(set(existing["keys"] if existing else ()) | set(values)),
+            "grants": sorted(set(existing["grants"] if existing else ()) | {grant.grant_id}),
+        })
+        tx.set_grant_expiry(grant.grant_id, grant.expires_at)
 
-        if grant.break_glass and grant.grant_id not in self._seen_break_glass:
-            self._seen_break_glass.add(grant.grant_id)
-            self._open_break_glass[grant.grant_id] = grant.holder
+        if grant.break_glass and not tx.break_glass_seen(grant.grant_id):
+            tx.open_break_glass(grant.grant_id, grant.holder)
             self._record("break_glass_review_due", {
                 "grant_id": grant.grant_id, "holder": grant.holder,
                 "purpose": grant.purpose, "justification_digest": _digest(grant.justification),
                 "review_role": policy.break_glass.review_role if policy.break_glass else None,
             })
 
-        return GovernedContext(self._next("context"), session_id, requester, values, label)
+        return GovernedContext(tx.next_id("context"), session_id, requester, values, label,
+                               labelled)
 
     # -- derivation ----------------------------------------------------------
     def derive_output(self, *, requester: str, session_id: str, content: str,
                       claimed_label: DataLabel | None = None) -> GovernedOutput:
-        """Label a model output. The session's label wins over any claim."""
-        with self._lock:
-            session = self._sessions.get(session_id)
+        """Label a model output with everything its session read."""
+        with self._state() as tx:
+            state = tx.get_session(session_id)
             bottom = DataLabel.bottom(self.policy)
             if self._on("session_taint"):
-                if session is not None and session.holder != requester:
+                if state is not None and state["holder"] != requester:
                     raise DisclosureDenied(DisclosureCode.SESSION_HOLDER_MISMATCH,
                                            "the session belongs to another principal")
-                label = session.label if session else bottom
+                label = DataLabel.from_dict(state["label"]) if state else bottom
             else:
                 label = claimed_label if claimed_label is not None else bottom
-            output = GovernedOutput(self._next("output"), session_id, requester, content, label,
-                                    grants=frozenset(session.grants) if session else frozenset())
-            self._outputs[output.output_id] = output
+            output = GovernedOutput(tx.next_id("output"), session_id, requester, content, label,
+                                    grants=frozenset(state["grants"]) if state else frozenset())
+            tx.put_output(output.output_id, output.to_record())
             downgrade = claimed_label is not None and not claimed_label.dominates(label)
             self._record("output_labelled", {
                 "output_id": output.output_id, "session_id": session_id,
                 "holder": requester, "content_digest": output.digest,
-                "label": label.to_dict(),
+                "label": label.to_dict(), "provenance": "session",
                 "claimed_label": claimed_label.to_dict() if claimed_label else None,
                 "claimed_downgrade_attempt": downgrade,
             })
-            return output
+        return output
 
-    def _issued(self, output: GovernedOutput) -> GovernedOutput:
-        known = self._outputs.get(output.output_id)
+    def derive_from_values(self, *, requester: str, session_id: str, content: str,
+                           sources: Iterable[str],
+                           claimed_label: DataLabel | None = None) -> GovernedOutput:
+        """Label an output by the issued values it was built from.
+
+        A trusted orchestrator names the value identifiers it passed to the model.
+        The gate recomputes the label from its own records of those values, ignores
+        any claimed label, and refuses identifiers it did not issue to this session
+        and holder. If other values released in the session appear verbatim in the
+        content, the gate falls back to the whole session's label: an omitted source
+        over-labels the output; it never under-labels it.
+        """
+        from .disclosure_sources import RecordSourceUnavailable
+
+        source_ids = tuple(sorted(set(sources)))
+        with self._state() as tx:
+            state = tx.get_session(session_id)
+            bottom = DataLabel.bottom(self.policy)
+            undeclared = False
+            if self._on("session_taint"):
+                if state is None:
+                    raise DisclosureDenied(DisclosureCode.VALUE_NOT_ISSUED,
+                                           "no values were issued to this session")
+                if state["holder"] != requester:
+                    raise DisclosureDenied(DisclosureCode.SESSION_HOLDER_MISMATCH,
+                                           "the session belongs to another principal")
+                if not source_ids:
+                    raise DisclosureDenied(DisclosureCode.VALUE_NOT_ISSUED,
+                                           "name the values used, or label by session instead")
+                label, grants, keys = bottom, set(), set()
+                for value_id in source_ids:
+                    record = tx.get_value(value_id)
+                    if (record is None or record["session_id"] != session_id
+                            or record["holder"] != requester):
+                        raise DisclosureDenied(DisclosureCode.VALUE_NOT_ISSUED,
+                                               f"value {value_id!r} was not issued to this session")
+                    label = label.join(DataLabel.from_dict(record["label"]))
+                    grants.add(record["grant_id"])
+                    keys.add(record["key"])
+                others = sorted(set(state["keys"]) - keys)
+                if others:
+                    try:
+                        texts = self._texts(others)
+                        undeclared = any(text and text in content for text in texts.values())
+                    except (DisclosureDenied, RecordSourceUnavailable):
+                        undeclared = True        # cannot verify, so assume the worst
+                if undeclared:
+                    label = DataLabel.from_dict(state["label"])
+                    grants = set(state["grants"])
+            else:
+                label = claimed_label if claimed_label is not None else bottom
+                grants = set(state["grants"]) if state else set()
+            output = GovernedOutput(tx.next_id("output"), session_id, requester, content, label,
+                                    grants=frozenset(grants), provenance="values",
+                                    sources=frozenset(source_ids))
+            tx.put_output(output.output_id, output.to_record())
+            downgrade = claimed_label is not None and not claimed_label.dominates(label)
+            self._record("output_labelled", {
+                "output_id": output.output_id, "session_id": session_id,
+                "holder": requester, "content_digest": output.digest,
+                "label": label.to_dict(), "provenance": "values", "sources": list(source_ids),
+                "undeclared_source_detected": undeclared,
+                "claimed_label": claimed_label.to_dict() if claimed_label else None,
+                "claimed_downgrade_attempt": downgrade,
+            })
+        return output
+
+    def _issued(self, tx, output: GovernedOutput) -> GovernedOutput:
+        body = tx.get_output(output.output_id)
+        known = GovernedOutput.from_record(body) if body is not None else None
         if known is None or known.digest != output.digest or known.label != output.label:
             raise DisclosureDenied(DisclosureCode.OUTPUT_UNKNOWN,
                                    "output was not issued by this gate or was altered")
@@ -1030,16 +1243,15 @@ class DisclosureGate:
                    approval: DeclassificationApproval | None, now: float) -> GovernedOutput:
         intent = {"output_id": output.output_id, "rule": rule,
                   "approver": approval.approver if approval else None}
-        with self._lock:
-            return self._guarded(
-                "declassification", intent,
-                lambda: self._declassify(output, rule, approval, now),
-                lambda out: {"new_output_id": out.output_id, "label": out.label.to_dict(),
-                             "approved_by": out.declassified_by},
-            )
+        return self._guarded(
+            "declassification", intent,
+            lambda tx: self._declassify(tx, output, rule, approval, now),
+            lambda out: {"new_output_id": out.output_id, "label": out.label.to_dict(),
+                         "approved_by": out.declassified_by},
+        )
 
-    def _declassify(self, output, rule_name, approval, now) -> GovernedOutput:
-        known = self._issued(output)
+    def _declassify(self, tx, output, rule_name, approval, now) -> GovernedOutput:
+        known = self._issued(tx, output)
         rule = self.policy.declassification.get(rule_name)
         if rule is None:
             raise DisclosureDenied(DisclosureCode.DECLASSIFICATION_RULE_UNKNOWN,
@@ -1075,11 +1287,13 @@ class DisclosureGate:
                 raise DisclosureDenied(DisclosureCode.DECLASSIFICATION_OUT_OF_RULE,
                                        "output purposes do not include this rule's purposes")
 
-        # The gate applies the transform. Redaction of released values and
-        # subject identifiers is a floor, not de-identification.
-        session = self._sessions.get(known.session_id)
+        # The gate applies the transform, refetching released values so the store
+        # never holds them. Redaction is a floor, not de-identification.
+        base_session = known.session_id.split("/", 1)[0]
+        state = tx.get_session(base_session)
+        texts = self._texts(state["keys"]) if state else {}
         content = known.content
-        for value in sorted(session.released_values if session else (), key=len, reverse=True):
+        for value in sorted((v for v in texts.values() if v), key=len, reverse=True):
             content = content.replace(value, "[withheld]")
         subjects = known.label.subjects
         if rule.removes_subject_identity:
@@ -1099,26 +1313,26 @@ class DisclosureGate:
         # A declassification that removes subject identity is a new disclosure
         # decision by an independent authority; it no longer depends on the grants
         # or consent of the people it no longer identifies.
-        new = GovernedOutput(self._next("output"), f"{known.session_id}/declassified",
+        new = GovernedOutput(tx.next_id("output"), f"{base_session}/declassified",
                              known.holder, content, label, declassified_by=approved_by,
-                             grants=frozenset() if rule.removes_subject_identity else known.grants)
-        self._outputs[new.output_id] = new
+                             grants=frozenset() if rule.removes_subject_identity else known.grants,
+                             provenance=known.provenance)
+        tx.put_output(new.output_id, new.to_record())
         return new
 
     # -- release path --------------------------------------------------------
     def release(self, output: GovernedOutput, *, recipient: str, recipient_id: str = "",
                 purpose: str, now: float) -> ReleaseReceipt:
         intent = {"output_id": output.output_id, "recipient": recipient, "purpose": purpose}
-        with self._lock:
-            return self._guarded(
-                "release", intent,
-                lambda: self._release(output, recipient, recipient_id, purpose, now),
-                lambda receipt: {"receipt_id": receipt.receipt_id,
-                                 "label": receipt.label.to_dict()},
-            )
+        return self._guarded(
+            "release", intent,
+            lambda tx: self._release(tx, output, recipient, recipient_id, purpose, now),
+            lambda receipt: {"receipt_id": receipt.receipt_id,
+                             "label": receipt.label.to_dict()},
+        )
 
-    def _release(self, output, recipient, recipient_id, purpose, now) -> ReleaseReceipt:
-        known = self._issued(output)
+    def _release(self, tx, output, recipient, recipient_id, purpose, now) -> ReleaseReceipt:
+        known = self._issued(tx, output)
         rule = self.policy.recipients.get(recipient)
         if rule is None:
             raise DisclosureDenied(DisclosureCode.RECIPIENT_UNDECLARED,
@@ -1143,18 +1357,22 @@ class DisclosureGate:
             # stateful harness: an output drafted before a consent withdrawal or a
             # revocation was still released after it.
             for subject in sorted(label.subjects):
-                if not self.consent.permits(subject, purpose):
+                if not self._consent_permits(subject, purpose):
                     raise DisclosureDenied(DisclosureCode.RELEASE_CONSENT_WITHDRAWN,
                                            f"{subject} no longer permits {purpose}")
             for grant_id in sorted(known.grants):
-                if grant_id in self._revoked or now >= self._grant_expiry.get(grant_id, 0.0):
+                expiry = tx.grant_expiry(grant_id)
+                if tx.is_revoked(grant_id) or expiry is None or now >= expiry:
                     raise DisclosureDenied(DisclosureCode.RELEASE_GRANT_NO_LONGER_CURRENT,
                                            f"grant {grant_id} that fed this output is no longer current")
-        return ReleaseReceipt(self._next("release"), known.output_id, recipient, purpose, label)
+        seq = tx.tick()
+        tx.record_event(seq, "release", {"output_id": known.output_id,
+                                         "grants": sorted(known.grants)})
+        return ReleaseReceipt(tx.next_id("release"), known.output_id, recipient, purpose, label)
 
 
 __all__ = [
-    "ALL_CHECKS", "BreakGlassRule", "ConsentRegister", "DataLabel",
+    "ALL_CHECKS", "BreakGlassRule", "ConsentRegister", "DataLabel", "LabelledValue",
     "DeclassificationApproval", "DeclassificationAuthority", "DeclassificationRule",
     "DisclosureCode", "DisclosureDenied", "DisclosureGate", "DisclosureGrant",
     "DisclosurePolicy", "DisclosurePolicyError", "GovernedContext", "GovernedOutput",

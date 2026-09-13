@@ -68,6 +68,10 @@ disclosure:
       purposes: [patient-access]
       zone: on-premises
       subject_scope: self
+    pharmacy_system:
+      classes: [synthetic-health-record]
+      purposes: [treatment]
+      zone: approved-cloud
     research_team:
       classes: [de-identified]
       purposes: [research]

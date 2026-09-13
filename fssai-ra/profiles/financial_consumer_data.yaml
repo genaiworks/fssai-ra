@@ -63,6 +63,10 @@ disclosure:
       classes: [customer-identifier, account-financial, credit-bureau]
       purposes: [credit-decision]
       zone: bank-private
+    affordability_service:
+      classes: [account-financial]
+      purposes: [credit-decision]
+      zone: vendor-contracted
     fraud_investigator:
       classes: [customer-identifier, account-financial, transaction-history, fraud-signal]
       purposes: [fraud-investigation]

@@ -48,7 +48,8 @@ ISSUER = "data-owner"
 REVIEWER = "independent-reviewer"
 SUBJECTS = ("subject-1", "subject-2", "subject-3")
 OPERATIONS = ("issue", "revoke", "withdraw", "restore", "tick", "read", "read",
-              "read", "derive", "derive", "declassify", "release", "release")
+              "read", "derive", "derive_values", "derive_values", "declassify", "release",
+              "release")
 
 
 @dataclass
@@ -62,6 +63,7 @@ class _Session:
     holder: str
     label: DataLabel
     grants: set = field(default_factory=set)
+    values: list = field(default_factory=list)
 
 
 @dataclass
@@ -279,16 +281,22 @@ def run_stateful(policy: DisclosurePolicy, *, sequences: int = 200, steps: int =
                 session_id = f"s{rng.randint(1, 3)}"
                 expected_ok = ref.read_allowed(agent, session_id, gid, purpose, subjects,
                                                req_fields, endpoint, now)
+                context = None
                 try:
-                    gate.assemble_context(requester=agent, session_id=session_id,
-                                          grant=grant, purpose=purpose, subjects=subjects,
-                                          fields=req_fields, model_endpoint=endpoint, now=now)
+                    context = gate.assemble_context(requester=agent, session_id=session_id,
+                                                    grant=grant, purpose=purpose, subjects=subjects,
+                                                    fields=req_fields, model_endpoint=endpoint, now=now)
                     actual_ok = True
                 except DisclosureDenied as denied:
                     actual_ok, actual = False, denied.code
                 if expected_ok:
                     ref.apply_read(agent, session_id, gid, purpose, subjects, req_fields)
                     released["read"] += actual_ok
+                    if context is not None:
+                        ref.sessions[session_id].values.extend(
+                            {"value_id": item.value_id, "key": item.key, "text": item.text,
+                             "label": item.label, "grant_id": gid}
+                            for item in context.labelled.values())
                 expected = "allow" if expected_ok else "deny"
                 actual = "allow" if actual_ok else f"deny:{actual}"
                 trace.append(f"read {agent} {session_id} {gid} purpose={purpose} "
@@ -307,6 +315,36 @@ def run_stateful(policy: DisclosurePolicy, *, sequences: int = 200, steps: int =
                 expected = "label=session"
                 actual = "label=session" if output.label == session.label else "label differs"
                 trace.append(f"derive {output.output_id} from {session_id}: {actual}")
+
+            elif op == "derive_values":
+                live = [(sid, s) for sid, s in ref.sessions.items() if s.values]
+                if not live:
+                    continue
+                session_id, session = rng.choice(sorted(live, key=lambda item: item[0]))
+                chosen = rng.sample(session.values, rng.randint(1, min(3, len(session.values))))
+                chosen_keys = {item["key"] for item in chosen}
+                unlisted = [item for item in session.values
+                            if item["key"] not in chosen_keys and item["text"]]
+                sloppy = bool(unlisted) and rng.random() < 0.25
+                content = " | ".join(item["text"] for item in chosen)
+                if sloppy:
+                    content += " | " + rng.choice(unlisted)["text"]
+                output = gate.derive_from_values(
+                    requester=session.holder, session_id=session_id, content=content,
+                    sources=[item["value_id"] for item in chosen],
+                    claimed_label=DataLabel.bottom(policy))
+                if sloppy:
+                    label, grants = session.label, frozenset(session.grants)
+                else:
+                    label = DataLabel.bottom(policy)
+                    for item in chosen:
+                        label = label.join(item["label"])
+                    grants = frozenset(item["grant_id"] for item in chosen)
+                ref.outputs[output.output_id] = _Output(output, label, session.holder, grants)
+                expected = "label=values" if not sloppy else "label=session"
+                actual = expected if output.label == label else "label differs"
+                trace.append(f"derive_values {output.output_id} from {session_id} "
+                             f"sources={sorted(chosen_keys)} sloppy={sloppy}: {actual}")
 
             elif op == "declassify":
                 candidates = sorted(ref.outputs)
