@@ -7,15 +7,18 @@
 
 > **A model may propose an action. It cannot manufacture the authority to execute it.**
 
-An **extensible, runnable reference platform** for specifying and testing the
-authority boundaries of agentic AI. It ships a dependency-free teaching mode and
+A **sector-neutral, extensible, runnable security kernel** for specifying and
+testing the authority and data boundaries of agentic AI. Education is one domain
+pack, not the architecture's boundary: the repository also ships corporate
+confidential-data and healthcare-record-access packs. It includes a
+dependency-free teaching mode and
 a distributed reference deployment built with FastAPI, PostgreSQL, Redis, Apache
 Kafka, PySpark, Apache Iceberg, S3-compatible storage, a local model through
 Ollama, and a React operator console. A low-side gateway and a working
 unidirectional transport model the seam a certified one-way data diode occupies.
 
-**Companion paper:** *From Model Literacy to System Literacy: Teaching Trust by
-Construction for Agentic AI* — extended abstract in
+**Companion paper:** *From Model Literacy to System Literacy: A Cross-Sector
+Authority Kernel for Agentic AI* — extended abstract in
 [`paper/extended-abstract.md`](paper/extended-abstract.md), prepared for the
 **UNU Macau AI Conference 2026** (*AI × Education: AI for Learning, Learning for
 AI*) and its UNU–Springer proceedings.
@@ -45,7 +48,7 @@ make demo                                         # guided walkthrough
 make reviewer                                     # all assurance checks, one command
 
 cd fssai-ra && source .venv/bin/activate          # optional: individual commands
-pytest                                            # 588 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # 601 deterministic tests (187 at the v1.0.0 tag)
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
@@ -57,11 +60,26 @@ fssaira coverage                                  # is each contract requirement
 fssaira delegation                                # authority that travels: 10 chain risk classes, 3 architectures
 fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
+fssaira profiles --verify                         # cross-domain authority and utility evidence
 ```
 
 After installation, these checks need no network, model weights or GPU.
 Execution time depends on the machine and worker count. A second institution can
 reproduce the observations on a disconnected laptop.
+
+## One kernel, multiple governed-data domains
+
+[`docs/DOMAIN_PACKS.md`](docs/DOMAIN_PACKS.md) explains the generalization
+model. Each pack combines an executable state-transition allowlist with purpose,
+data classifications, prohibited uses, applicable obligations, separate
+data/privacy/security owners, and a manual fallback. `fssaira profiles` validates
+and inventories the shipped packs.
+
+The healthcare pack governs record access and secondary-use authorization; it
+explicitly excludes diagnosis, treatment, triage, prescribing, and clinical
+record alteration. The corporate pack governs classification, internal use,
+external release, revocation, and legal hold. Both are synthetic teaching
+profiles—not compliance claims or production deployments.
 
 ## Current-source enhancements after v1.0.0
 
@@ -153,7 +171,15 @@ declared cadence, or unverified — reading **34, 3, 0** today. A binding naming
 test that does not exist fails the build, because otherwise the report would be a
 file asserting its own correctness.
 
-**A second domain, because one proves nothing about a method.**
+**One kernel, four independently reported domain packs.**
+The framework now exercises student support, academic-record correction,
+corporate-confidential data, and healthcare-record access through the same
+verifier and evaluator: 31,360 bounded configurations, 120/120 hostile scenarios
+contained, 36/36 benign tasks completed, and zero unauthorized mutations. These
+are synthetic executable specifications, not evidence of sector compliance,
+privacy, fairness, clinical safety, or production readiness.
+
+The first transfer remains important because it found a defect.
 [`profiles/academic_record_correction.yaml`](profiles/academic_record_correction.yaml)
 was added through the documented extension path and carries its own evidence: the
 identical suite holds with no library change — 4,800 configurations, 0 violations,
@@ -198,6 +224,7 @@ And on current source, three questions `v1.0.0` could not answer at all:
 |---|---|---|
 | **Oversight capacity** | How much review can this institution actually supply? | 11 reviewers sustain 2,640 actions/day; 4 → 0 merit failures under load |
 | **A second domain** | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
+| **Cross-sector domain packs** | Does one kernel support distinct governed-data workflows? | 4 packs; 31,360 states; 120/120 hostile contained; 36/36 benign; 0 unauthorized mutations |
 | **Open adversary corpus** | Is the adversary ever someone other than the author? | 10 entries across 3 arms; 0 contributed externally, and we say so |
 
 Plus: **single-transaction execution** on PostgreSQL, which removes — rather than
@@ -377,8 +404,8 @@ UN Global Digital Compact.
 
 ## Citation
 
-> R. Srivastava, *From Model Literacy to System Literacy: Teaching Trust by
-> Construction for Agentic AI* (UNU Macau AI Conference 2026). Reference implementation:
+> R. Srivastava, *From Model Literacy to System Literacy: A Cross-Sector Authority
+> Kernel for Agentic AI* (UNU Macau AI Conference 2026). Reference implementation:
 > this repository, release `v1.0.0`.
 
 Machine-readable metadata in [`CITATION.cff`](CITATION.cff).

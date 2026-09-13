@@ -1,0 +1,80 @@
+# Healthcare record-access governance domain pack.
+#
+# This profile governs access/disclosure authorization for synthetic records.
+# It deliberately does not diagnose, recommend treatment, triage, prescribe, or
+# change a clinical record. Those uses require separate clinical safety work.
+profile_id: healthcare-record-access
+version: "1.0"
+title: Healthcare Record Access and Secondary Use
+resource_name: health_record_access_request
+owner: health_information_management
+manual_fallback: >-
+  Keep record access unchanged. Route the request to Health Information
+  Management and the privacy office using the organization's staffed access,
+  emergency-access, research-review, or patient-request process as applicable.
+governance:
+  domain: healthcare-data
+  purpose: Govern purpose-bound access, research disclosure, revocation, and emergency-access review for synthetic health records.
+  deployment_profile: teaching
+  data_classes: [synthetic-health-record, highly-restricted, research-sensitive]
+  applicable_frameworks:
+    - Applicable health-information privacy and security obligations
+    - Applicable research ethics, consent, and institutional review requirements
+    - Organization-specific clinical safety, records, and emergency-access policy
+  prohibited_uses:
+    - Diagnosis, treatment recommendation, triage, prescribing, or clinical record alteration
+    - Secondary use without purpose, legal basis, minimum-necessary scope, and review
+    - Model training on patient records under this teaching profile
+    - Concealing or automatically approving emergency break-glass access
+  processing_basis: A documented treatment, patient-request, research, consent, legal, or emergency-access basis approved for the specific request.
+  data_minimization_rule: Authorize only the minimum patient, requester, fields, purpose, and duration required for the approved use.
+  retention_rule: Retain access decisions and audit evidence for the institutionally approved health-record and research period.
+  deletion_rule: Revoke access and delete expired working copies while preserving records subject to approved retention, patient-request, or legal-hold duties.
+  residency_rule: Store and process records only in healthcare-organization-approved regions and systems recorded in the deployment contract.
+  incident_response: Suspend affected access, preserve evidence, notify privacy, security, Health Information Management, and clinical safety owners, and use the approved response process.
+  owners:
+    data: health_information_management
+    privacy: healthcare_privacy_officer
+    security: healthcare_information_security_officer
+transitions:
+  - operation: verify_request_identity
+    from_status: draft
+    to_status: identity_verified
+    consequential: false
+    approval_role: health_records_specialist
+
+  - operation: authorize_treatment_access
+    from_status: identity_verified
+    to_status: treatment_access_active
+    consequential: true
+    approval_role: healthcare_privacy_officer
+
+  - operation: request_secondary_use
+    from_status: identity_verified
+    to_status: awaiting_research_review
+    consequential: true
+    approval_role: healthcare_privacy_officer
+
+  - operation: approve_secondary_use
+    from_status: awaiting_research_review
+    to_status: research_access_active
+    consequential: true
+    approval_role: research_review_authority
+
+  - operation: revoke_treatment_access
+    from_status: treatment_access_active
+    to_status: access_revoked
+    consequential: true
+    approval_role: healthcare_privacy_officer
+
+  - operation: revoke_research_access
+    from_status: research_access_active
+    to_status: access_revoked
+    consequential: true
+    approval_role: healthcare_privacy_officer
+
+  - operation: record_break_glass_review
+    from_status: emergency_access_pending_review
+    to_status: emergency_access_reviewed
+    consequential: true
+    approval_role: emergency_access_reviewer

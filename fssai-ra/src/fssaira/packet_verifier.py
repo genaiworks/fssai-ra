@@ -15,13 +15,14 @@ import math
 import re
 from pathlib import Path
 
-SCHEMA = "fssaira.decision-packet.v2"
+SCHEMA = "fssaira.decision-packet.v3"
 MAX_BYTES = 2_000_000
 LIMITS = [
     "Approval signature not authenticated: never distribute a signing key with a packet.",
     "A supplied fingerprint only helps if obtained and retained through an independently trusted channel.",
     "Selected request records do not establish completeness of the institution's entire ledger.",
     "The profile is the configuration at export, not proof of the policy in force at execution.",
+    "Governance metadata declares purpose and obligations; it is not evidence of legal compliance.",
     "Evidence source content is not included; its reference alone cannot reconstruct what the reviewer saw.",
     "Internal consistency is not proof of an event, identity, legal compliance, policy fairness or educational benefit.",
 ]
@@ -152,7 +153,10 @@ def inspect_packet(packet, expected_sha256: str | None = None) -> dict:
         context = payload["review_context"]
         _fields(context, "profile profile_scope evidence_content")
         profile = context["profile"]
-        _fields(profile, "profile_id version title resource_name owner manual_fallback transitions")
+        _fields(
+            profile,
+            "profile_id version title resource_name owner manual_fallback transitions governance",
+        )
         for name in ("profile_id", "version", "title", "resource_name", "owner", "manual_fallback"):
             _text(profile[name])
         if context["profile_scope"] != "configuration_at_export":
@@ -162,6 +166,28 @@ def inspect_packet(packet, expected_sha256: str | None = None) -> dict:
         rules = profile["transitions"]
         if not isinstance(rules, list) or not rules:
             raise ValueError("profile transitions required")
+        governance = profile["governance"]
+        if governance is not None:
+            _fields(
+                governance,
+                "domain purpose deployment_profile data_classes applicable_frameworks "
+                "prohibited_uses processing_basis data_minimization_rule retention_rule "
+                "deletion_rule residency_rule incident_response data_owner privacy_owner "
+                "security_owner",
+            )
+            for name in (
+                "domain", "purpose", "deployment_profile", "processing_basis",
+                "data_minimization_rule", "retention_rule", "deletion_rule",
+                "residency_rule", "incident_response", "data_owner", "privacy_owner",
+                "security_owner",
+            ):
+                _text(governance[name])
+            for name in ("data_classes", "applicable_frameworks", "prohibited_uses"):
+                values = governance[name]
+                if not isinstance(values, list) or not values:
+                    raise ValueError(f"profile governance {name} required")
+                for value in values:
+                    _text(value)
         matching = []
         for rule in rules:
             _fields(rule, "operation from_status to_status consequential approval_role")

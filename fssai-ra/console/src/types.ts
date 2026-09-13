@@ -17,6 +17,23 @@ export interface Profile {
   owner: string;
   manual_fallback: string;
   transitions: TransitionRule[];
+  governance: {
+    domain: string;
+    purpose: string;
+    deployment_profile: "teaching" | "institutional-pilot" | "hardware-isolated";
+    data_classes: string[];
+      applicable_frameworks: string[];
+      prohibited_uses: string[];
+      processing_basis: string;
+      data_minimization_rule: string;
+      retention_rule: string;
+      deletion_rule: string;
+      residency_rule: string;
+      incident_response: string;
+      data_owner: string;
+    privacy_owner: string;
+    security_owner: string;
+  } | null;
 }
 
 export interface Health {

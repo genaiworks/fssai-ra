@@ -1,7 +1,7 @@
-# From Model Literacy to System Literacy: Teaching Trust by Construction for Agentic AI
+# From Model Literacy to System Literacy: A Cross-Sector Authority Kernel for Agentic AI
 
 **Proposed panel:** Agentic AI in the Loop - From Autonomous Tools to Shared Capacity
-**Keywords:** agentic AI; educational administration; institutional sovereignty; fail-secure architecture; human oversight; verifiable governance; digital public goods
+**Keywords:** agentic AI; system literacy; secure data governance; institutional sovereignty; fail-secure architecture; human oversight; verifiable governance; digital public goods
 **Reference implementation:** https://github.com/genaiworks/fssai-ra (release v1.0.0 for baseline figures, plus current-source supplements; record the reviewed commit at submission)
 
 > Paste each section below into the matching form field. Headings are field
@@ -9,9 +9,9 @@
 
 ## Introduction
 
-A student's support application is refused. She asks who decided, what they saw, and how she can contest it. Somewhere in that process an agent read her file, applied policy, drafted a recommendation, and called an administrative tool. A malicious instruction hidden in an uploaded file could have redirected it. So could an ordinary model error, with no attacker. From where she stands the two are the same: an outcome, and no way back in.
+A student's support application is refused. She asks who decided, what they saw, and how to contest it. The same questions follow a patient's record disclosure or a corporate data release. An agent or hidden instruction can be wrong. To the affected person the result is the same: an outcome, and no way back in.
 
-This work asks a narrower question than whether AI is trustworthy: what stops a wrong or compromised agent from turning its own proposal into institutional authority? It presents Trust by Construction, a fail-secure architecture for sovereign AI agents in education. Its central rule is one sentence: a model may propose an action; it cannot manufacture the authority to execute it.
+This work asks a narrower question than whether AI is trustworthy: what stops a wrong or compromised agent from turning its own proposal into institutional authority? It presents Trust by Construction, a sector-neutral fail-secure authority and data-governance kernel, taught through education and exercised across education, corporate-confidential data, and healthcare-record access. Its central rule is one sentence: a model may propose an action; it cannot manufacture the authority to execute it.
 
 The contribution is an executable control contract. For every consequential capability it names the protected asset, permitted operation, enforcement point, accountable owner, failure test, evidence artifact, and recovery response. It turns system literacy from vocabulary into something a learner can demonstrate.
 
@@ -19,7 +19,7 @@ The argument I bring to the panel goes further. Institutions are being sold auto
 
 ## Development Section 1 Methodology Core Argument and Case Context
 
-The method joins an education case with executable assurance, informed by zero trust, NIST, OWASP, ISO/IEC 42001, and UNESCO's AI competency framework. Each governance duty becomes behaviour another institution can test after replacing parts.
+The method joins an education case with a cross-sector executable kernel, informed by zero trust, NIST, OWASP, ISO/IEC 42001, and UNESCO's AI competency framework. Each governance duty becomes behaviour another institution can test after replacing parts.
 
 The control contract is machine-readable. Its seven fields are mandatory, and each check names the requirement it defends. Teams begin with one consequential capability and manual fallback, writing the failure test before connecting real records or keys. If the fields cannot be filled, nobody is ready to automate it.
 
@@ -31,7 +31,9 @@ Five domains organise the design. Controlled import validates source, type, size
 
 An approval binds to a proposal digest covering the operation, target, states, evidence version, requester, and resource version, with the reviewer role, audience, and expiry also authenticated. The executor rechecks every field before mutation and reads the review class from a deployment catalogue, never from the model's own label.
 
-Two additions answer questions this architecture previously could not. First, review load is modelled as a scarce safety-relevant resource: a declared capacity per reviewer per window, a deliberation floor below which an approval is refused rather than flagged, mandatory escalation to a second reviewer under sustained load, and a published measure of remaining headroom. Refusing to issue the approval, rather than recording a concern afterwards, is what makes this a control instead of a dashboard. Second, because every result had been measured on the one profile the architecture was designed around, a structurally different education domain was added through the documented extension path: academic record correction, with a multi-role chain, a rejection an appeal can reopen, and its own evidence rather than the first domain's.
+Two additions answer questions this architecture previously could not. First, review load is modelled as a scarce safety-relevant resource: a declared capacity per reviewer per window, a deliberation floor below which an approval is refused rather than flagged, mandatory escalation under sustained load, and published headroom. Refusing the approval, rather than recording a concern afterwards, makes this a control instead of a dashboard. Second, four independently reported domain packs now exercise one kernel: student support, academic-record correction, corporate-confidential data, and healthcare-record access. Each declares purpose, data classes, lifecycle rules, prohibited uses, key owners, and evidence.
+
+Each pack is a testable spec: purpose, data types, bans, owners, states, fallback, tests, proof, and limits. Local teams replace each item and run the suite before use.
 
 Assurance is checked four ways, each answering a question a hand-written test suite cannot. Randomised property testing compares generated tool calls against a predicate written independently of the implementation. Bounded model checking enumerates the profile's declared authority space, runs the real enforcement code against every configuration, and checks five invariants: the combination nobody imagined. Ablation removes one control at a time and measures whether the harm returns, because a control whose removal changes nothing was decorative and the assurance matrix should stop claiming it. A portable conformance suite re-runs the properties against whatever backends an institution has substituted, naming for each check the requirement it defends, so a failure states which claim was lost rather than merely turning red.
 
@@ -45,11 +47,11 @@ The same hostile proposals and legitimate work went to three architectures. An u
 
 The oversight results are the new contribution. With shipped defaults, a roster of 11 reviewers sustains 2,640 consequential actions per day, bound by the declared quota rather than by attention. In a queue trial, 40 arrivals reach one reviewer budgeted for 8. Some proposals are structurally perfect and substantively wrong: correct operation, current version, authentic approval, ineligible applicant. No digest detects that and no invariant excludes it; the only control behind that harm is a person who is reading. Without load control, four such failures execute. With it, none do, and 32 actions defer to manual review. That deferral is the finding, not a defect to tune away: it makes over-capacity arithmetic instead of invisible. One caveat is essential: the degradation curve is a declared parameter, not a measurement of any officer; observing real reviewers is open work.
 
-The second domain repaid the effort at once. The identical suite holds with no library change: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. It also failed on first run, and the defect was genuine. A declared approval role on a routine transition was silently ignored, because the enforcement map was built only from consequential rules. The field was mandatory in the schema, visible to any reviewer, and absent at runtime. One domain could not reach it; two did.
+Across four synthetic packs, the identical kernel covers 31,360 bounded configurations, contains 120 of 120 hostile scenarios, completes 36 of 36 benign tasks, and records zero unauthorised mutations. This demonstrates reuse, not sector compliance or safety. The academic pack retains the transfer baseline: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. Its first run exposed a role declared in the profile but ignored at runtime.
 
 Because every attack was written by the people who built the defence, an open adversary corpus now ships. A contributed attack is seven fields of YAML, scored against all three architectures and attributed to its contributor. No student record or vendor name is needed, and no contributor code runs. The tool prints how many attacks came from outside the project; today that number is zero, stated in the output rather than buried in a limitation.
 
-For AI for Learning, this governs administration. For Learning for AI, it teaches system literacy: trace data, bound delegation, verify controls, calculate escalation capacity, and reconstruct accountability. Participants violate a boundary, watch refusal, remove the control, and watch harm return. Institutions unable to pool infrastructure can pool failures. No learning gain is claimed; none has been measured.
+For AI for Learning, the education pack governs administration. For Learning for AI, the cross-sector kernel teaches system literacy: trace data, bound delegation, verify controls, calculate escalation capacity, and reconstruct accountability. Participants violate a boundary, watch refusal, remove the control, and watch harm return. Institutions unable to pool infrastructure can pool failures. No learning gain is claimed; none has been measured.
 
 Open questions remain: a compromised host or signing authority, injection rates for named models, reviewer accuracy under load, appeal quality, fairness, cost, energy, and independent audit. Separate containers on one host are logical separation, not independent administrative trust.
 

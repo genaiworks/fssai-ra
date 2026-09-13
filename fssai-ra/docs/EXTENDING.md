@@ -4,8 +4,10 @@
 >
 > **Recommended next:** Continue the engineering route → [`ASSURANCE.md`](ASSURANCE.md)
 
-This guide helps a university, public agency, researcher, or student adapt the
-teaching profile without inheriting claims that its environment has not tested.
+This guide helps a corporation, healthcare organization, university, public
+agency, researcher, or community organization adapt the security kernel without
+inheriting claims that its environment has not tested. See the shipped matrix in
+[`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) and inventory it with `fssaira profiles`.
 
 ## Begin with one consequential action
 
@@ -30,6 +32,13 @@ and the defect was in the library rather than the new profile: a declared
 `approval_role` on a non-consequential transition was silently unenforced. That
 is the normal experience of adding a second domain, and it is the argument for
 adding one. See [`tests/test_generalization.py`](../tests/test_generalization.py).
+
+Two additional packs exercise regulated-data shapes outside education:
+[`corporate_confidential_data.yaml`](../profiles/corporate_confidential_data.yaml)
+and [`healthcare_record_access.yaml`](../profiles/healthcare_record_access.yaml).
+They declare purpose, data classes, prohibited uses, applicable obligations, and
+separate data/privacy/security owners. They are executable teaching examples,
+not compliance claims.
 
 Copy `profiles/template.yaml`, replace its domain language, and enumerate only the
 state transitions that the executor may perform. Validate it before writing code:

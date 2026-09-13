@@ -21,6 +21,26 @@ manual_fallback: >-
   Route the unchanged record to the registrar for manual correction under the
   published appeals procedure, and notify the student that the request is being
   handled outside the automated path.
+governance:
+  domain: education-records
+  purpose: Route synthetic academic-record correction requests through instructor, registrar, and appeal authority without letting a model alter grades.
+  deployment_profile: teaching
+  data_classes: [synthetic-academic-record, restricted]
+  applicable_frameworks: [institution-specific academic-record and privacy obligations]
+  prohibited_uses:
+    - Autonomous grade changes
+    - Reuse of records for unrelated profiling or model training
+    - External disclosure outside the published correction and appeal process
+  processing_basis: Institution-approved record-correction and appeal administration using synthetic records only.
+  data_minimization_rule: Include only fields needed to verify and decide the specific correction request.
+  retention_rule: Retain request and decision evidence for the declared record-correction and appeal period.
+  deletion_rule: Delete expired working copies while preserving records required by the approved retention rule.
+  residency_rule: Store all artifacts only in institution-approved locations declared by the deployment.
+  incident_response: Freeze automated corrections, preserve evidence, notify the registrar and named owners, and use the manual appeal path.
+  owners:
+    data: registrar
+    privacy: institutional_privacy_officer
+    security: information_security
 transitions:
   - operation: submit_correction_request
     from_status: draft

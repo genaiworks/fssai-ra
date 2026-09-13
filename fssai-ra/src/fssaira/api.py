@@ -328,6 +328,9 @@ def create_app(
             "owner": plane.profile.owner,
             "manual_fallback": plane.profile.manual_fallback,
             "transitions": [asdict(rule) for rule in plane.profile.transitions],
+            "governance": (
+                asdict(plane.profile.governance) if plane.profile.governance else None
+            ),
         }
 
     @app.get("/v1/contract", tags=["governance"])

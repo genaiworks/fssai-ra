@@ -812,6 +812,51 @@ def cmd_init(args) -> int:
     return 0
 
 
+def cmd_profiles(args) -> int:
+    """Validate and inventory the reusable domain packs."""
+    from .evaluation import EvaluationRunner
+    from .profiles import ApplicationProfile, discover_profiles
+    from .verification import verify_profile
+
+    profiles = discover_profiles(args.directory)
+    if args.verify:
+        for summary in profiles:
+            profile = ApplicationProfile.load(summary["path"])
+            verification = verify_profile(profile)
+            evaluation = EvaluationRunner(profile).run()
+            summary["assurance"] = {
+                "states_explored": verification.states_explored,
+                "invariants_hold": verification.holds,
+                "scenarios_contained": evaluation.passed,
+                "scenarios_total": evaluation.total,
+                "unauthorized_mutations": evaluation.unauthorized_mutations,
+                "benign_completed": evaluation.benign_completed,
+                "benign_total": len(evaluation.utility),
+            }
+    payload = {"profiles": profiles, "count": len(profiles)}
+    if args.output:
+        emit(payload, args.output)
+        return 0
+    heading(f"Domain packs — {len(profiles)} validated profiles")
+    for profile in profiles:
+        print(f"  {profile['profile_id']:<34} {profile['domain']}")
+        print(dim(
+            f"    {profile['transitions']} transitions · "
+            f"{profile['consequential_transitions']} consequential · "
+            f"roles: {', '.join(profile['approval_roles'])}"
+        ))
+        print(dim(f"    purpose: {profile['purpose']}"))
+        if "assurance" in profile:
+            assurance = profile["assurance"]
+            print(dim(
+                f"    checked: {assurance['states_explored']} states · "
+                f"{assurance['scenarios_contained']}/{assurance['scenarios_total']} hostile · "
+                f"{assurance['benign_completed']}/{assurance['benign_total']} benign"
+            ))
+    print(dim("\n  External frameworks are applicability declarations, not compliance claims."))
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -1005,6 +1050,16 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--owner", default="accountable_service_owner")
     init.add_argument("--resource", default="governed_resource")
     init.set_defaults(func=cmd_init)
+
+    profiles = add_output(sub.add_parser(
+        "profiles", help="validate and inventory reusable domain packs"
+    ))
+    profiles.add_argument("--directory", type=Path, default=Path("profiles"))
+    profiles.add_argument(
+        "--verify", action="store_true",
+        help="also run bounded verification, adversarial scenarios, and benign tasks",
+    )
+    profiles.set_defaults(func=cmd_profiles)
 
     return parser
 

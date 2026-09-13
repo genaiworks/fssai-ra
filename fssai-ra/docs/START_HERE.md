@@ -17,6 +17,11 @@ Do not begin with Kafka, Spark, or the data diode. Those are replaceable
 implementations. Begin with the authority boundary; then see how each technology
 serves it.
 
+To see immediately that the kernel is not education-specific, run
+`fssaira profiles` and open [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md). The shipped
+catalog includes corporate-confidential and healthcare-record-access workflows;
+all use synthetic identifiers and carry separate claim limits.
+
 ## Step 0 · Draw the system in one line (2 minutes)
 
 ```text

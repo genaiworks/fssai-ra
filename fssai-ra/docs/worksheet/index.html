@@ -192,7 +192,8 @@ footer.foot { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--r
     <div class="example">
       <span class="faint" style="align-self:center">Load a worked example:</span>
       <button type="button" data-example="student">Student support</button>
-      <button type="button" data-example="health">Clinic referral</button>
+      <button type="button" data-example="corporate">Corporate data</button>
+      <button type="button" data-example="health">Health-record access</button>
       <button type="button" data-example="benefits">Benefits eligibility</button>
       <button type="button" data-example="weak">A weak draft, for contrast</button>
       <button type="button" data-example="blank">Blank</button>
@@ -252,7 +253,7 @@ footer.foot { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--r
   </section>
 
   <footer class="foot">
-    <span>Companion to <em>From Model Literacy to System Literacy: Teaching Trust by Construction for Agentic AI</em>.</span>
+    <span>Companion to <em>From Model Literacy to System Literacy: A Cross-Sector Authority Kernel for Agentic AI</em>.</span>
     <span>Reference implementation, Apache-2.0: <code>github.com/genaiworks/fssai-ra</code> — release <code>v1.0.0</code>.</span>
     <span>This worksheet checks that your answers are <em>specific</em>. It cannot check that they are <em>correct</em>; that is a governance review with the named owner in the room.</span>
   </footer>
@@ -353,19 +354,35 @@ const EXAMPLES = {
     ],
   },
   health: {
-    id: "clinic-referral", title: "Clinic Referral Triage", resource: "referral",
+    id: "healthcare-record-access", title: "Healthcare Record Access", resource: "access_request",
     values: {
-      capability: "Mark a referral as ready for clinician triage",
-      protected_asset: "A patient's place in a waiting list and the clinical urgency assigned to it",
-      permitted_operation: "A triage assistant may propose a priority band for a referral already in its queue",
-      enforcement_point: "Referral service that checks the proposing identity, the approving clinician's registration, and the referral's current version before writing a band",
-      owner: "Clinical Governance Lead",
-      test: "Propose a higher urgency band, obtain approval, then alter the patient identifier before execution; confirm denial and no change to either record",
-      evidence_artifact: "Band-change receipt naming the approving clinician, the evidence version, and the prior band",
-      failure_response: "Deny the automated change; leave the referral in its current band and place it on the manual triage list reviewed each morning",
+      capability: "Authorize purpose-bound access to an existing health record",
+      protected_asset: "A patient's confidential record and the institution's authority to disclose it",
+      permitted_operation: "A records assistant may propose treatment-purpose access for an identity-verified request; it may not diagnose, triage, prescribe, or alter the clinical record",
+      enforcement_point: "Access service that verifies patient and requester scope, purpose, approving privacy role, proposal digest, expiry, and current request version before changing access",
+      owner: "Health Information Management Director",
+      test: "Approve treatment access, then change the patient, requester, purpose, or fields before execution; confirm denial and zero access changes",
+      evidence_artifact: "Access decision packet naming purpose, patient and requester scopes, record version, approving privacy officer, and outcome receipt",
+      failure_response: "Keep access unchanged and route the request to Health Information Management and the privacy office through the staffed access process",
     },
     transitions: [
-      { operation: "propose_triage_band", from: "received", to: "awaiting_clinician_review", role: "registered_clinician", consequential: true },
+      { operation: "authorize_treatment_access", from: "identity_verified", to: "treatment_access_active", role: "healthcare_privacy_officer", consequential: true },
+    ],
+  },
+  corporate: {
+    id: "corporate-confidential-data", title: "Corporate Confidential Data", resource: "dataset_request",
+    values: {
+      capability: "Authorize an exact confidential dataset for a named internal purpose",
+      protected_asset: "Restricted corporate data, trade secrets, and the authority to disclose them",
+      permitted_operation: "A data-governance assistant may propose internal use for the exact dataset, recipient, fields, purpose, and duration reviewed",
+      enforcement_point: "Access service that verifies the data owner's role, canonical proposal digest, recipient and purpose scope, expiry, legal-hold state, and current request version",
+      owner: "Enterprise Data Governance Director",
+      test: "Approve one internal-use request, then change the recipient, purpose, dataset, fields, or duration; confirm denial and zero permission changes",
+      evidence_artifact: "Signed access decision packet and outcome receipt naming dataset version, purpose, recipient, fields, duration, and approving data owner",
+      failure_response: "Keep the dataset inaccessible and route the unchanged request to the data owner and information-security reviewer",
+    },
+    transitions: [
+      { operation: "authorize_internal_use", from: "classified", to: "internal_use_authorized", role: "data_owner", consequential: true },
     ],
   },
   benefits: {

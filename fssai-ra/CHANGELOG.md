@@ -2,6 +2,29 @@
 
 ## Unreleased — composition: delegated authority, assisted review, and a contract that measures itself
 
+### Cross-sector secure-data domain packs
+
+- Reframed the implementation as a sector-neutral authority and data-governance
+  kernel. Education remains the conference case, not the software boundary.
+- Added validated governance context to profiles: purpose, deployment class,
+  sensitive-data classes, applicable obligations, processing basis,
+  minimization, retention, deletion, residency, incident response, prohibited
+  uses, and distinct data, privacy, and security owners. The context now travels in the API and
+  decision packet without being presented as compliance evidence. Decision
+  packets therefore use schema `fssaira.decision-packet.v3`; the offline verifier
+  deliberately rejects older packet schemas rather than guessing at missing
+  governance context.
+- Added synthetic corporate-confidential-data and healthcare-record-access
+  packs. The healthcare pack explicitly excludes diagnosis, treatment advice,
+  triage, prescribing, and clinical-record alteration.
+- Added `fssaira profiles --verify`, fail-closed catalog discovery, duplicate-id
+  checks, and generated cross-domain evidence. Four independently reported packs
+  cover 31,360 bounded configurations, contain 120/120 hostile scenarios,
+  complete 36/36 benign tasks, and produce zero unauthorized mutations. These
+  fixture results demonstrate kernel reuse, not sector compliance or safety.
+- Generalized the public worksheet, documentation routes, abstract, Word
+  submission artifact, presentation, and citation metadata around domain packs.
+
 ### Release-readiness hardening
 
 - The HTTP review flow now uses server-recorded presentation times, immutable

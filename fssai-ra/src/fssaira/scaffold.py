@@ -32,6 +32,25 @@ manual_fallback: >-
   Describe the safe service path used when automation is denied. This is not
   optional: fail-secure means a person can still be served when the machine
   refuses, and the person who owns that path must be named.
+governance:
+  domain: {domain_id}
+  purpose: Replace with the narrow, legitimate purpose for processing this data.
+  deployment_profile: teaching
+  data_classes: [restricted]
+  applicable_frameworks: [replace-with-applicable-obligations]
+  prohibited_uses:
+    - Any use outside the declared purpose
+    - Model training on governed records without separate authorization
+  processing_basis: Replace with the approved policy, consent, contract, or duty.
+  data_minimization_rule: Replace with the minimum subjects, fields, recipients, purpose, and duration.
+  retention_rule: Replace with the approved source, working-data, decision, and evidence retention rule.
+  deletion_rule: Replace with revocation, deletion, and legal-hold handling for every copy.
+  residency_rule: Replace with approved regions, systems, and cross-border transfer constraints.
+  incident_response: Replace with containment, evidence preservation, notification, recovery, and continuity steps.
+  owners:
+    data: {owner}
+    privacy: accountable_privacy_owner
+    security: accountable_security_owner
 transitions:
   - operation: prepare_for_human_review
     from_status: draft
@@ -176,12 +195,16 @@ pytest {directory}
 
 1. Replace every transition in `profile.yaml` with one that exists in the real
    process, and name the role that is genuinely accountable for it.
-2. Fill all seven fields of every requirement in `contract.yaml`. A capability
+2. Replace every `governance` placeholder: purpose, data classes, processing
+   basis, minimization, retention, deletion, residency, incident response,
+   applicable obligations, prohibited uses, and data/privacy/security owners.
+   Listing an external framework declares applicability; it does not prove compliance.
+3. Fill all seven fields of every requirement in `contract.yaml`. A capability
    whose seven fields cannot be filled is not ready to be automated.
-3. Replace the failing test in `test_{domain_id_snake}.py` with the adversarial
+4. Replace the failing test in `test_{domain_id_snake}.py` with the adversarial
    attempt you are actually worried about.
-4. Write `ASSURANCE.md` from results you generated, not results you inherited.
-5. Name the manual fallback owner, and check that they know.
+5. Write `ASSURANCE.md` from results you generated, not results you inherited.
+6. Name the manual fallback owner, and check that they know.
 """
 
 

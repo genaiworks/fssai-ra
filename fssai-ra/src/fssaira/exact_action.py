@@ -43,6 +43,11 @@ class ActionProposal:
     evidence_version: str
 
     @property
+    def resource_id(self) -> str:
+        """Domain-neutral alias for the legacy ``case_id`` wire field."""
+        return self.case_id
+
+    @property
     def digest(self) -> str:
         return _canonical_digest(asdict(self))
 
@@ -70,6 +75,11 @@ class ExecutionResult:
     receipt_hash: str
     replayed: bool = False
     proposal_digest: str = ""
+
+    @property
+    def resource_id(self) -> str:
+        """Domain-neutral alias for the legacy ``case_id`` wire field."""
+        return self.case_id
 
 
 class ExecutionDenied(RuntimeError):
@@ -204,6 +214,11 @@ class CaseRegister:
         )
         self._results[proposal.request_id] = result
         return result
+
+
+# Domain-neutral name for new integrations. ``CaseRegister`` remains the wire-
+# compatible public name so existing education adopters do not break.
+ResourceRegister = CaseRegister
 
 
 class ApprovalAuthority:

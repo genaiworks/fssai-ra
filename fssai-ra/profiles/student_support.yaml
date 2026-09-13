@@ -4,6 +4,26 @@ title: Student Support Review
 resource_name: support_case
 owner: student_services
 manual_fallback: Route the unchanged case to an authorized officer for manual review.
+governance:
+  domain: education-support
+  purpose: Prepare synthetic student-support cases for review without allowing a model to award benefits or disclose records.
+  deployment_profile: teaching
+  data_classes: [synthetic-education-record, restricted]
+  applicable_frameworks: [institution-specific student-record and privacy obligations]
+  prohibited_uses:
+    - Making an award or eligibility decision without the named human authority
+    - External disclosure of a case through a model or tool
+    - Training a model on real student records under this teaching profile
+  processing_basis: Institution-approved student-support administration using synthetic cases only.
+  data_minimization_rule: Include only fields required to prepare the assigned case for named-officer review.
+  retention_rule: Retain synthetic decision evidence for the declared appeal and assurance period.
+  deletion_rule: Delete expired synthetic case content while preserving only evidence the approved retention rule requires.
+  residency_rule: Store all artifacts only in institution-approved locations declared by the deployment.
+  incident_response: Freeze automated actions, preserve evidence, notify the named owners, and route cases to manual review.
+  owners:
+    data: student_services
+    privacy: institutional_privacy_officer
+    security: information_security
 transitions:
   - operation: prepare_case_for_review
     from_status: draft

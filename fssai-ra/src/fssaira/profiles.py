@@ -25,6 +25,33 @@ class TransitionRule:
 
 
 @dataclass(frozen=True)
+class GovernanceContext:
+    """Domain facts that must travel with a reusable authority profile.
+
+    These fields are descriptive and deliberately do not claim compliance.
+    They force an adopter to name purpose, sensitive-data classes, prohibited
+    uses, external obligations, and the people who own data/privacy/security.
+    Enforcement remains in transitions and the control contract.
+    """
+
+    domain: str
+    purpose: str
+    deployment_profile: str
+    data_classes: tuple[str, ...]
+    applicable_frameworks: tuple[str, ...]
+    prohibited_uses: tuple[str, ...]
+    processing_basis: str
+    data_minimization_rule: str
+    retention_rule: str
+    deletion_rule: str
+    residency_rule: str
+    incident_response: str
+    data_owner: str
+    privacy_owner: str
+    security_owner: str
+
+
+@dataclass(frozen=True)
 class ApplicationProfile:
     profile_id: str
     version: str
@@ -33,6 +60,7 @@ class ApplicationProfile:
     owner: str
     manual_fallback: str
     transitions: tuple[TransitionRule, ...]
+    governance: GovernanceContext | None = None
 
     @property
     def allowed_operations(self) -> set[str]:
@@ -140,6 +168,8 @@ class ApplicationProfile:
             seen.add(identity)
             rules.append(TransitionRule(**{key: item[key] for key in (*fields, "consequential")}))
 
+        governance = _governance_context(raw.get("governance"))
+
         return cls(
             profile_id=str(raw["profile_id"]),
             version=str(raw["version"]),
@@ -148,4 +178,135 @@ class ApplicationProfile:
             owner=str(raw["owner"]),
             manual_fallback=str(raw["manual_fallback"]),
             transitions=tuple(rules),
+            governance=governance,
         )
+
+
+def _governance_context(raw: Any) -> GovernanceContext | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ProfileError("governance must be a mapping")
+    required = (
+        "domain", "purpose", "deployment_profile", "data_classes",
+        "applicable_frameworks", "prohibited_uses", "processing_basis",
+        "data_minimization_rule", "retention_rule", "deletion_rule",
+        "residency_rule", "incident_response", "owners",
+    )
+    missing = [key for key in required if key not in raw]
+    if missing:
+        raise ProfileError("governance missing required fields: " + ", ".join(missing))
+    for key in (
+        "domain", "purpose", "deployment_profile", "processing_basis",
+        "data_minimization_rule", "retention_rule", "deletion_rule",
+        "residency_rule", "incident_response",
+    ):
+        if not isinstance(raw[key], str) or not raw[key].strip():
+            raise ProfileError(f"governance {key} must be a non-empty string")
+    if raw["deployment_profile"] not in {
+        "teaching", "institutional-pilot", "hardware-isolated",
+    }:
+        raise ProfileError(
+            "governance deployment_profile must be teaching, institutional-pilot, "
+            "or hardware-isolated"
+        )
+
+    def string_list(key: str) -> tuple[str, ...]:
+        value = raw[key]
+        if (
+            not isinstance(value, list)
+            or not value
+            or not all(isinstance(item, str) and item.strip() for item in value)
+        ):
+            raise ProfileError(f"governance {key} must be a non-empty list of strings")
+        normalized = tuple(item.strip() for item in value)
+        if len(set(normalized)) != len(normalized):
+            raise ProfileError(f"governance {key} contains duplicates")
+        return normalized
+
+    owners = raw["owners"]
+    if not isinstance(owners, dict):
+        raise ProfileError("governance owners must be a mapping")
+    owner_values = {}
+    for key in ("data", "privacy", "security"):
+        value = owners.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise ProfileError(f"governance owners.{key} must be a non-empty string")
+        owner_values[key] = value.strip()
+    return GovernanceContext(
+        domain=raw["domain"].strip(),
+        purpose=raw["purpose"].strip(),
+        deployment_profile=raw["deployment_profile"],
+        data_classes=string_list("data_classes"),
+        applicable_frameworks=string_list("applicable_frameworks"),
+        prohibited_uses=string_list("prohibited_uses"),
+        processing_basis=raw["processing_basis"].strip(),
+        data_minimization_rule=raw["data_minimization_rule"].strip(),
+        retention_rule=raw["retention_rule"].strip(),
+        deletion_rule=raw["deletion_rule"].strip(),
+        residency_rule=raw["residency_rule"].strip(),
+        incident_response=raw["incident_response"].strip(),
+        data_owner=owner_values["data"],
+        privacy_owner=owner_values["privacy"],
+        security_owner=owner_values["security"],
+    )
+
+
+def discover_profiles(directory: str | Path) -> list[dict]:
+    """Validate and summarize every YAML domain pack in a directory."""
+    root = Path(directory)
+    if not root.is_dir():
+        raise ProfileError(f"profile directory does not exist: {root}")
+    summaries = []
+    profile_ids: set[str] = set()
+    for path in sorted(root.glob("*.yaml")):
+        if path.name == "template.yaml":
+            continue
+        profile = ApplicationProfile.load(path)
+        if profile.profile_id in profile_ids:
+            raise ProfileError(f"duplicate profile_id in {root}: {profile.profile_id}")
+        profile_ids.add(profile.profile_id)
+        governance = profile.governance
+        if governance is None:
+            raise ProfileError(
+                f"domain pack {path} must declare a governance context"
+            )
+        summaries.append({
+            "profile_id": profile.profile_id,
+            "title": profile.title,
+            "resource_name": profile.resource_name,
+            "owner": profile.owner,
+            "domain": governance.domain if governance else "undeclared",
+            "purpose": governance.purpose if governance else "undeclared",
+            "deployment_profile": (
+                governance.deployment_profile if governance else "undeclared"
+            ),
+            "data_classes": list(governance.data_classes) if governance else [],
+            "applicable_frameworks": (
+                list(governance.applicable_frameworks) if governance else []
+            ),
+            "prohibited_uses": list(governance.prohibited_uses) if governance else [],
+            "processing_basis": governance.processing_basis if governance else "undeclared",
+            "data_minimization_rule": (
+                governance.data_minimization_rule if governance else "undeclared"
+            ),
+            "retention_rule": governance.retention_rule if governance else "undeclared",
+            "deletion_rule": governance.deletion_rule if governance else "undeclared",
+            "residency_rule": governance.residency_rule if governance else "undeclared",
+            "incident_response": (
+                governance.incident_response if governance else "undeclared"
+            ),
+            "transitions": len(profile.transitions),
+            "consequential_transitions": sum(rule.consequential for rule in profile.transitions),
+            "approval_roles": sorted({rule.approval_role for rule in profile.transitions}),
+            "path": str(path),
+        })
+    if not summaries:
+        raise ProfileError(f"profile directory contains no domain packs: {root}")
+    return summaries
+
+
+__all__ = [
+    "ApplicationProfile", "GovernanceContext", "ProfileError", "TransitionRule",
+    "discover_profiles",
+]

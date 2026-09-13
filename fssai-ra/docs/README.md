@@ -71,21 +71,23 @@ component.
 
 1. [`START_HERE.md`](START_HERE.md) — follow the exact source-reading order from
    profile to decision packet.
-2. [`PLATFORM.md`](PLATFORM.md) — map the teaching implementation to FastAPI,
+2. [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — see how the same security kernel is
+   applied to education, corporate-confidential, and healthcare data.
+3. [`PLATFORM.md`](PLATFORM.md) — map the teaching implementation to FastAPI,
    PostgreSQL/Redis, Kafka, Spark, Iceberg, object storage, and local models.
-3. [`SECURITY.md`](SECURITY.md) — understand trusted components, attacker
+4. [`SECURITY.md`](SECURITY.md) — understand trusted components, attacker
    capabilities, egress, identity, keys, and administrative limits.
-4. [`DIODE_DEPLOYMENT.md`](DIODE_DEPLOYMENT.md) — locate the one-way seam and
+5. [`DIODE_DEPLOYMENT.md`](DIODE_DEPLOYMENT.md) — locate the one-way seam and
    distinguish a software interface from certified hardware isolation.
-5. [`RESILIENCE.md`](RESILIENCE.md) — study request identity, process races,
+6. [`RESILIENCE.md`](RESILIENCE.md) — study request identity, process races,
    crash points, replay, and reconciliation.
-6. [`OPERATIONS.md`](OPERATIONS.md) — connect failure states to operational
+7. [`OPERATIONS.md`](OPERATIONS.md) — connect failure states to operational
    ownership and recovery procedures.
-7. [`EXTENDING.md`](EXTENDING.md) — add a new domain or adapter without inheriting
+8. [`EXTENDING.md`](EXTENDING.md) — add a new domain or adapter without inheriting
    evidence the new deployment has not generated.
-8. [`ASSURANCE.md`](ASSURANCE.md) — verify that each engineering mechanism is
+9. [`ASSURANCE.md`](ASSURANCE.md) — verify that each engineering mechanism is
    attached to a bounded public claim.
-9. [`openapi.json`](openapi.json) — inspect the generated HTTP contract after the
+10. [`openapi.json`](openapi.json) — inspect the generated HTTP contract after the
    conceptual and security model are clear.
 
 **Engineering outcome:** you should be able to trace grant → check → state
@@ -162,6 +164,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 
 - [`README.md`](README.md) — this map.
 - [`START_HERE.md`](START_HERE.md) — self-directed repository walkthrough.
+- [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — reusable corporate, healthcare, and education domain packs.
 - [`GLOSSARY.md`](GLOSSARY.md) — policy and engineering vocabulary in one table.
 - [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) — education framework and rubric.
 - [`DEMO.md`](DEMO.md) — demonstration guide.

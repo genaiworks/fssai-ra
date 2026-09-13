@@ -115,6 +115,7 @@ from .exact_action import (
     ExecutionUncertain,
     PendingOutcome,
     PendingOutcomeStore,
+    ResourceRegister,
 )
 from .import_boundary import ImportBoundary, IngestReport, QuarantineError, RawInput
 from .metrics import Metrics
@@ -138,7 +139,13 @@ from .oversight import (
 )
 from .pipeline import FSSAIRAPipeline
 from .plugins import PluginError, PluginInfo, available, create, register
-from .profiles import ApplicationProfile, ProfileError, TransitionRule
+from .profiles import (
+    ApplicationProfile,
+    GovernanceContext,
+    ProfileError,
+    TransitionRule,
+    discover_profiles,
+)
 from .race import RaceReport, run_replay_race
 from .reproducible_data import Snapshot, SnapshotStore, Transformer
 from .security import AuthConfig, Authenticator, Principal
@@ -149,7 +156,7 @@ __all__ = [
     # accountable action
     "ActionClass", "Decision", "DenyCode", "PolicyEnforcementPoint", "Tool", "ToolCall",
     "AccountableExecutor", "AtomicExecutor", "ActionProposal", "Approval", "ApprovalAuthority",
-    "ApprovalUseStore", "CaseRegister", "ExecutionDenied", "ExecutionResult",
+    "ApprovalUseStore", "CaseRegister", "ResourceRegister", "ExecutionDenied", "ExecutionResult",
     "ExecutionUncertain", "PendingOutcome", "PendingOutcomeStore", "TEACHING_APPROVAL_KEY_ID",
     # bounded intelligence
     "Agent", "BoundedAgent", "ModelBackend", "Route", "RuleBasedLocalModel", "TaskRouter",
@@ -165,7 +172,8 @@ __all__ = [
     # evidence
     "EvidenceError", "EvidenceLedger", "EvidenceRecord",
     # governance and assurance
-    "ControlContract", "Requirement", "ApplicationProfile", "ProfileError", "TransitionRule",
+    "ControlContract", "Requirement", "ApplicationProfile", "GovernanceContext",
+    "ProfileError", "TransitionRule", "discover_profiles",
     # contract coverage: is each requirement enforced, or only written down?
     "CoverageReport", "measure_coverage",
     # delegated authority: what a chain of agents actually confers

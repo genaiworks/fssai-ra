@@ -37,7 +37,7 @@ The submission should remain clear if a reviewer reads only four elements:
 2. **Contribution:** a seven-field executable control contract.
 3. **Evidence:** comparative attacks, utility, ablations, bounded model checking,
    conformance, a narrowly stated replay race, a queue-pressure trial of review
-   capacity, and a second domain carrying its own evidence.
+   capacity, and four independently reported domain packs carrying their own evidence.
 4. **Boundary:** fixture results are neither certification nor proof of educational
    benefit, hardware isolation, or distributed linearizability — and **no reviewer
    was observed**, so the oversight curve is a declared parameter throughout.

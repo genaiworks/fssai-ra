@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-13T04:04:06.462114+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-13T11:27:35.503159+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -25,18 +25,31 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Assisted review — merit failures | `5 → 1` | dependent then independent review assistant, identical lowered floor; every runtime mechanism passed in both |
 | Assisted review — benign completed | `7 → 35` | unaided then assisted: assistance is worth 5.0x in completed legitimate work, which is why institutions will buy it |
 | Contract coverage — machine-verified | `34/37` | 3 organizationally attested, 0 unverified; every requirement bound to a check that is itself checked to exist |
-| Deterministic tests | `588` | no network, no model weights |
+| Deterministic tests | `601` | no network, no model weights |
 | Oversight — sustainable review | `2,640/day` | for a roster of 11, bound by the policy quota; declared capacity, not a measurement of reviewers |
 | Oversight — merit failures executed | `4 → 0` | without load control, then with it, on a queue at 5.0x declared attentive capacity |
 | Oversight — sensitivity sweep | `16/20` | cells where the control was load-bearing out of those where harm was possible; harm reached zero in 16; 4 did not bind (no deliberation floor configured); 5 had no harm to contain |
 | Oversight — false-positive cost | `0` | deferrals across the whole sweep where there was no harm to contain; an attentive reviewer is not throttled by the shipped policy |
 | Oversight — smallest floor that fully contains | `5s` | across every swept cell where harm was possible; the number an institution needs to set its own policy |
 | Oversight — deferred to manual review | `32` | the cost of the control, and a measurement of demand against declared capacity |
+| Domain packs — independently verified | `4` | 31,360 total bounded states; education, corporate confidential data, and healthcare record access; synthetic fixtures, not sector-compliance evidence |
+| Domain packs — containment and utility | `120/120, 36/36` | separate denominators per pack; 0 unauthorized mutations |
 | Second domain — states explored | `4,800` | 0 violations; the identical suite, no library change |
 | Second domain — containment and utility | `30/30, 9/9` | its own evidence, borrowed from no other domain; 26 conformance checks |
 | Second domain — defects it exposed | `1` | a declared approval role ignored on non-consequential transitions; unreachable with one domain |
 | Adversary corpus — contained | `7/7` | unguarded arm contained 0; contributed attacks, not a threat catalogue |
 | Adversary corpus — externally contributed | `0` | the figure that matters; until it is non-zero the corpus samples the maintainers' imagination |
+
+## Domain-pack matrix
+
+Each row has its own denominator. These synthetic checks demonstrate reuse of the authority kernel, not sector compliance or production safety.
+
+| Pack | Domain | States | Hostile scenarios | Benign tasks | Unauthorized mutations |
+|---|---|---:|---:|---:|---:|
+| `student-support` | education-support | 240 | 30/30 | 6/6 | 0 |
+| `academic-record-correction` | education-records | 4,800 | 30/30 | 9/9 | 0 |
+| `corporate-confidential-data` | corporate-data | 8,400 | 30/30 | 10/10 | 0 |
+| `healthcare-record-access` | healthcare-data | 17,920 | 30/30 | 11/11 | 0 |
 
 ## Verdicts
 
@@ -46,6 +59,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 - Transactional SQL profile conformant: **True**
 - Second domain conformant under the identical suite: **True**
 - Second domain invariants hold: **True**
+- All independently reported domain packs hold: **True**
 - Review-load control is load-bearing: **True**
 - The control never increased harm in any swept cell: **True**
 - The shipped review policy is self-consistent: **True**
@@ -63,7 +77,7 @@ The adversarial suite runs in 0.02s and the bounded model check in 0.01s on the 
 - containment of sampled risk classes, not coverage of any threat catalogue
 - the reviewer degradation curve is a declared parameter, not a measurement of any reviewer; no human was observed, and reviewer accuracy under load remains open work
 - the oversight deferral count is the cost of the control, reported rather than netted off; refusing an approval preserves the boundary and delays the student
-- the second domain tests that the method transfers, not that either domain's evidence applies to the other; each carries its own
+- the four domain packs test reuse of one authority kernel across synthetic workflow shapes; they do not establish sector compliance or operational safety, and each domain must carry its own evidence
 - the adversary corpus is contributed attacks, not a threat catalogue, and no attack in it yet comes from outside this project
 - the delegation results bound authority under composition, not the competence or intent of any hop; a fully attenuated chain can still carry a substantively wrong action, and no real multi-agent deployment was observed
 - the proposer/assistant error correlation is a declared parameter, exactly like the reviewer degradation curve: no model was evaluated and no rate is claimed for any named system

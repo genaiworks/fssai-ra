@@ -21,6 +21,11 @@ def export_decision_packet(plane, request_id: str) -> dict:
         raise ExecutionDenied("PACKET_OUTCOME_MISSING", "a completed action receipt is required")
     profile = asdict(plane.profile)
     profile["transitions"] = [asdict(rule) for rule in plane.profile.transitions]
+    if plane.profile.governance is not None:
+        governance = asdict(plane.profile.governance)
+        for name in ("data_classes", "applicable_frameworks", "prohibited_uses"):
+            governance[name] = list(governance[name])
+        profile["governance"] = governance
     body = {
         "schema": SCHEMA,
         "payload": {

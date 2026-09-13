@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "kind": "domain-pack-matrix",
+  "profiles": [
+    {
+      "profile_id": "student-support",
+      "domain": "education-support",
+      "deployment_profile": "teaching",
+      "states_explored": 240,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 6,
+      "benign_completed": 6,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    },
+    {
+      "profile_id": "academic-record-correction",
+      "domain": "education-records",
+      "deployment_profile": "teaching",
+      "states_explored": 4800,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 9,
+      "benign_completed": 9,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    },
+    {
+      "profile_id": "corporate-confidential-data",
+      "domain": "corporate-data",
+      "deployment_profile": "teaching",
+      "states_explored": 8400,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 10,
+      "benign_completed": 10,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    },
+    {
+      "profile_id": "healthcare-record-access",
+      "domain": "healthcare-data",
+      "deployment_profile": "teaching",
+      "states_explored": 17920,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 11,
+      "benign_completed": 11,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    }
+  ],
+  "limits": [
+    "Every profile is synthetic and authored by this project.",
+    "Passing the shared authority suite does not establish sector compliance, privacy, fairness, clinical safety, or production readiness."
+  ]
+}

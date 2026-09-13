@@ -1,0 +1,73 @@
+# Corporate confidential-data governance domain pack.
+#
+# This is a synthetic teaching profile for governing authorization state around
+# sensitive corporate datasets. It does not store corporate data, grant cloud
+# permissions, or establish compliance with any named framework.
+profile_id: corporate-confidential-data
+version: "1.0"
+title: Corporate Confidential Data Access and Release
+resource_name: governed_dataset_request
+owner: enterprise_data_governance
+manual_fallback: >-
+  Keep the dataset unchanged and inaccessible. Route the request to the named
+  data owner and information-security reviewer through the organization's
+  existing access-request or legal-hold process.
+governance:
+  domain: corporate-data
+  purpose: Govern classification, approved internal use, external release, revocation, and legal hold for sensitive corporate datasets.
+  deployment_profile: teaching
+  data_classes: [internal, confidential, restricted, trade-secret]
+  applicable_frameworks:
+    - Organization-specific information classification and acceptable-use policy
+    - Applicable privacy, contractual, records-retention, and breach-notification obligations
+  prohibited_uses:
+    - External release without data-owner and disclosure authority
+    - Model training or profiling outside the approved purpose
+    - Removing a legal hold through an automated recommendation
+    - Expanding access beyond the exact dataset, purpose, recipient, and duration reviewed
+  processing_basis: A documented business purpose approved by the data owner and any required privacy, legal, or contractual authority.
+  data_minimization_rule: Authorize only the exact dataset, fields, recipients, purpose, and duration required for the approved use.
+  retention_rule: Retain access decisions and evidence under the applicable records schedule and any active legal hold.
+  deletion_rule: Revoke access and delete working copies when purpose or retention expires unless a legal hold requires preservation.
+  residency_rule: Store and process data only in organization-approved regions and systems recorded in the deployment contract.
+  incident_response: Suspend affected access, preserve evidence, notify security, privacy, legal, and the data owner, and enter the approved response process.
+  owners:
+    data: enterprise_data_governance
+    privacy: data_protection_officer
+    security: chief_information_security_officer
+transitions:
+  - operation: classify_dataset
+    from_status: draft
+    to_status: classified
+    consequential: false
+    approval_role: data_steward
+
+  - operation: authorize_internal_use
+    from_status: classified
+    to_status: internal_use_authorized
+    consequential: true
+    approval_role: data_owner
+
+  - operation: authorize_external_release
+    from_status: internal_use_authorized
+    to_status: external_release_authorized
+    consequential: true
+    approval_role: data_protection_officer
+
+  - operation: revoke_internal_use
+    from_status: internal_use_authorized
+    to_status: access_revoked
+    consequential: true
+    approval_role: security_officer
+
+  - operation: place_legal_hold
+    from_status: classified
+    to_status: legal_hold
+    consequential: true
+    approval_role: legal_counsel
+
+  - operation: release_legal_hold
+    from_status: legal_hold
+    to_status: classified
+    consequential: true
+    approval_role: legal_counsel

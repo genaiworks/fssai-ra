@@ -6,7 +6,7 @@
 
 ## Recommended positioning
 
-**Paper title:** From Model Literacy to System Literacy: Teaching Trust by Construction for Agentic AI
+**Paper title:** From Model Literacy to System Literacy: A Cross-Sector Authority Kernel for Agentic AI
 
 **Spoken title:** From Model Literacy to System Literacy
 

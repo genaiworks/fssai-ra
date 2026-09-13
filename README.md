@@ -7,14 +7,16 @@
 
 > **A model may propose an action. It cannot manufacture the authority to execute it.**
 
-**Fail-Secure Sovereign AI Reference Architecture** is an extensible,
-public-interest platform for specifying and testing the authority boundaries of
-agentic AI. It runs in memory on a laptop, or as a reference deployment with
+**Fail-Secure Sovereign AI Reference Architecture** is a sector-neutral,
+public-interest security kernel for specifying and testing the authority and
+data boundaries of agentic AI. Education is one reusable domain pack; corporate
+confidential-data and healthcare-record-access packs are also included. It runs
+in memory on a laptop, or as a reference deployment with
 FastAPI, PostgreSQL, Redis, Kafka, PySpark, Iceberg, object storage, a local
 model through Ollama, and a React operator console.
 
-The companion paper is *From Model Literacy to System Literacy: Teaching Trust
-by Construction for Agentic AI*, prepared for the **UNU Macau AI Conference
+The companion paper is *From Model Literacy to System Literacy: A Cross-Sector
+Authority Kernel for Agentic AI*, prepared for the **UNU Macau AI Conference
 2026** — *AI × Education: AI for Learning, Learning for AI* — and its
 UNU–Springer proceedings.
 
@@ -48,6 +50,7 @@ reviewers, and adopters.
 - [Adoption playbook](fssai-ra/docs/ADOPTION.md) — a 30/60/90-day path
 - [Procurement questions](fssai-ra/docs/PROCUREMENT.md) — the seven fields as a supplier questionnaire, plus delegated authority and review-assistant independence
 - [Project overview and architecture](fssai-ra/README.md)
+- [Reusable domain packs](fssai-ra/docs/DOMAIN_PACKS.md) — education, corporate confidential data, and healthcare record access
 - [Extension guide](fssai-ra/docs/EXTENDING.md) · [Distributed platform](fssai-ra/docs/PLATFORM.md) · [Threat model](fssai-ra/docs/SECURITY.md)
 
 ## Quickstart
@@ -71,11 +74,12 @@ fssaira coverage                                  # is each contract requirement
 fssaira delegation                                # authority that travels: 10 chain risk classes, 3 architectures
 fssaira assisted-review                           # what a review assistant does to the oversight argument
 fssaira challenge                                 # the open adversary corpus, scored
+fssaira profiles --verify                         # check every education, corporate, and healthcare pack
 fssaira init my-domain                            # scaffold your own
 ```
 
 No network, no model weights, no GPU. Release `v1.0.0` contains 187 deterministic
-tests; current source has 588 deterministic tests. Both include a bounded model checker over the
+tests; current source has 601 deterministic tests. Both include a bounded model checker over the
 profile's declared authority space, a portable conformance suite, and versioned
 machine-readable results. These establish specified properties in a synthetic
 environment; they are **not** a security certification or evidence of production
@@ -111,6 +115,7 @@ What the current branch adds, each answering a question the release could not:
 | **Delegated authority** | **Does authority survive being passed to another agent?** | **10/10 chains contained where per-hop validation contains 2/10; 768 states, 0 violations** |
 | **Contract coverage** | **Is each control enforced, or only written down?** | **18 of 28 requirements were prose bound to nothing. Now 34 machine-verified, 3 attested, 0 unverified** |
 | A second domain | Does the method work where it was not designed? | 4,800 states, 0 violations, no library change — and it found a real defect |
+| **Cross-sector domain packs** | **Does one kernel work across distinct governed-data shapes?** | **4 packs; 31,360 states; 120/120 hostile contained; 36/36 benign completed; 0 unauthorized mutations** |
 | Open adversary corpus | Is the adversary ever someone other than the author? | 10 entries, 3 arms, and an externally-contributed count of 0 that we print |
 
 Plus single-transaction execution on PostgreSQL, privilege invariance, real

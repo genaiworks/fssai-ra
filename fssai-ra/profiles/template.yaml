@@ -5,6 +5,25 @@ title: Replace Me
 resource_name: governed_resource
 owner: accountable_service_owner
 manual_fallback: Describe the safe service path used when automation is denied.
+governance:
+  domain: replace-me
+  purpose: State the narrow, legitimate purpose for processing this data.
+  deployment_profile: teaching
+  data_classes: [restricted]
+  applicable_frameworks: [replace-with-jurisdiction-and-sector-specific-obligations]
+  prohibited_uses:
+    - Any use outside the declared purpose
+    - Training a model on governed records without separate authorization
+  processing_basis: Name the policy, consent, contract, duty, or other approved basis for this processing.
+  data_minimization_rule: State the minimum subjects, fields, recipients, purpose, and duration permitted.
+  retention_rule: State how long source data, working data, decisions, and evidence are retained and why.
+  deletion_rule: State when access is revoked and each data copy is deleted or placed on hold.
+  residency_rule: State the approved regions, systems, and cross-border transfer constraints.
+  incident_response: Name the containment, evidence preservation, notification, recovery, and service-continuity path.
+  owners:
+    data: accountable_data_owner
+    privacy: privacy_officer
+    security: security_officer
 transitions:
   - operation: prepare_for_human_review
     from_status: draft

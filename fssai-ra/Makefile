@@ -2,7 +2,7 @@ PYTHON ?= python3
 
 .PHONY: help install test lint results figures demo check api gateway console dev-env \
         stack-up stack-down verify evaluate conformance doctor openapi clean \
-        reviewer oversight challenge second-domain lab
+        reviewer oversight challenge second-domain domain-packs lab
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -34,37 +34,42 @@ second-domain:  ## The identical suite against a domain it was not designed for
 	$(PYTHON) -m fssaira.cli evaluate profiles/academic_record_correction.yaml
 	$(PYTHON) -m fssaira.cli conformance --profile profiles/academic_record_correction.yaml
 
+domain-packs:  ## Validate and verify every reusable education, corporate, and healthcare pack
+	$(PYTHON) -m fssaira.cli profiles --verify
+
 lab:  ## Open the two browser tools used by docs/LAB.md
 	@echo "  worksheet   docs/worksheet/index.html"
 	@echo "  calculator  docs/oversight/index.html"
 	@$(PYTHON) -c "import pathlib,webbrowser; [webbrowser.open(pathlib.Path(p).resolve().as_uri()) for p in ('docs/worksheet/index.html','docs/oversight/index.html')]"
 
 reviewer:  ## Everything a reviewer should check, in one command
-	@echo "── 1/13  the suite ───────────────────────────────────────────────"
+	@echo "── 1/14  the suite ───────────────────────────────────────────────"
 	@$(PYTHON) -m pytest -q
-	@echo "── 2/13  what this deployment really is ──────────────────────────"
+	@echo "── 2/14  what this deployment really is ──────────────────────────"
 	@$(PYTHON) -m fssaira.cli doctor || true
-	@echo "── 3/13  is each contract requirement enforced, or written down? ─"
+	@echo "── 3/14  is each contract requirement enforced, or written down? ─"
 	@$(PYTHON) -m fssaira.cli coverage
-	@echo "── 4/13  bounded model check, reference domain ───────────────────"
+	@echo "── 4/14  bounded model check, reference domain ───────────────────"
 	@$(PYTHON) -m fssaira.cli verify profiles/student_support.yaml
-	@echo "── 5/13  containment, utility, and ablation ──────────────────────"
+	@echo "── 5/14  containment, utility, and ablation ──────────────────────"
 	@$(PYTHON) -m fssaira.cli evaluate profiles/student_support.yaml
-	@echo "── 6/13  the same suite on a domain it was not designed for ──────"
+	@echo "── 6/14  the first transfer test and defect it exposed ───────────"
 	@$(MAKE) second-domain PYTHON="$(PYTHON)"
-	@echo "── 7/13  portable conformance on memory and SQL backends ─────────"
+	@echo "── 7/14  every reusable domain pack, independently reported ──────"
+	@$(MAKE) domain-packs PYTHON="$(PYTHON)"
+	@echo "── 8/14  portable conformance on memory and SQL backends ─────────"
 	@$(MAKE) conformance PYTHON="$(PYTHON)"
-	@echo "── 8/13  how much oversight can actually be supplied ─────────────"
+	@echo "── 9/14  how much oversight can actually be supplied ─────────────"
 	@$(PYTHON) -m fssaira.cli oversight profiles/student_support.yaml --sweep
-	@echo "── 9/13  what a review assistant does to that answer ─────────────"
+	@echo "── 10/14  what a review assistant does to that answer ────────────"
 	@$(PYTHON) -m fssaira.cli assisted-review profiles/student_support.yaml
-	@echo "── 10/13  authority that travels: delegation chains ──────────────"
+	@echo "── 11/14  authority that travels: delegation chains ──────────────"
 	@$(PYTHON) -m fssaira.cli delegation
-	@echo "── 11/13  the open adversary corpus ──────────────────────────────"
+	@echo "── 12/14  the open adversary corpus ──────────────────────────────"
 	@$(PYTHON) -m fssaira.cli challenge --dir challenges
-	@echo "── 12/13  do process races and recovery match their source? ──────"
+	@echo "── 13/14  do process races and recovery match their source? ──────"
 	@$(PYTHON) scripts/check_resilience.py
-	@echo "── 13/13  do the committed numbers match a fresh run? ────────────"
+	@echo "── 14/14  do the committed numbers match a fresh run? ────────────"
 	@$(PYTHON) scripts/generate_results.py --check
 	@echo ""
 	@echo "  Every figure above is regenerated, not typed. If any of it disagrees"

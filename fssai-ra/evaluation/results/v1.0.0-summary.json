@@ -3,12 +3,82 @@
   "kind": "paper-figures",
   "tag": "v1.0.0",
   "software_version": "1.0.0",
-  "generated_at": "2026-09-13T04:04:06.462114+00:00",
+  "generated_at": "2026-09-13T11:27:35.503159+00:00",
   "environment": {
     "python_version": "3.14.6",
     "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
   },
   "note": "Every figure the paper quotes is produced here. A number in the paper that this file does not contain is a drift bug, and the alignment test fails the build for it.",
+  "domain_packs": [
+    {
+      "profile_id": "student-support",
+      "domain": "education-support",
+      "deployment_profile": "teaching",
+      "states_explored": 240,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 6,
+      "benign_completed": 6,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    },
+    {
+      "profile_id": "academic-record-correction",
+      "domain": "education-records",
+      "deployment_profile": "teaching",
+      "states_explored": 4800,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 9,
+      "benign_completed": 9,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    },
+    {
+      "profile_id": "corporate-confidential-data",
+      "domain": "corporate-data",
+      "deployment_profile": "teaching",
+      "states_explored": 8400,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 10,
+      "benign_completed": 10,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    },
+    {
+      "profile_id": "healthcare-record-access",
+      "domain": "healthcare-data",
+      "deployment_profile": "teaching",
+      "states_explored": 17920,
+      "violations": 0,
+      "scenarios_total": 30,
+      "scenarios_contained": 30,
+      "unauthorized_mutations": 0,
+      "benign_total": 11,
+      "benign_completed": 11,
+      "invariants_hold": true,
+      "limits": [
+        "synthetic profile and fixtures only",
+        "not evidence of legal compliance, operational safety, or domain quality"
+      ]
+    }
+  ],
   "figures": {
     "adversarial_scenarios_total": 30,
     "adversarial_scenarios_contained": 30,
@@ -64,8 +134,15 @@
     "coverage_unverified": 0,
     "contract_requirements": 37,
     "control_contract_fields": 7,
-    "test_count": 588,
-    "domains_verified": 2,
+    "test_count": 601,
+    "domains_verified": 4,
+    "domain_pack_states_explored": 31360,
+    "domain_pack_states_explored_display": "31,360",
+    "domain_pack_scenarios_total": 120,
+    "domain_pack_scenarios_contained": 120,
+    "domain_pack_benign_total": 36,
+    "domain_pack_benign_completed": 36,
+    "domain_pack_unauthorized_mutations": 0,
     "second_domain_states_explored": 4800,
     "second_domain_states_explored_display": "4,800",
     "second_domain_violations": 0,
@@ -113,6 +190,7 @@
     "second_domain_model_check_holds": true,
     "second_domain_all_scenarios_contained": true,
     "second_domain_conformant": true,
+    "all_domain_packs_hold": true,
     "oversight_load_control_is_load_bearing": true,
     "oversight_control_never_increased_harm": true,
     "oversight_policy_declaration_is_coherent": true,
@@ -131,7 +209,7 @@
     "containment of sampled risk classes, not coverage of any threat catalogue",
     "the reviewer degradation curve is a declared parameter, not a measurement of any reviewer; no human was observed, and reviewer accuracy under load remains open work",
     "the oversight deferral count is the cost of the control, reported rather than netted off; refusing an approval preserves the boundary and delays the student",
-    "the second domain tests that the method transfers, not that either domain's evidence applies to the other; each carries its own",
+    "the four domain packs test reuse of one authority kernel across synthetic workflow shapes; they do not establish sector compliance or operational safety, and each domain must carry its own evidence",
     "the adversary corpus is contributed attacks, not a threat catalogue, and no attack in it yet comes from outside this project",
     "the delegation results bound authority under composition, not the competence or intent of any hop; a fully attenuated chain can still carry a substantively wrong action, and no real multi-agent deployment was observed",
     "the proposer/assistant error correlation is a declared parameter, exactly like the reviewer degradation curve: no model was evaluated and no rate is claimed for any named system",

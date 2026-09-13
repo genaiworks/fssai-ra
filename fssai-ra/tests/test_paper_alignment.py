@@ -63,6 +63,11 @@ CLAIMS = [
      "scenarios contained, {second_domain_benign_completed} of "
      "{second_domain_benign_total} benign tasks, {second_domain_conformance_checks} "
      "conformance checks"),
+    ("cross-domain matrix", "{domains_verified} independently reported domain packs cover "
+     "{domain_pack_states_explored_display} bounded configurations, "
+     "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios "
+     "contained, {domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks "
+     "completed, and zero unauthorized mutations"),
     ("corpus provenance", "today that number is **{corpus_externally_contributed}**"),
     ("oversight sensitivity sweep", "across {sweep_cells_total} parameter combinations the "
      "control was load-bearing in {sweep_cells_load_bearing} of the "
@@ -474,6 +479,10 @@ SUBMITTED_CLAIMS = [
      "{second_domain_scenarios_contained} of {second_domain_scenarios_total} scenarios contained, "
      "{second_domain_benign_completed} of {second_domain_benign_total} benign tasks, "
      "{second_domain_conformance_checks} conformance checks"),
+    ("cross-domain matrix", "four synthetic packs, the identical kernel covers "
+     "{domain_pack_states_explored_display} bounded configurations, contains "
+     "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios, "
+     "completes {domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks"),
 ]
 
 

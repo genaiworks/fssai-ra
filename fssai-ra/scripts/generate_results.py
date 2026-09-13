@@ -47,6 +47,12 @@ PROFILE_PATH = ROOT / "profiles" / "student_support.yaml"
 #: The second domain exists to test the *method*, not to add a headline. Its
 #: figures are generated separately and never merged into the first domain's.
 SECOND_PROFILE_PATH = ROOT / "profiles" / "academic_record_correction.yaml"
+DOMAIN_PROFILE_PATHS = (
+    PROFILE_PATH,
+    SECOND_PROFILE_PATH,
+    ROOT / "profiles" / "corporate_confidential_data.yaml",
+    ROOT / "profiles" / "healthcare_record_access.yaml",
+)
 CHALLENGE_DIR = ROOT / "challenges"
 #: Roster used only for the published oversight-capacity arithmetic.
 REVIEWER_ROSTER = 11
@@ -79,6 +85,33 @@ def generate(output_dir: Path, tag: str) -> dict:
     second_evaluation = EvaluationRunner(second_profile).run()
     second_verification = verify_profile(second_profile)
     second_conformance = run_conformance(memory_bundle(second_profile))
+
+    # Cross-sector transfer is reported as a matrix, never as an aggregate score.
+    # Each pack keeps its own denominators so success in one domain cannot be
+    # borrowed by another. These are synthetic executable specifications, not
+    # evidence of regulatory compliance or operational safety.
+    domain_pack_matrix = []
+    for domain_path in DOMAIN_PROFILE_PATHS:
+        domain_profile = ApplicationProfile.load(domain_path)
+        domain_evaluation = EvaluationRunner(domain_profile).run()
+        domain_verification = verify_profile(domain_profile)
+        domain_pack_matrix.append({
+            "profile_id": domain_profile.profile_id,
+            "domain": domain_profile.governance.domain,
+            "deployment_profile": domain_profile.governance.deployment_profile,
+            "states_explored": domain_verification.states_explored,
+            "violations": len(domain_verification.violations),
+            "scenarios_total": domain_evaluation.total,
+            "scenarios_contained": domain_evaluation.passed,
+            "unauthorized_mutations": domain_evaluation.unauthorized_mutations,
+            "benign_total": len(domain_evaluation.utility),
+            "benign_completed": domain_evaluation.benign_completed,
+            "invariants_hold": domain_verification.holds,
+            "limits": [
+                "synthetic profile and fixtures only",
+                "not evidence of legal compliance, operational safety, or domain quality",
+            ],
+        })
 
     # Delegated authority: the chain controls, their ablations, and the
     # bounded enumeration of the declared chain space.
@@ -117,6 +150,17 @@ def generate(output_dir: Path, tag: str) -> dict:
     (output_dir / f"{tag}-second-domain-verification.json").write_text(
         json.dumps(second_verification.to_dict(), indent=2) + "\n", encoding="utf-8")
     second_conformance.write_json(output_dir / f"{tag}-conformance-second-domain.json")
+    (output_dir / f"{tag}-domain-pack-matrix.json").write_text(
+        json.dumps({
+            "schema_version": "1.0",
+            "kind": "domain-pack-matrix",
+            "profiles": domain_pack_matrix,
+            "limits": [
+                "Every profile is synthetic and authored by this project.",
+                "Passing the shared authority suite does not establish sector compliance, "
+                "privacy, fairness, clinical safety, or production readiness.",
+            ],
+        }, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-oversight.json").write_text(
         json.dumps(oversight, indent=2) + "\n", encoding="utf-8")
     (output_dir / f"{tag}-oversight-sweep.json").write_text(
@@ -149,6 +193,7 @@ def generate(output_dir: Path, tag: str) -> dict:
             "that this file does not contain is a drift bug, and the alignment test "
             "fails the build for it."
         ),
+        "domain_packs": domain_pack_matrix,
         "figures": {
             # containment
             "adversarial_scenarios_total": evaluation.total,
@@ -225,8 +270,27 @@ def generate(output_dir: Path, tag: str) -> dict:
             "contract_requirements": _contract_count(),
             "control_contract_fields": 7,
             "test_count": _test_count(),
-            # generalization: the same suite, a second domain, no library change
-            "domains_verified": 2,
+            # generalization: one kernel, independently reported domain packs
+            "domains_verified": len(domain_pack_matrix),
+            "domain_pack_states_explored": sum(
+                item["states_explored"] for item in domain_pack_matrix
+            ),
+            "domain_pack_states_explored_display": f"{sum(item['states_explored'] for item in domain_pack_matrix):,}",
+            "domain_pack_scenarios_total": sum(
+                item["scenarios_total"] for item in domain_pack_matrix
+            ),
+            "domain_pack_scenarios_contained": sum(
+                item["scenarios_contained"] for item in domain_pack_matrix
+            ),
+            "domain_pack_benign_total": sum(
+                item["benign_total"] for item in domain_pack_matrix
+            ),
+            "domain_pack_benign_completed": sum(
+                item["benign_completed"] for item in domain_pack_matrix
+            ),
+            "domain_pack_unauthorized_mutations": sum(
+                item["unauthorized_mutations"] for item in domain_pack_matrix
+            ),
             "second_domain_states_explored": second_verification.states_explored,
             "second_domain_states_explored_display": (
                 f"{second_verification.states_explored:,}"
@@ -306,6 +370,13 @@ def generate(output_dir: Path, tag: str) -> dict:
             "second_domain_model_check_holds": second_verification.holds,
             "second_domain_all_scenarios_contained": second_evaluation.all_contained,
             "second_domain_conformant": second_conformance.passed,
+            "all_domain_packs_hold": all(
+                item["invariants_hold"]
+                and item["scenarios_contained"] == item["scenarios_total"]
+                and item["benign_completed"] == item["benign_total"]
+                and item["unauthorized_mutations"] == 0
+                for item in domain_pack_matrix
+            ),
             "oversight_load_control_is_load_bearing": (
                 oversight["summary"]["load_control_is_load_bearing"]
             ),
@@ -345,8 +416,9 @@ def generate(output_dir: Path, tag: str) -> dict:
             "reviewer; no human was observed, and reviewer accuracy under load remains open work",
             "the oversight deferral count is the cost of the control, reported rather than netted "
             "off; refusing an approval preserves the boundary and delays the student",
-            "the second domain tests that the method transfers, not that either domain's evidence "
-            "applies to the other; each carries its own",
+            "the four domain packs test reuse of one authority kernel across synthetic workflow "
+            "shapes; they do not establish sector compliance or operational safety, and each "
+            "domain must carry its own evidence",
             "the adversary corpus is contributed attacks, not a threat catalogue, and no attack in "
             "it yet comes from outside this project",
             "the delegation results bound authority under composition, not the competence or "
@@ -503,6 +575,18 @@ def render_markdown(summary: dict) -> str:
         ("Oversight — deferred to manual review",
          str(figures["oversight_deferred_to_manual"]),
          "the cost of the control, and a measurement of demand against declared capacity"),
+        ("Domain packs — independently verified",
+         str(figures["domains_verified"]),
+         f"{figures['domain_pack_states_explored']:,} total bounded states; education, "
+         "corporate confidential data, and healthcare record access; synthetic fixtures, "
+         "not sector-compliance evidence"),
+        ("Domain packs — containment and utility",
+         f"{figures['domain_pack_scenarios_contained']}/"
+         f"{figures['domain_pack_scenarios_total']}, "
+         f"{figures['domain_pack_benign_completed']}/"
+         f"{figures['domain_pack_benign_total']}",
+         f"separate denominators per pack; {figures['domain_pack_unauthorized_mutations']} "
+         "unauthorized mutations"),
         ("Second domain — states explored",
          f"{figures['second_domain_states_explored']:,}",
          f"{figures['second_domain_violations']} violations; the identical suite, no library change"),
@@ -539,6 +623,23 @@ def render_markdown(summary: dict) -> str:
     lines += [f"| {name} | `{value}` | {note} |" for name, value, note in rows]
     lines += [
         "",
+        "## Domain-pack matrix",
+        "",
+        "Each row has its own denominator. These synthetic checks demonstrate reuse of the "
+        "authority kernel, not sector compliance or production safety.",
+        "",
+        "| Pack | Domain | States | Hostile scenarios | Benign tasks | Unauthorized mutations |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
+    lines += [
+        f"| `{item['profile_id']}` | {item['domain']} | {item['states_explored']:,} | "
+        f"{item['scenarios_contained']}/{item['scenarios_total']} | "
+        f"{item['benign_completed']}/{item['benign_total']} | "
+        f"{item['unauthorized_mutations']} |"
+        for item in summary["domain_packs"]
+    ]
+    lines += [
+        "",
         "## Verdicts",
         "",
         f"- All declared scenarios contained: **{verdicts['all_scenarios_contained']}**",
@@ -547,6 +648,8 @@ def render_markdown(summary: dict) -> str:
         f"- Transactional SQL profile conformant: **{verdicts['sql_profile_conformant']}**",
         f"- Second domain conformant under the identical suite: **{verdicts['second_domain_conformant']}**",
         f"- Second domain invariants hold: **{verdicts['second_domain_model_check_holds']}**",
+        f"- All independently reported domain packs hold: "
+        f"**{verdicts['all_domain_packs_hold']}**",
         f"- Review-load control is load-bearing: **{verdicts['oversight_load_control_is_load_bearing']}**",
         f"- The control never increased harm in any swept cell: "
         f"**{verdicts['oversight_control_never_increased_harm']}**",

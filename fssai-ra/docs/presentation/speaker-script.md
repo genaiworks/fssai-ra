@@ -6,7 +6,7 @@
 
 **Session:** Agentic AI in the Loop — From Autonomous Tools to Shared Capacity
 **Conference:** AI × Education: AI for Learning, Learning for AI · 25–26 November 2026 · Macau SAR
-**Talk:** From Model Literacy to System Literacy — Teaching Trust by Construction for Agentic AI
+**Talk:** From Model Literacy to System Literacy — A Cross-Sector Authority Kernel for Agentic AI
 **Deck:** [`slides.html`](slides.html) — arrow keys or click to advance, `n` for these notes on screen, `g` for the slide grid, `⌘P` for a PDF.
 
 A panel opener is not a conference talk. The room has three or four other people
@@ -21,7 +21,7 @@ the weakest thing you had to say.
 | You have | Run slides | Cut |
 |---|---|---|
 | **16 minutes** | 1–25 | nothing |
-| **12 minutes** | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25 | sovereignty (3), method (9), finding (10), atomicity (11), harms (13), second domain (18), corpus (19) — fold 18 and 19 into one sentence each on 20 |
+| **12 minutes** | 1, 2, 4, 5, 6, 7, 8, 12, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25 | sovereignty (3), method (9), finding (10), atomicity (11), harms (13), domain packs (18), corpus (19) — fold 18 and 19 into one sentence each on 20 |
 | **10 minutes** | 1, 2, 4, 5, 7, 12, 14, 15, 16, 20, 21, 22, 25 | the above, plus privilege invariance (6), counterfactual (8), composition (17), theme (23), the ask (24) |
 | **5 minutes** | 1, 2, 5, 14, 15, 16, 21, 22, 25 | everything but the rule, the person, the contract, the oversight argument and its 2026 form, the limits, who this is for, and the close |
 
@@ -66,7 +66,7 @@ middle — never from either end.
 | 9:00 | 15 · Oversight measured | Two numbers: 2,640/day for this roster, and 4 → 0. |
 | 9:40 | 16 · The assisted reviewer | The 2026 form of the same failure. 5 → 1, and nothing to alert on. |
 | 10:15 | 17 · Authority that travels | Brisk. "Every hop locally correct; the composition wrong." |
-| 10:50 | 18 · A second domain | Generalization, and the defect it found in us. |
+| 10:50 | 18 · Four domain packs | Cross-sector reuse, its limits, and the defect transfer found. |
 | 11:20 | 19 · The corpus | The invitation. Say the ask: contribute one attack. |
 | 11:55 | 20 · Evidence | Numbers with denominators. |
 | 12:30 | 21 · Limits | **Never cut this.** |
@@ -78,7 +78,7 @@ middle — never from either end.
 | — | 27 · Backup | The interface inventory, for "but you have a diode". |
 
 **If you are given twelve minutes rather than sixteen,** take the twelve-minute
-path above: cut 3, 9, 10, 11 and 13, and fold the second domain (18) and the
+path above: cut 3, 9, 10, 11 and 13, and fold the domain-pack matrix (18) and the
 corpus (19) into one sentence each on slide 20. Do not cut 14, 15 or 16: the
 oversight argument and its assisted-review extension are the reason this
 submission is on the panel rather than in a poster session. Slide 17 is the first
@@ -219,14 +219,15 @@ names it as the largest open gap between this and a field claim.
 A roster, a deliberation floor, and available hours give you a ceiling today, with
 numbers you already have.
 
-**0b · "Two domains is not generalization."**
-Correct, and we say so. Two domains, both authored here, show the method travels
-off the shape it was designed for — not that it travels everywhere. What makes it
-worth reporting is what it cost us: the second domain failed on its first run and
-exposed a mandatory schema field that did nothing at runtime, unreachable with one
-domain. That is evidence *against* single-domain results, including the rest of
-ours.
-*Backed by:* `fssaira verify profiles/academic_record_correction.yaml`, slide 16.
+**0b · "Four synthetic packs is not universal generalization."**
+Correct, and we say so. Four packs authored here demonstrate that one authority
+kernel runs across education, corporate-confidential, and healthcare-record
+workflow shapes; they do not establish sector compliance, privacy, fairness,
+clinical safety, or production readiness. What makes transfer worth reporting is
+what it cost us: the academic pack's first run exposed a mandatory schema field
+that did nothing at runtime, unreachable with the original profile. Each adopter
+must replace our declarations and fixtures with its own obligations and evidence.
+*Backed by:* `fssaira profiles --verify`, slide 18.
 
 **0c · "Every attack in your evaluation is one you wrote."**
 Also correct, and it is the standing weakness of the whole evidence base. It is
@@ -236,7 +237,7 @@ fields of YAML, no contributor code, nothing an institution would need to clear.
 *Turn it into the ask:* if you think we have missed an attack, that is a pull
 request, and the corpus already found a defect in our own measurement on its
 first run.
-*Backed by:* `fssaira challenge`, slide 17.
+*Backed by:* `fssaira challenge`, slide 19.
 
 **1 · "Isn't this just a testing framework?"**
 No. A test suite proves the attacks I imagined are contained. Two of our three

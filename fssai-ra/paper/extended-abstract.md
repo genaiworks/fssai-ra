@@ -1,15 +1,15 @@
-# From Model Literacy to System Literacy: Teaching Trust by Construction for Agentic AI
+# From Model Literacy to System Literacy: A Cross-Sector Authority Kernel for Agentic AI
 
 **Submission:** Extended abstract, UNU Macau AI Conference 2026 — *AI × Education: AI for Learning, Learning for AI*, 25–26 November 2026, Macau SAR, China.
 **Proposed panel:** Agentic AI in the Loop — From Autonomous Tools to Shared Capacity.
-**Keywords:** agentic AI; educational administration; institutional sovereignty; fail-secure architecture; human oversight; verifiable governance; digital public goods.
-**Reference implementation:** Apache-2.0, `https://github.com/genaiworks/fssai-ra`, release `v1.0.0` for the baseline figures; the oversight, second-domain, and adversary-corpus results below are current-source and published separately.
+**Keywords:** agentic AI; system literacy; secure data governance; institutional sovereignty; fail-secure architecture; human oversight; verifiable governance; digital public goods.
+**Reference implementation:** Apache-2.0, `https://github.com/genaiworks/fssai-ra`, release `v1.0.0` for the baseline figures; the oversight, cross-domain, and adversary-corpus results below are current-source and published separately.
 
 **Position I will argue on the panel.** Institutions are being sold autonomy and told to add a human. Both halves are wrong. Authority, not autonomy, is the quantity that matters, and it can be specified and tested. Human oversight is not a safeguard you attach afterwards; it is a scarce resource with a ceiling an institution can compute, and above that ceiling "a human approved it" stops being true while every audit log continues to say it is. Two things move that ceiling in 2026: authority now travels between agents, and the reviewer now has a model too.
 
 ## 1. A student asks why
 
-A support application is refused. She asks why — and is entitled to three answers: **who decided this and were they allowed to, what did they see, and how do I contest it.** Somewhere in that process an agent read her file, interpreted eligibility guidance, drafted a recommendation, and called an administrative tool. A sentence in an uploaded document could have redirected that workflow; so could an ordinary mistake, with no attacker anywhere. From where she stands the two are indistinguishable: an outcome, and no way back.
+A support application is refused. She asks why, then: **who decided this and were they allowed to, what did they see, and how do I contest it.** They follow a patient's record disclosure or a company's release of confidential data. An agent read sensitive evidence, applied policy and called a tool. An uploaded sentence or ordinary mistake could redirect it. To the affected person these are indistinguishable: an outcome, and no way back.
 
 That problem is narrower and more useful than "is the AI safe?". The central rule is one sentence: **a model may propose an action; it cannot manufacture the authority to execute it.** Most current answers concern *where the model runs*; local hosting is necessary and nowhere near sufficient. Sovereignty is better understood as capabilities an institution can demonstrate — governing data access, replacing models, holding keys, producing evidence, leaving a vendor — none established by a postcode.
 
@@ -43,15 +43,15 @@ One agent under one grant is no longer the deployed shape: orchestrators spawn s
 
 ## 5. Does the method travel?
 
-Every figure above was measured on the profile the architecture was designed around — the weakest position from which to claim a *method*. So a second, structurally different domain was added through the documented extension path: academic record correction, with a multi-role chain and a rejection an appeal can reopen.
+One successful profile is the weakest position from which to claim a method. Four packs exercise the same kernel: student support, academic-record correction, corporate-confidential data, and healthcare-record access. **4 independently reported domain packs cover 31,360 bounded configurations, 120 of 120 hostile scenarios contained, 36 of 36 benign tasks completed, and zero unauthorized mutations.** These synthetic specifications do not establish sector quality, compliance, privacy, or clinical safety. Each adopter must supply obligations, classifications, prohibited uses, owners, tests, and evidence.
 
-The identical verifier, evaluator and conformance suite hold with no library change: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. It failed on first run: a declared approval role on a routine transition was silently ignored, because the enforcement map was built only from *consequential* rules — a mandatory schema field doing nothing at runtime. One domain could not reach it; two did immediately.
+The academic pack preserves the original transfer test: 4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks. Its first run exposed a declared approval role silently ignored on a routine transition because enforcement was built only from *consequential* rules. One domain could not reach that defect; another did.
 
 ## 6. Evidence, with denominators
 
 A containment figure means nothing without a baseline, so identical hostile proposals and identical legitimate work went to three architectures. An *unguarded* arm contained 0% and delivered 28 harmful actions. A *prompt-guarded* arm — a safety prompt plus a per-agent tool allowlist, the two mitigations most commonly deployed — contained 29% and delivered 8; it is not a strawman, it simply lacks an enforcement point independent of the model. This architecture contained all seven and delivered none.
 
-Against the reference profile: 30 of 30 adversarial scenarios contained, zero unauthorized mutations, 11 distinct denial controls each exercised, 8 of 8 ablated controls restored their harm when removed, 26 conformance checks passing on 2 backend profiles, a 32-caller race produced 1 mutation and 1 receipt, and 588 deterministic tests run offline in seconds. One figure matters more than the containment rate: **6 of 6 benign tasks completed, false-denial rate 0.0.** A system that denies everything scores perfectly on containment and is useless. Reporting both stops either being optimised alone.
+Against the reference profile: 30 of 30 adversarial scenarios contained, zero unauthorized mutations, 11 distinct denial controls each exercised, 8 of 8 ablated controls restored their harm when removed, 26 conformance checks passing on 2 backend profiles, a 32-caller race produced 1 mutation and 1 receipt, and 601 deterministic tests run offline in seconds. One figure matters more than the containment rate: **6 of 6 benign tasks completed, false-denial rate 0.0.** A system that denies everything scores perfectly on containment and is useless. Reporting both stops either being optimised alone.
 
 ## 7. Shared capacity, made mechanical
 
