@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "conformance",
-  "generated_at": "2026-09-12T20:49:07.666587+00:00",
+  "generated_at": "2026-09-13T03:10:37.358622+00:00",
   "profile_id": "student-support",
   "backends": {
     "register": "CaseRegister",

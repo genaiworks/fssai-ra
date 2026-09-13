@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-12T20:49:08.024073+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-13T03:10:37.739431+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -53,7 +53,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 
 ## Cost of reproduction
 
-The adversarial suite runs in 0.02s and the bounded model check in 0.0s on the machine above, with no network access and no model weights. A second institution can therefore check these numbers rather than trust them.
+The adversarial suite runs in 0.02s and the bounded model check in 0.01s on the machine above, with no network access and no model weights. A second institution can therefore check these numbers rather than trust them.
 
 ## Limits
 

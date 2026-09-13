@@ -3,7 +3,7 @@
   "kind": "paper-figures",
   "tag": "v1.0.0",
   "software_version": "1.0.0",
-  "generated_at": "2026-09-12T20:49:08.024073+00:00",
+  "generated_at": "2026-09-13T03:10:37.739431+00:00",
   "environment": {
     "python_version": "3.14.6",
     "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
@@ -100,7 +100,7 @@
     "corpus_contained_arm_c": 7,
     "corpus_externally_contributed": 0,
     "evaluation_seconds": 0.02,
-    "verification_seconds": 0.0
+    "verification_seconds": 0.01
   },
   "verdicts": {
     "all_scenarios_contained": true,
