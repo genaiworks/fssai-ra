@@ -194,8 +194,13 @@ def run_governed_request(world: EducationWorld | None = None, *, model: Any = No
     step = by["AUTHORIZE"]
     approval = None
     if not halted and proposal is not None:
+        # The reviewer reads the case file, not the model's rationale: approve only the
+        # correction that was actually requested, for the student it was requested for.
+        matches_case = (proposal.case_id == f"transcript:{student}:MATH101"
+                        and proposal.to_status == target_grade)
+        step.evidence = {"proposal_matches_case_file": matches_case}
         try:
-            approval = world.review_and_approve(proposal, reviewer=reviewer)
+            approval = world.review_and_approve(proposal, reviewer=reviewer, approve=matches_case)
             step.status, step.code, step.decided_by = "ALLOWED", "HUMAN_APPROVED", f"{reviewer} ({PEOPLE.get(reviewer)})"
             step.detail = "Ed25519 approval bound to the exact proposal digest"
             step.evidence = {"approval_id": approval.approval_id, "approver_role": approval.approver_role,

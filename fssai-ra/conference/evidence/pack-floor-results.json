@@ -1,0 +1,215 @@
+{
+  "kind": "kernel-floor",
+  "education_pack_findings": [],
+  "malicious_pack_findings": [
+    {
+      "code": "PACK_UNKNOWN_KEY",
+      "where": "consent",
+      "detail": "the kernel does not read this key; a pack author may believe it does something"
+    },
+    {
+      "code": "PACK_UNKNOWN_KEY",
+      "where": "skip_evidence",
+      "detail": "the kernel does not read this key; a pack author may believe it does something"
+    },
+    {
+      "code": "PACK_ATTEMPTS_TO_DISABLE_KERNEL",
+      "where": "consent",
+      "detail": "'consent' would switch a kernel guarantee off"
+    },
+    {
+      "code": "PACK_ATTEMPTS_TO_DISABLE_KERNEL",
+      "where": "skip_evidence",
+      "detail": "'skip_evidence' would switch a kernel guarantee off"
+    },
+    {
+      "code": "PACK_ATTEMPTS_TO_DISABLE_KERNEL",
+      "where": "controls.correct_transcript_grade.auto_approve",
+      "detail": "'auto_approve' would switch a kernel guarantee off"
+    },
+    {
+      "code": "PACK_ATTEMPTS_TO_DISABLE_KERNEL",
+      "where": "delegation.disable_checks",
+      "detail": "'disable_checks' would switch a kernel guarantee off"
+    },
+    {
+      "code": "PACK_MANUAL_FALLBACK_MISSING",
+      "where": "manual_fallback",
+      "detail": "failure must route to a staffed path; a missing fallback turns refusal into outage or override"
+    },
+    {
+      "code": "PACK_NON_HUMAN_APPROVER",
+      "where": "transitions[0]",
+      "detail": "correct_transcript_grade is approved by 'model'; authority must come from a declared human role"
+    },
+    {
+      "code": "PACK_CONSEQUENCE_DOWNGRADED",
+      "where": "transitions[0]",
+      "detail": "correct_transcript_grade has a control contract but is marked non-consequential, which removes review"
+    },
+    {
+      "code": "PACK_NON_HUMAN_APPROVER",
+      "where": "transitions[1]",
+      "detail": "overwrite_record is approved by '*'; authority must come from a declared human role"
+    },
+    {
+      "code": "PACK_STRUCTURALLY_INVALID",
+      "where": "transitions[1]",
+      "detail": "wildcard states grant unrestricted writes"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_INCOMPLETE",
+      "where": "controls.correct_transcript_grade.owner",
+      "detail": "owner is empty"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_INCOMPLETE",
+      "where": "controls.correct_transcript_grade.evidence_artifact",
+      "detail": "evidence_artifact is empty"
+    },
+    {
+      "code": "PACK_ENFORCEMENT_POINT_UNKNOWN",
+      "where": "controls.correct_transcript_grade.enforcement_point",
+      "detail": "'model_self_check' is not an independent mediator the kernel provides"
+    },
+    {
+      "code": "PACK_FAILURE_TEST_MISSING",
+      "where": "controls.correct_transcript_grade.failure_test",
+      "detail": "tests/test_does_not_exist.py::test_nothing does not exist, so the failure test never runs"
+    },
+    {
+      "code": "PACK_FAILURE_RESPONSE_FAILS_OPEN",
+      "where": "controls.correct_transcript_grade.failure_response",
+      "detail": "'Allow and continue' continues on failure"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_MISSING",
+      "where": "controls.delegate_authority",
+      "detail": "a consequential capability without a seven-field contract is an unresolved governance decision"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_MISSING",
+      "where": "controls.erase_subject",
+      "detail": "a consequential capability without a seven-field contract is an unresolved governance decision"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_MISSING",
+      "where": "controls.overwrite_record",
+      "detail": "a consequential capability without a seven-field contract is an unresolved governance decision"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_MISSING",
+      "where": "controls.read_protected_context",
+      "detail": "a consequential capability without a seven-field contract is an unresolved governance decision"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_MISSING",
+      "where": "controls.release_labelled_output",
+      "detail": "a consequential capability without a seven-field contract is an unresolved governance decision"
+    },
+    {
+      "code": "PACK_CONTROL_CONTRACT_MISSING",
+      "where": "controls.restore_identity",
+      "detail": "a consequential capability without a seven-field contract is an unresolved governance decision"
+    },
+    {
+      "code": "PACK_PROTECTED_CLASS_IN_EXTERNAL_ZONE",
+      "where": "disclosure.class_zones.student-identity",
+      "detail": "student-identity may be processed in external"
+    },
+    {
+      "code": "PACK_PROTECTED_CLASS_IN_EXTERNAL_ZONE",
+      "where": "disclosure.class_zones.student-health",
+      "detail": "student-health may be processed in external"
+    },
+    {
+      "code": "PACK_EXTERNAL_RECIPIENT_RECEIVES_PROTECTED_DATA",
+      "where": "disclosure.recipients.marketing_partner",
+      "detail": "external recipient receives student-health, student-identity"
+    },
+    {
+      "code": "PACK_BREAK_GLASS_UNBOUNDED",
+      "where": "disclosure.break_glass.max_ttl_seconds",
+      "detail": "emergency access may not exceed 86400 seconds"
+    },
+    {
+      "code": "PACK_BREAK_GLASS_UNBOUNDED",
+      "where": "disclosure.break_glass.max_unreviewed_per_holder",
+      "detail": "more than three unreviewed emergency accesses is not emergency access"
+    },
+    {
+      "code": "PACK_NON_HUMAN_APPROVER",
+      "where": "disclosure.break_glass.review_role",
+      "detail": "emergency access must be reviewed by a human role"
+    },
+    {
+      "code": "PACK_REVIEW_OVERLOAD_FAILS_OPEN",
+      "where": "review.overload_policy",
+      "detail": "'auto_approve': overload must defer, escalate, or queue, never approve"
+    },
+    {
+      "code": "PACK_REVIEW_OVERLOAD_FAILS_OPEN",
+      "where": "review.capacity_per_window",
+      "detail": "capacity_per_window must be a positive integer"
+    },
+    {
+      "code": "PACK_REVIEW_OVERLOAD_FAILS_OPEN",
+      "where": "review.queue_limit",
+      "detail": "queue_limit must be a positive integer"
+    },
+    {
+      "code": "PACK_REVIEW_OVERLOAD_FAILS_OPEN",
+      "where": "review.timeout_seconds",
+      "detail": "timeout_seconds must be a positive integer"
+    },
+    {
+      "code": "PACK_REVIEW_OVERLOAD_FAILS_OPEN",
+      "where": "review.escalation_role",
+      "detail": "escalation needs a human role"
+    },
+    {
+      "code": "PACK_DELEGATION_UNBOUNDED",
+      "where": "delegation.max_depth",
+      "detail": "depth must be between 1 and 4"
+    },
+    {
+      "code": "PACK_DELEGATION_UNBOUNDED",
+      "where": "delegation.allow_machine_delegated_consequence",
+      "detail": "a machine may not pass consequential authority onward"
+    },
+    {
+      "code": "PACK_MODEL_APPROVAL_UNBOUNDED",
+      "where": "model_manifests.public_chatbot_api.approval_days",
+      "detail": "model approval must expire within 366 days"
+    },
+    {
+      "code": "PACK_PROTECTED_CLASS_IN_EXTERNAL_ZONE",
+      "where": "model_manifests.public_chatbot_api.allowed_classes",
+      "detail": "external model approved for student-health, student-identity"
+    },
+    {
+      "code": "PACK_ATTEMPTS_TO_DISABLE_KERNEL",
+      "where": "model_manifests.public_chatbot_api.capabilities",
+      "detail": "no model may hold an execution capability; models propose"
+    }
+  ],
+  "malicious_pack_codes": [
+    "PACK_ATTEMPTS_TO_DISABLE_KERNEL",
+    "PACK_BREAK_GLASS_UNBOUNDED",
+    "PACK_CONSEQUENCE_DOWNGRADED",
+    "PACK_CONTROL_CONTRACT_INCOMPLETE",
+    "PACK_CONTROL_CONTRACT_MISSING",
+    "PACK_DELEGATION_UNBOUNDED",
+    "PACK_ENFORCEMENT_POINT_UNKNOWN",
+    "PACK_EXTERNAL_RECIPIENT_RECEIVES_PROTECTED_DATA",
+    "PACK_FAILURE_RESPONSE_FAILS_OPEN",
+    "PACK_FAILURE_TEST_MISSING",
+    "PACK_MANUAL_FALLBACK_MISSING",
+    "PACK_MODEL_APPROVAL_UNBOUNDED",
+    "PACK_NON_HUMAN_APPROVER",
+    "PACK_PROTECTED_CLASS_IN_EXTERNAL_ZONE",
+    "PACK_REVIEW_OVERLOAD_FAILS_OPEN",
+    "PACK_STRUCTURALLY_INVALID",
+    "PACK_UNKNOWN_KEY"
+  ]
+}

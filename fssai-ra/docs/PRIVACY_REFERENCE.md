@@ -1,5 +1,9 @@
 # Opt-in HTTP privacy reference profile
 
+> **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
+>
+> **Recommended next:** Run `pytest tests/test_privacy_integration.py`, then see the same controls against a malicious model in the [conference package](../conference/README.md).
+
 The default HTTP path remains `disclosure-only`. A server may construct
 `PrivacyConfiguration` and pass it through
 `create_app(..., disclosure_options={"privacy": configuration})`.

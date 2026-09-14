@@ -171,31 +171,37 @@
     },
     {
       "id": "notary",
-      "claim": "Unpredictable default signing keys",
-      "status": "selected-regressions-tested",
+      "claim": "Unpredictable notary keys; signed checkpoints detect rewritten and truncated history",
+      "status": "fixture-tested",
       "implementation": [
-        "src/fssaira/evidence_notary.py"
+        "src/fssaira/evidence_notary.py",
+        "src/fssaira/education_world.py"
       ],
-      "enforcement_point": "Notary",
+      "enforcement_point": "Evidence notary key not held by the evidence writer",
       "tests": [
-        "tests/test_foundation_security.py"
+        "tests/test_conference_falsification.py",
+        "tests/test_education_pack.py"
       ],
-      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py",
-      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
-      "limitation": "Fresh keys are not persisted/rotated HSM custody or independent checkpoint publication."
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_conference_falsification.py -k notary tests/test_education_pack.py -k rewritten",
+      "evidence": "conference/evidence/security-results.json (F15) and ablation-results.json",
+      "limitation": "Bound in the education world only; checkpoints are not yet published outside the writer's boundary, and a compromised notary key can sign rewritten history."
     },
     {
       "id": "pack-floor",
-      "claim": "Immutable policy minimum",
-      "status": "source-present-unqualified",
+      "claim": "Kernel floor rejects domain packs that weaken mediation, review, evidence, delegation, or residency",
+      "status": "fixture-tested",
       "implementation": [
-        "src/fssaira/pack_floor.py"
+        "src/fssaira/pack_floor.py",
+        "conference/attacks/malicious-domain-pack.yaml"
       ],
-      "enforcement_point": "Pack-floor validator",
-      "tests": [],
-      "reproduction_command": null,
-      "evidence": null,
-      "limitation": "Presence alone does not establish activation on every deployed route."
+      "enforcement_point": "Pack loader for the governed-learning pack",
+      "tests": [
+        "tests/test_education_pack.py",
+        "tests/test_conference_tools.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m fssaira.cli conference pack-check conference/attacks/malicious-domain-pack.yaml",
+      "evidence": "conference/evidence/pack-floor-results.json",
+      "limitation": "Rejects declared weakening patterns and incomplete contracts; it does not judge policy wisdom and is not applied to the six profiles/ packs."
     },
     {
       "id": "composition",
@@ -270,14 +276,20 @@
     },
     {
       "id": "education",
-      "claim": "Integrated student privacy and correction workflow",
-      "status": "deployment-requirement",
-      "implementation": [],
-      "enforcement_point": "Education context gate and registrar executor",
-      "tests": [],
-      "reproduction_command": null,
-      "evidence": null,
-      "limitation": "Current education action fixtures do not establish integrated education disclosure."
+      "claim": "Integrated student privacy and correction workflow (synthetic)",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/education_world.py",
+        "conference/education/governed-learning-pack.yaml"
+      ],
+      "enforcement_point": "Context gate, privacy pipeline, and execution mediator in one world",
+      "tests": [
+        "tests/test_education_pack.py",
+        "tests/test_privacy_custody.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_education_pack.py tests/test_privacy_custody.py",
+      "evidence": "conference/evidence/lifecycle-traces.json and data-flow-results.json",
+      "limitation": "One process, synthetic records, and a deterministic reviewer; not a deployed institutional workflow."
     },
     {
       "id": "redress",
@@ -328,6 +340,56 @@
       "reproduction_command": ".venv/bin/python -m pytest tests/test_privacy_integration.py",
       "evidence": "revision-verification.json and test-results.xml",
       "limitation": "Reference configuration only; not persistent custody, general identity detection, or cross-mediator action authorization."
+    },
+    {
+      "id": "ed25519-approvals",
+      "claim": "Executor verifies approvals with a public key and cannot mint them",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/exact_action.py"
+      ],
+      "enforcement_point": "Execution mediator",
+      "tests": [
+        "tests/test_conference_falsification.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_conference_falsification.py -k mint_approvals",
+      "evidence": "conference/evidence/security-results.json (F19)",
+      "limitation": "The HMAC path remains for compatibility; the approval service's private key stays in the trusted base."
+    },
+    {
+      "id": "delegation-revocation",
+      "claim": "Signed hop purpose, seven-axis data delegation, and propagated revocation",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/delegation.py",
+        "src/fssaira/grant_delegation.py"
+      ],
+      "enforcement_point": "Delegation verifier and context gate",
+      "tests": [
+        "tests/test_conference_falsification.py",
+        "tests/test_education_pack.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_education_pack.py -k delegated tests/test_conference_falsification.py -k delegation",
+      "evidence": "conference/evidence/delegation-results.json",
+      "limitation": "Revocation propagates at next use within one store; distributed freshness remains a deployment requirement."
+    },
+    {
+      "id": "conference-falsification",
+      "claim": "Falsifiers, ablation, stateful sequences, and red-team attacks against a malicious model",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/falsification.py",
+        "src/fssaira/authority_stateful.py",
+        "src/fssaira/redteam.py"
+      ],
+      "enforcement_point": "All mediators of the education world",
+      "tests": [
+        "tests/test_conference_falsification.py",
+        "tests/test_conference_tools.py"
+      ],
+      "reproduction_command": ".venv/bin/python scripts/conference_evidence.py --check",
+      "evidence": "conference/evidence/summary.json and SCORECARD.md",
+      "limitation": "Scripted and grammar-generated attacks over one synthetic pack; not independent red teaming or a live-model evaluation."
     }
   ]
 }

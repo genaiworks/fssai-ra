@@ -163,11 +163,17 @@ class TokenVault:
 
     @staticmethod
     def detect_contact_details(text: str) -> list[tuple[str, str]]:
-        """Contact details that no declared field named. Reported, never trusted as complete."""
+        """Contact details that no declared field named. Reported, never trusted as complete.
+
+        Token spans are masked first. A token's hex code is random, so a run of its
+        digits could otherwise match the phone pattern from inside the token and make
+        an output that holds only tokens look as if it carried a phone number.
+        """
+        # "#" matches neither detector, so no contact pattern can run across a masked token.
+        masked = TOKEN_PATTERN.sub(lambda match: "#" * len(match.group(0)), text)
         found = []
         for kind, pattern in _DETECTORS:
-            found.extend((kind, match.group(0)) for match in pattern.finditer(text)
-                         if not TOKEN_PATTERN.fullmatch(match.group(0)))
+            found.extend((kind, match.group(0)) for match in pattern.finditer(masked))
         return found
 
     # -- restore -------------------------------------------------------------

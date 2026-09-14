@@ -1,0 +1,16 @@
+{
+  "kind": "concurrency",
+  "in_memory_executor": {
+    "32": {
+      "mutations": 1,
+      "outcome_records": 1,
+      "refusals": 0
+    },
+    "128": {
+      "mutations": 1,
+      "outcome_records": 1,
+      "refusals": 0
+    }
+  },
+  "bounds": "one process, in-memory register with locks; the SQL race is in evaluation/results"
+}

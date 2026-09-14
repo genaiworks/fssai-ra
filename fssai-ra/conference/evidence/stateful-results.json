@@ -1,0 +1,64 @@
+{
+  "kind": "stateful",
+  "all_controls": {
+    "sequences": 120,
+    "steps": 3000,
+    "controls_removed": [],
+    "properties": {
+      "P1": {
+        "property": "no unauthorized write",
+        "violations": 0
+      },
+      "P2": {
+        "property": "no unauthorized protected read",
+        "violations": 0
+      },
+      "P3": {
+        "property": "child authority never exceeds parent authority",
+        "violations": 0
+      },
+      "P4": {
+        "property": "revoked authority cannot be used",
+        "violations": 0
+      },
+      "P5": {
+        "property": "expired authority cannot be used",
+        "violations": 0
+      },
+      "P6": {
+        "property": "output restrictions cannot decrease without explicit authorization",
+        "violations": 0
+      },
+      "P7": {
+        "property": "every consequential action produces evidence",
+        "violations": 0
+      },
+      "P8": {
+        "property": "replay cannot cause an additional mutation",
+        "violations": 0
+      }
+    },
+    "total_violations": 0,
+    "false_denials": 0,
+    "operations": {
+      "delegate": 290,
+      "derive": 298,
+      "execute": 322,
+      "expire": 298,
+      "grant": 299,
+      "read": 297,
+      "replay": 298,
+      "retry": 309,
+      "revoke": 299,
+      "withdraw_consent": 290
+    },
+    "holds": true,
+    "first_counterexample": []
+  },
+  "violations_when_removed": {
+    "grant_currency": 7,
+    "consent": 1,
+    "data_delegation_attenuation": 41,
+    "context_gate": 154
+  }
+}

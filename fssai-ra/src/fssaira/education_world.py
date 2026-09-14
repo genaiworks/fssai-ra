@@ -54,7 +54,12 @@ from .exact_action import (
 )
 from .grant_delegation import GrantDelegationService
 from .key_custody import KeyCustody
-from .model_registry import ManifestPublisher, ModelAttestationDenied, ModelRegistry, artifact_digest
+from .model_registry import (
+    ManifestPublisher,
+    ModelAttestationDenied,
+    ModelRegistry,
+    artifact_digest,
+)
 from .pack_floor import GovernedPack, load_governed_pack
 from .privacy_pipeline import ErasureService, ModelContext, PrivacyGate
 from .privacy_vault import TokenVault
@@ -76,8 +81,8 @@ PLATFORM_CONTROLS = ("model_attestation", "evidence_checkpoint", "review_overloa
 ALL_CONTROLS = (*EXECUTION_CONTROLS, *DATA_CONTROLS, *PLATFORM_CONTROLS)
 
 MEDIATOR_OF = {
-    **{c: "execution mediator" for c in EXECUTION_CONTROLS},
-    **{c: "context gate" for c in DATA_CONTROLS},
+    **dict.fromkeys(EXECUTION_CONTROLS, "execution mediator"),
+    **dict.fromkeys(DATA_CONTROLS, "context gate"),
     "recipient_clearance": "release gate", "release_recheck": "release gate",
     "session_taint": "release gate", "exact_output_declassification": "release gate",
     "identity_restoration_entitlement": "release gate",

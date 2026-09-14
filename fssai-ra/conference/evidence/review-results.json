@@ -1,0 +1,43 @@
+{
+  "kind": "human-review",
+  "policy": {
+    "capacity_per_window": 4,
+    "window_seconds": 3600,
+    "queue_limit": 6,
+    "timeout_seconds": 1800,
+    "overload_policy": "defer_to_manual",
+    "escalation_role": "dean_of_students"
+  },
+  "loads": {
+    "normal load": {
+      "submitted": 3,
+      "by_state": {
+        "APPROVED": 3
+      },
+      "human_decisions": 3,
+      "approved_without_human": 0
+    },
+    "high load": {
+      "submitted": 6,
+      "by_state": {
+        "APPROVED": 4,
+        "TIMED_OUT": 2
+      },
+      "human_decisions": 4,
+      "approved_without_human": 0
+    },
+    "overload": {
+      "submitted": 14,
+      "by_state": {
+        "APPROVED": 4,
+        "DEFERRED_TO_MANUAL": 8,
+        "TIMED_OUT": 2
+      },
+      "human_decisions": 4,
+      "approved_without_human": 0
+    },
+    "overload with auto-approve (ablation only)": {
+      "approved_without_human": 8
+    }
+  }
+}
