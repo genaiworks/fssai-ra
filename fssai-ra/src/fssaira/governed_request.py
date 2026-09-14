@@ -214,7 +214,7 @@ def run_governed_request(world: EducationWorld | None = None, *, model: Any = No
     receipt = None
     if not halted and proposal is not None:
         try:
-            executed = world.execute(proposal, approval, model_endpoint=endpoint)
+            executed = world.execute(proposal, approval, model_endpoint=endpoint, context_grant=grant)
             receipt = executed["receipt"]
             step.status, step.code, step.decided_by = "ALLOWED", "EXECUTED", "execution mediator"
             step.detail = f"{proposal.case_id} now {executed['result'].status} (version {executed['result'].version})"
