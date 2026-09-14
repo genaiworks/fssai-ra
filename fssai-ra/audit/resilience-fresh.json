@@ -13,96 +13,78 @@
     {
       "scenario": "duplicate_request",
       "callers": 8,
-      "independent_processes": 0,
-      "executions_returned": 0,
-      "replayed": 0,
+      "independent_processes": 8,
+      "executions_returned": 8,
+      "replayed": 7,
       "version_conflicts": 0,
-      "distinct_receipts": 0,
-      "unexpected_codes": [
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT"
-      ],
+      "distinct_receipts": 1,
+      "unexpected_codes": [],
       "exit_codes": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
       ],
       "snapshot": {
         "state": {
-          "status": "draft",
-          "version": 1
+          "status": "ready_for_officer_review",
+          "version": 2
         },
-        "mutations": 0,
-        "intent_records": 0,
-        "outcome_records": 0,
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
         "evidence_valid": true,
-        "complete_receipt_pair": false,
-        "approval_uses": 0,
-        "execution_results": 0,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
         "pending_outcomes": 0
       },
-      "passed": false
+      "passed": true
     },
     {
       "scenario": "competing_versions",
       "callers": 8,
-      "independent_processes": 0,
-      "executions_returned": 0,
+      "independent_processes": 8,
+      "executions_returned": 1,
       "replayed": 0,
-      "version_conflicts": 0,
-      "distinct_receipts": 0,
-      "unexpected_codes": [
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT",
-        "WORKER_EXITED_WITHOUT_RESULT"
-      ],
+      "version_conflicts": 7,
+      "distinct_receipts": 1,
+      "unexpected_codes": [],
       "exit_codes": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
       ],
       "snapshot": {
         "state": {
-          "status": "draft",
-          "version": 1
+          "status": "ready_for_officer_review",
+          "version": 2
         },
-        "mutations": 0,
-        "intent_records": 0,
-        "outcome_records": 0,
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
         "evidence_valid": true,
-        "complete_receipt_pair": false,
-        "approval_uses": 0,
-        "execution_results": 0,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
         "pending_outcomes": 0
       },
-      "passed": false
+      "passed": true
     }
   ],
   "crash_recovery": [
     {
       "checkpoint": "after_intent",
-      "exit_code": 1,
+      "exit_code": 86,
       "before_retry": {
         "state": {
           "status": "draft",
@@ -132,11 +114,11 @@
         "pending_outcomes": 0
       },
       "retry_replayed": false,
-      "passed": false
+      "passed": true
     },
     {
       "checkpoint": "after_mutation",
-      "exit_code": 1,
+      "exit_code": 86,
       "before_retry": {
         "state": {
           "status": "draft",
@@ -166,11 +148,11 @@
         "pending_outcomes": 0
       },
       "retry_replayed": false,
-      "passed": false
+      "passed": true
     },
     {
       "checkpoint": "after_outcome",
-      "exit_code": 1,
+      "exit_code": 86,
       "before_retry": {
         "state": {
           "status": "draft",
@@ -200,23 +182,23 @@
         "pending_outcomes": 0
       },
       "retry_replayed": false,
-      "passed": false
+      "passed": true
     },
     {
       "checkpoint": "after_commit",
-      "exit_code": 1,
+      "exit_code": 86,
       "before_retry": {
         "state": {
-          "status": "draft",
-          "version": 1
+          "status": "ready_for_officer_review",
+          "version": 2
         },
-        "mutations": 0,
-        "intent_records": 0,
-        "outcome_records": 0,
+        "mutations": 1,
+        "intent_records": 1,
+        "outcome_records": 1,
         "evidence_valid": true,
-        "complete_receipt_pair": false,
-        "approval_uses": 0,
-        "execution_results": 0,
+        "complete_receipt_pair": true,
+        "approval_uses": 1,
+        "execution_results": 1,
         "pending_outcomes": 0
       },
       "after_retry": {
@@ -233,11 +215,11 @@
         "execution_results": 1,
         "pending_outcomes": 0
       },
-      "retry_replayed": false,
-      "passed": false
+      "retry_replayed": true,
+      "passed": true
     }
   ],
-  "passed": false,
+  "passed": true,
   "schema_version": "1.0",
   "bounds": [
     "Synthetic fixtures using one transition from the supplied profile and teaching keys.",

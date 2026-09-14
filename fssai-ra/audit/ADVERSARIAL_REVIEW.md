@@ -19,3 +19,11 @@ A05 — policy-authorized substantive harm (3.5, 7.3). An authentic mistaken ins
 ## Hypotheses, not baseline exploit results
 
 Stale source/policy/recipient approvals; cross-session cache laundering; shared sibling budgets; duplicate JSON fields; tool redirects; trace/log disclosure; evidence rollback; delayed jobs and streaming revocation. Each needs an executed regression or an explicit exclusion. Monitoring model explanations is neither authentication nor a correctness oracle. Synthetic rationales are not hidden chain-of-thought or a human study.
+
+## Additional executed findings and repairs
+
+A06 — implementation defect in the newly joined reconciliation path (7.8). A committed effect could be queried by the proposing advisor after root revocation because status reconciliation checked holder identity but not current grant. Fixed by rechecking rooted grant, consent and expiry before advisor reconciliation; registrar/appeal roles retain explicit recovery access. Regression extends the cached-revocation test and checks both denial and privileged recovery. Previously released content cannot be recalled.
+
+A03 execution update: a separately spawned process with the mediator's OS user read grade C directly from the synthetic SQLite database. `audit/host-isolation-probe.json` records exit code and returned value. This confirms a trust-assumption violation can bypass the JSON interface; it is not reported as contained. Separate actual production model/worker identities do not exist in this teaching slice.
+
+All named new regressions execute against real local register/SQLite state and controlled sink contents. Unsupported network, code, tool, memory and stream requests are JSON denials; they are not network packet-capture experiments or arbitrary-code sandbox tests. The attack classes listed as unrun in RESIDUAL_RISKS remain qualification gaps.

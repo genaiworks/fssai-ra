@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/genai/Documents/Codex/2026-09-14/files-mentioned-by-the-user-united/work/clean-checkout/fssai-ra/scripts/joined_demo.py", line 8, in <module>
+    from fssaira.joined_workflow import Workflow, call
+  File "/Users/genai/Documents/Codex/2026-09-14/files-mentioned-by-the-user-united/work/clean-checkout/fssai-ra/src/fssaira/__init__.py", line 61, in <module>
+    from .challenge import (
+    ...<5 lines>...
+    )
+  File "/Users/genai/Documents/Codex/2026-09-14/files-mentioned-by-the-user-united/work/clean-checkout/fssai-ra/src/fssaira/challenge.py", line 46, in <module>
+    import yaml
+ModuleNotFoundError: No module named 'yaml'

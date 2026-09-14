@@ -1,0 +1,49 @@
+
+FSSAI-RA configuration report
+─────────────────────────────
+  version         1.0.0
+  profile         profiles/student_support.yaml
+  database        not configured
+  redis           not configured
+  kafka           not configured
+  model           ollama
+  auth mode       token
+
+Durability
+──────────
+  volatile: state is in memory and is lost on restart
+
+Model backend
+─────────────
+  ollama: unreachable
+    host: http://localhost:11434
+    model: llama3.2
+    model_installed: False
+    detail: ollama is running at http://localhost:11434 but 'llama3.2' does not resolve. Installed tags for llama3.2: llama3.2:1b, llama3.2:3b — set FSSAI_OLLAMA_MODEL to one of them.
+
+Findings (7)
+────────────
+  [blocking] TEACHING_APPROVAL_KEY
+             the public teaching approval key is active; approvals are forgeable by anyone who has read this repository
+             → set FSSAI_APPROVAL_SIGNING_KEY from a secret manager
+  [blocking] TEACHING_EVIDENCE_TOKEN
+             the default evidence write credential is active
+             → set FSSAI_EVIDENCE_TOKEN and hold it only in the evidence service
+  [blocking] AUTHENTICATION
+             development bearer tokens are active; set FSSAI_AUTH_TOKENS_JSON
+             → see docs/OPERATIONS.md, 'Authentication modes'
+  [    high] VOLATILE_STATE
+             in-memory state is active; every record is lost on restart
+             → set FSSAI_DATABASE_URL (postgresql:// or sqlite:///)
+  [    high] NO_DECLARED_REVIEW_CAPACITY
+             no review capacity is declared, so approvals are unlimited: this deployment routes consequential actions to a named human and assumes that human has infinite attention
+             → set FSSAI_REVIEW_MAX_PER_WINDOW and FSSAI_REVIEW_DELIBERATION_FLOOR from a roster you would defend; `fssaira oversight <profile> --sweep` computes the ceiling
+  [    info] IN_MEMORY_EVENTS
+             in-memory event transport is active; events are not replayable across processes
+             → set FSSAI_KAFKA_BOOTSTRAP
+  [    info] NO_DECLARED_DELEGATION_BOUND
+             no delegation depth is declared. This is correct for a deployment where one agent calls one tool, and wrong for one that calls a tool server, a plugin, or a sub-agent it did not write
+             → set FSSAI_MAX_DELEGATION_DEPTH if authority is passed onward at all
+
+  ✗ 3 blocking finding(s) must be resolved first
+  readiness here means 'no known teaching defaults are active'. It is not an assessment of the deployment, the domain profile, or the institution's controls.

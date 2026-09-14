@@ -4,13 +4,13 @@ jobs:
   offline-demo:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: PYTHONPATH=src python scripts/joined_demo.py --output audit/ci-demo
         working-directory: fssai-ra
-      - run: python -m pip install pytest==8.4.1
+      - run: python -m pip install pytest==8.4.1 PyYAML==6.0.2
       - run: PYTHONPATH=src python -m pytest tests/test_joined_workflow.py --junitxml=audit/joined.xml
         working-directory: fssai-ra
       - run: PYTHONPATH=src python scripts/adaptive_attacks.py --episodes 10 --training 300 --output audit/ci-adaptive.json

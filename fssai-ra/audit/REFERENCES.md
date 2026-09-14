@@ -1,0 +1,11 @@
+# Primary-reference verification, 2026-09-14
+
+Verified primary pages: CaMeL (arXiv 2503.18813, v2 June 2025), Fides (2505.23643, v2 September 2025), AI Control (2312.06942), NIST SP 800-207, NIST AI 600-1, NIST SP 800-57 Part 1 Rev. 5, NIST SP 800-88 Rev. 2 (CSRC final page: September 2025, Chandramouli and Hibbard), OWASP Agent Control Standard and Agentic Top 10 2026, ISO/IEC 42001 official page (redirects to /standard/42001).
+
+CaMeL already supplies a protective system layer, control/data separation and capabilities; Fides already provides confidentiality/integrity flow control and security/expressiveness analysis. Consequently, this paper's novelty is an implementation/transfer and evidence method, not invention of reference mediation or information-flow control. AI Control addresses intentionally subverting models and motivates testing effects under hostile behavior. No experiment here compares their actual implementations.
+
+Attempted but not fully verified through retrieved primary content: UNESCO record and MITRE ATLAS returned empty text; Global Digital Compact returned 403; Parasuraman DOI timed out; Saltzer–Schroeder and EUR-Lex returned browser challenges; Denning DOI returned 403. Clark–Wilson bibliographic details were retained but not independently verified in this run. These are outstanding bibliography verification items, not evidence those sources do not exist. Original citations remain identifiable and linked. No legal compliance conclusion is drawn from them.
+
+Primary links are retained in the editable paper. The NIST 800-88 DOI fetch failed but its official CSRC metadata page succeeded: https://csrc.nist.gov/pubs/sp/800/88/r2/final .
+
+Follow-up primary-source lookup verified UNESCO authors/title/year at https://www.unesco.org/en/articles/ai-competency-framework-teachers?hub=83294 and the UN's September 2024 adoption at https://www.un.org/digital-emerging-technologies/node/1123 . Saltzer's MIT publication index confirms the 1975 paper: https://www.mit.edu/~Saltzer/publications/memos.html . IEEE's security committee identifies the Clark–Wilson 1987 paper at https://www.ieee-security.org/TC/citationgraph/close00044502.html . These resolve bibliographic identity for those items; they are not a full-text rereview or proof of the paper's empirical claims.

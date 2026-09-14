@@ -1,0 +1,832 @@
+{
+  "baseline_commit": "5c587c361cf114125e39344caa6802efd4eaff11",
+  "claims": [
+    {
+      "historical_claim": {
+        "id": "action",
+        "claim": "Independent exact-action authorization",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/exact_action.py",
+          "src/fssaira/atomic_execution.py"
+        ],
+        "enforcement_point": "Executor",
+        "tests": [
+          "tests/test_exact_action.py",
+          "tests/test_atomic_execution.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_exact_action.py tests/test_atomic_execution.py",
+        "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+        "limitation": "Institutional process isolation and remote side effects are not established."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "disclosure",
+        "claim": "Purpose/subject/field/release checks",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/disclosure.py",
+          "src/fssaira/disclosure_api.py"
+        ],
+        "enforcement_point": "Context/release gate",
+        "tests": [
+          "tests/test_disclosure.py",
+          "tests/test_disclosure_api.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_disclosure.py tests/test_disclosure_api.py",
+        "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+        "limitation": "Four disclosure-domain fixtures; not the full tokenizing privacy profile."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "delegation",
+        "claim": "Rooted authority attenuation",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/delegation.py"
+        ],
+        "enforcement_point": "Chain verifier",
+        "tests": [
+          "tests/test_delegation.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_delegation.py",
+        "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+        "limitation": "Real orchestrator and global revocation freshness remain unqualified; purposes are exact identifiers."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "replay",
+        "claim": "Local atomic mutation and evidence",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/atomic_execution.py"
+        ],
+        "enforcement_point": "Transactional executor",
+        "tests": [
+          "tests/test_atomic_execution.py",
+          "tests/test_concurrent_replay.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_atomic_execution.py tests/test_concurrent_replay.py",
+        "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+        "limitation": "Cannot guarantee exactly-once arbitrary external effects."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "contract",
+        "claim": "Executable bindings",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/coverage.py",
+          "src/fssaira/contract.py"
+        ],
+        "enforcement_point": "Contract validator",
+        "tests": [
+          "tests/test_coverage.py",
+          "tests/test_contract.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_coverage.py tests/test_contract.py",
+        "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+        "limitation": "Binding existence is not behavioral coverage or whole-architecture percentage."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "stateful",
+        "claim": "Disclosure sequence invariants",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/disclosure_stateful.py"
+        ],
+        "enforcement_point": "Disclosure gate",
+        "tests": [
+          "tests/test_disclosure.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_disclosure.py",
+        "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+        "limitation": "Finite author-defined state space, not security probabilities."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "review",
+        "claim": "Bounded reviewer capacity and assistant correlation",
+        "status": "simulated",
+        "implementation": [
+          "src/fssaira/oversight.py",
+          "src/fssaira/assisted_review.py"
+        ],
+        "enforcement_point": "Approval issuer",
+        "tests": [
+          "tests/test_oversight.py",
+          "tests/test_assisted_review.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_oversight.py tests/test_assisted_review.py",
+        "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+        "limitation": "Declared behavior; no human or named-model effectiveness study."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "tokens",
+        "claim": "Identifier tokenization and restoration",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/privacy_vault.py",
+          "src/fssaira/privacy_pipeline.py",
+          "src/fssaira/privacy_runtime.py",
+          "src/fssaira/disclosure_api.py"
+        ],
+        "enforcement_point": "Privacy wrapper",
+        "tests": [
+          "tests/test_privacy_integration.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_privacy_integration.py",
+        "evidence": "revision-verification.json and test-results.xml record the second-audit execution.",
+        "limitation": "Opt-in in-memory HTTP integration tested. Lookup uses keyed digests; heap zeroization, anonymous outputs and durable custody are not established."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "erasure",
+        "claim": "Scoped erasure completion reporting",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/privacy_pipeline.py",
+          "src/fssaira/key_custody.py"
+        ],
+        "enforcement_point": "Erasure service",
+        "tests": [
+          "tests/test_foundation_security.py",
+          "tests/test_privacy_integration.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py tests/test_privacy_integration.py",
+        "evidence": "revision-verification.json and test-results.xml record the second-audit execution.",
+        "limitation": "Isolated restore probes and known-history journal checks tested; negative scans remain unverified. External copies and independently retained decryptable key backups remain unresolved."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "registry",
+        "claim": "Signed manifests and expiry",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/model_registry.py"
+        ],
+        "enforcement_point": "Model registry",
+        "tests": [
+          "tests/test_foundation_security.py",
+          "tests/test_privacy_integration.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py tests/test_privacy_integration.py",
+        "evidence": "revision-verification.json and test-results.xml record the second-audit execution.",
+        "limitation": "Strict registry is bound to opt-in HTTP privacy context and model-task routes; serving identity is server-reported, not hardware-rooted."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "notary",
+        "claim": "Unpredictable notary keys; signed checkpoints detect rewritten and truncated history",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/evidence_notary.py",
+          "src/fssaira/education_world.py"
+        ],
+        "enforcement_point": "Evidence notary key not held by the evidence writer",
+        "tests": [
+          "tests/test_conference_falsification.py",
+          "tests/test_education_pack.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_conference_falsification.py -k notary tests/test_education_pack.py -k rewritten",
+        "evidence": "conference/evidence/security-results.json (F15) and ablation-results.json",
+        "limitation": "Bound in the education world only; checkpoints are not yet published outside the writer's boundary, and a compromised notary key can sign rewritten history."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "pack-floor",
+        "claim": "Kernel floor rejects domain packs that weaken mediation, review, evidence, delegation, or residency",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/pack_floor.py",
+          "conference/attacks/malicious-domain-pack.yaml"
+        ],
+        "enforcement_point": "Pack loader for the governed-learning pack",
+        "tests": [
+          "tests/test_education_pack.py",
+          "tests/test_conference_tools.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m fssaira.cli conference pack-check conference/attacks/malicious-domain-pack.yaml",
+        "evidence": "conference/evidence/pack-floor-results.json",
+        "limitation": "Rejects declared weakening patterns and incomplete contracts; it does not judge policy wisdom and is not applied to the six profiles/ packs."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "composition",
+        "claim": "Action tied to trusted context receipt and versions",
+        "status": "deployment-requirement",
+        "implementation": [],
+        "enforcement_point": "Executor and context gate",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "Separate passing suites do not prove joined end-to-end path."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "isolation",
+        "claim": "Host/process/credential separation",
+        "status": "deployment-requirement",
+        "implementation": [],
+        "enforcement_point": "Host/network/IAM",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "No malicious code execution containment from Python object boundaries."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "memory",
+        "claim": "RAG/cache/vector/handoff label propagation",
+        "status": "deployment-requirement",
+        "implementation": [
+          "src/fssaira/encrypted_records.py"
+        ],
+        "enforcement_point": "Context gate and all stores",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "Demonstration vector index is not complete production RAG or memory governance."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "multimodal",
+        "claim": "Streaming/OCR/audio/generated-code controls",
+        "status": "deployment-requirement",
+        "implementation": [],
+        "enforcement_point": "Boundary and release adapters",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "No comprehensive modality or streaming qualification."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "supply-chain",
+        "claim": "Bundle pinning and tool-server egress",
+        "status": "deployment-requirement",
+        "implementation": [],
+        "enforcement_point": "Platform and tool adapters",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "Model names or tool schemas alone do not establish endpoint authenticity or safety."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "revocation",
+        "claim": "Distributed freshness and linearization",
+        "status": "deployment-requirement",
+        "implementation": [
+          "src/fssaira/grant_delegation.py",
+          "src/fssaira/disclosure_store.py"
+        ],
+        "enforcement_point": "Authority services and dispatchers",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "Must measure stale-use window on actual topology; no instantaneous global guarantee."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "education",
+        "claim": "Integrated student privacy and correction workflow (synthetic)",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/education_world.py",
+          "conference/education/governed-learning-pack.yaml"
+        ],
+        "enforcement_point": "Context gate, privacy pipeline, and execution mediator in one world",
+        "tests": [
+          "tests/test_education_pack.py",
+          "tests/test_privacy_custody.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_education_pack.py tests/test_privacy_custody.py",
+        "evidence": "conference/evidence/lifecycle-traces.json and data-flow-results.json",
+        "limitation": "One process, synthetic records, and a deterministic reviewer; not a deployed institutional workflow."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "redress",
+        "claim": "Accessible, fair and timely institutional appeals",
+        "status": "empirical-open",
+        "implementation": [],
+        "enforcement_point": "Independent appeals owner",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "Requires affected-user participation and completed operational appeal evidence."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "learning",
+        "claim": "Educational effectiveness",
+        "status": "empirical-open",
+        "implementation": [],
+        "enforcement_point": "Study owner",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "Lab and rubric do not establish learning; comparison and retention study required."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "field",
+        "claim": "Production, independent assurance, cost and energy",
+        "status": "empirical-open",
+        "implementation": [],
+        "enforcement_point": "Adopting institution",
+        "tests": [],
+        "reproduction_command": null,
+        "evidence": null,
+        "limitation": "Exact deployment qualification, independent review and measurements required."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "privacy-http",
+        "claim": "Opt-in in-memory privacy HTTP path",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/privacy_runtime.py",
+          "src/fssaira/disclosure_api.py",
+          "src/fssaira/api.py"
+        ],
+        "enforcement_point": "Strict registry and privacy wrapper around disclosure gate",
+        "tests": [
+          "tests/test_privacy_integration.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_privacy_integration.py",
+        "evidence": "revision-verification.json and test-results.xml",
+        "limitation": "Reference configuration only; not persistent custody, general identity detection, or cross-mediator action authorization."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "ed25519-approvals",
+        "claim": "Executor verifies approvals with a public key and cannot mint them",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/exact_action.py"
+        ],
+        "enforcement_point": "Execution mediator",
+        "tests": [
+          "tests/test_conference_falsification.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_conference_falsification.py -k mint_approvals",
+        "evidence": "conference/evidence/security-results.json (F19)",
+        "limitation": "The HMAC path remains for compatibility; the approval service's private key stays in the trusted base."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "delegation-revocation",
+        "claim": "Signed hop purpose, seven-axis data delegation, and propagated revocation",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/delegation.py",
+          "src/fssaira/grant_delegation.py"
+        ],
+        "enforcement_point": "Delegation verifier and context gate",
+        "tests": [
+          "tests/test_conference_falsification.py",
+          "tests/test_education_pack.py"
+        ],
+        "reproduction_command": ".venv/bin/python -m pytest tests/test_education_pack.py -k delegated tests/test_conference_falsification.py -k delegation",
+        "evidence": "conference/evidence/delegation-results.json",
+        "limitation": "Revocation propagates at next use within one store; distributed freshness remains a deployment requirement."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "historical_claim": {
+        "id": "conference-falsification",
+        "claim": "Falsifiers, ablation, stateful sequences, and red-team attacks against a malicious model",
+        "status": "fixture-tested",
+        "implementation": [
+          "src/fssaira/falsification.py",
+          "src/fssaira/authority_stateful.py",
+          "src/fssaira/redteam.py"
+        ],
+        "enforcement_point": "All mediators of the education world",
+        "tests": [
+          "tests/test_conference_falsification.py",
+          "tests/test_conference_tools.py"
+        ],
+        "reproduction_command": ".venv/bin/python scripts/conference_evidence.py --check",
+        "evidence": "conference/evidence/summary.json and SCORECARD.md",
+        "limitation": "Scripted and grammar-generated attacks over one synthetic pack; not independent red teaming or a live-model evaluation."
+      },
+      "execution_evidence": "audit/executed-tests.xml; audit/results-check.log; audit/conference-check.log",
+      "qualification": "Existing module tests executed; source-only and deployment requirements retain original limits. No blanket integration promotion."
+    },
+    {
+      "id": "test_complete_durable_workflow_and_timeout_reconciliation",
+      "claim": "complete durable workflow and timeout reconciliation",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_complete_durable_workflow_and_timeout_reconciliation",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_unsupported_paths_and_wrong_subject_have_no_effect",
+      "claim": "unsupported paths and wrong subject have no effect",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_unsupported_paths_and_wrong_subject_have_no_effect",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_false_rationale_cannot_confirm_wrong_grade",
+      "claim": "false rationale cannot confirm wrong grade",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_false_rationale_cannot_confirm_wrong_grade",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_changed_context_invalidates_approval_and_cached_release",
+      "claim": "changed context invalidates approval and cached release",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_changed_context_invalidates_approval_and_cached_release",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_revocation_after_cached_result_before_release",
+      "claim": "revocation after cached result before release",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_revocation_after_cached_result_before_release",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_approval_substitution_and_confused_deputy",
+      "claim": "approval substitution and confused deputy",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_approval_substitution_and_confused_deputy",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_delegation_attenuation_and_sibling_budget",
+      "claim": "delegation attenuation and sibling budget",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_delegation_attenuation_and_sibling_budget",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_read_only_grant_not_write_and_cross_session",
+      "claim": "read only grant not write and cross session",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_read_only_grant_not_write_and_cross_session",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_duplicate_fields_and_secret_errors",
+      "claim": "duplicate fields and secret errors",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_duplicate_fields_and_secret_errors",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_evidence_failure_rolls_back_mutation",
+      "claim": "evidence failure rolls back mutation",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_evidence_failure_rolls_back_mutation",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_checkpoint_detects_rollback",
+      "claim": "checkpoint detects rollback",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_checkpoint_detects_rollback",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_authorized_bad_source_and_appeal_are_not_unauthorized_effect",
+      "claim": "authorized bad source and appeal are not unauthorized effect",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_authorized_bad_source_and_appeal_are_not_unauthorized_effect",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_control_on_off_restored",
+      "claim": "control on off restored",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_control_on_off_restored",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_second_domain",
+      "claim": "second domain",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_workflow.py::test_second_domain",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_legacy_driver_cannot_select_unassigned_student",
+      "claim": "legacy driver cannot select unassigned student",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_legacy_regressions.py::test_legacy_driver_cannot_select_unassigned_student",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    },
+    {
+      "id": "test_legacy_driver_does_not_treat_requested_grade_as_evidence",
+      "claim": "legacy driver does not treat requested grade as evidence",
+      "paper_sections": [
+        "3.5",
+        "7.8",
+        "7.9",
+        "8.1"
+      ],
+      "implementation": [
+        "src/fssaira/joined_workflow.py",
+        "src/fssaira/governed_request.py"
+      ],
+      "executed_experiment": "tests/test_joined_legacy_regressions.py::test_legacy_driver_does_not_treat_requested_grade_as_evidence",
+      "result_artifact": "audit/executed-tests.xml",
+      "status": "executed-passed",
+      "attacker_capabilities": "untrusted JSON requests and references; synthetic role calls controlled by test referee",
+      "oracle": "direct SQLite records/effects/sinks or legacy register.write_log and model inputs",
+      "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
+      "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
+    }
+  ]
+}

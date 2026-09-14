@@ -1,0 +1,1034 @@
+<!doctype html><meta charset="utf-8"><title>Governed workflow evidence</title><style>body{max-width:1000px;margin:3em auto;font:16px system-ui}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><h1>Trust by Construction: executed evidence</h1><p>Synthetic data; scripted model; simulated reviewers. SQLite effects and sink bytes below are actual local execution. No live model or institutional deployment.</p><pre>[
+  {
+    &quot;mode&quot;: &quot;offline scripted model and simulated human decisions; real SQLite effects&quot;,
+    &quot;control&quot;: true,
+    &quot;pack&quot;: &quot;education&quot;,
+    &quot;transcript&quot;: [
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;,
+          &quot;subject&quot;: &quot;s2&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;tool&quot;,
+          &quot;url&quot;: &quot;http://127.0.0.1/controlled-sink&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;context&quot;: &quot;48ad3b7044b0e526b93aa8c7fbc9d06d&quot;,
+          &quot;value&quot;: &quot;C&quot;,
+          &quot;supported&quot;: &quot;B&quot;,
+          &quot;label&quot;: &quot;synthetic-academic&quot;,
+          &quot;model&quot;: &quot;offline-scripted&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;propose&quot;,
+          &quot;context&quot;: &quot;48ad3b7044b0e526b93aa8c7fbc9d06d&quot;,
+          &quot;operation&quot;: &quot;correct_transcript&quot;,
+          &quot;recipient&quot;: &quot;recipient&quot;,
+          &quot;value&quot;: &quot;B&quot;,
+          &quot;rationale&quot;: &quot;Synthetic scripted proposal; not hidden chain-of-thought&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;,
+          &quot;digest&quot;: &quot;22c9953ee6f6ab8b012fa363612697823dc7db046f6c92f9918e693192ab47fc&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;confirm&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;confirmation&quot;: &quot;2a6b0fb16f4f69a4d586879b6ecfa943&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;approve&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;,
+          &quot;confirmation&quot;: &quot;2a6b0fb16f4f69a4d586879b6ecfa943&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;approval&quot;: &quot;d06ca269b4e0175704f2ba3d87524436&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;execute&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;,
+          &quot;approval&quot;: &quot;d06ca269b4e0175704f2ba3d87524436&quot;,
+          &quot;value&quot;: &quot;tampered-after-approval&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;execute&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;,
+          &quot;approval&quot;: &quot;d06ca269b4e0175704f2ba3d87524436&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;state&quot;: &quot;committed&quot;,
+          &quot;replayed&quot;: false,
+          &quot;receipt&quot;: &quot;cfe36da1019e72a78bfc2664e2858dc74bf0bc11e8a6299d59eb00266a8b8bd7&quot;,
+          &quot;version&quot;: 2
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;reconcile&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;state&quot;: &quot;committed&quot;,
+          &quot;effect&quot;: {
+            &quot;value&quot;: &quot;B&quot;,
+            &quot;version&quot;: 2
+          }
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;bytes&quot;: &quot;{\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;,\&quot;subject\&quot;:\&quot;s1\&quot;,\&quot;value\&quot;:\&quot;B\&quot;}&quot;,
+          &quot;receipt&quot;: &quot;ef3b39cb928235491a5987fb95b37093d2e3389510daa4682592a7c962d94ac3&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;revoke&quot;,
+          &quot;grant&quot;: &quot;root&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;appeal&quot;,
+          &quot;proposal&quot;: &quot;8de1e93eb824cc8e89a923b617fe5010&quot;,
+          &quot;value&quot;: &quot;C&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;receipt&quot;: &quot;fa5972f9c2fe93cc050060abd94abfa45b0b74e0ba5903235bfbe123984643f1&quot;,
+          &quot;version&quot;: 3
+        }
+      }
+    ],
+    &quot;records&quot;: [
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 3,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s2&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;other&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      }
+    ],
+    &quot;sinks&quot;: [
+      {
+        &quot;recipient&quot;: &quot;recipient&quot;,
+        &quot;bytes&quot;: &quot;{\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;,\&quot;subject\&quot;:\&quot;s1\&quot;,\&quot;value\&quot;:\&quot;B\&quot;}&quot;
+      }
+    ],
+    &quot;evidence&quot;: [
+      {
+        &quot;seq&quot;: 1,
+        &quot;previous&quot;: &quot;0000000000000000000000000000000000000000000000000000000000000000&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;pack\&quot;:\&quot;education\&quot;,\&quot;synthetic\&quot;:true},\&quot;kind\&quot;:\&quot;seed\&quot;}&quot;,
+        &quot;head&quot;: &quot;5b3d598ad1c5501a7bae1e71d0067820a6e245edf6a62f086082d8413d2b5683&quot;
+      },
+      {
+        &quot;seq&quot;: 2,
+        &quot;previous&quot;: &quot;5b3d598ad1c5501a7bae1e71d0067820a6e245edf6a62f086082d8413d2b5683&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;advisor\&quot;,\&quot;context\&quot;:\&quot;48ad3b7044b0e526b93aa8c7fbc9d06d\&quot;,\&quot;digest\&quot;:\&quot;973e68042f345c2c1b0c8d1c47378f866d8b03f766b2e667d7bfee616fc4c19b\&quot;},\&quot;kind\&quot;:\&quot;context\&quot;}&quot;,
+        &quot;head&quot;: &quot;065ab7045fc68e01fd2272427bf67a2f247c1988ce77a8cdcd4ebe2bd6ce7d0d&quot;
+      },
+      {
+        &quot;seq&quot;: 3,
+        &quot;previous&quot;: &quot;065ab7045fc68e01fd2272427bf67a2f247c1988ce77a8cdcd4ebe2bd6ce7d0d&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;digest\&quot;:\&quot;22c9953ee6f6ab8b012fa363612697823dc7db046f6c92f9918e693192ab47fc\&quot;,\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;},\&quot;kind\&quot;:\&quot;proposal\&quot;}&quot;,
+        &quot;head&quot;: &quot;ef75b9027c9681a669bd23646012b6c8ac78775a6129ba48a535ae67918428d9&quot;
+      },
+      {
+        &quot;seq&quot;: 4,
+        &quot;previous&quot;: &quot;ef75b9027c9681a669bd23646012b6c8ac78775a6129ba48a535ae67918428d9&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;confirmation\&quot;:\&quot;2a6b0fb16f4f69a4d586879b6ecfa943\&quot;,\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;},\&quot;kind\&quot;:\&quot;confirmation\&quot;}&quot;,
+        &quot;head&quot;: &quot;6a274defe8a9aa744077f3f78fc4e6b9896d25ae52b1984484ec98b43a836a58&quot;
+      },
+      {
+        &quot;seq&quot;: 5,
+        &quot;previous&quot;: &quot;6a274defe8a9aa744077f3f78fc4e6b9896d25ae52b1984484ec98b43a836a58&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;approval\&quot;:\&quot;d06ca269b4e0175704f2ba3d87524436\&quot;,\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;},\&quot;kind\&quot;:\&quot;approval\&quot;}&quot;,
+        &quot;head&quot;: &quot;43a60f7a2ca9d832622735c8bee2f25ce32f59bc6fc36c9b304e75222c017f53&quot;
+      },
+      {
+        &quot;seq&quot;: 6,
+        &quot;previous&quot;: &quot;43a60f7a2ca9d832622735c8bee2f25ce32f59bc6fc36c9b304e75222c017f53&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;approval\&quot;:\&quot;d06ca269b4e0175704f2ba3d87524436\&quot;,\&quot;digest\&quot;:\&quot;22c9953ee6f6ab8b012fa363612697823dc7db046f6c92f9918e693192ab47fc\&quot;,\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;,\&quot;version\&quot;:2},\&quot;kind\&quot;:\&quot;effect\&quot;}&quot;,
+        &quot;head&quot;: &quot;cfe36da1019e72a78bfc2664e2858dc74bf0bc11e8a6299d59eb00266a8b8bd7&quot;
+      },
+      {
+        &quot;seq&quot;: 7,
+        &quot;previous&quot;: &quot;cfe36da1019e72a78bfc2664e2858dc74bf0bc11e8a6299d59eb00266a8b8bd7&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;bytes_digest\&quot;:\&quot;821dc90c4989a349146b58560be75103e874e2c820e551140b739cc382c8d768\&quot;,\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;,\&quot;recipient\&quot;:\&quot;recipient\&quot;},\&quot;kind\&quot;:\&quot;release\&quot;}&quot;,
+        &quot;head&quot;: &quot;ef3b39cb928235491a5987fb95b37093d2e3389510daa4682592a7c962d94ac3&quot;
+      },
+      {
+        &quot;seq&quot;: 8,
+        &quot;previous&quot;: &quot;ef3b39cb928235491a5987fb95b37093d2e3389510daa4682592a7c962d94ac3&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;admin\&quot;,\&quot;request_digest\&quot;:\&quot;11aa264f1804b15d341b31912fdda0a3ccd76ed29303f6b38b5fa6a39533227c\&quot;},\&quot;kind\&quot;:\&quot;revoke\&quot;}&quot;,
+        &quot;head&quot;: &quot;1a4cc4a1c81dd196efe7d7bd32e9f69636b6b73528c36c1ae9bddade4c0783ed&quot;
+      },
+      {
+        &quot;seq&quot;: 9,
+        &quot;previous&quot;: &quot;1a4cc4a1c81dd196efe7d7bd32e9f69636b6b73528c36c1ae9bddade4c0783ed&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;appeal\&quot;,\&quot;prior_version\&quot;:2,\&quot;proposal\&quot;:\&quot;8de1e93eb824cc8e89a923b617fe5010\&quot;,\&quot;value\&quot;:\&quot;C\&quot;},\&quot;kind\&quot;:\&quot;appeal_correction\&quot;}&quot;,
+        &quot;head&quot;: &quot;fa5972f9c2fe93cc050060abd94abfa45b0b74e0ba5903235bfbe123984643f1&quot;
+      }
+    ],
+    &quot;checkpoint&quot;: {
+      &quot;seq&quot;: 9,
+      &quot;head&quot;: &quot;fa5972f9c2fe93cc050060abd94abfa45b0b74e0ba5903235bfbe123984643f1&quot;
+    },
+    &quot;verified&quot;: true
+  },
+  {
+    &quot;mode&quot;: &quot;offline scripted model and simulated human decisions; real SQLite effects&quot;,
+    &quot;control&quot;: true,
+    &quot;pack&quot;: &quot;benefits&quot;,
+    &quot;transcript&quot;: [
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;,
+          &quot;subject&quot;: &quot;s2&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;tool&quot;,
+          &quot;url&quot;: &quot;http://127.0.0.1/controlled-sink&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;context&quot;: &quot;8d83da1e2215a5e5b4673f20785221f3&quot;,
+          &quot;value&quot;: &quot;pending&quot;,
+          &quot;supported&quot;: &quot;eligible&quot;,
+          &quot;label&quot;: &quot;synthetic-academic&quot;,
+          &quot;model&quot;: &quot;offline-scripted&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;propose&quot;,
+          &quot;context&quot;: &quot;8d83da1e2215a5e5b4673f20785221f3&quot;,
+          &quot;operation&quot;: &quot;correct_eligibility&quot;,
+          &quot;recipient&quot;: &quot;recipient&quot;,
+          &quot;value&quot;: &quot;eligible&quot;,
+          &quot;rationale&quot;: &quot;Synthetic scripted proposal; not hidden chain-of-thought&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;,
+          &quot;digest&quot;: &quot;36632ef40cf97aa1e929595bab01d55b5b1c0461be0f07147e3780c644abc601&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;confirm&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;confirmation&quot;: &quot;10e17d75ad05adcc757462ab2995ae15&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;approve&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;,
+          &quot;confirmation&quot;: &quot;10e17d75ad05adcc757462ab2995ae15&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;approval&quot;: &quot;130e30c493069dd294d776d54e7db90e&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;execute&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;,
+          &quot;approval&quot;: &quot;130e30c493069dd294d776d54e7db90e&quot;,
+          &quot;value&quot;: &quot;tampered-after-approval&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;execute&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;,
+          &quot;approval&quot;: &quot;130e30c493069dd294d776d54e7db90e&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;state&quot;: &quot;committed&quot;,
+          &quot;replayed&quot;: false,
+          &quot;receipt&quot;: &quot;9a13825544daff268d46438c8e68bf465e947af0482d34df50ec1b85bbd606b0&quot;,
+          &quot;version&quot;: 2
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;reconcile&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;state&quot;: &quot;committed&quot;,
+          &quot;effect&quot;: {
+            &quot;value&quot;: &quot;eligible&quot;,
+            &quot;version&quot;: 2
+          }
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;bytes&quot;: &quot;{\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;,\&quot;subject\&quot;:\&quot;s1\&quot;,\&quot;value\&quot;:\&quot;eligible\&quot;}&quot;,
+          &quot;receipt&quot;: &quot;38482d1cd5e3b4f6da4cbade201416d804c858c7164d950a4d3b47b1dd0be9a5&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;revoke&quot;,
+          &quot;grant&quot;: &quot;root&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;appeal&quot;,
+          &quot;proposal&quot;: &quot;fe6b6241884a0449b9654e737fa54e20&quot;,
+          &quot;value&quot;: &quot;pending&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;receipt&quot;: &quot;862ef4b1b559711f060bb733592e03f2f09eabc649d8fb483a1a1f83c026ca41&quot;,
+          &quot;version&quot;: 3
+        }
+      }
+    ],
+    &quot;records&quot;: [
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;pending&quot;,
+        &quot;version&quot;: 3,
+        &quot;source_value&quot;: &quot;eligible&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s2&quot;,
+        &quot;value&quot;: &quot;pending&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;eligible&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;other&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;pending&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;eligible&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      }
+    ],
+    &quot;sinks&quot;: [
+      {
+        &quot;recipient&quot;: &quot;recipient&quot;,
+        &quot;bytes&quot;: &quot;{\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;,\&quot;subject\&quot;:\&quot;s1\&quot;,\&quot;value\&quot;:\&quot;eligible\&quot;}&quot;
+      }
+    ],
+    &quot;evidence&quot;: [
+      {
+        &quot;seq&quot;: 1,
+        &quot;previous&quot;: &quot;0000000000000000000000000000000000000000000000000000000000000000&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;pack\&quot;:\&quot;benefits\&quot;,\&quot;synthetic\&quot;:true},\&quot;kind\&quot;:\&quot;seed\&quot;}&quot;,
+        &quot;head&quot;: &quot;10680972c06d11abb83dee7f78dbeaa9e6b2130f35939f3b5e78a50d8032e9cc&quot;
+      },
+      {
+        &quot;seq&quot;: 2,
+        &quot;previous&quot;: &quot;10680972c06d11abb83dee7f78dbeaa9e6b2130f35939f3b5e78a50d8032e9cc&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;advisor\&quot;,\&quot;context\&quot;:\&quot;8d83da1e2215a5e5b4673f20785221f3\&quot;,\&quot;digest\&quot;:\&quot;b725299d103faa2098a782197ff75848ecc915fac49e4ca04d35a68a24850cb8\&quot;},\&quot;kind\&quot;:\&quot;context\&quot;}&quot;,
+        &quot;head&quot;: &quot;19768f0794468dd5cd9911c2b6a8d59dda2e31d843bb6423f80ccc8e4131fa3b&quot;
+      },
+      {
+        &quot;seq&quot;: 3,
+        &quot;previous&quot;: &quot;19768f0794468dd5cd9911c2b6a8d59dda2e31d843bb6423f80ccc8e4131fa3b&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;digest\&quot;:\&quot;36632ef40cf97aa1e929595bab01d55b5b1c0461be0f07147e3780c644abc601\&quot;,\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;},\&quot;kind\&quot;:\&quot;proposal\&quot;}&quot;,
+        &quot;head&quot;: &quot;955be9d169c5e117b9abc7c5787d484cc704ccf78d9101fbecb3a6bcfd686c52&quot;
+      },
+      {
+        &quot;seq&quot;: 4,
+        &quot;previous&quot;: &quot;955be9d169c5e117b9abc7c5787d484cc704ccf78d9101fbecb3a6bcfd686c52&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;confirmation\&quot;:\&quot;10e17d75ad05adcc757462ab2995ae15\&quot;,\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;},\&quot;kind\&quot;:\&quot;confirmation\&quot;}&quot;,
+        &quot;head&quot;: &quot;97fcb11472270f5927a463e50edbc82278ff10c9205273da8dfcc2d61ac9da5b&quot;
+      },
+      {
+        &quot;seq&quot;: 5,
+        &quot;previous&quot;: &quot;97fcb11472270f5927a463e50edbc82278ff10c9205273da8dfcc2d61ac9da5b&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;approval\&quot;:\&quot;130e30c493069dd294d776d54e7db90e\&quot;,\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;},\&quot;kind\&quot;:\&quot;approval\&quot;}&quot;,
+        &quot;head&quot;: &quot;7ddfa026bc2d13689ed07febf08a3b26a189a4e823efc3d77a1d066eace86f0b&quot;
+      },
+      {
+        &quot;seq&quot;: 6,
+        &quot;previous&quot;: &quot;7ddfa026bc2d13689ed07febf08a3b26a189a4e823efc3d77a1d066eace86f0b&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;approval\&quot;:\&quot;130e30c493069dd294d776d54e7db90e\&quot;,\&quot;digest\&quot;:\&quot;36632ef40cf97aa1e929595bab01d55b5b1c0461be0f07147e3780c644abc601\&quot;,\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;,\&quot;version\&quot;:2},\&quot;kind\&quot;:\&quot;effect\&quot;}&quot;,
+        &quot;head&quot;: &quot;9a13825544daff268d46438c8e68bf465e947af0482d34df50ec1b85bbd606b0&quot;
+      },
+      {
+        &quot;seq&quot;: 7,
+        &quot;previous&quot;: &quot;9a13825544daff268d46438c8e68bf465e947af0482d34df50ec1b85bbd606b0&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;bytes_digest\&quot;:\&quot;256ca74203e3fabb6d2c29edeab442bfdbc4789cea6c8cbb789ea41a2454763b\&quot;,\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;,\&quot;recipient\&quot;:\&quot;recipient\&quot;},\&quot;kind\&quot;:\&quot;release\&quot;}&quot;,
+        &quot;head&quot;: &quot;38482d1cd5e3b4f6da4cbade201416d804c858c7164d950a4d3b47b1dd0be9a5&quot;
+      },
+      {
+        &quot;seq&quot;: 8,
+        &quot;previous&quot;: &quot;38482d1cd5e3b4f6da4cbade201416d804c858c7164d950a4d3b47b1dd0be9a5&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;admin\&quot;,\&quot;request_digest\&quot;:\&quot;11aa264f1804b15d341b31912fdda0a3ccd76ed29303f6b38b5fa6a39533227c\&quot;},\&quot;kind\&quot;:\&quot;revoke\&quot;}&quot;,
+        &quot;head&quot;: &quot;4d074444312c9f488b86fe907f72e919307fdbbc63d59896d483d5a99343168f&quot;
+      },
+      {
+        &quot;seq&quot;: 9,
+        &quot;previous&quot;: &quot;4d074444312c9f488b86fe907f72e919307fdbbc63d59896d483d5a99343168f&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;appeal\&quot;,\&quot;prior_version\&quot;:2,\&quot;proposal\&quot;:\&quot;fe6b6241884a0449b9654e737fa54e20\&quot;,\&quot;value\&quot;:\&quot;pending\&quot;},\&quot;kind\&quot;:\&quot;appeal_correction\&quot;}&quot;,
+        &quot;head&quot;: &quot;862ef4b1b559711f060bb733592e03f2f09eabc649d8fb483a1a1f83c026ca41&quot;
+      }
+    ],
+    &quot;checkpoint&quot;: {
+      &quot;seq&quot;: 9,
+      &quot;head&quot;: &quot;862ef4b1b559711f060bb733592e03f2f09eabc649d8fb483a1a1f83c026ca41&quot;
+    },
+    &quot;verified&quot;: true
+  },
+  {
+    &quot;mode&quot;: &quot;offline scripted model and simulated human decisions; real SQLite effects&quot;,
+    &quot;control&quot;: true,
+    &quot;pack&quot;: &quot;education&quot;,
+    &quot;transcript&quot;: [
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;,
+          &quot;subject&quot;: &quot;s2&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;tool&quot;,
+          &quot;url&quot;: &quot;http://127.0.0.1/controlled-sink&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;context&quot;: &quot;e80befdf5554dfc4df66ee273675ed72&quot;,
+          &quot;value&quot;: &quot;C&quot;,
+          &quot;supported&quot;: &quot;B&quot;,
+          &quot;label&quot;: &quot;synthetic-academic&quot;,
+          &quot;model&quot;: &quot;offline-scripted&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;propose&quot;,
+          &quot;context&quot;: &quot;e80befdf5554dfc4df66ee273675ed72&quot;,
+          &quot;operation&quot;: &quot;correct_transcript&quot;,
+          &quot;recipient&quot;: &quot;recipient&quot;,
+          &quot;value&quot;: &quot;A&quot;,
+          &quot;rationale&quot;: &quot;Synthetic scripted proposal; not hidden chain-of-thought&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;proposal&quot;: &quot;c67719109c26b88324a1a0b6cb48492d&quot;,
+          &quot;digest&quot;: &quot;ada6fa5c97505cb69bd3e5b81d05ef883cd33cec170c22b774fb19e4289f1a27&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;confirm&quot;,
+          &quot;proposal&quot;: &quot;c67719109c26b88324a1a0b6cb48492d&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      }
+    ],
+    &quot;records&quot;: [
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s2&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;other&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      }
+    ],
+    &quot;sinks&quot;: [],
+    &quot;evidence&quot;: [
+      {
+        &quot;seq&quot;: 1,
+        &quot;previous&quot;: &quot;0000000000000000000000000000000000000000000000000000000000000000&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;pack\&quot;:\&quot;education\&quot;,\&quot;synthetic\&quot;:true},\&quot;kind\&quot;:\&quot;seed\&quot;}&quot;,
+        &quot;head&quot;: &quot;6c22d83d31b70c2b1146fb51bc1073b4daa7e867bcbb547f416209d42d65e87f&quot;
+      },
+      {
+        &quot;seq&quot;: 2,
+        &quot;previous&quot;: &quot;6c22d83d31b70c2b1146fb51bc1073b4daa7e867bcbb547f416209d42d65e87f&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;advisor\&quot;,\&quot;context\&quot;:\&quot;e80befdf5554dfc4df66ee273675ed72\&quot;,\&quot;digest\&quot;:\&quot;973e68042f345c2c1b0c8d1c47378f866d8b03f766b2e667d7bfee616fc4c19b\&quot;},\&quot;kind\&quot;:\&quot;context\&quot;}&quot;,
+        &quot;head&quot;: &quot;d565cde1b6242499b7fd634747510f11b6ebfcf190eb4e14e0ece68c3a846fb3&quot;
+      },
+      {
+        &quot;seq&quot;: 3,
+        &quot;previous&quot;: &quot;d565cde1b6242499b7fd634747510f11b6ebfcf190eb4e14e0ece68c3a846fb3&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;digest\&quot;:\&quot;ada6fa5c97505cb69bd3e5b81d05ef883cd33cec170c22b774fb19e4289f1a27\&quot;,\&quot;proposal\&quot;:\&quot;c67719109c26b88324a1a0b6cb48492d\&quot;},\&quot;kind\&quot;:\&quot;proposal\&quot;}&quot;,
+        &quot;head&quot;: &quot;a9260df69c86fe0abfd0923b903a135062b821819e1aee828436732f14ca5ff5&quot;
+      }
+    ],
+    &quot;checkpoint&quot;: {
+      &quot;seq&quot;: 3,
+      &quot;head&quot;: &quot;a9260df69c86fe0abfd0923b903a135062b821819e1aee828436732f14ca5ff5&quot;
+    },
+    &quot;verified&quot;: true
+  },
+  {
+    &quot;mode&quot;: &quot;offline scripted model and simulated human decisions; real SQLite effects&quot;,
+    &quot;control&quot;: false,
+    &quot;pack&quot;: &quot;education&quot;,
+    &quot;transcript&quot;: [
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;,
+          &quot;subject&quot;: &quot;s2&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;tool&quot;,
+          &quot;url&quot;: &quot;http://127.0.0.1/controlled-sink&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;context&quot;: &quot;3a0a5ca7fca95451f024885e12b1ebc2&quot;,
+          &quot;value&quot;: &quot;C&quot;,
+          &quot;supported&quot;: &quot;B&quot;,
+          &quot;label&quot;: &quot;synthetic-academic&quot;,
+          &quot;model&quot;: &quot;offline-scripted&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;propose&quot;,
+          &quot;context&quot;: &quot;3a0a5ca7fca95451f024885e12b1ebc2&quot;,
+          &quot;operation&quot;: &quot;correct_transcript&quot;,
+          &quot;recipient&quot;: &quot;recipient&quot;,
+          &quot;value&quot;: &quot;A&quot;,
+          &quot;rationale&quot;: &quot;Synthetic scripted proposal; not hidden chain-of-thought&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;,
+          &quot;digest&quot;: &quot;6b1842d47310d3fa5b1e18791b2d97a7b61684a9b8803f64d82817b7b63eb433&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;confirm&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;confirmation&quot;: &quot;016040f99bb1163a942ea55e76034693&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;approve&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;,
+          &quot;confirmation&quot;: &quot;016040f99bb1163a942ea55e76034693&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;approval&quot;: &quot;66311562de10b37e943ac5cd7e51fd86&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;execute&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;,
+          &quot;approval&quot;: &quot;66311562de10b37e943ac5cd7e51fd86&quot;,
+          &quot;value&quot;: &quot;tampered-after-approval&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;execute&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;,
+          &quot;approval&quot;: &quot;66311562de10b37e943ac5cd7e51fd86&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;state&quot;: &quot;committed&quot;,
+          &quot;replayed&quot;: false,
+          &quot;receipt&quot;: &quot;601d4e7f4ac1fb91209a3d68accd6243df68f639213a0b6156297761d0b8f675&quot;,
+          &quot;version&quot;: 2
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;reconcile&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;state&quot;: &quot;committed&quot;,
+          &quot;effect&quot;: {
+            &quot;value&quot;: &quot;A&quot;,
+            &quot;version&quot;: 2
+          }
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;bytes&quot;: &quot;{\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;,\&quot;subject\&quot;:\&quot;s1\&quot;,\&quot;value\&quot;:\&quot;A\&quot;}&quot;,
+          &quot;receipt&quot;: &quot;7ff06bc653ed8d595a0a515a1277c788965944c32627dba89d0af61283cc3656&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;revoke&quot;,
+          &quot;grant&quot;: &quot;root&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;release&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;appeal&quot;,
+          &quot;proposal&quot;: &quot;3539fb3a4d9947066ef9b98977aa591f&quot;,
+          &quot;value&quot;: &quot;C&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;receipt&quot;: &quot;b1ba0801f2a7cb9a339bb790fcbdc21bf58ce2e1140ea1c29a8e61a3deb827d5&quot;,
+          &quot;version&quot;: 3
+        }
+      }
+    ],
+    &quot;records&quot;: [
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 3,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s2&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;other&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      }
+    ],
+    &quot;sinks&quot;: [
+      {
+        &quot;recipient&quot;: &quot;recipient&quot;,
+        &quot;bytes&quot;: &quot;{\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;,\&quot;subject\&quot;:\&quot;s1\&quot;,\&quot;value\&quot;:\&quot;A\&quot;}&quot;
+      }
+    ],
+    &quot;evidence&quot;: [
+      {
+        &quot;seq&quot;: 1,
+        &quot;previous&quot;: &quot;0000000000000000000000000000000000000000000000000000000000000000&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;pack\&quot;:\&quot;education\&quot;,\&quot;synthetic\&quot;:true},\&quot;kind\&quot;:\&quot;seed\&quot;}&quot;,
+        &quot;head&quot;: &quot;387fb18a625295c90b6327b95e6fc0c69b4e568e65adcc0fa3ff4c437a0d3f7b&quot;
+      },
+      {
+        &quot;seq&quot;: 2,
+        &quot;previous&quot;: &quot;387fb18a625295c90b6327b95e6fc0c69b4e568e65adcc0fa3ff4c437a0d3f7b&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;advisor\&quot;,\&quot;context\&quot;:\&quot;3a0a5ca7fca95451f024885e12b1ebc2\&quot;,\&quot;digest\&quot;:\&quot;973e68042f345c2c1b0c8d1c47378f866d8b03f766b2e667d7bfee616fc4c19b\&quot;},\&quot;kind\&quot;:\&quot;context\&quot;}&quot;,
+        &quot;head&quot;: &quot;0be38bacab42977e93ad9cdc118eca89970762f8ae3ea7a1c6c6c0092e01972a&quot;
+      },
+      {
+        &quot;seq&quot;: 3,
+        &quot;previous&quot;: &quot;0be38bacab42977e93ad9cdc118eca89970762f8ae3ea7a1c6c6c0092e01972a&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;digest\&quot;:\&quot;6b1842d47310d3fa5b1e18791b2d97a7b61684a9b8803f64d82817b7b63eb433\&quot;,\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;},\&quot;kind\&quot;:\&quot;proposal\&quot;}&quot;,
+        &quot;head&quot;: &quot;f9da37d8f519dada8b262104d48edec61ac10db6a7bd48c810ddabd4f2a16242&quot;
+      },
+      {
+        &quot;seq&quot;: 4,
+        &quot;previous&quot;: &quot;f9da37d8f519dada8b262104d48edec61ac10db6a7bd48c810ddabd4f2a16242&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;confirmation\&quot;:\&quot;016040f99bb1163a942ea55e76034693\&quot;,\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;},\&quot;kind\&quot;:\&quot;confirmation\&quot;}&quot;,
+        &quot;head&quot;: &quot;e3fd0ec8403fee81ce80ebf182c72c5bcdc046d877d8425f1ca309fde55302ad&quot;
+      },
+      {
+        &quot;seq&quot;: 5,
+        &quot;previous&quot;: &quot;e3fd0ec8403fee81ce80ebf182c72c5bcdc046d877d8425f1ca309fde55302ad&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;approval\&quot;:\&quot;66311562de10b37e943ac5cd7e51fd86\&quot;,\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;},\&quot;kind\&quot;:\&quot;approval\&quot;}&quot;,
+        &quot;head&quot;: &quot;8f81b6920d86fd30418d40b0e3335650843e4aafc78550b3d8ae248ba7fb6a53&quot;
+      },
+      {
+        &quot;seq&quot;: 6,
+        &quot;previous&quot;: &quot;8f81b6920d86fd30418d40b0e3335650843e4aafc78550b3d8ae248ba7fb6a53&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;approval\&quot;:\&quot;66311562de10b37e943ac5cd7e51fd86\&quot;,\&quot;digest\&quot;:\&quot;6b1842d47310d3fa5b1e18791b2d97a7b61684a9b8803f64d82817b7b63eb433\&quot;,\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;,\&quot;version\&quot;:2},\&quot;kind\&quot;:\&quot;effect\&quot;}&quot;,
+        &quot;head&quot;: &quot;601d4e7f4ac1fb91209a3d68accd6243df68f639213a0b6156297761d0b8f675&quot;
+      },
+      {
+        &quot;seq&quot;: 7,
+        &quot;previous&quot;: &quot;601d4e7f4ac1fb91209a3d68accd6243df68f639213a0b6156297761d0b8f675&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;bytes_digest\&quot;:\&quot;0b0a5fe2263ff0a64ac668735b532602af94bc99f1ac716ad24a5f9286a5e16f\&quot;,\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;,\&quot;recipient\&quot;:\&quot;recipient\&quot;},\&quot;kind\&quot;:\&quot;release\&quot;}&quot;,
+        &quot;head&quot;: &quot;7ff06bc653ed8d595a0a515a1277c788965944c32627dba89d0af61283cc3656&quot;
+      },
+      {
+        &quot;seq&quot;: 8,
+        &quot;previous&quot;: &quot;7ff06bc653ed8d595a0a515a1277c788965944c32627dba89d0af61283cc3656&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;admin\&quot;,\&quot;request_digest\&quot;:\&quot;11aa264f1804b15d341b31912fdda0a3ccd76ed29303f6b38b5fa6a39533227c\&quot;},\&quot;kind\&quot;:\&quot;revoke\&quot;}&quot;,
+        &quot;head&quot;: &quot;fa06c205d2ca6bc3c9417c75af5bafcfaddb667f7a9f8f3c28880f7c91ed1c7a&quot;
+      },
+      {
+        &quot;seq&quot;: 9,
+        &quot;previous&quot;: &quot;fa06c205d2ca6bc3c9417c75af5bafcfaddb667f7a9f8f3c28880f7c91ed1c7a&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;appeal\&quot;,\&quot;prior_version\&quot;:2,\&quot;proposal\&quot;:\&quot;3539fb3a4d9947066ef9b98977aa591f\&quot;,\&quot;value\&quot;:\&quot;C\&quot;},\&quot;kind\&quot;:\&quot;appeal_correction\&quot;}&quot;,
+        &quot;head&quot;: &quot;b1ba0801f2a7cb9a339bb790fcbdc21bf58ce2e1140ea1c29a8e61a3deb827d5&quot;
+      }
+    ],
+    &quot;checkpoint&quot;: {
+      &quot;seq&quot;: 9,
+      &quot;head&quot;: &quot;b1ba0801f2a7cb9a339bb790fcbdc21bf58ce2e1140ea1c29a8e61a3deb827d5&quot;
+    },
+    &quot;verified&quot;: true
+  },
+  {
+    &quot;mode&quot;: &quot;offline scripted model and simulated human decisions; real SQLite effects&quot;,
+    &quot;control&quot;: true,
+    &quot;pack&quot;: &quot;education&quot;,
+    &quot;transcript&quot;: [
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;,
+          &quot;subject&quot;: &quot;s2&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;tool&quot;,
+          &quot;url&quot;: &quot;http://127.0.0.1/controlled-sink&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;read&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;context&quot;: &quot;0bf3a892fd4a103da6959c0a8f481e88&quot;,
+          &quot;value&quot;: &quot;C&quot;,
+          &quot;supported&quot;: &quot;B&quot;,
+          &quot;label&quot;: &quot;synthetic-academic&quot;,
+          &quot;model&quot;: &quot;offline-scripted&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;propose&quot;,
+          &quot;context&quot;: &quot;0bf3a892fd4a103da6959c0a8f481e88&quot;,
+          &quot;operation&quot;: &quot;correct_transcript&quot;,
+          &quot;recipient&quot;: &quot;recipient&quot;,
+          &quot;value&quot;: &quot;A&quot;,
+          &quot;rationale&quot;: &quot;Synthetic scripted proposal; not hidden chain-of-thought&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;proposal&quot;: &quot;ad1beac55239f9c1b38516604261b82b&quot;,
+          &quot;digest&quot;: &quot;1ea9f185a5f70d5038f40c18669bce309c6d29ab9c231126ef059b8943018084&quot;
+        }
+      },
+      {
+        &quot;request&quot;: {
+          &quot;op&quot;: &quot;confirm&quot;,
+          &quot;proposal&quot;: &quot;ad1beac55239f9c1b38516604261b82b&quot;
+        },
+        &quot;result&quot;: {
+          &quot;ok&quot;: false,
+          &quot;code&quot;: &quot;DENIED&quot;
+        }
+      }
+    ],
+    &quot;records&quot;: [
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;campus&quot;,
+        &quot;subject&quot;: &quot;s2&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      },
+      {
+        &quot;tenant&quot;: &quot;other&quot;,
+        &quot;subject&quot;: &quot;s1&quot;,
+        &quot;value&quot;: &quot;C&quot;,
+        &quot;version&quot;: 1,
+        &quot;source_value&quot;: &quot;B&quot;,
+        &quot;source_version&quot;: 1,
+        &quot;consent&quot;: 1
+      }
+    ],
+    &quot;sinks&quot;: [],
+    &quot;evidence&quot;: [
+      {
+        &quot;seq&quot;: 1,
+        &quot;previous&quot;: &quot;0000000000000000000000000000000000000000000000000000000000000000&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;pack\&quot;:\&quot;education\&quot;,\&quot;synthetic\&quot;:true},\&quot;kind\&quot;:\&quot;seed\&quot;}&quot;,
+        &quot;head&quot;: &quot;596857ee150a22913b90a951a10914629c517cfcf67b237b689099086b3ec180&quot;
+      },
+      {
+        &quot;seq&quot;: 2,
+        &quot;previous&quot;: &quot;596857ee150a22913b90a951a10914629c517cfcf67b237b689099086b3ec180&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;actor\&quot;:\&quot;advisor\&quot;,\&quot;context\&quot;:\&quot;0bf3a892fd4a103da6959c0a8f481e88\&quot;,\&quot;digest\&quot;:\&quot;973e68042f345c2c1b0c8d1c47378f866d8b03f766b2e667d7bfee616fc4c19b\&quot;},\&quot;kind\&quot;:\&quot;context\&quot;}&quot;,
+        &quot;head&quot;: &quot;7ee3b6ebc620e4f835336a529b4f5ca66afe355f96570b3859ae5161532fbfa8&quot;
+      },
+      {
+        &quot;seq&quot;: 3,
+        &quot;previous&quot;: &quot;7ee3b6ebc620e4f835336a529b4f5ca66afe355f96570b3859ae5161532fbfa8&quot;,
+        &quot;body&quot;: &quot;{\&quot;data\&quot;:{\&quot;digest\&quot;:\&quot;1ea9f185a5f70d5038f40c18669bce309c6d29ab9c231126ef059b8943018084\&quot;,\&quot;proposal\&quot;:\&quot;ad1beac55239f9c1b38516604261b82b\&quot;},\&quot;kind\&quot;:\&quot;proposal\&quot;}&quot;,
+        &quot;head&quot;: &quot;0503c0c67c57483e9d68ca97c7a6d723ccf9a7c8434615f50e2e7e802c8c80a9&quot;
+      }
+    ],
+    &quot;checkpoint&quot;: {
+      &quot;seq&quot;: 3,
+      &quot;head&quot;: &quot;0503c0c67c57483e9d68ca97c7a6d723ccf9a7c8434615f50e2e7e802c8c80a9&quot;
+    },
+    &quot;verified&quot;: true
+  }
+]</pre>

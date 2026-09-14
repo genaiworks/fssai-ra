@@ -1,0 +1,7 @@
+{
+  "executed": true,
+  "subprocess_identity": "same OS user as mediator",
+  "direct_read": "C",
+  "returncode": 0,
+  "verdict": "NO HOSTILE-CODE ISOLATION; trusted substrate assumption required"
+}

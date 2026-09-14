@@ -1,0 +1,78 @@
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/race.py:13:from concurrent.futures import ThreadPoolExecutor
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/race.py:83:        with ThreadPoolExecutor(max_workers=callers) as pool:
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:117:    import httpx
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:121:    return HttpConsentService(url, httpx.Client())
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:129:    import httpx
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:134:    return FhirRecordSource(url, httpx.Client(), fields=fields)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:249:    @app.get("/v1/disclosure", tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:264:    @app.post("/v1/disclosure/records", status_code=201, tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:272:    @app.post("/v1/disclosure/grants", status_code=201, tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:295:    @app.post("/v1/disclosure/grants/token", status_code=201, tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:315:    @app.post("/v1/disclosure/grants/{grant_id}/revoke", tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:324:    @app.post("/v1/disclosure/consent/withdrawals", status_code=201, tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:331:    @app.post("/v1/disclosure/context", tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:338:    @app.post("/v1/disclosure/outputs", status_code=201, tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:346:    @app.post("/v1/disclosure/outputs/{output_id}/declassify", status_code=201,
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:361:    @app.post("/v1/disclosure/outputs/{output_id}/release", tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_api.py:385:    @app.post("/v1/disclosure/break-glass/{grant_id}/review", tags=["disclosure"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/import_api.py:121:    @app.get("/health")
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/import_api.py:129:    @app.post("/v1/imports", status_code=202)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:9:This module is the runnable version. The sender holds a UDP socket it has
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:10:shut down for reading; the receiver holds a UDP socket it never writes to. There
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:42:import socket
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:110:    """Send-only. There is no method here that reads, and the socket cannot.
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:112:    ``socket.shutdown(SHUT_RD)`` is attempted at construction so the operating
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:114:    some platforms reject it on an unconnected UDP socket -- and the absence of
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:139:        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:140:        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1 << 20)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:142:        # socket. The absence of any read method is the property that matters.
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:144:            self._socket.shutdown(socket.SHUT_RD)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:164:                self._socket.sendto(encoded, self.target)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:180:        self._socket.close()
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:248:        self._thread: threading.Thread | None = None
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:249:        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:250:        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:251:        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1 << 20)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:252:        self._socket.bind((host, int(port)))
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:253:        self._socket.settimeout(0.25)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:256:            self._socket.shutdown(socket.SHUT_WR)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:260:        return self._socket.getsockname()[1]
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:264:        self._thread = threading.Thread(target=self._loop, name="diode-receiver", daemon=True)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:272:        self._socket.close()
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:284:                datagram, _sender = self._socket.recvfrom(65535)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode_transport.py:293:        """Process one datagram. Exposed so tests need no live socket."""
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:310:    @app.get("/health", tags=["introspection"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:334:    @app.get("/readiness", tags=["introspection"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:339:    @app.get("/metrics", response_class=PlainTextResponse, tags=["introspection"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:359:    @app.get("/v1/profile", tags=["governance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:377:    @app.get("/v1/contract", tags=["governance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:397:    @app.get("/v1/capabilities", tags=["governance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:408:    @app.get("/v1/interfaces", tags=["governance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:416:    @app.post("/v1/resources", status_code=201, tags=["resources"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:421:    @app.get("/v1/resources/{resource_id}", tags=["resources"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:443:    @app.post("/v1/proposals", status_code=201, tags=["actions"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:450:    @app.get("/v1/proposals/{request_id}", tags=["actions"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:461:    @app.post("/v1/proposals/{request_id}/review", status_code=201, tags=["actions"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:468:    @app.post("/v1/proposals/{request_id}/endorsement", status_code=201, tags=["actions"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:477:    @app.post("/v1/proposals/{request_id}/approval", status_code=201, tags=["actions"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:501:    @app.post("/v1/proposals/{request_id}/execute", tags=["actions"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:505:    @app.get("/v1/proposals/{request_id}/evidence", tags=["evidence"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:509:    @app.get("/v1/proposals/{request_id}/packet", tags=["evidence"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:521:    @app.get("/v1/evidence", tags=["evidence"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:530:    @app.get("/v1/evidence/verify", tags=["evidence"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:542:    @app.get("/v1/verification", tags=["assurance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:550:    @app.get("/v1/conformance", tags=["assurance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:568:    @app.get("/v1/coverage", tags=["assurance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:589:    @app.get("/v1/delegation", tags=["assurance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:609:    @app.get("/v1/assisted-review", tags=["assurance"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:623:    @app.post("/v1/propose-task", tags=["intelligence"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:706:    @app.post("/v1/recovery/reconcile", tags=["recovery"])
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/api.py:716:    @app.post("/v1/reconcile", include_in_schema=False)
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/import_boundary.py:43:    "base64,", "eval(", "__import__", "subprocess",
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_concurrency.py:100:    workers = [threading.Thread(target=releaser) for _ in range(threads)]
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_concurrency.py:101:    workers.append(threading.Thread(target=revoker))
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/disclosure_concurrency.py:127:        racers = [threading.Thread(target=emergency, args=(i,)) for i in range(break_glass_threads)]
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/diode.py:13:whose sender and receiver are separate processes on separate sockets. The
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/kafka_backend.py:55:            "max.in.flight.requests.per.connection": 5,
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/falsification.py:20:from concurrent.futures import ThreadPoolExecutor
+/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/src/fssaira/falsification.py:183:    with ThreadPoolExecutor(max_workers=32) as pool:

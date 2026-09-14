@@ -1,0 +1,7825 @@
+[
+  {
+    "file": "src/fssaira/__init__.py",
+    "interfaces": [],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/accountable_action.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 98,
+        "decorators": []
+      },
+      {
+        "name": "check",
+        "line": 123,
+        "decorators": []
+      },
+      {
+        "name": "effective_class",
+        "line": 154,
+        "decorators": []
+      },
+      {
+        "name": "reset_budgets",
+        "line": 173,
+        "decorators": []
+      },
+      {
+        "name": "_evaluate",
+        "line": 177,
+        "decorators": []
+      },
+      {
+        "name": "_outward_arguments",
+        "line": 232,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "deny",
+        "line": 180,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/api.py",
+    "interfaces": [
+      {
+        "name": "current_principal",
+        "line": 96,
+        "decorators": []
+      },
+      {
+        "name": "require",
+        "line": 122,
+        "decorators": []
+      },
+      {
+        "name": "require_one",
+        "line": 127,
+        "decorators": []
+      },
+      {
+        "name": "_oversight_samples",
+        "line": 140,
+        "decorators": []
+      },
+      {
+        "name": "_declared_controls",
+        "line": 174,
+        "decorators": []
+      },
+      {
+        "name": "create_app",
+        "line": 216,
+        "decorators": []
+      },
+      {
+        "name": "create_default_app",
+        "line": 724,
+        "decorators": []
+      },
+      {
+        "name": "lifespan",
+        "line": 236,
+        "decorators": [
+          "asynccontextmanager"
+        ]
+      },
+      {
+        "name": "protect_operational_responses",
+        "line": 272,
+        "decorators": [
+          "app.middleware('http')"
+        ]
+      },
+      {
+        "name": "privacy_denied_handler",
+        "line": 286,
+        "decorators": [
+          "app.exception_handler(CustodyDenied)",
+          "app.exception_handler(VaultDenied)"
+        ]
+      },
+      {
+        "name": "denied_handler",
+        "line": 292,
+        "decorators": [
+          "app.exception_handler(ExecutionDenied)"
+        ]
+      },
+      {
+        "name": "disclosure_denied_handler",
+        "line": 296,
+        "decorators": [
+          "app.exception_handler(DisclosureDenied)"
+        ]
+      },
+      {
+        "name": "uncertain_handler",
+        "line": 301,
+        "decorators": [
+          "app.exception_handler(ExecutionUncertain)"
+        ]
+      },
+      {
+        "name": "health",
+        "line": 311,
+        "decorators": [
+          "app.get('/health', tags=['introspection'])"
+        ]
+      },
+      {
+        "name": "get_readiness",
+        "line": 335,
+        "decorators": [
+          "app.get('/readiness', tags=['introspection'])"
+        ]
+      },
+      {
+        "name": "metrics",
+        "line": 340,
+        "decorators": [
+          "app.get('/metrics', response_class=PlainTextResponse, tags=['introspection'])"
+        ]
+      },
+      {
+        "name": "get_profile",
+        "line": 360,
+        "decorators": [
+          "app.get('/v1/profile', tags=['governance'])"
+        ]
+      },
+      {
+        "name": "get_contract",
+        "line": 378,
+        "decorators": [
+          "app.get('/v1/contract', tags=['governance'])"
+        ]
+      },
+      {
+        "name": "get_capabilities",
+        "line": 398,
+        "decorators": [
+          "app.get('/v1/capabilities', tags=['governance'])"
+        ]
+      },
+      {
+        "name": "get_interfaces",
+        "line": 409,
+        "decorators": [
+          "app.get('/v1/interfaces', tags=['governance'])"
+        ]
+      },
+      {
+        "name": "register_resource",
+        "line": 417,
+        "decorators": [
+          "app.post('/v1/resources', status_code=201, tags=['resources'])"
+        ]
+      },
+      {
+        "name": "get_resource",
+        "line": 422,
+        "decorators": [
+          "app.get('/v1/resources/{resource_id}', tags=['resources'])"
+        ]
+      },
+      {
+        "name": "approval_role",
+        "line": 429,
+        "decorators": []
+      },
+      {
+        "name": "create_proposal",
+        "line": 444,
+        "decorators": [
+          "app.post('/v1/proposals', status_code=201, tags=['actions'])"
+        ]
+      },
+      {
+        "name": "get_proposal",
+        "line": 451,
+        "decorators": [
+          "app.get('/v1/proposals/{request_id}', tags=['actions'])"
+        ]
+      },
+      {
+        "name": "begin_review",
+        "line": 462,
+        "decorators": [
+          "app.post('/v1/proposals/{request_id}/review', status_code=201, tags=['actions'])"
+        ]
+      },
+      {
+        "name": "endorse_review",
+        "line": 469,
+        "decorators": [
+          "app.post('/v1/proposals/{request_id}/endorsement', status_code=201, tags=['actions'])"
+        ]
+      },
+      {
+        "name": "approve_proposal",
+        "line": 478,
+        "decorators": [
+          "app.post('/v1/proposals/{request_id}/approval', status_code=201, tags=['actions'])"
+        ]
+      },
+      {
+        "name": "execute_proposal",
+        "line": 502,
+        "decorators": [
+          "app.post('/v1/proposals/{request_id}/execute', tags=['actions'])"
+        ]
+      },
+      {
+        "name": "get_proposal_evidence",
+        "line": 506,
+        "decorators": [
+          "app.get('/v1/proposals/{request_id}/evidence', tags=['evidence'])"
+        ]
+      },
+      {
+        "name": "export_packet",
+        "line": 510,
+        "decorators": [
+          "app.get('/v1/proposals/{request_id}/packet', tags=['evidence'])"
+        ]
+      },
+      {
+        "name": "list_evidence",
+        "line": 522,
+        "decorators": [
+          "app.get('/v1/evidence', tags=['evidence'])"
+        ]
+      },
+      {
+        "name": "verify_evidence",
+        "line": 531,
+        "decorators": [
+          "app.get('/v1/evidence/verify', tags=['evidence'])"
+        ]
+      },
+      {
+        "name": "run_verification",
+        "line": 543,
+        "decorators": [
+          "app.get('/v1/verification', tags=['assurance'])"
+        ]
+      },
+      {
+        "name": "run_conformance_check",
+        "line": 551,
+        "decorators": [
+          "app.get('/v1/conformance', tags=['assurance'])"
+        ]
+      },
+      {
+        "name": "run_contract_coverage",
+        "line": 569,
+        "decorators": [
+          "app.get('/v1/coverage', tags=['assurance'])"
+        ]
+      },
+      {
+        "name": "run_delegation_check",
+        "line": 590,
+        "decorators": [
+          "app.get('/v1/delegation', tags=['assurance'])"
+        ]
+      },
+      {
+        "name": "run_assisted_review_check",
+        "line": 610,
+        "decorators": [
+          "app.get('/v1/assisted-review', tags=['assurance'])"
+        ]
+      },
+      {
+        "name": "propose_task",
+        "line": 624,
+        "decorators": [
+          "app.post('/v1/propose-task', tags=['intelligence'])"
+        ]
+      },
+      {
+        "name": "reconcile",
+        "line": 707,
+        "decorators": [
+          "app.post('/v1/recovery/reconcile', tags=['recovery'])"
+        ]
+      },
+      {
+        "name": "reconcile_legacy",
+        "line": 717,
+        "decorators": [
+          "app.post('/v1/reconcile', include_in_schema=False)"
+        ]
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/assisted_review.py",
+    "interfaces": [
+      {
+        "name": "run_assisted_review_trial",
+        "line": 384,
+        "decorators": []
+      },
+      {
+        "name": "independence_score",
+        "line": 138,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "is_independent",
+        "line": 145,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "floor_multiplier",
+        "line": 149,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "from_env",
+        "line": 168,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 213,
+        "decorators": []
+      },
+      {
+        "name": "__post_init__",
+        "line": 243,
+        "decorators": []
+      },
+      {
+        "name": "permitted_floor",
+        "line": 255,
+        "decorators": []
+      },
+      {
+        "name": "check",
+        "line": 259,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 289,
+        "decorators": []
+      },
+      {
+        "name": "effective_attention",
+        "line": 340,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "review",
+        "line": 349,
+        "decorators": []
+      },
+      {
+        "name": "reset",
+        "line": 375,
+        "decorators": []
+      },
+      {
+        "name": "flag",
+        "line": 191,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/atomic_execution.py",
+    "interfaces": [
+      {
+        "name": "sql_object_store",
+        "line": 259,
+        "decorators": []
+      },
+      {
+        "name": "sql_evidence",
+        "line": 264,
+        "decorators": []
+      },
+      {
+        "name": "sql_register",
+        "line": 268,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 50,
+        "decorators": []
+      },
+      {
+        "name": "execute",
+        "line": 75,
+        "decorators": []
+      },
+      {
+        "name": "reconcile_pending",
+        "line": 133,
+        "decorators": []
+      },
+      {
+        "name": "pending_outcome_count",
+        "line": 143,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "__init__",
+        "line": 156,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 159,
+        "decorators": []
+      },
+      {
+        "name": "seed",
+        "line": 163,
+        "decorators": []
+      },
+      {
+        "name": "result_for",
+        "line": 167,
+        "decorators": []
+      },
+      {
+        "name": "transition",
+        "line": 171,
+        "decorators": []
+      },
+      {
+        "name": "mutation_count",
+        "line": 176,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "__init__",
+        "line": 182,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 185,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 189,
+        "decorators": []
+      },
+      {
+        "name": "find",
+        "line": 193,
+        "decorators": []
+      },
+      {
+        "name": "records",
+        "line": 197,
+        "decorators": []
+      },
+      {
+        "name": "__iter__",
+        "line": 201,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 204,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 209,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 212,
+        "decorators": []
+      },
+      {
+        "name": "put_if_absent",
+        "line": 216,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 220,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 226,
+        "decorators": []
+      },
+      {
+        "name": "bind",
+        "line": 229,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 235,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 238,
+        "decorators": []
+      },
+      {
+        "name": "remove",
+        "line": 242,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 246,
+        "decorators": []
+      },
+      {
+        "name": "values",
+        "line": 250,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 254,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/authority_stateful.py",
+    "interfaces": [
+      {
+        "name": "_run_sequence",
+        "line": 84,
+        "decorators": []
+      },
+      {
+        "name": "_attempt",
+        "line": 238,
+        "decorators": []
+      },
+      {
+        "name": "run_stateful",
+        "line": 245,
+        "decorators": []
+      },
+      {
+        "name": "holds",
+        "line": 71,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 74,
+        "decorators": []
+      },
+      {
+        "name": "violate",
+        "line": 95,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/bounded_intelligence.py",
+    "interfaces": [
+      {
+        "name": "_deterministic_model",
+        "line": 160,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 39,
+        "decorators": []
+      },
+      {
+        "name": "register",
+        "line": 43,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 47,
+        "decorators": []
+      },
+      {
+        "name": "names",
+        "line": 50,
+        "decorators": []
+      },
+      {
+        "name": "call",
+        "line": 53,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 58,
+        "decorators": []
+      },
+      {
+        "name": "grant_summary",
+        "line": 70,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "model_name",
+        "line": 91,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "run",
+        "line": 94,
+        "decorators": []
+      },
+      {
+        "name": "execute",
+        "line": 99,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 127,
+        "decorators": []
+      },
+      {
+        "name": "choose",
+        "line": 134,
+        "decorators": []
+      },
+      {
+        "name": "model_for",
+        "line": 141,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 152,
+        "decorators": []
+      },
+      {
+        "name": "name",
+        "line": 156,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "__new__",
+        "line": 169,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/challenge.py",
+    "interfaces": [
+      {
+        "name": "load_corpus",
+        "line": 197,
+        "decorators": []
+      },
+      {
+        "name": "_harms_from",
+        "line": 213,
+        "decorators": []
+      },
+      {
+        "name": "score_challenge",
+        "line": 239,
+        "decorators": []
+      },
+      {
+        "name": "run_corpus",
+        "line": 308,
+        "decorators": []
+      },
+      {
+        "name": "to_call",
+        "line": 75,
+        "decorators": []
+      },
+      {
+        "name": "load",
+        "line": 103,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "from_dict",
+        "line": 112,
+        "decorators": [
+          "classmethod"
+        ]
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/cli.py",
+    "interfaces": [
+      {
+        "name": "_c",
+        "line": 35,
+        "decorators": []
+      },
+      {
+        "name": "bold",
+        "line": 39,
+        "decorators": []
+      },
+      {
+        "name": "green",
+        "line": 43,
+        "decorators": []
+      },
+      {
+        "name": "red",
+        "line": 47,
+        "decorators": []
+      },
+      {
+        "name": "yellow",
+        "line": 51,
+        "decorators": []
+      },
+      {
+        "name": "dim",
+        "line": 55,
+        "decorators": []
+      },
+      {
+        "name": "heading",
+        "line": 59,
+        "decorators": []
+      },
+      {
+        "name": "verdict",
+        "line": 63,
+        "decorators": []
+      },
+      {
+        "name": "emit",
+        "line": 67,
+        "decorators": []
+      },
+      {
+        "name": "cmd_version",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "cmd_validate_profile",
+        "line": 91,
+        "decorators": []
+      },
+      {
+        "name": "cmd_validate_contract",
+        "line": 105,
+        "decorators": []
+      },
+      {
+        "name": "cmd_contract_show",
+        "line": 117,
+        "decorators": []
+      },
+      {
+        "name": "cmd_evaluate",
+        "line": 139,
+        "decorators": []
+      },
+      {
+        "name": "cmd_verify",
+        "line": 181,
+        "decorators": []
+      },
+      {
+        "name": "cmd_conformance",
+        "line": 211,
+        "decorators": []
+      },
+      {
+        "name": "cmd_race_test",
+        "line": 235,
+        "decorators": []
+      },
+      {
+        "name": "cmd_resilience",
+        "line": 255,
+        "decorators": []
+      },
+      {
+        "name": "cmd_oversight",
+        "line": 270,
+        "decorators": []
+      },
+      {
+        "name": "cmd_challenge",
+        "line": 359,
+        "decorators": []
+      },
+      {
+        "name": "cmd_delegation",
+        "line": 404,
+        "decorators": []
+      },
+      {
+        "name": "cmd_assisted_review",
+        "line": 456,
+        "decorators": []
+      },
+      {
+        "name": "cmd_coverage",
+        "line": 507,
+        "decorators": []
+      },
+      {
+        "name": "cmd_doctor",
+        "line": 549,
+        "decorators": []
+      },
+      {
+        "name": "cmd_plugins",
+        "line": 606,
+        "decorators": []
+      },
+      {
+        "name": "cmd_model_list",
+        "line": 623,
+        "decorators": []
+      },
+      {
+        "name": "cmd_model_health",
+        "line": 635,
+        "decorators": []
+      },
+      {
+        "name": "cmd_model_propose",
+        "line": 644,
+        "decorators": []
+      },
+      {
+        "name": "cmd_packet_check",
+        "line": 671,
+        "decorators": []
+      },
+      {
+        "name": "cmd_evidence_verify",
+        "line": 680,
+        "decorators": []
+      },
+      {
+        "name": "cmd_diode_inventory",
+        "line": 708,
+        "decorators": []
+      },
+      {
+        "name": "cmd_diode_receive",
+        "line": 724,
+        "decorators": []
+      },
+      {
+        "name": "cmd_diode_send",
+        "line": 753,
+        "decorators": []
+      },
+      {
+        "name": "cmd_db_ddl",
+        "line": 764,
+        "decorators": []
+      },
+      {
+        "name": "cmd_db_init",
+        "line": 774,
+        "decorators": []
+      },
+      {
+        "name": "cmd_serve",
+        "line": 782,
+        "decorators": []
+      },
+      {
+        "name": "cmd_init",
+        "line": 793,
+        "decorators": []
+      },
+      {
+        "name": "cmd_profiles",
+        "line": 815,
+        "decorators": []
+      },
+      {
+        "name": "cmd_disclosure",
+        "line": 867,
+        "decorators": []
+      },
+      {
+        "name": "cmd_threats",
+        "line": 924,
+        "decorators": []
+      },
+      {
+        "name": "cmd_conference_pack_check",
+        "line": 953,
+        "decorators": []
+      },
+      {
+        "name": "cmd_conference_falsify",
+        "line": 966,
+        "decorators": []
+      },
+      {
+        "name": "cmd_conference_ablation",
+        "line": 987,
+        "decorators": []
+      },
+      {
+        "name": "cmd_conference_trace",
+        "line": 1007,
+        "decorators": []
+      },
+      {
+        "name": "cmd_conference_stateful",
+        "line": 1032,
+        "decorators": []
+      },
+      {
+        "name": "cmd_conference_lab",
+        "line": 1048,
+        "decorators": []
+      },
+      {
+        "name": "cmd_thesis",
+        "line": 1058,
+        "decorators": []
+      },
+      {
+        "name": "cmd_pilot_report",
+        "line": 1089,
+        "decorators": []
+      },
+      {
+        "name": "build_parser",
+        "line": 1126,
+        "decorators": []
+      },
+      {
+        "name": "main",
+        "line": 1378,
+        "decorators": []
+      },
+      {
+        "name": "handle",
+        "line": 731,
+        "decorators": []
+      },
+      {
+        "name": "add_output",
+        "line": 1137,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/conformance.py",
+    "interfaces": [
+      {
+        "name": "run_conformance",
+        "line": 640,
+        "decorators": []
+      },
+      {
+        "name": "memory_bundle",
+        "line": 644,
+        "decorators": []
+      },
+      {
+        "name": "sql_bundle",
+        "line": 668,
+        "decorators": []
+      },
+      {
+        "name": "executed",
+        "line": 91,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "failures",
+        "line": 95,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "passed",
+        "line": 99,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 102,
+        "decorators": []
+      },
+      {
+        "name": "write_json",
+        "line": 128,
+        "decorators": []
+      },
+      {
+        "name": "render",
+        "line": 131,
+        "decorators": []
+      },
+      {
+        "name": "describe",
+        "line": 163,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 184,
+        "decorators": []
+      },
+      {
+        "name": "_check",
+        "line": 204,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "_skip",
+        "line": 218,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "structural_checks",
+        "line": 222,
+        "decorators": []
+      },
+      {
+        "name": "import_checks",
+        "line": 249,
+        "decorators": []
+      },
+      {
+        "name": "event_checks",
+        "line": 278,
+        "decorators": []
+      },
+      {
+        "name": "snapshot_checks",
+        "line": 339,
+        "decorators": []
+      },
+      {
+        "name": "evidence_checks",
+        "line": 369,
+        "decorators": []
+      },
+      {
+        "name": "action_checks",
+        "line": 405,
+        "decorators": []
+      },
+      {
+        "name": "model_checks",
+        "line": 548,
+        "decorators": []
+      },
+      {
+        "name": "verification_checks",
+        "line": 604,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 617,
+        "decorators": []
+      },
+      {
+        "name": "name",
+        "line": 164,
+        "decorators": []
+      },
+      {
+        "name": "no_return",
+        "line": 255,
+        "decorators": []
+      },
+      {
+        "name": "delivers_inward",
+        "line": 262,
+        "decorators": []
+      },
+      {
+        "name": "monotonic",
+        "line": 284,
+        "decorators": []
+      },
+      {
+        "name": "replayable",
+        "line": 290,
+        "decorators": []
+      },
+      {
+        "name": "redelivery_is_distinguishable",
+        "line": 297,
+        "decorators": []
+      },
+      {
+        "name": "round_trip",
+        "line": 345,
+        "decorators": []
+      },
+      {
+        "name": "manifest_binds",
+        "line": 352,
+        "decorators": []
+      },
+      {
+        "name": "guarded_write",
+        "line": 376,
+        "decorators": []
+      },
+      {
+        "name": "chain_verifies",
+        "line": 385,
+        "decorators": []
+      },
+      {
+        "name": "find_works",
+        "line": 390,
+        "decorators": []
+      },
+      {
+        "name": "executor_for",
+        "line": 413,
+        "decorators": []
+      },
+      {
+        "name": "approved_executes",
+        "line": 434,
+        "decorators": []
+      },
+      {
+        "name": "retry_is_idempotent",
+        "line": 453,
+        "decorators": []
+      },
+      {
+        "name": "altered_proposal_denied",
+        "line": 475,
+        "decorators": []
+      },
+      {
+        "name": "expired_denied",
+        "line": 495,
+        "decorators": []
+      },
+      {
+        "name": "stale_version_denied",
+        "line": 507,
+        "decorators": []
+      },
+      {
+        "name": "separation_of_duties",
+        "line": 521,
+        "decorators": []
+      },
+      {
+        "name": "proposes_only",
+        "line": 569,
+        "decorators": []
+      },
+      {
+        "name": "evidence_is_data",
+        "line": 581,
+        "decorators": []
+      },
+      {
+        "name": "model_check",
+        "line": 605,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/contract.py",
+    "interfaces": [
+      {
+        "name": "load",
+        "line": 40,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "validate",
+        "line": 53,
+        "decorators": []
+      },
+      {
+        "name": "by_domain",
+        "line": 63,
+        "decorators": []
+      },
+      {
+        "name": "__iter__",
+        "line": 66,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 69,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/control_plane.py",
+    "interfaces": [
+      {
+        "name": "put",
+        "line": 42,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 43,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 47,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 51,
+        "decorators": []
+      },
+      {
+        "name": "put_if_absent",
+        "line": 55,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 63,
+        "decorators": []
+      },
+      {
+        "name": "keys",
+        "line": 68,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 76,
+        "decorators": []
+      },
+      {
+        "name": "register_resource",
+        "line": 133,
+        "decorators": []
+      },
+      {
+        "name": "get_resource",
+        "line": 142,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 146,
+        "decorators": []
+      },
+      {
+        "name": "begin_review",
+        "line": 195,
+        "decorators": []
+      },
+      {
+        "name": "review_started_at",
+        "line": 226,
+        "decorators": []
+      },
+      {
+        "name": "endorse_review",
+        "line": 230,
+        "decorators": []
+      },
+      {
+        "name": "review_endorser",
+        "line": 280,
+        "decorators": []
+      },
+      {
+        "name": "review_endorsement",
+        "line": 291,
+        "decorators": []
+      },
+      {
+        "name": "approve",
+        "line": 307,
+        "decorators": []
+      },
+      {
+        "name": "execute",
+        "line": 352,
+        "decorators": []
+      },
+      {
+        "name": "get_proposal",
+        "line": 363,
+        "decorators": []
+      },
+      {
+        "name": "get_approval",
+        "line": 369,
+        "decorators": []
+      },
+      {
+        "name": "get_result",
+        "line": 375,
+        "decorators": []
+      },
+      {
+        "name": "evidence_for",
+        "line": 378,
+        "decorators": []
+      },
+      {
+        "name": "evidence_page",
+        "line": 384,
+        "decorators": []
+      },
+      {
+        "name": "reconcile",
+        "line": 399,
+        "decorators": []
+      },
+      {
+        "name": "pending_outcomes",
+        "line": 405,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "_emit",
+        "line": 408,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/coverage.py",
+    "interfaces": [
+      {
+        "name": "load_bindings",
+        "line": 199,
+        "decorators": []
+      },
+      {
+        "name": "measure_coverage",
+        "line": 251,
+        "decorators": []
+      },
+      {
+        "name": "_load_attestations",
+        "line": 294,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 89,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 108,
+        "decorators": []
+      },
+      {
+        "name": "_count",
+        "line": 129,
+        "decorators": []
+      },
+      {
+        "name": "total",
+        "line": 133,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "machine_verified",
+        "line": 137,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "organizationally_attested",
+        "line": 141,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "unverified",
+        "line": 145,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "unverified_ids",
+        "line": 149,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "holds",
+        "line": 153,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 162,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/custody_errors.py",
+    "interfaces": [
+      {
+        "name": "denial_code",
+        "line": 20,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/decision_packet.py",
+    "interfaces": [
+      {
+        "name": "export_decision_packet",
+        "line": 10,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/delegation.py",
+    "interfaces": [
+      {
+        "name": "verify_delegation_space",
+        "line": 990,
+        "decorators": []
+      },
+      {
+        "name": "_covers_set",
+        "line": 153,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "_class_rank",
+        "line": 161,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "covers",
+        "line": 164,
+        "decorators": []
+      },
+      {
+        "name": "intersect",
+        "line": 174,
+        "decorators": []
+      },
+      {
+        "name": "permits",
+        "line": 200,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 211,
+        "decorators": []
+      },
+      {
+        "name": "signing_payload",
+        "line": 241,
+        "decorators": []
+      },
+      {
+        "name": "digest",
+        "line": 260,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "signed_with",
+        "line": 264,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 272,
+        "decorators": []
+      },
+      {
+        "name": "__post_init__",
+        "line": 300,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 312,
+        "decorators": []
+      },
+      {
+        "name": "__post_init__",
+        "line": 340,
+        "decorators": []
+      },
+      {
+        "name": "from_env",
+        "line": 347,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 402,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 421,
+        "decorators": []
+      },
+      {
+        "name": "revoke",
+        "line": 451,
+        "decorators": []
+      },
+      {
+        "name": "issue",
+        "line": 456,
+        "decorators": []
+      },
+      {
+        "name": "verify_chain",
+        "line": 492,
+        "decorators": []
+      },
+      {
+        "name": "admit",
+        "line": 671,
+        "decorators": []
+      },
+      {
+        "name": "admit_strict",
+        "line": 764,
+        "decorators": []
+      },
+      {
+        "name": "_refuse",
+        "line": 773,
+        "decorators": []
+      },
+      {
+        "name": "report",
+        "line": 777,
+        "decorators": []
+      },
+      {
+        "name": "key",
+        "line": 921,
+        "decorators": []
+      },
+      {
+        "name": "holds",
+        "line": 947,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 950,
+        "decorators": []
+      },
+      {
+        "name": "meet",
+        "line": 181,
+        "decorators": []
+      },
+      {
+        "name": "flag",
+        "line": 372,
+        "decorators": []
+      },
+      {
+        "name": "refuse",
+        "line": 509,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/delegation_eval.py",
+    "interfaces": [
+      {
+        "name": "_authority",
+        "line": 161,
+        "decorators": []
+      },
+      {
+        "name": "_scope",
+        "line": 165,
+        "decorators": []
+      },
+      {
+        "name": "build_chains",
+        "line": 176,
+        "decorators": []
+      },
+      {
+        "name": "_arm_unguarded",
+        "line": 350,
+        "decorators": []
+      },
+      {
+        "name": "_arm_caller_checked",
+        "line": 367,
+        "decorators": []
+      },
+      {
+        "name": "_arm_this_architecture",
+        "line": 407,
+        "decorators": []
+      },
+      {
+        "name": "run_delegation_suite",
+        "line": 429,
+        "decorators": []
+      },
+      {
+        "name": "ablate_delegation",
+        "line": 451,
+        "decorators": []
+      },
+      {
+        "name": "_for",
+        "line": 98,
+        "decorators": []
+      },
+      {
+        "name": "contained",
+        "line": 101,
+        "decorators": []
+      },
+      {
+        "name": "hostile_total",
+        "line": 106,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "benign_completed",
+        "line": 109,
+        "decorators": []
+      },
+      {
+        "name": "holds",
+        "line": 114,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 125,
+        "decorators": []
+      },
+      {
+        "name": "hop",
+        "line": 190,
+        "decorators": []
+      },
+      {
+        "name": "harmed_without",
+        "line": 466,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/diode.py",
+    "interfaces": [
+      {
+        "name": "assert_no_return_path",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "describe_channel",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 42,
+        "decorators": []
+      },
+      {
+        "name": "connect",
+        "line": 46,
+        "decorators": []
+      },
+      {
+        "name": "send_inward",
+        "line": 50,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/diode_transport.py",
+    "interfaces": [
+      {
+        "name": "_tag",
+        "line": 99,
+        "decorators": []
+      },
+      {
+        "name": "header",
+        "line": 67,
+        "decorators": []
+      },
+      {
+        "name": "encode",
+        "line": 76,
+        "decorators": []
+      },
+      {
+        "name": "decode",
+        "line": 81,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "__init__",
+        "line": 120,
+        "decorators": []
+      },
+      {
+        "name": "send_inward",
+        "line": 147,
+        "decorators": []
+      },
+      {
+        "name": "connect",
+        "line": 170,
+        "decorators": []
+      },
+      {
+        "name": "close",
+        "line": 179,
+        "decorators": []
+      },
+      {
+        "name": "__enter__",
+        "line": 182,
+        "decorators": []
+      },
+      {
+        "name": "__exit__",
+        "line": 185,
+        "decorators": []
+      },
+      {
+        "name": "snapshot",
+        "line": 203,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 223,
+        "decorators": []
+      },
+      {
+        "name": "port",
+        "line": 259,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "start",
+        "line": 263,
+        "decorators": []
+      },
+      {
+        "name": "stop",
+        "line": 268,
+        "decorators": []
+      },
+      {
+        "name": "__enter__",
+        "line": 274,
+        "decorators": []
+      },
+      {
+        "name": "__exit__",
+        "line": 277,
+        "decorators": []
+      },
+      {
+        "name": "_loop",
+        "line": 281,
+        "decorators": []
+      },
+      {
+        "name": "ingest_datagram",
+        "line": 292,
+        "decorators": []
+      },
+      {
+        "name": "_expire",
+        "line": 341,
+        "decorators": []
+      },
+      {
+        "name": "add",
+        "line": 381,
+        "decorators": []
+      },
+      {
+        "name": "uncontrolled",
+        "line": 385,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "outward_capable",
+        "line": 389,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 392,
+        "decorators": []
+      },
+      {
+        "name": "reference",
+        "line": 402,
+        "decorators": [
+          "classmethod"
+        ]
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure.py",
+    "interfaces": [
+      {
+        "name": "_sign",
+        "line": 490,
+        "decorators": []
+      },
+      {
+        "name": "_digest",
+        "line": 494,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 175,
+        "decorators": []
+      },
+      {
+        "name": "bottom",
+        "line": 196,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "join",
+        "line": 201,
+        "decorators": []
+      },
+      {
+        "name": "dominates",
+        "line": 209,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 218,
+        "decorators": []
+      },
+      {
+        "name": "from_dict",
+        "line": 223,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "all_zones",
+        "line": 274,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "summary",
+        "line": 281,
+        "decorators": []
+      },
+      {
+        "name": "from_dict",
+        "line": 302,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "signing_payload",
+        "line": 519,
+        "decorators": []
+      },
+      {
+        "name": "to_record",
+        "line": 529,
+        "decorators": []
+      },
+      {
+        "name": "from_record",
+        "line": 534,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 545,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 564,
+        "decorators": []
+      },
+      {
+        "name": "trusted_keys",
+        "line": 570,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "issue",
+        "line": 573,
+        "decorators": []
+      },
+      {
+        "name": "signing_payload",
+        "line": 602,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 614,
+        "decorators": []
+      },
+      {
+        "name": "trusted_keys",
+        "line": 620,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "approve",
+        "line": 623,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 643,
+        "decorators": []
+      },
+      {
+        "name": "withdraw",
+        "line": 647,
+        "decorators": []
+      },
+      {
+        "name": "restore",
+        "line": 651,
+        "decorators": []
+      },
+      {
+        "name": "permits",
+        "line": 655,
+        "decorators": []
+      },
+      {
+        "name": "value_ids",
+        "line": 686,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "digest",
+        "line": 709,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_record",
+        "line": 712,
+        "decorators": []
+      },
+      {
+        "name": "from_record",
+        "line": 721,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "__init__",
+        "line": 762,
+        "decorators": []
+      },
+      {
+        "name": "_on",
+        "line": 794,
+        "decorators": []
+      },
+      {
+        "name": "_record",
+        "line": 797,
+        "decorators": []
+      },
+      {
+        "name": "_state",
+        "line": 801,
+        "decorators": [
+          "contextmanager"
+        ]
+      },
+      {
+        "name": "_guarded",
+        "line": 811,
+        "decorators": []
+      },
+      {
+        "name": "_fetch",
+        "line": 834,
+        "decorators": []
+      },
+      {
+        "name": "_texts",
+        "line": 849,
+        "decorators": []
+      },
+      {
+        "name": "_consent_permits",
+        "line": 861,
+        "decorators": []
+      },
+      {
+        "name": "_verify_grant_signature",
+        "line": 870,
+        "decorators": []
+      },
+      {
+        "name": "load_records",
+        "line": 893,
+        "decorators": []
+      },
+      {
+        "name": "output",
+        "line": 911,
+        "decorators": []
+      },
+      {
+        "name": "session_label",
+        "line": 918,
+        "decorators": []
+      },
+      {
+        "name": "revoke_grant",
+        "line": 924,
+        "decorators": []
+      },
+      {
+        "name": "withdraw_consent",
+        "line": 932,
+        "decorators": []
+      },
+      {
+        "name": "open_break_glass",
+        "line": 943,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "record_break_glass_review",
+        "line": 947,
+        "decorators": []
+      },
+      {
+        "name": "assemble_context",
+        "line": 968,
+        "decorators": []
+      },
+      {
+        "name": "_deny",
+        "line": 992,
+        "decorators": []
+      },
+      {
+        "name": "_assemble",
+        "line": 995,
+        "decorators": []
+      },
+      {
+        "name": "derive_output",
+        "line": 1141,
+        "decorators": []
+      },
+      {
+        "name": "derive_from_values",
+        "line": 1167,
+        "decorators": []
+      },
+      {
+        "name": "_issued",
+        "line": 1234,
+        "decorators": []
+      },
+      {
+        "name": "declassify",
+        "line": 1243,
+        "decorators": []
+      },
+      {
+        "name": "_declassify",
+        "line": 1254,
+        "decorators": []
+      },
+      {
+        "name": "release",
+        "line": 1332,
+        "decorators": []
+      },
+      {
+        "name": "_release",
+        "line": 1342,
+        "decorators": []
+      },
+      {
+        "name": "text",
+        "line": 321,
+        "decorators": []
+      },
+      {
+        "name": "strings",
+        "line": 326,
+        "decorators": []
+      },
+      {
+        "name": "mapping",
+        "line": 334,
+        "decorators": []
+      },
+      {
+        "name": "known_purposes",
+        "line": 343,
+        "decorators": []
+      },
+      {
+        "name": "known_class",
+        "line": 351,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_api.py",
+    "interfaces": [
+      {
+        "name": "token_verifier_from_env",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "consent_from_env",
+        "line": 112,
+        "decorators": []
+      },
+      {
+        "name": "records_from_env",
+        "line": 124,
+        "decorators": []
+      },
+      {
+        "name": "_label",
+        "line": 137,
+        "decorators": []
+      },
+      {
+        "name": "register_disclosure_routes",
+        "line": 230,
+        "decorators": []
+      },
+      {
+        "name": "proposals_output",
+        "line": 397,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 144,
+        "decorators": []
+      },
+      {
+        "name": "put_grant",
+        "line": 187,
+        "decorators": []
+      },
+      {
+        "name": "get_grant",
+        "line": 191,
+        "decorators": []
+      },
+      {
+        "name": "grant_count",
+        "line": 196,
+        "decorators": []
+      },
+      {
+        "name": "owner_roles",
+        "line": 201,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "assemble",
+        "line": 205,
+        "decorators": []
+      },
+      {
+        "name": "derive",
+        "line": 225,
+        "decorators": []
+      },
+      {
+        "name": "need",
+        "line": 236,
+        "decorators": []
+      },
+      {
+        "name": "require_any",
+        "line": 242,
+        "decorators": []
+      },
+      {
+        "name": "disclosure_summary",
+        "line": 250,
+        "decorators": [
+          "app.get('/v1/disclosure', tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "load_records",
+        "line": 265,
+        "decorators": [
+          "app.post('/v1/disclosure/records', status_code=201, tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "issue_grant",
+        "line": 273,
+        "decorators": [
+          "app.post('/v1/disclosure/grants', status_code=201, tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "register_token_grant",
+        "line": 296,
+        "decorators": [
+          "app.post('/v1/disclosure/grants/token', status_code=201, tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "revoke_grant",
+        "line": 316,
+        "decorators": [
+          "app.post('/v1/disclosure/grants/{grant_id}/revoke', tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "withdraw_consent",
+        "line": 325,
+        "decorators": [
+          "app.post('/v1/disclosure/consent/withdrawals', status_code=201, tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "assemble_context",
+        "line": 332,
+        "decorators": [
+          "app.post('/v1/disclosure/context', tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "derive_output",
+        "line": 339,
+        "decorators": [
+          "app.post('/v1/disclosure/outputs', status_code=201, tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "declassify",
+        "line": 348,
+        "decorators": [
+          "app.post('/v1/disclosure/outputs/{output_id}/declassify', status_code=201, tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "release",
+        "line": 362,
+        "decorators": [
+          "app.post('/v1/disclosure/outputs/{output_id}/release', tags=['disclosure'])"
+        ]
+      },
+      {
+        "name": "review_break_glass",
+        "line": 386,
+        "decorators": [
+          "app.post('/v1/disclosure/break-glass/{grant_id}/review', tags=['disclosure'])"
+        ]
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_concurrency.py",
+    "interfaces": [
+      {
+        "name": "_gate",
+        "line": 33,
+        "decorators": []
+      },
+      {
+        "name": "_events",
+        "line": 42,
+        "decorators": []
+      },
+      {
+        "name": "releases_after_revocation",
+        "line": 47,
+        "decorators": []
+      },
+      {
+        "name": "run_thread_race",
+        "line": 59,
+        "decorators": []
+      },
+      {
+        "name": "_open",
+        "line": 155,
+        "decorators": []
+      },
+      {
+        "name": "_release_worker",
+        "line": 167,
+        "decorators": []
+      },
+      {
+        "name": "_break_glass_worker",
+        "line": 190,
+        "decorators": []
+      },
+      {
+        "name": "run_process_race",
+        "line": 204,
+        "decorators": []
+      },
+      {
+        "name": "releaser",
+        "line": 77,
+        "decorators": []
+      },
+      {
+        "name": "revoker",
+        "line": 93,
+        "decorators": []
+      },
+      {
+        "name": "emergency",
+        "line": 115,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_eval.py",
+    "interfaces": [
+      {
+        "name": "_reached",
+        "line": 247,
+        "decorators": []
+      },
+      {
+        "name": "_context_scenario",
+        "line": 255,
+        "decorators": []
+      },
+      {
+        "name": "_s_wrong_subject",
+        "line": 262,
+        "decorators": []
+      },
+      {
+        "name": "_s_field_widening",
+        "line": 267,
+        "decorators": []
+      },
+      {
+        "name": "_s_purpose_switch",
+        "line": 271,
+        "decorators": []
+      },
+      {
+        "name": "_s_undeclared_purpose",
+        "line": 277,
+        "decorators": []
+      },
+      {
+        "name": "_s_expired",
+        "line": 282,
+        "decorators": []
+      },
+      {
+        "name": "_s_revoked",
+        "line": 286,
+        "decorators": []
+      },
+      {
+        "name": "_s_consent_withdrawn",
+        "line": 292,
+        "decorators": []
+      },
+      {
+        "name": "_s_residency",
+        "line": 297,
+        "decorators": []
+      },
+      {
+        "name": "_s_borrowed_grant",
+        "line": 301,
+        "decorators": []
+      },
+      {
+        "name": "_s_self_issued",
+        "line": 305,
+        "decorators": []
+      },
+      {
+        "name": "_s_tampered_grant",
+        "line": 309,
+        "decorators": []
+      },
+      {
+        "name": "_s_rogue_authority",
+        "line": 314,
+        "decorators": []
+      },
+      {
+        "name": "_s_class_above_clearance",
+        "line": 319,
+        "decorators": []
+      },
+      {
+        "name": "_s_break_glass_outside_emergency",
+        "line": 326,
+        "decorators": []
+      },
+      {
+        "name": "_s_break_glass_not_declared",
+        "line": 333,
+        "decorators": []
+      },
+      {
+        "name": "_s_break_glass_repeat_without_review",
+        "line": 339,
+        "decorators": []
+      },
+      {
+        "name": "_s_break_glass_unbounded",
+        "line": 348,
+        "decorators": []
+      },
+      {
+        "name": "_release_scenario",
+        "line": 355,
+        "decorators": []
+      },
+      {
+        "name": "_honest_output",
+        "line": 362,
+        "decorators": []
+      },
+      {
+        "name": "_r_laundered_summary",
+        "line": 369,
+        "decorators": []
+      },
+      {
+        "name": "_r_uncleared_recipient",
+        "line": 375,
+        "decorators": []
+      },
+      {
+        "name": "_r_release_after_consent_withdrawn",
+        "line": 381,
+        "decorators": []
+      },
+      {
+        "name": "_r_release_after_grant_revoked",
+        "line": 387,
+        "decorators": []
+      },
+      {
+        "name": "_r_external_exfiltration",
+        "line": 393,
+        "decorators": []
+      },
+      {
+        "name": "_v_omitted_source",
+        "line": 402,
+        "decorators": []
+      },
+      {
+        "name": "_v_value_not_issued",
+        "line": 413,
+        "decorators": []
+      },
+      {
+        "name": "_b_value_level_precision",
+        "line": 422,
+        "decorators": []
+      },
+      {
+        "name": "_declassify_scenario",
+        "line": 432,
+        "decorators": []
+      },
+      {
+        "name": "_b_primary_flow",
+        "line": 469,
+        "decorators": []
+      },
+      {
+        "name": "_b_break_glass_then_review",
+        "line": 474,
+        "decorators": []
+      },
+      {
+        "name": "_run",
+        "line": 608,
+        "decorators": []
+      },
+      {
+        "name": "run_disclosure_suite",
+        "line": 616,
+        "decorators": []
+      },
+      {
+        "name": "_evidence_properties",
+        "line": 660,
+        "decorators": []
+      },
+      {
+        "name": "verify_disclosure_space",
+        "line": 743,
+        "decorators": []
+      },
+      {
+        "name": "_verify_release_space",
+        "line": 911,
+        "decorators": []
+      },
+      {
+        "name": "_approval_variant",
+        "line": 1003,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 75,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 79,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 88,
+        "decorators": []
+      },
+      {
+        "name": "_benign_path",
+        "line": 109,
+        "decorators": []
+      },
+      {
+        "name": "granted_fields",
+        "line": 134,
+        "decorators": []
+      },
+      {
+        "name": "widen_field",
+        "line": 137,
+        "decorators": []
+      },
+      {
+        "name": "disallowed_endpoint",
+        "line": 140,
+        "decorators": []
+      },
+      {
+        "name": "laundering_recipient",
+        "line": 147,
+        "decorators": []
+      },
+      {
+        "name": "precision_path",
+        "line": 159,
+        "decorators": []
+      },
+      {
+        "name": "declassification_path",
+        "line": 177,
+        "decorators": []
+      },
+      {
+        "name": "honest_label",
+        "line": 197,
+        "decorators": []
+      },
+      {
+        "name": "gate",
+        "line": 207,
+        "decorators": []
+      },
+      {
+        "name": "grant",
+        "line": 215,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 225,
+        "decorators": []
+      },
+      {
+        "name": "break_glass_grant",
+        "line": 232,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 256,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 356,
+        "decorators": []
+      },
+      {
+        "name": "build",
+        "line": 433,
+        "decorators": []
+      },
+      {
+        "name": "hostile_total",
+        "line": 544,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "contained",
+        "line": 547,
+        "decorators": []
+      },
+      {
+        "name": "benign_completed",
+        "line": 551,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "load_bearing",
+        "line": 555,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "holds",
+        "line": 559,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 569,
+        "decorators": []
+      },
+      {
+        "name": "holds",
+        "line": 721,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 724,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_metrics.py",
+    "interfaces": [
+      {
+        "name": "export_records",
+        "line": 25,
+        "decorators": []
+      },
+      {
+        "name": "_normalise",
+        "line": 31,
+        "decorators": []
+      },
+      {
+        "name": "_chain_intact",
+        "line": 43,
+        "decorators": []
+      },
+      {
+        "name": "_outcomes",
+        "line": 59,
+        "decorators": []
+      },
+      {
+        "name": "disclosure_metrics",
+        "line": 72,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_sources.py",
+    "interfaces": [
+      {
+        "name": "as_record_source",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "_path",
+        "line": 124,
+        "decorators": []
+      },
+      {
+        "name": "fetch",
+        "line": 32,
+        "decorators": []
+      },
+      {
+        "name": "permits",
+        "line": 36,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 47,
+        "decorators": []
+      },
+      {
+        "name": "fetch",
+        "line": 50,
+        "decorators": []
+      },
+      {
+        "name": "load",
+        "line": 56,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 85,
+        "decorators": []
+      },
+      {
+        "name": "fetch",
+        "line": 96,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 156,
+        "decorators": []
+      },
+      {
+        "name": "_get",
+        "line": 165,
+        "decorators": []
+      },
+      {
+        "name": "fetch",
+        "line": 183,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 223,
+        "decorators": []
+      },
+      {
+        "name": "permits",
+        "line": 228,
+        "decorators": []
+      },
+      {
+        "name": "withdraw",
+        "line": 244,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_stateful.py",
+    "interfaces": [
+      {
+        "name": "run_stateful",
+        "line": 194,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 86,
+        "decorators": []
+      },
+      {
+        "name": "holds",
+        "line": 100,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 103,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 131,
+        "decorators": []
+      },
+      {
+        "name": "bottom",
+        "line": 138,
+        "decorators": []
+      },
+      {
+        "name": "current",
+        "line": 141,
+        "decorators": []
+      },
+      {
+        "name": "read_allowed",
+        "line": 145,
+        "decorators": []
+      },
+      {
+        "name": "apply_read",
+        "line": 166,
+        "decorators": []
+      },
+      {
+        "name": "release_allowed",
+        "line": 178,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_store.py",
+    "interfaces": [
+      {
+        "name": "_erased_output",
+        "line": 40,
+        "decorators": []
+      },
+      {
+        "name": "_is_database_error",
+        "line": 207,
+        "decorators": []
+      },
+      {
+        "name": "open_disclosure_store",
+        "line": 422,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 55,
+        "decorators": []
+      },
+      {
+        "name": "atomic",
+        "line": 70,
+        "decorators": [
+          "contextmanager"
+        ]
+      },
+      {
+        "name": "next_id",
+        "line": 75,
+        "decorators": []
+      },
+      {
+        "name": "tick",
+        "line": 79,
+        "decorators": []
+      },
+      {
+        "name": "put_grant",
+        "line": 84,
+        "decorators": []
+      },
+      {
+        "name": "get_grant",
+        "line": 87,
+        "decorators": []
+      },
+      {
+        "name": "grant_count",
+        "line": 91,
+        "decorators": []
+      },
+      {
+        "name": "revoke",
+        "line": 94,
+        "decorators": []
+      },
+      {
+        "name": "is_revoked",
+        "line": 97,
+        "decorators": []
+      },
+      {
+        "name": "set_grant_expiry",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "grant_expiry",
+        "line": 103,
+        "decorators": []
+      },
+      {
+        "name": "withdraw",
+        "line": 107,
+        "decorators": []
+      },
+      {
+        "name": "restore",
+        "line": 110,
+        "decorators": []
+      },
+      {
+        "name": "consent_permits",
+        "line": 113,
+        "decorators": []
+      },
+      {
+        "name": "get_session",
+        "line": 117,
+        "decorators": []
+      },
+      {
+        "name": "put_session",
+        "line": 121,
+        "decorators": []
+      },
+      {
+        "name": "put_value",
+        "line": 124,
+        "decorators": []
+      },
+      {
+        "name": "get_value",
+        "line": 127,
+        "decorators": []
+      },
+      {
+        "name": "put_output",
+        "line": 131,
+        "decorators": []
+      },
+      {
+        "name": "get_output",
+        "line": 134,
+        "decorators": []
+      },
+      {
+        "name": "purge_subject_outputs",
+        "line": 138,
+        "decorators": []
+      },
+      {
+        "name": "output_bodies",
+        "line": 151,
+        "decorators": []
+      },
+      {
+        "name": "lock_holder",
+        "line": 155,
+        "decorators": []
+      },
+      {
+        "name": "break_glass_seen",
+        "line": 158,
+        "decorators": []
+      },
+      {
+        "name": "open_break_glass",
+        "line": 161,
+        "decorators": []
+      },
+      {
+        "name": "unreviewed_count",
+        "line": 164,
+        "decorators": []
+      },
+      {
+        "name": "open_break_glass_holder",
+        "line": 168,
+        "decorators": []
+      },
+      {
+        "name": "close_break_glass",
+        "line": 172,
+        "decorators": []
+      },
+      {
+        "name": "open_break_glass_map",
+        "line": 176,
+        "decorators": []
+      },
+      {
+        "name": "record_event",
+        "line": 180,
+        "decorators": []
+      },
+      {
+        "name": "events",
+        "line": 183,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 215,
+        "decorators": []
+      },
+      {
+        "name": "_t",
+        "line": 219,
+        "decorators": []
+      },
+      {
+        "name": "_upsert",
+        "line": 222,
+        "decorators": []
+      },
+      {
+        "name": "_body",
+        "line": 232,
+        "decorators": []
+      },
+      {
+        "name": "next_id",
+        "line": 237,
+        "decorators": []
+      },
+      {
+        "name": "tick",
+        "line": 240,
+        "decorators": []
+      },
+      {
+        "name": "put_grant",
+        "line": 244,
+        "decorators": []
+      },
+      {
+        "name": "get_grant",
+        "line": 248,
+        "decorators": []
+      },
+      {
+        "name": "grant_count",
+        "line": 251,
+        "decorators": []
+      },
+      {
+        "name": "revoke",
+        "line": 255,
+        "decorators": []
+      },
+      {
+        "name": "is_revoked",
+        "line": 260,
+        "decorators": []
+      },
+      {
+        "name": "set_grant_expiry",
+        "line": 264,
+        "decorators": []
+      },
+      {
+        "name": "grant_expiry",
+        "line": 268,
+        "decorators": []
+      },
+      {
+        "name": "withdraw",
+        "line": 273,
+        "decorators": []
+      },
+      {
+        "name": "restore",
+        "line": 278,
+        "decorators": []
+      },
+      {
+        "name": "consent_permits",
+        "line": 283,
+        "decorators": []
+      },
+      {
+        "name": "get_session",
+        "line": 288,
+        "decorators": []
+      },
+      {
+        "name": "put_session",
+        "line": 291,
+        "decorators": []
+      },
+      {
+        "name": "put_value",
+        "line": 295,
+        "decorators": []
+      },
+      {
+        "name": "get_value",
+        "line": 299,
+        "decorators": []
+      },
+      {
+        "name": "put_output",
+        "line": 302,
+        "decorators": []
+      },
+      {
+        "name": "get_output",
+        "line": 306,
+        "decorators": []
+      },
+      {
+        "name": "output_bodies",
+        "line": 309,
+        "decorators": []
+      },
+      {
+        "name": "purge_subject_outputs",
+        "line": 313,
+        "decorators": []
+      },
+      {
+        "name": "lock_holder",
+        "line": 324,
+        "decorators": []
+      },
+      {
+        "name": "break_glass_seen",
+        "line": 330,
+        "decorators": []
+      },
+      {
+        "name": "open_break_glass",
+        "line": 334,
+        "decorators": []
+      },
+      {
+        "name": "unreviewed_count",
+        "line": 339,
+        "decorators": []
+      },
+      {
+        "name": "open_break_glass_holder",
+        "line": 345,
+        "decorators": []
+      },
+      {
+        "name": "close_break_glass",
+        "line": 351,
+        "decorators": []
+      },
+      {
+        "name": "open_break_glass_map",
+        "line": 355,
+        "decorators": []
+      },
+      {
+        "name": "record_event",
+        "line": 360,
+        "decorators": []
+      },
+      {
+        "name": "events",
+        "line": 364,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 374,
+        "decorators": []
+      },
+      {
+        "name": "atomic",
+        "line": 384,
+        "decorators": [
+          "contextmanager"
+        ]
+      },
+      {
+        "name": "__init__",
+        "line": 406,
+        "decorators": []
+      },
+      {
+        "name": "permits",
+        "line": 409,
+        "decorators": []
+      },
+      {
+        "name": "withdraw",
+        "line": 413,
+        "decorators": []
+      },
+      {
+        "name": "restore",
+        "line": 417,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/disclosure_tokens.py",
+    "interfaces": [
+      {
+        "name": "encode_grant_token",
+        "line": 130,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 38,
+        "decorators": []
+      },
+      {
+        "name": "_signing_key",
+        "line": 57,
+        "decorators": []
+      },
+      {
+        "name": "claims",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "grant_from_token",
+        "line": 95,
+        "decorators": []
+      },
+      {
+        "name": "text",
+        "line": 103,
+        "decorators": []
+      },
+      {
+        "name": "strings",
+        "line": 109,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/education_models.py",
+    "interfaces": [
+      {
+        "name": "to_dict",
+        "line": 29,
+        "decorators": []
+      },
+      {
+        "name": "respond",
+        "line": 40,
+        "decorators": []
+      },
+      {
+        "name": "respond",
+        "line": 73,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 107,
+        "decorators": []
+      },
+      {
+        "name": "available",
+        "line": 113,
+        "decorators": []
+      },
+      {
+        "name": "respond",
+        "line": 121,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 157,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 168,
+        "decorators": []
+      },
+      {
+        "name": "route",
+        "line": 171,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 188,
+        "decorators": []
+      },
+      {
+        "name": "route",
+        "line": 194,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/education_world.py",
+    "interfaces": [
+      {
+        "name": "action_root",
+        "line": 532,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 159,
+        "decorators": []
+      },
+      {
+        "name": "transition",
+        "line": 165,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 183,
+        "decorators": []
+      },
+      {
+        "name": "result_for",
+        "line": 186,
+        "decorators": []
+      },
+      {
+        "name": "transition",
+        "line": 189,
+        "decorators": []
+      },
+      {
+        "name": "model_saw",
+        "line": 201,
+        "decorators": []
+      },
+      {
+        "name": "released_contains",
+        "line": 204,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 209,
+        "decorators": []
+      },
+      {
+        "name": "on",
+        "line": 305,
+        "decorators": []
+      },
+      {
+        "name": "tick",
+        "line": 308,
+        "decorators": []
+      },
+      {
+        "name": "decision",
+        "line": 312,
+        "decorators": []
+      },
+      {
+        "name": "admit_document",
+        "line": 319,
+        "decorators": []
+      },
+      {
+        "name": "sign_document",
+        "line": 340,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "grant",
+        "line": 346,
+        "decorators": []
+      },
+      {
+        "name": "attest",
+        "line": 358,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 372,
+        "decorators": []
+      },
+      {
+        "name": "ask_model",
+        "line": 405,
+        "decorators": []
+      },
+      {
+        "name": "derive",
+        "line": 410,
+        "decorators": []
+      },
+      {
+        "name": "release",
+        "line": 417,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 435,
+        "decorators": []
+      },
+      {
+        "name": "review_and_approve",
+        "line": 445,
+        "decorators": []
+      },
+      {
+        "name": "_ablate_signature",
+        "line": 466,
+        "decorators": []
+      },
+      {
+        "name": "execute",
+        "line": 472,
+        "decorators": []
+      },
+      {
+        "name": "checkpoint",
+        "line": 509,
+        "decorators": []
+      },
+      {
+        "name": "evidence_intact",
+        "line": 514,
+        "decorators": []
+      },
+      {
+        "name": "protected_values",
+        "line": 525,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "identity_values",
+        "line": 528,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/encrypted_records.py",
+    "interfaces": [
+      {
+        "name": "_serialise",
+        "line": 41,
+        "decorators": []
+      },
+      {
+        "name": "hashed_embedding",
+        "line": 125,
+        "decorators": []
+      },
+      {
+        "name": "contains_plaintext",
+        "line": 37,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 50,
+        "decorators": []
+      },
+      {
+        "name": "load",
+        "line": 61,
+        "decorators": []
+      },
+      {
+        "name": "fetch",
+        "line": 76,
+        "decorators": []
+      },
+      {
+        "name": "subjects",
+        "line": 96,
+        "decorators": []
+      },
+      {
+        "name": "snapshot",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "restore_snapshot",
+        "line": 105,
+        "decorators": []
+      },
+      {
+        "name": "raw_bytes",
+        "line": 112,
+        "decorators": []
+      },
+      {
+        "name": "_move_ciphertext",
+        "line": 117,
+        "decorators": []
+      },
+      {
+        "name": "_row",
+        "line": 121,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 140,
+        "decorators": []
+      },
+      {
+        "name": "add",
+        "line": 147,
+        "decorators": []
+      },
+      {
+        "name": "search",
+        "line": 152,
+        "decorators": []
+      },
+      {
+        "name": "readable_entries",
+        "line": 168,
+        "decorators": []
+      },
+      {
+        "name": "entries_for",
+        "line": 181,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/evaluation.py",
+    "interfaces": [
+      {
+        "name": "_software_version",
+        "line": 1004,
+        "decorators": []
+      },
+      {
+        "name": "load_bearing",
+        "line": 115,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "authority_coverage",
+        "line": 132,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 137,
+        "decorators": []
+      },
+      {
+        "name": "passed",
+        "line": 165,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "total",
+        "line": 169,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "all_contained",
+        "line": 173,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "unauthorized_mutations",
+        "line": 177,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "benign_completed",
+        "line": 187,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "false_denial_rate",
+        "line": 191,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "coverage",
+        "line": 198,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 204,
+        "decorators": []
+      },
+      {
+        "name": "write_json",
+        "line": 246,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 258,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 262,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 285,
+        "decorators": []
+      },
+      {
+        "name": "_select_consequential_rule",
+        "line": 293,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "_workflow",
+        "line": 297,
+        "decorators": []
+      },
+      {
+        "name": "_approve",
+        "line": 314,
+        "decorators": []
+      },
+      {
+        "name": "_denial_scenario",
+        "line": 320,
+        "decorators": []
+      },
+      {
+        "name": "_resign",
+        "line": 339,
+        "decorators": []
+      },
+      {
+        "name": "exact_action_scenarios",
+        "line": 344,
+        "decorators": []
+      },
+      {
+        "name": "_interrupted_outcome_scenario",
+        "line": 446,
+        "decorators": []
+      },
+      {
+        "name": "import_boundary_scenarios",
+        "line": 474,
+        "decorators": []
+      },
+      {
+        "name": "bounded_intelligence_scenarios",
+        "line": 532,
+        "decorators": []
+      },
+      {
+        "name": "platform_scenarios",
+        "line": 633,
+        "decorators": []
+      },
+      {
+        "name": "utility_tasks",
+        "line": 715,
+        "decorators": []
+      },
+      {
+        "name": "ablations",
+        "line": 795,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 983,
+        "decorators": []
+      },
+      {
+        "name": "call",
+        "line": 801,
+        "decorators": []
+      },
+      {
+        "name": "call",
+        "line": 819,
+        "decorators": []
+      },
+      {
+        "name": "call",
+        "line": 840,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/event_transport.py",
+    "interfaces": [
+      {
+        "name": "append",
+        "line": 35,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 36,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 40,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 43,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 51,
+        "decorators": []
+      },
+      {
+        "name": "replay",
+        "line": 54,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 61,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/evidence.py",
+    "interfaces": [
+      {
+        "name": "_digest",
+        "line": 34,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 67,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "find",
+        "line": 92,
+        "decorators": []
+      },
+      {
+        "name": "__iter__",
+        "line": 101,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 104,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/evidence_notary.py",
+    "interfaces": [
+      {
+        "name": "_ed25519",
+        "line": 45,
+        "decorators": []
+      },
+      {
+        "name": "_canonical",
+        "line": 56,
+        "decorators": []
+      },
+      {
+        "name": "_verify_signature",
+        "line": 132,
+        "decorators": []
+      },
+      {
+        "name": "verify_against_checkpoint",
+        "line": 145,
+        "decorators": []
+      },
+      {
+        "name": "verify_receipt",
+        "line": 173,
+        "decorators": []
+      },
+      {
+        "name": "rewrite_history",
+        "line": 182,
+        "decorators": []
+      },
+      {
+        "name": "payload",
+        "line": 68,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 72,
+        "decorators": []
+      },
+      {
+        "name": "digest",
+        "line": 85,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "payload",
+        "line": 88,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 91,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 106,
+        "decorators": []
+      },
+      {
+        "name": "public_keys",
+        "line": 115,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "checkpoint",
+        "line": 119,
+        "decorators": []
+      },
+      {
+        "name": "sign_receipt",
+        "line": 126,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/exact_action.py",
+    "interfaces": [
+      {
+        "name": "_canonical_digest",
+        "line": 30,
+        "decorators": []
+      },
+      {
+        "name": "validate_replay",
+        "line": 94,
+        "decorators": []
+      },
+      {
+        "name": "_approval_signature_valid",
+        "line": 338,
+        "decorators": []
+      },
+      {
+        "name": "_approval_signing_payload",
+        "line": 354,
+        "decorators": []
+      },
+      {
+        "name": "resource_id",
+        "line": 47,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "digest",
+        "line": 52,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "resource_id",
+        "line": 81,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "__init__",
+        "line": 89,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 109,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 129,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 132,
+        "decorators": []
+      },
+      {
+        "name": "remove",
+        "line": 135,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 138,
+        "decorators": []
+      },
+      {
+        "name": "values",
+        "line": 141,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 144,
+        "decorators": []
+      },
+      {
+        "name": "bind",
+        "line": 149,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 155,
+        "decorators": []
+      },
+      {
+        "name": "bind",
+        "line": 159,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 172,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 178,
+        "decorators": []
+      },
+      {
+        "name": "seed",
+        "line": 181,
+        "decorators": []
+      },
+      {
+        "name": "result_for",
+        "line": 188,
+        "decorators": []
+      },
+      {
+        "name": "transition",
+        "line": 193,
+        "decorators": []
+      },
+      {
+        "name": "_transition",
+        "line": 198,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 237,
+        "decorators": []
+      },
+      {
+        "name": "approve",
+        "line": 259,
+        "decorators": []
+      },
+      {
+        "name": "_sign",
+        "line": 298,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 315,
+        "decorators": []
+      },
+      {
+        "name": "public_key",
+        "line": 325,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "verification_keys",
+        "line": 331,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "_sign",
+        "line": 334,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 376,
+        "decorators": []
+      },
+      {
+        "name": "validate_authorization",
+        "line": 416,
+        "decorators": []
+      },
+      {
+        "name": "execute",
+        "line": 521,
+        "decorators": []
+      },
+      {
+        "name": "reconcile_pending",
+        "line": 587,
+        "decorators": []
+      },
+      {
+        "name": "pending_outcome_count",
+        "line": 605,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "_append_outcome",
+        "line": 608,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/experiment.py",
+    "interfaces": [
+      {
+        "name": "run_comparison",
+        "line": 358,
+        "decorators": []
+      },
+      {
+        "name": "containment_rate",
+        "line": 87,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "benign_completion_rate",
+        "line": 93,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 98,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 112,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 120,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 138,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 143,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 192,
+        "decorators": []
+      },
+      {
+        "name": "_proposals",
+        "line": 196,
+        "decorators": []
+      },
+      {
+        "name": "_harms_from",
+        "line": 206,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "run_unguarded",
+        "line": 229,
+        "decorators": []
+      },
+      {
+        "name": "run_prompt_guarded",
+        "line": 250,
+        "decorators": []
+      },
+      {
+        "name": "run_fssaira",
+        "line": 273,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 323,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/falsification.py",
+    "interfaces": [
+      {
+        "name": "_try",
+        "line": 88,
+        "decorators": []
+      },
+      {
+        "name": "_grant",
+        "line": 95,
+        "decorators": []
+      },
+      {
+        "name": "_read",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "_grade",
+        "line": 106,
+        "decorators": []
+      },
+      {
+        "name": "_changed",
+        "line": 111,
+        "decorators": []
+      },
+      {
+        "name": "f_unauthorized_action",
+        "line": 120,
+        "decorators": []
+      },
+      {
+        "name": "f_wrong_student",
+        "line": 128,
+        "decorators": []
+      },
+      {
+        "name": "f_compromised_agent",
+        "line": 140,
+        "decorators": []
+      },
+      {
+        "name": "f_compromised_tool",
+        "line": 149,
+        "decorators": []
+      },
+      {
+        "name": "f_replay",
+        "line": 156,
+        "decorators": []
+      },
+      {
+        "name": "f_race",
+        "line": 173,
+        "decorators": []
+      },
+      {
+        "name": "f_malicious_domain_pack",
+        "line": 189,
+        "decorators": []
+      },
+      {
+        "name": "f_reviewer_overload",
+        "line": 209,
+        "decorators": []
+      },
+      {
+        "name": "f_unauthorized_read",
+        "line": 224,
+        "decorators": []
+      },
+      {
+        "name": "f_minimum_necessary",
+        "line": 230,
+        "decorators": []
+      },
+      {
+        "name": "f_purpose_violation",
+        "line": 237,
+        "decorators": []
+      },
+      {
+        "name": "f_consent_bypass",
+        "line": 244,
+        "decorators": []
+      },
+      {
+        "name": "f_revocation_bypass",
+        "line": 252,
+        "decorators": []
+      },
+      {
+        "name": "f_release_after_revocation",
+        "line": 265,
+        "decorators": []
+      },
+      {
+        "name": "f_unauthorized_release",
+        "line": 275,
+        "decorators": []
+      },
+      {
+        "name": "f_output_laundering",
+        "line": 284,
+        "decorators": []
+      },
+      {
+        "name": "f_identity_leakage",
+        "line": 294,
+        "decorators": []
+      },
+      {
+        "name": "f_token_reversal",
+        "line": 303,
+        "decorators": []
+      },
+      {
+        "name": "f_delegation_escalation",
+        "line": 319,
+        "decorators": []
+      },
+      {
+        "name": "f_model_substitution",
+        "line": 333,
+        "decorators": []
+      },
+      {
+        "name": "f_router_compromise",
+        "line": 342,
+        "decorators": []
+      },
+      {
+        "name": "f_prompt_injection",
+        "line": 355,
+        "decorators": []
+      },
+      {
+        "name": "f_unauthenticated_source",
+        "line": 366,
+        "decorators": []
+      },
+      {
+        "name": "f_evidence_tampering",
+        "line": 373,
+        "decorators": []
+      },
+      {
+        "name": "f_compromised_model",
+        "line": 385,
+        "decorators": []
+      },
+      {
+        "name": "falsifier",
+        "line": 475,
+        "decorators": []
+      },
+      {
+        "name": "run_one",
+        "line": 482,
+        "decorators": []
+      },
+      {
+        "name": "run_falsifiers",
+        "line": 489,
+        "decorators": []
+      },
+      {
+        "name": "run_ablation",
+        "line": 520,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 48,
+        "decorators": []
+      },
+      {
+        "name": "violations",
+        "line": 74,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "held",
+        "line": 78,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "once",
+        "line": 179,
+        "decorators": []
+      },
+      {
+        "name": "load_bearing",
+        "line": 505,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 508,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/governed_request.py",
+    "interfaces": [
+      {
+        "name": "run_governed_request",
+        "line": 86,
+        "decorators": []
+      },
+      {
+        "name": "explain",
+        "line": 285,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 56,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 70,
+        "decorators": []
+      },
+      {
+        "name": "render",
+        "line": 74,
+        "decorators": []
+      },
+      {
+        "name": "deny",
+        "line": 102,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/grant_delegation.py",
+    "interfaces": [
+      {
+        "name": "payload",
+        "line": 74,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 83,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 95,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 104,
+        "decorators": []
+      },
+      {
+        "name": "_sign",
+        "line": 117,
+        "decorators": []
+      },
+      {
+        "name": "delegate",
+        "line": 120,
+        "decorators": []
+      },
+      {
+        "name": "_refuse",
+        "line": 134,
+        "decorators": []
+      },
+      {
+        "name": "exchange",
+        "line": 137,
+        "decorators": []
+      },
+      {
+        "name": "revoke",
+        "line": 193,
+        "decorators": []
+      },
+      {
+        "name": "check_use",
+        "line": 200,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/iceberg_backend.py",
+    "interfaces": [
+      {
+        "name": "_manifest",
+        "line": 36,
+        "decorators": []
+      },
+      {
+        "name": "load_catalog",
+        "line": 40,
+        "decorators": []
+      },
+      {
+        "name": "archive_evidence",
+        "line": 182,
+        "decorators": []
+      },
+      {
+        "name": "__post_init__",
+        "line": 72,
+        "decorators": []
+      },
+      {
+        "name": "_table",
+        "line": 76,
+        "decorators": []
+      },
+      {
+        "name": "commit",
+        "line": 79,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 98,
+        "decorators": []
+      },
+      {
+        "name": "manifest",
+        "line": 103,
+        "decorators": []
+      },
+      {
+        "name": "rollback",
+        "line": 106,
+        "decorators": []
+      },
+      {
+        "name": "history",
+        "line": 111,
+        "decorators": []
+      },
+      {
+        "name": "current_id",
+        "line": 129,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "current_rows",
+        "line": 133,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/import_api.py",
+    "interfaces": [
+      {
+        "name": "create_import_app",
+        "line": 34,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 31,
+        "decorators": []
+      },
+      {
+        "name": "inward_handler",
+        "line": 77,
+        "decorators": []
+      },
+      {
+        "name": "protect_gateway_responses",
+        "line": 110,
+        "decorators": [
+          "app.middleware('http')"
+        ]
+      },
+      {
+        "name": "quarantine_handler",
+        "line": 118,
+        "decorators": [
+          "app.exception_handler(QuarantineError)"
+        ]
+      },
+      {
+        "name": "health",
+        "line": 122,
+        "decorators": [
+          "app.get('/health')"
+        ]
+      },
+      {
+        "name": "import_item",
+        "line": 130,
+        "decorators": [
+          "app.post('/v1/imports', status_code=202)"
+        ]
+      },
+      {
+        "name": "close_audit_database",
+        "line": 106,
+        "decorators": [
+          "app.on_event('shutdown')"
+        ]
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/import_boundary.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 79,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 86,
+        "decorators": []
+      },
+      {
+        "name": "trust",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "untrust",
+        "line": 106,
+        "decorators": []
+      },
+      {
+        "name": "trusted_sources",
+        "line": 110,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "sign",
+        "line": 114,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "_expected_sig",
+        "line": 119,
+        "decorators": []
+      },
+      {
+        "name": "_reject_reason",
+        "line": 123,
+        "decorators": []
+      },
+      {
+        "name": "_sanitize",
+        "line": 137,
+        "decorators": []
+      },
+      {
+        "name": "ingest",
+        "line": 151,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/joined_workflow.py",
+    "interfaces": [
+      {
+        "name": "canonical",
+        "line": 16,
+        "decorators": []
+      },
+      {
+        "name": "digest",
+        "line": 21,
+        "decorators": []
+      },
+      {
+        "name": "strict_json",
+        "line": 25,
+        "decorators": []
+      },
+      {
+        "name": "call",
+        "line": 345,
+        "decorators": []
+      },
+      {
+        "name": "pairs",
+        "line": 26,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 55,
+        "decorators": []
+      },
+      {
+        "name": "close",
+        "line": 93,
+        "decorators": []
+      },
+      {
+        "name": "meta",
+        "line": 96,
+        "decorators": []
+      },
+      {
+        "name": "event",
+        "line": 99,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 107,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 112,
+        "decorators": []
+      },
+      {
+        "name": "record",
+        "line": 118,
+        "decorators": []
+      },
+      {
+        "name": "grant",
+        "line": 124,
+        "decorators": []
+      },
+      {
+        "name": "current",
+        "line": 148,
+        "decorators": []
+      },
+      {
+        "name": "dispatch",
+        "line": 158,
+        "decorators": []
+      },
+      {
+        "name": "handle",
+        "line": 179,
+        "decorators": []
+      },
+      {
+        "name": "checkpoint",
+        "line": 329,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 333,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/kafka_backend.py",
+    "interfaces": [
+      {
+        "name": "_require_kafka",
+        "line": 31,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 46,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 102,
+        "decorators": []
+      },
+      {
+        "name": "poll",
+        "line": 129,
+        "decorators": []
+      },
+      {
+        "name": "_broker_message_is_usable",
+        "line": 138,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "_parse",
+        "line": 148,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "stream",
+        "line": 166,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 173,
+        "decorators": []
+      },
+      {
+        "name": "_process_message",
+        "line": 197,
+        "decorators": []
+      },
+      {
+        "name": "_to_dead_letter",
+        "line": 217,
+        "decorators": []
+      },
+      {
+        "name": "stop",
+        "line": 231,
+        "decorators": []
+      },
+      {
+        "name": "close",
+        "line": 234,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 249,
+        "decorators": []
+      },
+      {
+        "name": "apply",
+        "line": 254,
+        "decorators": []
+      },
+      {
+        "name": "timeline",
+        "line": 266,
+        "decorators": []
+      },
+      {
+        "name": "summary",
+        "line": 269,
+        "decorators": []
+      },
+      {
+        "name": "callback",
+        "line": 69,
+        "decorators": []
+      },
+      {
+        "name": "stop",
+        "line": 177,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/key_custody.py",
+    "interfaces": [
+      {
+        "name": "_aesgcm",
+        "line": 86,
+        "decorators": []
+      },
+      {
+        "name": "_hkdf",
+        "line": 94,
+        "decorators": []
+      },
+      {
+        "name": "_binding",
+        "line": 119,
+        "decorators": []
+      },
+      {
+        "name": "_wrap_binding",
+        "line": 397,
+        "decorators": []
+      },
+      {
+        "name": "_credential_candidates",
+        "line": 402,
+        "decorators": []
+      },
+      {
+        "name": "random_master_seed",
+        "line": 408,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 76,
+        "decorators": []
+      },
+      {
+        "name": "associated_data",
+        "line": 110,
+        "decorators": []
+      },
+      {
+        "name": "rebound",
+        "line": 113,
+        "decorators": []
+      },
+      {
+        "name": "digest",
+        "line": 154,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 157,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 186,
+        "decorators": []
+      },
+      {
+        "name": "register_principal",
+        "line": 201,
+        "decorators": []
+      },
+      {
+        "name": "_fingerprint",
+        "line": 213,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "_authorize",
+        "line": 216,
+        "decorators": []
+      },
+      {
+        "name": "holds_credential_material",
+        "line": 226,
+        "decorators": []
+      },
+      {
+        "name": "_kek",
+        "line": 232,
+        "decorators": []
+      },
+      {
+        "name": "_current_kek_generation",
+        "line": 235,
+        "decorators": []
+      },
+      {
+        "name": "_unwrap",
+        "line": 238,
+        "decorators": []
+      },
+      {
+        "name": "_dek",
+        "line": 250,
+        "decorators": []
+      },
+      {
+        "name": "encrypt",
+        "line": 263,
+        "decorators": []
+      },
+      {
+        "name": "decrypt",
+        "line": 272,
+        "decorators": []
+      },
+      {
+        "name": "destroy_subject",
+        "line": 290,
+        "decorators": []
+      },
+      {
+        "name": "is_destroyed",
+        "line": 308,
+        "decorators": []
+      },
+      {
+        "name": "has_key",
+        "line": 311,
+        "decorators": []
+      },
+      {
+        "name": "rotate_kek",
+        "line": 314,
+        "decorators": []
+      },
+      {
+        "name": "journal",
+        "line": 342,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "backup",
+        "line": 345,
+        "decorators": []
+      },
+      {
+        "name": "restore",
+        "line": 350,
+        "decorators": []
+      },
+      {
+        "name": "_log",
+        "line": 391,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/metrics.py",
+    "interfaces": [
+      {
+        "name": "snapshot",
+        "line": 30,
+        "decorators": []
+      },
+      {
+        "name": "merge",
+        "line": 33,
+        "decorators": []
+      },
+      {
+        "name": "reset",
+        "line": 39,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/model_registry.py",
+    "interfaces": [
+      {
+        "name": "artifact_digest",
+        "line": 80,
+        "decorators": []
+      },
+      {
+        "name": "_ed25519",
+        "line": 85,
+        "decorators": []
+      },
+      {
+        "name": "registry_for",
+        "line": 331,
+        "decorators": []
+      },
+      {
+        "name": "signing_payload",
+        "line": 126,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 138,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 149,
+        "decorators": []
+      },
+      {
+        "name": "public_key",
+        "line": 160,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "trusted_keys",
+        "line": 165,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "sign",
+        "line": 168,
+        "decorators": []
+      },
+      {
+        "name": "issue",
+        "line": 172,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 196,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 210,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 222,
+        "decorators": []
+      },
+      {
+        "name": "register",
+        "line": 245,
+        "decorators": []
+      },
+      {
+        "name": "revoke",
+        "line": 253,
+        "decorators": []
+      },
+      {
+        "name": "is_registered",
+        "line": 256,
+        "decorators": []
+      },
+      {
+        "name": "manifest",
+        "line": 259,
+        "decorators": []
+      },
+      {
+        "name": "registered",
+        "line": 262,
+        "decorators": []
+      },
+      {
+        "name": "_store_unverified",
+        "line": 265,
+        "decorators": []
+      },
+      {
+        "name": "attest",
+        "line": 269,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/models/__init__.py",
+    "interfaces": [
+      {
+        "name": "build_model",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "select_model",
+        "line": 87,
+        "decorators": []
+      },
+      {
+        "name": "available_models",
+        "line": 124,
+        "decorators": []
+      },
+      {
+        "name": "name",
+        "line": 69,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 72,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/models/adversarial.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 19,
+        "decorators": []
+      },
+      {
+        "name": "health",
+        "line": 22,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 25,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 41,
+        "decorators": []
+      },
+      {
+        "name": "health",
+        "line": 52,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 55,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 82,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/models/base.py",
+    "interfaces": [
+      {
+        "name": "wrap_untrusted",
+        "line": 123,
+        "decorators": []
+      },
+      {
+        "name": "build_prompt",
+        "line": 138,
+        "decorators": []
+      },
+      {
+        "name": "parse_proposals",
+        "line": 162,
+        "decorators": []
+      },
+      {
+        "name": "_extract_json_array",
+        "line": 203,
+        "decorators": []
+      },
+      {
+        "name": "from_iterable",
+        "line": 64,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "default",
+        "line": 68,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "add",
+        "line": 84,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 87,
+        "decorators": []
+      },
+      {
+        "name": "prompt_manifest",
+        "line": 90,
+        "decorators": []
+      },
+      {
+        "name": "egress_tools",
+        "line": 97,
+        "decorators": []
+      },
+      {
+        "name": "consequential_tools",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 104,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 119,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/models/deterministic.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 19,
+        "decorators": []
+      },
+      {
+        "name": "health",
+        "line": 30,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 33,
+        "decorators": []
+      },
+      {
+        "name": "_materialise",
+        "line": 46,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/models/ollama.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 33,
+        "decorators": []
+      },
+      {
+        "name": "resolves",
+        "line": 54,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "health",
+        "line": 70,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 104,
+        "decorators": []
+      },
+      {
+        "name": "generate",
+        "line": 111,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/models/openai_compat.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 31,
+        "decorators": []
+      },
+      {
+        "name": "is_local",
+        "line": 51,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "health",
+        "line": 54,
+        "decorators": []
+      },
+      {
+        "name": "_headers",
+        "line": 70,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 76,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/oversight.py",
+    "interfaces": [
+      {
+        "name": "_demand_ratio",
+        "line": 571,
+        "decorators": []
+      },
+      {
+        "name": "run_queue_pressure_trial",
+        "line": 592,
+        "decorators": []
+      },
+      {
+        "name": "sweep_oversight",
+        "line": 749,
+        "decorators": []
+      },
+      {
+        "name": "__post_init__",
+        "line": 113,
+        "decorators": []
+      },
+      {
+        "name": "sustainable_actions_per_day",
+        "line": 131,
+        "decorators": []
+      },
+      {
+        "name": "declared_consistency",
+        "line": 172,
+        "decorators": []
+      },
+      {
+        "name": "from_env",
+        "line": 230,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 280,
+        "decorators": []
+      },
+      {
+        "name": "deliberation_seconds",
+        "line": 303,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "__init__",
+        "line": 317,
+        "decorators": []
+      },
+      {
+        "name": "admit",
+        "line": 323,
+        "decorators": []
+      },
+      {
+        "name": "_refuse",
+        "line": 397,
+        "decorators": []
+      },
+      {
+        "name": "_in_window",
+        "line": 400,
+        "decorators": []
+      },
+      {
+        "name": "records",
+        "line": 409,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "report",
+        "line": 412,
+        "decorators": []
+      },
+      {
+        "name": "approvals",
+        "line": 437,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "per_reviewer",
+        "line": 441,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "median_deliberation_seconds",
+        "line": 448,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "escalations",
+        "line": 458,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "refusals_total",
+        "line": 462,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "headroom",
+        "line": 466,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 480,
+        "decorators": []
+      },
+      {
+        "name": "review",
+        "line": 523,
+        "decorators": []
+      },
+      {
+        "name": "reset",
+        "line": 530,
+        "decorators": []
+      },
+      {
+        "name": "number",
+        "line": 251,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/pack_floor.py",
+    "interfaces": [
+      {
+        "name": "_protected",
+        "line": 106,
+        "decorators": []
+      },
+      {
+        "name": "_walk_keys",
+        "line": 110,
+        "decorators": []
+      },
+      {
+        "name": "_test_exists",
+        "line": 121,
+        "decorators": []
+      },
+      {
+        "name": "check_pack",
+        "line": 130,
+        "decorators": []
+      },
+      {
+        "name": "read_pack",
+        "line": 304,
+        "decorators": []
+      },
+      {
+        "name": "load_governed_pack",
+        "line": 308,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 95,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "identity_fields",
+        "line": 284,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "controls",
+        "line": 288,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "model_manifests",
+        "line": 292,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "review",
+        "line": 296,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "delegation",
+        "line": 300,
+        "decorators": [
+          "property"
+        ]
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/packet_verifier.py",
+    "interfaces": [
+      {
+        "name": "canonical_hash",
+        "line": 31,
+        "decorators": []
+      },
+      {
+        "name": "_fields",
+        "line": 36,
+        "decorators": []
+      },
+      {
+        "name": "_text",
+        "line": 41,
+        "decorators": []
+      },
+      {
+        "name": "_number",
+        "line": 46,
+        "decorators": []
+      },
+      {
+        "name": "inspect_packet",
+        "line": 53,
+        "decorators": []
+      },
+      {
+        "name": "_unique_object",
+        "line": 243,
+        "decorators": []
+      },
+      {
+        "name": "load_packet",
+        "line": 252,
+        "decorators": []
+      },
+      {
+        "name": "main",
+        "line": 260,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/pipeline.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 30,
+        "decorators": []
+      },
+      {
+        "name": "_register_default_tools",
+        "line": 77,
+        "decorators": []
+      },
+      {
+        "name": "trust_source",
+        "line": 84,
+        "decorators": []
+      },
+      {
+        "name": "make_agent",
+        "line": 87,
+        "decorators": []
+      },
+      {
+        "name": "make_student_support_agent",
+        "line": 113,
+        "decorators": []
+      },
+      {
+        "name": "ingest_document",
+        "line": 121,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/plugins.py",
+    "interfaces": [
+      {
+        "name": "register",
+        "line": 58,
+        "decorators": []
+      },
+      {
+        "name": "unregister",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "_load_entry_points",
+        "line": 87,
+        "decorators": []
+      },
+      {
+        "name": "load_dotted",
+        "line": 107,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 124,
+        "decorators": []
+      },
+      {
+        "name": "create",
+        "line": 140,
+        "decorators": []
+      },
+      {
+        "name": "available",
+        "line": 149,
+        "decorators": []
+      },
+      {
+        "name": "configured_name",
+        "line": 167,
+        "decorators": []
+      },
+      {
+        "name": "fits",
+        "line": 172,
+        "decorators": []
+      },
+      {
+        "name": "_install_reference_plugins",
+        "line": 177,
+        "decorators": []
+      },
+      {
+        "name": "_memory_register",
+        "line": 180,
+        "decorators": []
+      },
+      {
+        "name": "_memory_evidence",
+        "line": 185,
+        "decorators": []
+      },
+      {
+        "name": "_memory_objects",
+        "line": 190,
+        "decorators": []
+      },
+      {
+        "name": "_memory_events",
+        "line": 195,
+        "decorators": []
+      },
+      {
+        "name": "_memory_snapshots",
+        "line": 200,
+        "decorators": []
+      },
+      {
+        "name": "_memory_inward",
+        "line": 205,
+        "decorators": []
+      },
+      {
+        "name": "_redis_register",
+        "line": 210,
+        "decorators": []
+      },
+      {
+        "name": "_redis_evidence",
+        "line": 215,
+        "decorators": []
+      },
+      {
+        "name": "_redis_objects",
+        "line": 224,
+        "decorators": []
+      },
+      {
+        "name": "_kafka_events",
+        "line": 229,
+        "decorators": []
+      },
+      {
+        "name": "_postgres_register",
+        "line": 234,
+        "decorators": []
+      },
+      {
+        "name": "_postgres_evidence",
+        "line": 239,
+        "decorators": []
+      },
+      {
+        "name": "_postgres_objects",
+        "line": 246,
+        "decorators": []
+      },
+      {
+        "name": "_iceberg_snapshots",
+        "line": 251,
+        "decorators": []
+      },
+      {
+        "name": "_udp_diode",
+        "line": 256,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/ports.py",
+    "interfaces": [
+      {
+        "name": "connect",
+        "line": 34,
+        "decorators": []
+      },
+      {
+        "name": "send_inward",
+        "line": 35,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 42,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 54,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 61,
+        "decorators": []
+      },
+      {
+        "name": "commit",
+        "line": 73,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 74,
+        "decorators": []
+      },
+      {
+        "name": "manifest",
+        "line": 75,
+        "decorators": []
+      },
+      {
+        "name": "rollback",
+        "line": 76,
+        "decorators": []
+      },
+      {
+        "name": "propose",
+        "line": 90,
+        "decorators": []
+      },
+      {
+        "name": "health",
+        "line": 97,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 109,
+        "decorators": []
+      },
+      {
+        "name": "seed",
+        "line": 110,
+        "decorators": []
+      },
+      {
+        "name": "result_for",
+        "line": 111,
+        "decorators": []
+      },
+      {
+        "name": "transition",
+        "line": 112,
+        "decorators": []
+      },
+      {
+        "name": "mutation_count",
+        "line": 115,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "append",
+        "line": 122,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 123,
+        "decorators": []
+      },
+      {
+        "name": "find",
+        "line": 124,
+        "decorators": []
+      },
+      {
+        "name": "__iter__",
+        "line": 125,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 126,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 133,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 134,
+        "decorators": []
+      },
+      {
+        "name": "bind",
+        "line": 141,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 148,
+        "decorators": []
+      },
+      {
+        "name": "remove",
+        "line": 149,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 150,
+        "decorators": []
+      },
+      {
+        "name": "values",
+        "line": 151,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 152,
+        "decorators": []
+      },
+      {
+        "name": "atomic",
+        "line": 166,
+        "decorators": []
+      },
+      {
+        "name": "now",
+        "line": 179,
+        "decorators": []
+      },
+      {
+        "name": "now",
+        "line": 183,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 192,
+        "decorators": []
+      },
+      {
+        "name": "now",
+        "line": 195,
+        "decorators": []
+      },
+      {
+        "name": "advance",
+        "line": 198,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/postgres_backend.py",
+    "interfaces": [
+      {
+        "name": "database_from_env",
+        "line": 36,
+        "decorators": []
+      },
+      {
+        "name": "PostgresCaseRegister",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "PostgresEvidenceLedger",
+        "line": 65,
+        "decorators": []
+      },
+      {
+        "name": "PostgresObjectStore",
+        "line": 70,
+        "decorators": []
+      },
+      {
+        "name": "build_atomic_executor",
+        "line": 75,
+        "decorators": []
+      },
+      {
+        "name": "ddl",
+        "line": 88,
+        "decorators": []
+      },
+      {
+        "name": "append_only_grants",
+        "line": 93,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/privacy_pipeline.py",
+    "interfaces": [
+      {
+        "name": "as_text",
+        "line": 72,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 88,
+        "decorators": []
+      },
+      {
+        "name": "_on",
+        "line": 106,
+        "decorators": []
+      },
+      {
+        "name": "_record",
+        "line": 109,
+        "decorators": []
+      },
+      {
+        "name": "_identifiers",
+        "line": 113,
+        "decorators": []
+      },
+      {
+        "name": "context_for_model",
+        "line": 128,
+        "decorators": []
+      },
+      {
+        "name": "sanitize_text",
+        "line": 172,
+        "decorators": []
+      },
+      {
+        "name": "derive",
+        "line": 186,
+        "decorators": []
+      },
+      {
+        "name": "identity_entitlement",
+        "line": 208,
+        "decorators": []
+      },
+      {
+        "name": "release",
+        "line": 222,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 269,
+        "decorators": []
+      },
+      {
+        "name": "complete",
+        "line": 280,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "governed_locations",
+        "line": 286,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 289,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 312,
+        "decorators": []
+      },
+      {
+        "name": "erase",
+        "line": 327,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 344,
+        "decorators": []
+      },
+      {
+        "name": "_restore_admin",
+        "line": 431,
+        "decorators": []
+      },
+      {
+        "name": "with_backup_credential",
+        "line": 436,
+        "decorators": []
+      },
+      {
+        "name": "read_back",
+        "line": 353,
+        "decorators": []
+      },
+      {
+        "name": "scan",
+        "line": 362,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/privacy_runtime.py",
+    "interfaces": [
+      {
+        "name": "validate",
+        "line": 24,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/privacy_vault.py",
+    "interfaces": [
+      {
+        "name": "_shares_run",
+        "line": 69,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 54,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 78,
+        "decorators": []
+      },
+      {
+        "name": "token_for",
+        "line": 87,
+        "decorators": []
+      },
+      {
+        "name": "tokenize_text",
+        "line": 119,
+        "decorators": []
+      },
+      {
+        "name": "forget_subject",
+        "line": 158,
+        "decorators": []
+      },
+      {
+        "name": "detect_contact_details",
+        "line": 165,
+        "decorators": [
+          "staticmethod"
+        ]
+      },
+      {
+        "name": "entry",
+        "line": 180,
+        "decorators": []
+      },
+      {
+        "name": "restore",
+        "line": 183,
+        "decorators": []
+      },
+      {
+        "name": "restore_text",
+        "line": 196,
+        "decorators": []
+      },
+      {
+        "name": "entries_for",
+        "line": 213,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 216,
+        "decorators": []
+      },
+      {
+        "name": "replace",
+        "line": 137,
+        "decorators": []
+      },
+      {
+        "name": "replace",
+        "line": 202,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/profiles.py",
+    "interfaces": [
+      {
+        "name": "_governance_context",
+        "line": 207,
+        "decorators": []
+      },
+      {
+        "name": "discover_profiles",
+        "line": 277,
+        "decorators": []
+      },
+      {
+        "name": "allowed_operations",
+        "line": 70,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "transition_rules",
+        "line": 74,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "required_approval_roles",
+        "line": 83,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "make_executor",
+        "line": 104,
+        "decorators": []
+      },
+      {
+        "name": "load",
+        "line": 127,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "from_dict",
+        "line": 136,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "string_list",
+        "line": 236,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/race.py",
+    "interfaces": [
+      {
+        "name": "run_replay_race",
+        "line": 43,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 39,
+        "decorators": []
+      },
+      {
+        "name": "execute_once",
+        "line": 79,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/redis_backend.py",
+    "interfaces": [
+      {
+        "name": "connect_redis",
+        "line": 19,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 28,
+        "decorators": []
+      },
+      {
+        "name": "_key",
+        "line": 31,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 34,
+        "decorators": []
+      },
+      {
+        "name": "put_if_absent",
+        "line": 37,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 42,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 48,
+        "decorators": []
+      },
+      {
+        "name": "bind",
+        "line": 51,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 57,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "remove",
+        "line": 63,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 66,
+        "decorators": []
+      },
+      {
+        "name": "values",
+        "line": 70,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 73,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 80,
+        "decorators": []
+      },
+      {
+        "name": "_case_key",
+        "line": 83,
+        "decorators": []
+      },
+      {
+        "name": "_result_key",
+        "line": 86,
+        "decorators": []
+      },
+      {
+        "name": "seed",
+        "line": 89,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 94,
+        "decorators": []
+      },
+      {
+        "name": "result_for",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "mutation_count",
+        "line": 105,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "transition",
+        "line": 108,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 168,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 174,
+        "decorators": []
+      },
+      {
+        "name": "_records",
+        "line": 194,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 197,
+        "decorators": []
+      },
+      {
+        "name": "find",
+        "line": 207,
+        "decorators": []
+      },
+      {
+        "name": "__iter__",
+        "line": 212,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 215,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/redteam.py",
+    "interfaces": [
+      {
+        "name": "_try",
+        "line": 58,
+        "decorators": []
+      },
+      {
+        "name": "execute_attack",
+        "line": 65,
+        "decorators": []
+      },
+      {
+        "name": "run_redteam",
+        "line": 189,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 52,
+        "decorators": []
+      },
+      {
+        "name": "leaked_beyond_grant",
+        "line": 75,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 147,
+        "decorators": []
+      },
+      {
+        "name": "next_attack",
+        "line": 150,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 162,
+        "decorators": []
+      },
+      {
+        "name": "available",
+        "line": 168,
+        "decorators": []
+      },
+      {
+        "name": "next_attack",
+        "line": 171,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/reproducible_data.py",
+    "interfaces": [
+      {
+        "name": "_manifest",
+        "line": 18,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 35,
+        "decorators": []
+      },
+      {
+        "name": "commit",
+        "line": 39,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 47,
+        "decorators": []
+      },
+      {
+        "name": "manifest",
+        "line": 50,
+        "decorators": []
+      },
+      {
+        "name": "current_id",
+        "line": 54,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "current_rows",
+        "line": 57,
+        "decorators": []
+      },
+      {
+        "name": "rollback",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "history",
+        "line": 65,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 74,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/resilience.py",
+    "interfaces": [
+      {
+        "name": "_executor",
+        "line": 51,
+        "decorators": []
+      },
+      {
+        "name": "_proposal",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "_approve",
+        "line": 70,
+        "decorators": []
+      },
+      {
+        "name": "_seed",
+        "line": 77,
+        "decorators": []
+      },
+      {
+        "name": "_snapshot",
+        "line": 86,
+        "decorators": []
+      },
+      {
+        "name": "_is_complete",
+        "line": 118,
+        "decorators": []
+      },
+      {
+        "name": "_is_untouched",
+        "line": 128,
+        "decorators": []
+      },
+      {
+        "name": "_race_worker",
+        "line": 139,
+        "decorators": []
+      },
+      {
+        "name": "_stop_workers",
+        "line": 156,
+        "decorators": []
+      },
+      {
+        "name": "_run_race",
+        "line": 167,
+        "decorators": []
+      },
+      {
+        "name": "_crash_worker",
+        "line": 225,
+        "decorators": []
+      },
+      {
+        "name": "_run_crash",
+        "line": 260,
+        "decorators": []
+      },
+      {
+        "name": "run_resilience",
+        "line": 289,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 47,
+        "decorators": []
+      },
+      {
+        "name": "crashing_transaction",
+        "line": 230,
+        "decorators": [
+          "contextmanager"
+        ]
+      },
+      {
+        "name": "crash_append",
+        "line": 235,
+        "decorators": []
+      },
+      {
+        "name": "crash_transition",
+        "line": 241,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/review_queue.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 43,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 67,
+        "decorators": []
+      },
+      {
+        "name": "for_pack",
+        "line": 85,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "depth",
+        "line": 96,
+        "decorators": []
+      },
+      {
+        "name": "submit",
+        "line": 100,
+        "decorators": []
+      },
+      {
+        "name": "expire",
+        "line": 119,
+        "decorators": []
+      },
+      {
+        "name": "_used",
+        "line": 130,
+        "decorators": []
+      },
+      {
+        "name": "decide",
+        "line": 133,
+        "decorators": []
+      },
+      {
+        "name": "approved_without_human",
+        "line": 160,
+        "decorators": []
+      },
+      {
+        "name": "stats",
+        "line": 164,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/runtime_factory.py",
+    "interfaces": [
+      {
+        "name": "build_control_plane",
+        "line": 61,
+        "decorators": []
+      },
+      {
+        "name": "_build_model",
+        "line": 197,
+        "decorators": []
+      },
+      {
+        "name": "configuration_warnings",
+        "line": 218,
+        "decorators": []
+      },
+      {
+        "name": "_is_local_model_url",
+        "line": 290,
+        "decorators": []
+      },
+      {
+        "name": "_oversight_warnings",
+        "line": 306,
+        "decorators": []
+      },
+      {
+        "name": "production_configuration_warnings",
+        "line": 412,
+        "decorators": []
+      },
+      {
+        "name": "readiness",
+        "line": 417,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 56,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/scaffold.py",
+    "interfaces": [
+      {
+        "name": "scaffold_domain",
+        "line": 211,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/security.py",
+    "interfaces": [
+      {
+        "name": "require_role",
+        "line": 258,
+        "decorators": []
+      },
+      {
+        "name": "has_role",
+        "line": 59,
+        "decorators": []
+      },
+      {
+        "name": "role",
+        "line": 63,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 67,
+        "decorators": []
+      },
+      {
+        "name": "__post_init__",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "from_env",
+        "line": 109,
+        "decorators": [
+          "classmethod"
+        ]
+      },
+      {
+        "name": "warnings",
+        "line": 146,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 169,
+        "decorators": []
+      },
+      {
+        "name": "warnings",
+        "line": 174,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "authenticate",
+        "line": 177,
+        "decorators": []
+      },
+      {
+        "name": "_from_token",
+        "line": 188,
+        "decorators": []
+      },
+      {
+        "name": "_from_headers",
+        "line": 197,
+        "decorators": []
+      },
+      {
+        "name": "_from_oidc",
+        "line": 209,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/semantic_router.py",
+    "interfaces": [
+      {
+        "name": "_terms",
+        "line": 65,
+        "decorators": []
+      },
+      {
+        "name": "_cosine",
+        "line": 143,
+        "decorators": []
+      },
+      {
+        "name": "fit",
+        "line": 83,
+        "decorators": []
+      },
+      {
+        "name": "vector",
+        "line": 85,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 93,
+        "decorators": []
+      },
+      {
+        "name": "fit",
+        "line": 96,
+        "decorators": []
+      },
+      {
+        "name": "vector",
+        "line": 103,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 121,
+        "decorators": []
+      },
+      {
+        "name": "fit",
+        "line": 128,
+        "decorators": []
+      },
+      {
+        "name": "vector",
+        "line": 131,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 157,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 176,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 191,
+        "decorators": []
+      },
+      {
+        "name": "classify",
+        "line": 205,
+        "decorators": []
+      },
+      {
+        "name": "sensitivity",
+        "line": 214,
+        "decorators": []
+      },
+      {
+        "name": "route",
+        "line": 223,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/sql_backend.py",
+    "interfaces": [
+      {
+        "name": "schema_statements",
+        "line": 102,
+        "decorators": []
+      },
+      {
+        "name": "open_sqlite",
+        "line": 258,
+        "decorators": []
+      },
+      {
+        "name": "open_postgres",
+        "line": 275,
+        "decorators": []
+      },
+      {
+        "name": "q",
+        "line": 69,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 164,
+        "decorators": []
+      },
+      {
+        "name": "connection",
+        "line": 178,
+        "decorators": []
+      },
+      {
+        "name": "table",
+        "line": 186,
+        "decorators": []
+      },
+      {
+        "name": "create_schema",
+        "line": 189,
+        "decorators": []
+      },
+      {
+        "name": "transaction",
+        "line": 202,
+        "decorators": [
+          "contextmanager"
+        ]
+      },
+      {
+        "name": "close",
+        "line": 233,
+        "decorators": []
+      },
+      {
+        "name": "_auto",
+        "line": 245,
+        "decorators": [
+          "contextmanager"
+        ]
+      },
+      {
+        "name": "loads",
+        "line": 251,
+        "decorators": []
+      },
+      {
+        "name": "dumps",
+        "line": 254,
+        "decorators": []
+      },
+      {
+        "name": "connect",
+        "line": 263,
+        "decorators": []
+      },
+      {
+        "name": "connect",
+        "line": 285,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 308,
+        "decorators": []
+      },
+      {
+        "name": "execute",
+        "line": 320,
+        "decorators": []
+      },
+      {
+        "name": "one",
+        "line": 324,
+        "decorators": []
+      },
+      {
+        "name": "all",
+        "line": 327,
+        "decorators": []
+      },
+      {
+        "name": "table",
+        "line": 330,
+        "decorators": []
+      },
+      {
+        "name": "bump",
+        "line": 333,
+        "decorators": []
+      },
+      {
+        "name": "counter",
+        "line": 341,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 349,
+        "decorators": []
+      },
+      {
+        "name": "seed",
+        "line": 352,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 365,
+        "decorators": []
+      },
+      {
+        "name": "result_for",
+        "line": 373,
+        "decorators": []
+      },
+      {
+        "name": "mutation_count",
+        "line": 388,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "transition",
+        "line": 391,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 441,
+        "decorators": []
+      },
+      {
+        "name": "append",
+        "line": 445,
+        "decorators": []
+      },
+      {
+        "name": "records",
+        "line": 463,
+        "decorators": []
+      },
+      {
+        "name": "verify",
+        "line": 472,
+        "decorators": []
+      },
+      {
+        "name": "find",
+        "line": 482,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 491,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 494,
+        "decorators": []
+      },
+      {
+        "name": "put_if_absent",
+        "line": 502,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 510,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 527,
+        "decorators": []
+      },
+      {
+        "name": "bind",
+        "line": 530,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 544,
+        "decorators": []
+      },
+      {
+        "name": "put",
+        "line": 547,
+        "decorators": []
+      },
+      {
+        "name": "remove",
+        "line": 555,
+        "decorators": []
+      },
+      {
+        "name": "get",
+        "line": 560,
+        "decorators": []
+      },
+      {
+        "name": "values",
+        "line": 566,
+        "decorators": []
+      },
+      {
+        "name": "__len__",
+        "line": 572,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/telemetry.py",
+    "interfaces": [
+      {
+        "name": "_escape",
+        "line": 60,
+        "decorators": []
+      },
+      {
+        "name": "render_prometheus",
+        "line": 64,
+        "decorators": []
+      },
+      {
+        "name": "samples_from",
+        "line": 81,
+        "decorators": []
+      },
+      {
+        "name": "configure_tracing",
+        "line": 120,
+        "decorators": []
+      },
+      {
+        "name": "instrument_fastapi",
+        "line": 143,
+        "decorators": []
+      },
+      {
+        "name": "increment",
+        "line": 107,
+        "decorators": []
+      },
+      {
+        "name": "set",
+        "line": 110,
+        "decorators": []
+      },
+      {
+        "name": "snapshot",
+        "line": 113,
+        "decorators": []
+      },
+      {
+        "name": "render",
+        "line": 116,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 155,
+        "decorators": []
+      },
+      {
+        "name": "__enter__",
+        "line": 158,
+        "decorators": []
+      },
+      {
+        "name": "__exit__",
+        "line": 162,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/thesis.py",
+    "interfaces": [
+      {
+        "name": "_packs",
+        "line": 126,
+        "decorators": []
+      },
+      {
+        "name": "falsify_unmediated_effect",
+        "line": 133,
+        "decorators": []
+      },
+      {
+        "name": "falsify_disclosure",
+        "line": 153,
+        "decorators": []
+      },
+      {
+        "name": "falsify_amplified_delegation",
+        "line": 193,
+        "decorators": []
+      },
+      {
+        "name": "falsify_decorative_controls",
+        "line": 205,
+        "decorators": []
+      },
+      {
+        "name": "falsify_phantom_evidence",
+        "line": 232,
+        "decorators": []
+      },
+      {
+        "name": "run_thesis",
+        "line": 272,
+        "decorators": []
+      },
+      {
+        "name": "refuted",
+        "line": 69,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 72,
+        "decorators": []
+      },
+      {
+        "name": "attempts",
+        "line": 85,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "counterexamples",
+        "line": 89,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "holds",
+        "line": 93,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 96,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/threats.py",
+    "interfaces": [
+      {
+        "name": "_strings",
+        "line": 91,
+        "decorators": []
+      },
+      {
+        "name": "load_catalogue",
+        "line": 99,
+        "decorators": []
+      },
+      {
+        "name": "locator_exists",
+        "line": 149,
+        "decorators": []
+      },
+      {
+        "name": "check_catalogue",
+        "line": 161,
+        "decorators": []
+      },
+      {
+        "name": "to_dict",
+        "line": 44,
+        "decorators": []
+      },
+      {
+        "name": "count",
+        "line": 58,
+        "decorators": []
+      },
+      {
+        "name": "holds",
+        "line": 63,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 66,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "src/fssaira/verification.py",
+    "interfaces": [
+      {
+        "name": "verify_profile",
+        "line": 430,
+        "decorators": []
+      },
+      {
+        "name": "key",
+        "line": 94,
+        "decorators": []
+      },
+      {
+        "name": "holds",
+        "line": 135,
+        "decorators": [
+          "property"
+        ]
+      },
+      {
+        "name": "to_dict",
+        "line": 138,
+        "decorators": []
+      },
+      {
+        "name": "__init__",
+        "line": 172,
+        "decorators": []
+      },
+      {
+        "name": "configurations",
+        "line": 184,
+        "decorators": []
+      },
+      {
+        "name": "observe",
+        "line": 193,
+        "decorators": []
+      },
+      {
+        "name": "_approval_for",
+        "line": 235,
+        "decorators": []
+      },
+      {
+        "name": "_required_role",
+        "line": 297,
+        "decorators": []
+      },
+      {
+        "name": "_authorized",
+        "line": 306,
+        "decorators": []
+      },
+      {
+        "name": "check",
+        "line": 324,
+        "decorators": []
+      },
+      {
+        "name": "_check_idempotence",
+        "line": 395,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "jobs/bootstrap_iceberg.py",
+    "interfaces": [
+      {
+        "name": "build_spark",
+        "line": 19,
+        "decorators": []
+      },
+      {
+        "name": "main",
+        "line": 38,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "jobs/kafka_to_iceberg.py",
+    "interfaces": [
+      {
+        "name": "write_batch",
+        "line": 19,
+        "decorators": []
+      },
+      {
+        "name": "main",
+        "line": 42,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "jobs/verify_evidence_chain.py",
+    "interfaces": [
+      {
+        "name": "recompute",
+        "line": 38,
+        "decorators": []
+      },
+      {
+        "name": "main",
+        "line": 47,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "adapters/__init__.py",
+    "interfaces": [],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "adapters/iceberg_adapter.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 16,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "adapters/kafka_adapter.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 16,
+        "decorators": []
+      },
+      {
+        "name": "read",
+        "line": 19,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "adapters/local_model_ollama.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 10,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  },
+  {
+    "file": "adapters/spark_adapter.py",
+    "interfaces": [
+      {
+        "name": "__init__",
+        "line": 16,
+        "decorators": []
+      },
+      {
+        "name": "run",
+        "line": 23,
+        "decorators": []
+      },
+      {
+        "name": "h",
+        "line": 31,
+        "decorators": []
+      }
+    ],
+    "deployment_status": "not blanket-qualified; consult specific executed tests and residual risks"
+  }
+]

@@ -10,11 +10,15 @@ import hashlib
 import json
 import random
 import sqlite3
+import sys
 import tempfile
 import time
 from pathlib import Path
 
-from fssaira.joined_workflow import Workflow, call
+# Load the stdlib-only leaf without the legacy package facade (which imports YAML).
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src" / "fssaira"))
+
+from joined_workflow import Workflow, call
 
 ACTIONS = ('read', 'wrong_subject', 'wrong_tenant', 'propose_bad', 'confirm', 'approve',
            'execute', 'release_wrong', 'replay', 'memory', 'delegate_escalation', 'fabricate')

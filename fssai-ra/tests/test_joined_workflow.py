@@ -81,6 +81,8 @@ def test_revocation_after_cached_result_before_release(world):
     assert call(world, 'demo-admin', op='revoke', grant='root')['ok']
     assert not call(world, 'demo-recipient', op='release', proposal=p)['ok']
     assert state(world)[2] == 0
+    assert not call(world, op='reconcile', proposal=p)['ok']
+    assert call(world, 'demo-registrar', op='reconcile', proposal=p)['state'] == 'committed'
 
 
 def test_approval_substitution_and_confused_deputy(world):

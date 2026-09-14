@@ -280,6 +280,11 @@ class Workflow:
         if op == "reconcile":
             if actor != c["actor"] and role not in ("registrar", "appeal"):
                 raise Denied("RECONCILIATION_SCOPE")
+            if actor == c["actor"]:
+                self.grant(c["grant"], actor, "execute", c["tenant"], c["subject"])
+                r = self.record(c["tenant"], c["subject"])
+                if not r["consent"] or int(self.meta("clock")) > c["expires"]:
+                    raise Denied("RECONCILIATION_REVOKED")
             e = self.db.execute("SELECT value,version FROM effects WHERE id=?", (q["proposal"],)).fetchone()
             return {"state": "committed" if e else "not_dispatched", "effect": dict(e) if e else None}
         if op == "execute":
