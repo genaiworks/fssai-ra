@@ -1,0 +1,315 @@
+{
+  "kind": "claims-register",
+  "claims": [
+    {
+      "claim": "Model cannot execute",
+      "implementation": "exact_action.AccountableExecutor",
+      "enforcement_point": "execution mediator",
+      "test": "tests/test_education_pack.py::test_unauthorized_agent_and_forged_authority_are_denied",
+      "evidence": "conference/evidence/security-results.json#F01; ablation: execution_mediator: YES",
+      "command": "make falsify F=F01 && make ablation F=F01",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Approval binds one exact proposal",
+      "implementation": "exact_action.ActionProposal.digest",
+      "enforcement_point": "execution mediator",
+      "test": "tests/test_education_pack.py::test_wrong_student_grade_change_is_denied",
+      "evidence": "conference/evidence/security-results.json#F21; ablation: proposal_digest_binding: YES",
+      "command": "make falsify F=F21 && make ablation F=F21",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Text claiming authority is not authority",
+      "implementation": "exact_action._approval_signature_valid (Ed25519)",
+      "enforcement_point": "execution mediator",
+      "test": "tests/test_education_pack.py::test_unauthorized_agent_and_forged_authority_are_denied",
+      "evidence": "conference/evidence/security-results.json#F19; ablation: approval_signature: YES",
+      "command": "make falsify F=F19 && make ablation F=F19",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Only the executor holds the write credential",
+      "implementation": "education_world.CredentialedRegister",
+      "enforcement_point": "register",
+      "test": "tests/test_education_pack.py::test_a_tool_holding_no_write_credential_cannot_write_the_register",
+      "evidence": "conference/evidence/security-results.json#F20; ablation: credentialed_register: YES",
+      "command": "make falsify F=F20 && make ablation F=F20",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Replay causes one mutation",
+      "implementation": "ApprovalUseStore + register idempotency",
+      "enforcement_point": "execution mediator",
+      "test": "tests/test_education_pack.py::test_replay_of_an_executed_proposal_causes_no_second_mutation",
+      "evidence": "conference/evidence/security-results.json#F13; ablation: proposal_digest_binding: NO: another control still stopped the attack; approval_single_use: NO: another control still stopped the attack; proposal_digest_binding + approval_single_use: YES",
+      "command": "make falsify F=F13 && make ablation F=F13",
+      "status": "PASS",
+      "limitation": "digest binding and single-use are jointly, not individually, load-bearing"
+    },
+    {
+      "claim": "Concurrent callers cause one mutation",
+      "implementation": "locked in-memory stores; AtomicExecutor for SQL",
+      "enforcement_point": "execution mediator",
+      "test": "tests/test_conference_falsification.py::test_in_memory_executor_is_safe_under_thread_races",
+      "evidence": "conference/evidence/security-results.json#F14; ablation: not ablated",
+      "command": "make falsify F=F14 && make ablation F=F14",
+      "status": "PASS",
+      "limitation": "one process; not a distributed linearizability proof"
+    },
+    {
+      "claim": "Model cannot read without entitlement",
+      "implementation": "disclosure.DisclosureGate",
+      "enforcement_point": "context gate",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F02; ablation: context_gate: YES",
+      "command": "make falsify F=F02 && make ablation F=F02",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Minimum necessary fields only",
+      "implementation": "DisclosureGate minimum_necessary",
+      "enforcement_point": "context gate",
+      "test": "tests/test_education_pack.py::test_unnecessary_sensitive_fields_are_denied",
+      "evidence": "conference/evidence/security-results.json#F22; ablation: minimum_necessary: YES",
+      "command": "make falsify F=F22 && make ablation F=F22",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Purpose limitation",
+      "implementation": "DisclosureGate purpose_binding",
+      "enforcement_point": "context gate",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F06; ablation: purpose_binding: YES",
+      "command": "make falsify F=F06 && make ablation F=F06",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Consent checked at every read",
+      "implementation": "DisclosureGate consent",
+      "enforcement_point": "context gate",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F07; ablation: consent: YES",
+      "command": "make falsify F=F07 && make ablation F=F07",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Revoked or expired grants unusable",
+      "implementation": "DisclosureGate grant_currency",
+      "enforcement_point": "context gate",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F08; ablation: grant_currency: YES",
+      "command": "make falsify F=F08 && make ablation F=F08",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Identity reaches models only as tokens",
+      "implementation": "privacy_pipeline.PrivacyGate + privacy_vault",
+      "enforcement_point": "context gate",
+      "test": "tests/test_education_pack.py::test_model_context_carries_tokens_not_identity",
+      "evidence": "conference/evidence/security-results.json#F04; ablation: tokenization: YES",
+      "command": "make falsify F=F04 && make ablation F=F04",
+      "status": "PASS",
+      "limitation": "tokenization covers declared identity fields and detected contact details, not quasi-identifiers"
+    },
+    {
+      "claim": "Identity restored only for entitled recipients",
+      "implementation": "PrivacyGate.identity_entitlement",
+      "enforcement_point": "release gate",
+      "test": "tests/test_education_pack.py::test_identity_is_restored_only_for_entitled_recipients",
+      "evidence": "conference/evidence/security-results.json#F05; ablation: identity_restoration_entitlement: YES",
+      "command": "make falsify F=F05 && make ablation F=F05",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Output cannot self-declassify",
+      "implementation": "DisclosureGate session_taint",
+      "enforcement_point": "release gate",
+      "test": "tests/test_education_pack.py::test_model_cannot_self_declassify_a_summary",
+      "evidence": "conference/evidence/security-results.json#F24; ablation: session_taint: YES",
+      "command": "make falsify F=F24 && make ablation F=F24",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Release rechecks revocation",
+      "implementation": "DisclosureGate release_recheck",
+      "enforcement_point": "release gate",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F23; ablation: release_recheck: YES",
+      "command": "make falsify F=F23 && make ablation F=F23",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Recipient must dominate label",
+      "implementation": "DisclosureGate recipient_clearance",
+      "enforcement_point": "release gate",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F03; ablation: recipient_clearance: YES",
+      "command": "make falsify F=F03 && make ablation F=F03",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Delegation attenuates on seven axes",
+      "implementation": "grant_delegation.GrantDelegationService",
+      "enforcement_point": "delegation verifier",
+      "test": "tests/test_education_pack.py::test_delegated_agent_cannot_escalate",
+      "evidence": "conference/evidence/security-results.json#F09; ablation: data_delegation_attenuation: YES",
+      "command": "make falsify F=F09 && make ablation F=F09",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Only attested models receive context",
+      "implementation": "model_registry.ModelRegistry (strict)",
+      "enforcement_point": "model registry",
+      "test": "tests/test_education_pack.py::test_model_replacement_is_denied",
+      "evidence": "conference/evidence/security-results.json#F10; ablation: model_attestation: YES",
+      "command": "make falsify F=F10 && make ablation F=F10",
+      "status": "PASS",
+      "limitation": "the runtime reports its own digest; no TEE quote"
+    },
+    {
+      "claim": "Routing cannot widen exposure",
+      "implementation": "education_models.MaliciousRouter vs gate+registry",
+      "enforcement_point": "context gate + registry",
+      "test": "tests/test_education_pack.py::test_a_malicious_router_cannot_widen_exposure",
+      "evidence": "conference/evidence/security-results.json#F11; ablation: residency: NO: another control still stopped the attack; model_attestation: NO: another control still stopped the attack; residency + model_attestation: YES",
+      "command": "make falsify F=F11 && make ablation F=F11",
+      "status": "PASS",
+      "limitation": "either control alone stops the router attacks; defence in depth, not single-control proof"
+    },
+    {
+      "claim": "Injected text confers no entitlement",
+      "implementation": "DisclosureGate subject_scope",
+      "enforcement_point": "context gate",
+      "test": "tests/test_education_pack.py::test_prompt_injection_has_no_authority_over_the_gate",
+      "evidence": "conference/evidence/security-results.json#F12; ablation: subject_scope: YES",
+      "command": "make falsify F=F12 && make ablation F=F12",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Unsigned input quarantined",
+      "implementation": "EducationWorld.admit_document",
+      "enforcement_point": "boundary",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F25; ablation: source_authentication: YES",
+      "command": "make falsify F=F25 && make ablation F=F25",
+      "status": "PASS",
+      "limitation": "synthetic education pack, one process"
+    },
+    {
+      "claim": "Evidence tamper-evident against insiders",
+      "implementation": "evidence_notary.EvidenceNotary",
+      "enforcement_point": "evidence notary",
+      "test": "tests/test_education_pack.py::test_rewritten_evidence_passes_the_chain_but_not_the_signed_checkpoint",
+      "evidence": "conference/evidence/security-results.json#F15; ablation: evidence_checkpoint: YES",
+      "command": "make falsify F=F15 && make ablation F=F15",
+      "status": "PASS",
+      "limitation": "a compromised notary key could sign rewritten history unless checkpoints are published externally"
+    },
+    {
+      "claim": "No domain pack weakens the kernel",
+      "implementation": "pack_floor.check_pack",
+      "enforcement_point": "kernel floor",
+      "test": "tests/test_education_pack.py::test_the_malicious_domain_pack_is_rejected_for_every_attempt",
+      "evidence": "conference/evidence/security-results.json#F16; ablation: pack_floor: YES",
+      "command": "make falsify F=F16 && make ablation F=F16",
+      "status": "PASS",
+      "limitation": "the floor rejects weakening patterns; it does not judge whether an at-floor pack is wise"
+    },
+    {
+      "claim": "Overload never becomes approval",
+      "implementation": "review_queue.BoundedReviewQueue",
+      "enforcement_point": "review queue",
+      "test": "tests/test_education_pack.py::test_reviewer_overload_never_becomes_approval",
+      "evidence": "conference/evidence/security-results.json#F17; ablation: review_overload_policy: YES",
+      "command": "make falsify F=F17 && make ablation F=F17",
+      "status": "PASS",
+      "limitation": "reviewer attention and accuracy are not measured"
+    },
+    {
+      "claim": "A compromised model gains nothing",
+      "implementation": "all mediators",
+      "enforcement_point": "executor + gate",
+      "test": "tests/test_conference_falsification.py::test_there_are_at_least_twenty_falsifiers_and_every_one_holds",
+      "evidence": "conference/evidence/security-results.json#F18; ablation: execution_mediator: YES; context_gate: YES",
+      "command": "make falsify F=F18 && make ablation F=F18",
+      "status": "PASS",
+      "limitation": "the malicious model is scripted; a real model may find moves nobody wrote"
+    },
+    {
+      "claim": "The ten-step governed request path is traceable",
+      "implementation": "governed_request.run_governed_request",
+      "enforcement_point": "all planes",
+      "test": "tests/test_conference_falsification.py::test_the_ten_step_trace_completes_for_an_honest_model_and_explains_itself",
+      "evidence": "conference/evidence/lifecycle-traces.json",
+      "command": "fssaira conference trace --model malicious",
+      "status": "PASS",
+      "limitation": "the demo reviewer decides deterministically from the case file"
+    },
+    {
+      "claim": "Safety does not depend on which model is selected",
+      "implementation": "same world, swapped model adapter",
+      "enforcement_point": "executor + context gate",
+      "test": "tests/test_conference_falsification.py::test_the_same_boundary_holds_for_a_malicious_model",
+      "evidence": "conference/evidence/model-attestation-results.json#model_swap",
+      "command": "python scripts/conference_demo.py --demo 9",
+      "status": "PASS",
+      "limitation": "ran"
+    },
+    {
+      "claim": "Eight stateful properties hold across random sequences",
+      "implementation": "authority_stateful.run_stateful",
+      "enforcement_point": "all mediators",
+      "test": "tests/test_conference_falsification.py::test_stateful_sequences_hold_and_find_counterexamples_when_a_control_is_removed",
+      "evidence": "conference/evidence/stateful-results.json",
+      "command": "fssaira conference stateful --remove consent",
+      "status": "PASS",
+      "limitation": "seeded sequences over a bounded operation grammar; not exhaustive"
+    },
+    {
+      "claim": "Cryptographic erasure makes governed copies unreadable",
+      "implementation": "key_custody + privacy_pipeline.ErasureService",
+      "enforcement_point": "key custody",
+      "test": "tests/test_privacy_custody.py::test_erasure_reaches_backups_tokens_indexes_and_outputs",
+      "evidence": "conference/evidence/data-flow-results.json#erasure",
+      "command": "make security",
+      "status": "PASS",
+      "limitation": "negative byte scans are reported as unverified; released copies and runtime memory are declared residuals"
+    },
+    {
+      "claim": "A red-team attacker gains nothing while every control is on",
+      "implementation": "redteam.GrammarAttacker",
+      "enforcement_point": "all mediators",
+      "test": "tests/test_conference_tools.py::test_redteam_finds_nothing_with_controls_and_something_without",
+      "evidence": "conference/evidence/redteam-results.json",
+      "command": "python scripts/conference_redteam.py",
+      "status": "PASS",
+      "limitation": "grammar attacks cover declared moves only"
+    },
+    {
+      "claim": "Identity reaches models only as tokens",
+      "implementation": "privacy_pipeline.PrivacyGate",
+      "enforcement_point": "context gate",
+      "test": "tests/test_education_pack.py::test_model_context_carries_tokens_not_identity",
+      "evidence": "conference/evidence/data-flow-results.json#tokenized_context",
+      "command": "make falsify F=F04",
+      "status": "PASS",
+      "limitation": "tokenization covers declared identity fields and detected contact details, not quasi-identifiers"
+    }
+  ]
+}

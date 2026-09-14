@@ -347,10 +347,10 @@ def test_delegated_agent_cannot_escalate():
                        fields=["attendance_rate", "current_grades"], ttl_seconds=3600)
 
     def hop(parent="support-agent", parent_id=None, **changes):
-        spec = dict(parent_id=parent_id or root.grant_id, delegator=parent, delegate="sub-agent-b",
-                    purpose="academic-support", subjects=["stu-a1f3"], fields=["attendance_rate"],
-                    classes=["student-academic"], zones=["campus-on-premises"],
-                    audience=["academic_advisor"], issued_at=world.now, expires_at=world.now + 1800)
+        spec = {"parent_id": parent_id or root.grant_id, "delegator": parent, "delegate": "sub-agent-b",
+                "purpose": "academic-support", "subjects": ["stu-a1f3"], "fields": ["attendance_rate"],
+                "classes": ["student-academic"], "zones": ["campus-on-premises"],
+                "audience": ["academic_advisor"], "issued_at": world.now, "expires_at": world.now + 1800}
         spec.update(changes)
         return service.delegate(**spec)
 

@@ -950,6 +950,111 @@ def cmd_threats(args) -> int:
     return 0 if report.holds else 1
 
 
+def cmd_conference_pack_check(args) -> int:
+    """Refuse a domain pack that weakens the kernel, naming every attempt."""
+    from .pack_floor import check_pack, read_pack
+
+    findings = check_pack(read_pack(args.path))
+    heading(f"Kernel floor — {args.path}")
+    for finding in findings:
+        print(f"  {red(finding.code)}  {finding.where}")
+        print(dim(f"      {finding.detail}"))
+    print(green("  at or above the kernel floor") if not findings else red(f"  {len(findings)} finding(s): rejected"))
+    return 0 if not findings else 1
+
+
+def cmd_conference_falsify(args) -> int:
+    """Attack the architecture; judge by what happened, not by denial codes."""
+    import json as _json
+
+    from .falsification import run_falsifiers
+
+    results = run_falsifiers([args.falsifier] if args.falsifier else None)
+    if args.json:
+        print(_json.dumps([r.to_dict() for r in results], indent=2))
+        return 0 if all(r.held for r in results) else 1
+    heading("Falsification — a model trying to break the institution")
+    for result in results:
+        mark = green("HELD") if result.held else red("VIOLATED")
+        print(f"  {result.id} {result.name:28} {mark}  {dim(result.property)}")
+        for item in result.attempts:
+            print(dim(f"      {'✕ ' + item.code if not item.violated else 'VIOLATION'}  {item.name}"))
+    held = sum(r.held for r in results)
+    print(f"\n  {held} of {len(results)} falsifiers held")
+    return 0 if held == len(results) else 1
+
+
+def cmd_conference_ablation(args) -> int:
+    """Remove exactly one control, rerun the attack, restore it, rerun."""
+    import json as _json
+
+    from .falsification import run_ablation
+
+    rows = run_ablation([args.falsifier] if args.falsifier else None)
+    if args.json:
+        print(_json.dumps([r.to_dict() for r in rows], indent=2))
+        return 0
+    heading("Ablation — are the controls load-bearing?")
+    print(dim(f"  {'falsifier':<5} {'control':<44} {'enabled':<9} {'disabled':<10} {'restored':<9} load-bearing"))
+    for row in rows:
+        body = row.to_dict()
+        verdict = green("YES") if row.load_bearing else dim(body["load_bearing"])
+        print(f"  {row.falsifier:<5} {row.control:<44} {body['enabled']:<9} {body['disabled']:<10} "
+              f"{body['restored']:<9} {verdict}")
+    return 0
+
+
+def cmd_conference_trace(args) -> int:
+    """One request through the ten governed steps, with the system-literacy view."""
+    import json as _json
+
+    from .education_models import HonestAssistant, MaliciousAssistant, OllamaAssistant
+    from .governed_request import explain, run_governed_request
+
+    if args.model == "ollama":
+        model = OllamaAssistant()
+        if not model.available():
+            print(red("  no local Ollama runtime is reachable; nothing was run"))
+            return 2
+    else:
+        model = HonestAssistant() if args.model == "honest" else MaliciousAssistant()
+    trace = run_governed_request(model=model)
+    if args.json:
+        print(_json.dumps({**trace.to_dict(), "system_literacy": explain(trace)}, indent=2, default=str))
+        return 0
+    print(trace.render())
+    heading("System literacy")
+    for key, value in explain(trace).items():
+        print(f"  {key:<9} {str(value)[:160]}")
+    return 0
+
+
+def cmd_conference_stateful(args) -> int:
+    """Seeded random authority sequences, eight properties checked after every step."""
+    from .authority_stateful import run_stateful
+
+    report = run_stateful(sequences=args.sequences, remove=args.remove).to_dict()
+    heading(f"Stateful testing — {report['steps']:,} steps"
+            + (f", removed: {', '.join(report['controls_removed'])}" if report["controls_removed"] else ""))
+    for key, item in report["properties"].items():
+        mark = green("0") if not item["violations"] else red(str(item["violations"]))
+        print(f"  {key} {item['property']:<66} {mark}")
+    print(f"  false denials: {report['false_denials']}")
+    for line in report["first_counterexample"]:
+        print(dim(f"    {line}"))
+    return 0 if report["holds"] or report["controls_removed"] else 1
+
+
+def cmd_conference_lab(args) -> int:
+    """Serve the attack lab locally. Ablation is a lab-only capability."""
+    import runpy
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "conference_lab.py"
+    sys.argv = [str(script), "--port", str(args.port)]
+    runpy.run_path(str(script), run_name="__main__")
+    return 0
+
+
 def cmd_thesis(args) -> int:
     """Try to refute the Mediation Thesis across every declared domain pack."""
     from .thesis import COMMITMENTS, RULES, THESIS, TRUSTED_BASE, run_thesis
@@ -1240,6 +1345,32 @@ def build_parser() -> argparse.ArgumentParser:
     ))
     pilot.add_argument("path", type=Path)
     pilot.set_defaults(func=cmd_pilot_report)
+
+    conference = sub.add_parser(
+        "conference", help="the UNU Macau demonstration layer: falsify, ablate, trace, lab")
+    conference_sub = conference.add_subparsers(dest="conference_command", required=True)
+    pack_check = conference_sub.add_parser("pack-check", help="check a domain pack against the kernel floor")
+    pack_check.add_argument("path", type=Path)
+    pack_check.set_defaults(func=cmd_conference_pack_check)
+    falsify = conference_sub.add_parser("falsify", help="run every falsifier, or one (e.g. F19)")
+    falsify.add_argument("falsifier", nargs="?")
+    falsify.add_argument("--json", action="store_true")
+    falsify.set_defaults(func=cmd_conference_falsify)
+    ablation = conference_sub.add_parser("ablation", help="enabled / disabled / restored per control")
+    ablation.add_argument("falsifier", nargs="?")
+    ablation.add_argument("--json", action="store_true")
+    ablation.set_defaults(func=cmd_conference_ablation)
+    trace = conference_sub.add_parser("trace", help="one governed request in ten steps")
+    trace.add_argument("--model", choices=("honest", "malicious", "ollama"), default="honest")
+    trace.add_argument("--json", action="store_true")
+    trace.set_defaults(func=cmd_conference_trace)
+    stateful = conference_sub.add_parser("stateful", help="random authority sequences checked after every step")
+    stateful.add_argument("--sequences", type=int, default=120)
+    stateful.add_argument("--remove", action="append", default=[])
+    stateful.set_defaults(func=cmd_conference_stateful)
+    lab = conference_sub.add_parser("lab", help="serve the educational attack lab on 127.0.0.1")
+    lab.add_argument("--port", type=int, default=8765)
+    lab.set_defaults(func=cmd_conference_lab)
 
     return parser
 

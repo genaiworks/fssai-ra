@@ -62,7 +62,7 @@ class StatefulReport:
     sequences: int
     steps: int
     controls_removed: tuple[str, ...]
-    violations: dict = field(default_factory=lambda: {key: 0 for key in PROPERTIES})
+    violations: dict = field(default_factory=lambda: dict.fromkeys(PROPERTIES, 0))
     false_denials: int = 0
     operations: dict = field(default_factory=dict)
     first_counterexample: list = field(default_factory=list)
@@ -130,8 +130,8 @@ def _run_sequence(rng: random.Random, controls: Iterable[str], length: int, repo
                 issued_at=world.now, expires_at=world.now + ttl)
             if len(parent.ancestry) > 1:
                 continue    # keep chains one hop deep from a root; depth is exercised elsewhere
-            code, effective = _attempt(lambda: world.data_delegation.exchange(
-                root, [hop], requester="support-agent-delegate", now=world.now))
+            code, effective = _attempt(world.data_delegation.exchange, root, [hop],
+                                       requester="support-agent-delegate", now=world.now)
             trace.append(f"delegate from {parent.grant.grant_id} fields={sorted(fields)} -> {code or 'ok'}")
             if effective is not None:
                 g = effective.grant
@@ -147,9 +147,8 @@ def _run_sequence(rng: random.Random, controls: Iterable[str], length: int, repo
             purpose = model.purpose if rng.random() < 0.8 else rng.choice(PURPOSES)
             session = f"session-{rng.randint(1, 3)}-{model.holder}"
             before = len(world.observed.model_inputs)
-            code, context = _attempt(lambda: world.read(requester=model.holder, grant=model.grant,
-                                                        purpose=purpose, subjects=subjects, fields=fields,
-                                                        session_id=session))
+            code, context = _attempt(world.read, requester=model.holder, grant=model.grant,
+                                     purpose=purpose, subjects=subjects, fields=fields, session_id=session)
             is_revoked = any(a in revoked for a in model.ancestry)
             is_expired = world.now >= model.expires_at
             allowed = (not is_revoked and not is_expired and purpose == model.purpose
@@ -189,9 +188,9 @@ def _run_sequence(rng: random.Random, controls: Iterable[str], length: int, repo
             approved = rng.random() < 0.7
             approval = None
             if approved:
-                code, approval = _attempt(lambda: world.review_and_approve(proposal, reviewer="dr-lin"))
+                code, approval = _attempt(world.review_and_approve, proposal, reviewer="dr-lin")
             before = world.register.mutation_count
-            code, _ = _attempt(lambda: world.execute(proposal, approval))
+            code, _ = _attempt(world.execute, proposal, approval)
             legitimate = approval is not None and approval.approval_id not in used_approvals
             if world.register.mutation_count > before:
                 if not legitimate:
@@ -207,7 +206,7 @@ def _run_sequence(rng: random.Random, controls: Iterable[str], length: int, repo
         elif op == "retry" and approvals:
             proposal, approval = rng.choice(approvals)
             before = world.register.mutation_count
-            _attempt(lambda: world.execute(proposal, approval))
+            _attempt(world.execute, proposal, approval)
             if world.register.mutation_count > before:
                 violate("P8", f"retry of {proposal.request_id} mutated again")
             trace.append(f"retry {proposal.request_id}")
@@ -218,16 +217,15 @@ def _run_sequence(rng: random.Random, controls: Iterable[str], length: int, repo
             fresh = world.propose(requester="support-agent", operation=proposal.operation, resource=resource,
                                   to_status=proposal.to_status if current["status"] != proposal.to_status else "grade:D")
             before = world.register.mutation_count
-            _attempt(lambda: world.execute(fresh, approval))
+            _attempt(world.execute, fresh, approval)
             if world.register.mutation_count > before:
                 violate("P8", f"approval {approval.approval_id} replayed onto {fresh.request_id}")
             trace.append(f"replay approval onto {fresh.request_id}")
         elif op == "derive" and sessions:
             session = rng.choice(sorted(sessions))
             holder, classes = sessions[session]
-            code, output = _attempt(lambda: world.derive(
-                requester=holder, session_id=session, content="summary",
-                claimed_label=DataLabel.bottom(world.policy)))
+            code, output = _attempt(world.derive, requester=holder, session_id=session, content="summary",
+                                    claimed_label=DataLabel.bottom(world.policy))
             if output is not None and hasattr(output, "label") and not classes <= set(output.label.classes):
                 violate("P6", f"output {output.output_id} lost classes {sorted(classes - set(output.label.classes))}")
             trace.append(f"derive in {session} -> {code or 'labelled'}")
@@ -237,9 +235,9 @@ def _run_sequence(rng: random.Random, controls: Iterable[str], length: int, repo
         del trace[:-12]
 
 
-def _attempt(action):
+def _attempt(action, *args, **kwargs):
     try:
-        return "", action()
+        return "", action(*args, **kwargs)
     except DENIALS as exc:
         return denial_code(exc), None
 

@@ -25,6 +25,22 @@ check-env:
 demo: check-env  ## Run the two-minute offline demonstration
 	cd $(APP_DIR) && $(PYTHON) scripts/demo.py
 
+security: check-env  ## Adversarial and kernel-floor tests for the conference layer
+	$(MAKE) -C $(APP_DIR) security PYTHON="$(PYTHON)"
+
+falsify: check-env  ## Every falsifier, or one: make falsify F=F19
+	$(MAKE) -C $(APP_DIR) falsify PYTHON="$(PYTHON)" F="$(F)"
+
+ablation: check-env  ## Enabled / disabled / restored per control: make ablation F=F10
+	$(MAKE) -C $(APP_DIR) ablation PYTHON="$(PYTHON)" F="$(F)"
+
+results: check-env  ## Regenerate paper figures and the conference evidence package
+	$(MAKE) -C $(APP_DIR) results PYTHON="$(PYTHON)"
+	$(MAKE) -C $(APP_DIR) conference PYTHON="$(PYTHON)"
+
+conference-demo: check-env  ## The UNU Macau live demonstration (DEMO=7 for one)
+	$(MAKE) -C $(APP_DIR) conference-demo PYTHON="$(PYTHON)" DEMO="$(DEMO)"
+
 reviewer: check-env  ## Reproduce every review and assurance check
 	$(MAKE) -C $(APP_DIR) reviewer PYTHON="$(PYTHON)"
 

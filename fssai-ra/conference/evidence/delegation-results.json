@@ -1,0 +1,24 @@
+{
+  "kind": "delegation",
+  "escalations": {
+    "scope (fields) escalation": "DELEGATION_FIELDS_ESCALATION",
+    "time escalation (1h parent \u2192 24h child)": "DELEGATION_EXPIRY_ESCALATION",
+    "purpose escalation (academic support \u2192 marketing)": "DELEGATION_PURPOSE_ESCALATION",
+    "subject escalation": "DELEGATION_SUBJECTS_ESCALATION",
+    "zone escalation": "DELEGATION_ZONES_ESCALATION",
+    "audience escalation": "DELEGATION_AUDIENCE_ESCALATION"
+  },
+  "legitimate_narrowing": {
+    "effective_fields": [
+      "attendance_rate"
+    ],
+    "read_before_revocation": "RELEASED"
+  },
+  "revocation_propagation": {
+    "read_after_root_revoked": "GRANT_REVOKED"
+  },
+  "stateful_P3": {
+    "with_attenuation": 0,
+    "without_attenuation": 26
+  }
+}

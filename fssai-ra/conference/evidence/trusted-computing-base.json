@@ -1,0 +1,75 @@
+{
+  "kind": "tcb",
+  "rows": [
+    {
+      "component": "Execution mediator (AccountableExecutor + register credential)",
+      "trusted": true,
+      "why": "only path to a governed write",
+      "property": "R1",
+      "failure_mode": "compromise allows unapproved writes; approvals are Ed25519 so it still cannot mint them"
+    },
+    {
+      "component": "Context gate + privacy pipeline",
+      "trusted": true,
+      "why": "only holder of the decrypt credential",
+      "property": "R2",
+      "failure_mode": "compromise discloses whatever custody lets it decrypt"
+    },
+    {
+      "component": "Key custody",
+      "trusted": true,
+      "why": "holds KEKs and wrapped DEKs",
+      "property": "encryption, erasure",
+      "failure_mode": "compromise decrypts everything; independent key backups outside custody defeat erasure"
+    },
+    {
+      "component": "Approval service (Ed25519 private key) and review queue",
+      "trusted": true,
+      "why": "creates authority",
+      "property": "R1",
+      "failure_mode": "compromise mints approvals; executor cannot tell"
+    },
+    {
+      "component": "Grant authority and delegation exchange",
+      "trusted": true,
+      "why": "creates entitlement",
+      "property": "R2",
+      "failure_mode": "compromise mints grants"
+    },
+    {
+      "component": "Evidence notary key",
+      "trusted": true,
+      "why": "attests history",
+      "property": "tamper evidence",
+      "failure_mode": "compromise can sign rewritten history unless checkpoints are published externally"
+    },
+    {
+      "component": "Model registry publisher key and serving runtime digest report",
+      "trusted": true,
+      "why": "decides which model is which",
+      "property": "attestation",
+      "failure_mode": "a runtime that lies about its loaded weights defeats digest checks (no TEE quote)"
+    },
+    {
+      "component": "Kernel floor validator and domain-pack review",
+      "trusted": true,
+      "why": "gates policy changes",
+      "property": "pack cannot weaken kernel",
+      "failure_mode": "a bypassed loader admits a weakened pack"
+    },
+    {
+      "component": "Models, agents, router, retrieval, tools",
+      "trusted": false,
+      "why": "treated as adversarial in every test",
+      "property": "none relied on",
+      "failure_mode": "can propose, request, and lie; F18 shows it gains nothing"
+    },
+    {
+      "component": "Domain pack authors",
+      "trusted": false,
+      "why": "floor-checked",
+      "property": "none relied on",
+      "failure_mode": "can declare bad but at-floor policy; the floor is not a wisdom check"
+    }
+  ]
+}

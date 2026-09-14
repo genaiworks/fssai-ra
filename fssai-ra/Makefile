@@ -103,6 +103,25 @@ doctor:  ## Report what this deployment actually is
 demo:  ## The two-minute hero demonstration (fully offline)
 	$(PYTHON) scripts/demo.py
 
+conference-demo:  ## The UNU Macau live demonstration: a malicious AI, nine demos (offline)
+	$(PYTHON) scripts/conference_demo.py $(if $(DEMO),--demo $(DEMO),)
+
+security:  ## Kernel floor, education pack failure tests, privacy custody, and conference tests
+	$(PYTHON) -m pytest -q tests/test_education_pack.py tests/test_privacy_custody.py tests/test_conference_falsification.py
+	$(PYTHON) -m fssaira.cli conference pack-check conference/attacks/malicious-domain-pack.yaml || true
+
+falsify:  ## Run every falsifier, or one: make falsify F=F19
+	$(PYTHON) -m fssaira.cli conference falsify $(F)
+
+ablation:  ## Enabled / disabled / restored for every control, or one falsifier: make ablation F=F10
+	$(PYTHON) -m fssaira.cli conference ablation $(F)
+
+conference:  ## Regenerate conference/evidence from a real run
+	$(PYTHON) scripts/conference_evidence.py
+
+conference-check:  ## Do the committed conference figures match a fresh run?
+	$(PYTHON) scripts/conference_evidence.py --check
+
 results:  ## Regenerate every figure the paper and the deck quote
 	$(PYTHON) scripts/generate_results.py
 

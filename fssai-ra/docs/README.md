@@ -197,6 +197,8 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`RELATED_WORK.md`](RELATED_WORK.md) — foundations inherited, overlap with CaMeL, FIDES, agent design patterns, and AI control, and the contribution stated narrowly.
 - [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.
 - [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) — the second constitutional rule: what a model may read and what may leave.
+- [`PRIVACY_REFERENCE.md`](PRIVACY_REFERENCE.md) — the opt-in HTTP privacy profile: session tokens, encrypted records, a strict model registry, entitled identity restoration, and its limits.
+- [`../conference/README.md`](../conference/README.md) — the UNU Macau demonstration package: education pack, falsifiers, ablation, attack lab, and generated evidence.
 - [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — reusable corporate, healthcare, and education domain packs.
 - [`GLOSSARY.md`](GLOSSARY.md) — policy and engineering vocabulary in one table.
 - [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) — education framework and rubric.

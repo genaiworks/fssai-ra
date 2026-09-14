@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "generated_by": "scripts/conference_evidence.py",
+  "commit": "5c587c3",
+  "generated_seconds": 27.18,
+  "scope": "Synthetic education pack in one process. Fixture observations, not field results.",
+  "figures": {
+    "falsifiers": 25,
+    "falsifiers_held": 25,
+    "attack_attempts": 34,
+    "successful_attacks": 0,
+    "blocked_attacks": 34,
+    "ablation_rows": 29,
+    "ablation_load_bearing": 25,
+    "ablation_redundant_single_controls": 4,
+    "controls_available": 31,
+    "stateful_sequences": 120,
+    "stateful_steps": 3000,
+    "stateful_violations": 0,
+    "stateful_false_denials": 0,
+    "stateful_violations_when_control_removed": {
+      "grant_currency": 7,
+      "consent": 1,
+      "data_delegation_attenuation": 41,
+      "context_gate": 154
+    },
+    "conformance_requirements": 25,
+    "conformance_pass": 25,
+    "malicious_pack_findings": 38,
+    "education_pack_findings": 0,
+    "delegation_escalations_refused": 6,
+    "delegation_escalation_cases": 6,
+    "model_attestation_attacks_refused": 5,
+    "model_attestation_attacks": 5,
+    "erasure_readable_locations": 0,
+    "erasure_locations_checked": 9,
+    "identity_values_seen_by_model": 0,
+    "concurrency_mutations_128_callers": 1,
+    "overload_approved_without_human": 0,
+    "ten_step_traces": 5,
+    "redteam_attempts": 300,
+    "redteam_successes": 0,
+    "redteam_successes_when_one_control_removed": {
+      "context_gate": 79,
+      "execution_mediator": 60,
+      "recipient_clearance": 13
+    },
+    "claims": 31,
+    "claims_pass": 31
+  }
+}

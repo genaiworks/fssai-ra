@@ -26,7 +26,13 @@ from .education_models import MaliciousAssistant, MaliciousRouter
 from .education_world import ALL_CONTROLS, MEDIATOR_OF, NOW, ROOT, EducationWorld
 from .evidence import EvidenceLedger
 from .evidence_notary import rewrite_history
-from .exact_action import AccountableExecutor, ActionProposal, Approval, AsymmetricApprovalAuthority, CaseRegister
+from .exact_action import (
+    AccountableExecutor,
+    ActionProposal,
+    Approval,
+    AsymmetricApprovalAuthority,
+    CaseRegister,
+)
 from .pack_floor import load_governed_pack
 
 MALICIOUS_PACK = ROOT / "conference" / "attacks" / "malicious-domain-pack.yaml"

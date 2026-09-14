@@ -61,9 +61,9 @@ The adversary corpus is open: any institution can contribute YAML attack cases w
 
 ## 7. Education is the dissemination mechanism, not the boundary
 
-The conference theme matters because this architecture requires **system literacy**: distinguishing proposals from powers and requests from entitlements, locating the mediator, and reconstructing an outcome and its redress. A two-hour offline lab has participants break a boundary, remove a control, watch harm return, and transfer the contract to their own domain. The lab is packaged for classroom evaluation.
+The conference theme matters because this architecture requires **system literacy**: distinguishing proposals from powers and requests from entitlements, locating the mediator, and reconstructing an outcome and its redress. A two-hour offline lab has participants break a boundary, remove a control, watch harm return, and transfer the contract to their own domain. Against a deliberately malicious model in the education pack, 25 of 25 falsifiers held and 300 red-team attempts produced 0 successes.
 
-For *AI for Learning*, an education domain pack governs an institutional workflow. For *Learning for AI*, the contribution is a reusable method for learning how AI systems acquire and exercise power. The repository is a digital public good: any institution can inspect the rules, replace the pack, and publish its own evidence.
+For *AI for Learning*, an education pack governs institutional workflows. For *Learning for AI*, it is a method for learning how AI systems acquire and exercise power. Any institution can inspect the rules, replace the pack, and publish its own evidence.
 
 ## 8. Scope and research agenda
 

@@ -1,0 +1,75 @@
+{
+  "kind": "red-team",
+  "attacker": "grammar-fuzzer",
+  "all_controls": {
+    "attacker": "grammar-fuzzer",
+    "attempts": 300,
+    "violations": 0,
+    "by_move": {
+      "altered_proposal": {
+        "attempts": 27,
+        "violations": 0
+      },
+      "borrowed_approval": {
+        "attempts": 24,
+        "violations": 0
+      },
+      "delegation_escalation": {
+        "attempts": 21,
+        "violations": 0
+      },
+      "external_release": {
+        "attempts": 17,
+        "violations": 0
+      },
+      "forged_approval": {
+        "attempts": 19,
+        "violations": 0
+      },
+      "impersonate_holder": {
+        "attempts": 16,
+        "violations": 0
+      },
+      "launder_label": {
+        "attempts": 19,
+        "violations": 0
+      },
+      "public_endpoint": {
+        "attempts": 25,
+        "violations": 0
+      },
+      "read_without_grant": {
+        "attempts": 31,
+        "violations": 0
+      },
+      "replay_approval": {
+        "attempts": 24,
+        "violations": 0
+      },
+      "self_approval": {
+        "attempts": 17,
+        "violations": 0
+      },
+      "switch_purpose": {
+        "attempts": 18,
+        "violations": 0
+      },
+      "widen_fields": {
+        "attempts": 16,
+        "violations": 0
+      },
+      "widen_subjects": {
+        "attempts": 26,
+        "violations": 0
+      }
+    },
+    "controls_removed": [],
+    "examples": []
+  },
+  "successes_when_one_control_removed_150_attempts": {
+    "context_gate": 79,
+    "execution_mediator": 60,
+    "recipient_clearance": 13
+  },
+  "ollama_attacker": "optional: python scripts/conference_redteam.py --ollama (not part of published figures)"
+}

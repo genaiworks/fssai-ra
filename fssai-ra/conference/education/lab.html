@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Governed Learning Attack Lab</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d2126; --muted: #5d6570; --line: #dcdad3;
+  --deny: #b3261e; --deny-bg: #fbeceb; --allow: #1f6f43; --allow-bg: #e8f3ec;
+  --warn: #8a5a00; --warn-bg: #fdf3dc; --accent: #0b5c8a; --chip: #eeece6;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15181c; --panel: #1d2126; --ink: #e8e6e1; --muted: #9aa3ad; --line: #30353c;
+    --deny: #ff8a80; --deny-bg: #3a1f1d; --allow: #7fd3a2; --allow-bg: #17311f;
+    --warn: #f3c56b; --warn-bg: #3a2e14; --accent: #6cb8e6; --chip: #262b31;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15181c; --panel: #1d2126; --ink: #e8e6e1; --muted: #9aa3ad; --line: #30353c;
+  --deny: #ff8a80; --deny-bg: #3a1f1d; --allow: #7fd3a2; --allow-bg: #17311f;
+  --warn: #f3c56b; --warn-bg: #3a2e14; --accent: #6cb8e6; --chip: #262b31;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; padding-inline: 16px; }
+main { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px; }
+h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; margin: 0 0 12px; }
+.lede { color: var(--muted); margin: 0 0 20px; max-width: 70ch; }
+.thesis { font-weight: 600; }
+.banner { border: 1px solid var(--line); border-left: 4px solid var(--warn); background: var(--warn-bg);
+  padding: 8px 12px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
+.grid { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.attacks { display: flex; flex-direction: column; gap: 4px; max-height: 560px; overflow-y: auto; }
+.attacks button { text-align: left; background: none; border: 1px solid transparent; color: var(--ink);
+  padding: 6px 8px; border-radius: 6px; cursor: pointer; font: inherit; }
+.attacks button:hover { background: var(--chip); }
+.attacks button[aria-pressed="true"] { border-color: var(--accent); background: var(--chip); }
+.attacks .id { font-family: var(--mono); color: var(--muted); margin-right: 6px; font-size: 0.85rem; }
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; margin: 12px 0; }
+.stage { flex: 1 1 140px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.stage b { display: block; font-size: 0.72rem; letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase; }
+.stage span { overflow-wrap: anywhere; }
+.arrow { align-self: center; color: var(--muted); }
+.deny { background: var(--deny-bg); border-color: var(--deny); }
+.allow { background: var(--allow-bg); border-color: var(--allow); }
+.warn { background: var(--warn-bg); border-color: var(--warn); }
+.controls label { display: flex; gap: 8px; align-items: center; padding: 6px 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.btn { font: inherit; border-radius: 6px; padding: 7px 12px; border: 1px solid var(--line); background: var(--chip);
+  color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.runs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.run { border-radius: 8px; padding: 10px; border: 1px solid var(--line); }
+.run h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.small { font-size: 0.85rem; color: var(--muted); }
+code, .mono { font-family: var(--mono); font-size: 0.85rem; overflow-wrap: anywhere; }
+.steps { list-style: none; padding: 0; margin: 0; }
+.steps li { display: grid; grid-template-columns: 2.2rem 7rem minmax(0, 1fr); gap: 8px; padding: 6px 8px; border-radius: 6px;
+  border: 1px solid var(--line); margin-bottom: 4px; }
+@media (max-width: 520px) { .steps li { grid-template-columns: 2rem minmax(0, 1fr); } .steps li .plane { display: none; } }
+.literacy { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.card b { font-size: 0.75rem; letter-spacing: 0.06em; color: var(--accent); }
+.score { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.score div { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.score strong { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Governed Learning Attack Lab</h1>
+  <p class="lede"><span class="thesis">Intelligence is untrusted; power and data are mediated.</span>
+    Pick an attack a malicious AI might try against a university. Run it. Then switch off the one control
+    that stopped it, run it again, and restore it. You are testing whether the architecture's controls are
+    load-bearing or decorative.</p>
+  <div class="banner" id="mode">Connecting…</div>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="attacks-title">
+      <h2 id="attacks-title">Attacks</h2>
+      <div class="attacks" id="attacks"></div>
+    </section>
+
+    <section>
+      <div class="panel" aria-live="polite">
+        <h2 id="attack-title">Choose an attack</h2>
+        <p class="small" id="attack-property"></p>
+        <div class="flow" id="flow"></div>
+        <div class="controls" id="controls"></div>
+        <div class="row">
+          <button class="btn primary" id="run-enabled">1 · Run with every control</button>
+          <button class="btn" id="run-disabled">2 · Run with the control removed</button>
+          <button class="btn" id="run-restored">3 · Restore and run again</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>What happened</h2>
+        <div class="runs" id="runs"><p class="small">Runs appear here. Nothing is shown that did not execute.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="literacy-title">
+    <h2 id="literacy-title">System literacy: follow one request through ten steps</h2>
+    <div class="row">
+      <button class="btn primary" data-model="honest">Honest model</button>
+      <button class="btn" data-model="malicious">Malicious model</button>
+    </div>
+    <p class="small" id="trace-outcome"></p>
+    <ol class="steps" id="steps"></ol>
+    <h2 style="margin-top:16px">Ten questions anyone should be able to answer</h2>
+    <div class="literacy" id="literacy"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="score-title">
+    <h2 id="score-title">Scorecard (from <code>conference/evidence/summary.json</code>)</h2>
+    <div class="score" id="score"></div>
+  </section>
+</main>
+<script>
+const RECORDED = /*RECORDED*/null;
+let live = false, catalogue = [], selected = null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+async function api(path) {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error((await response.json()).error || response.status);
+  return response.json();
+}
+
+async function init() {
+  try {
+    catalogue = (await api("/api/catalogue")).falsifiers;
+    live = true;
+    $("mode").textContent = "Live: every run executes now, in a fresh synthetic university, on this machine. Removing a control is a lab-only capability.";
+  } catch (e) {
+    if (!RECORDED) { $("mode").textContent = "Start the lab with: make lab-conference (or python scripts/conference_lab.py)"; return; }
+    catalogue = RECORDED.catalogue;
+    $("mode").textContent = `Recorded: results captured from real runs at ${RECORDED.recorded_at}. Start scripts/conference_lab.py to run live.`;
+  }
+  $("attacks").innerHTML = catalogue.map((f) =>
+    `<button data-id="${f.id}" aria-pressed="false"><span class="id">${f.id}</span>${esc(f.name)}</button>`).join("");
+  $("attacks").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => choose(b.dataset.id)));
+  choose(catalogue[1]?.id || catalogue[0].id);
+  loadScore();
+  trace("honest");
+}
+
+function choose(id) {
+  selected = catalogue.find((f) => f.id === id);
+  $("attacks").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
+  $("attack-title").textContent = `${selected.id} · ${selected.name}`;
+  $("attack-property").textContent = `Property under test: ${selected.property} (${selected.rule})`;
+  $("controls").innerHTML = selected.controls.length
+    ? selected.controls.map((c, i) => `<label><input type="radio" name="ctl" value="${c.name}" ${i === 0 ? "checked" : ""}>
+        Remove <code>${c.name}</code> <span class="small">(${esc(c.mediator)})</span></label>`).join("")
+    : `<p class="small">This attack has no removable control in the lab (the protection is structural).</p>`;
+  $("runs").innerHTML = "";
+  flow(null);
+}
+
+function flow(result) {
+  const first = result?.attempts?.[0];
+  const decision = result?.decisions?.slice().reverse().find((d) => !d.allowed) || result?.decisions?.slice(-1)[0];
+  const outcome = !result ? "" : result.violated ? "warn" : "deny";
+  $("flow").innerHTML = [
+    ["Attack", selected.name],
+    ["Attempted violation", first ? first.name : "—"],
+    ["Mediator", decision ? decision.mediator : "—"],
+    [result ? (result.violated ? "Attack succeeded" : "Denied") : "Outcome", result ? (result.violated ? first.observation : (first.code || "no violation")) : "—"],
+    ["Evidence", result ? `${result.ledger_records} ledger records · chain ${result.evidence_intact ? "intact" : "BROKEN"}` : "—"],
+  ].map(([k, v], i) => `${i ? '<span class="arrow" aria-hidden="true">→</span>' : ""}<div class="stage ${i >= 3 ? outcome : ""}"><b>${k}</b><span>${esc(v)}</span></div>`).join("");
+}
+
+async function run(label, disable) {
+  let result;
+  const key = `${selected.id}|${disable || ""}`;
+  if (live) {
+    const q = new URLSearchParams({falsifier: selected.id});
+    if (disable) q.append("disable", disable);
+    result = await api(`/api/run?${q}`);
+  } else {
+    result = RECORDED.runs[key];
+    if (!result) return;
+  }
+  flow(result);
+  const card = document.createElement("div");
+  card.className = `run ${result.violated ? "warn" : "deny"}`;
+  card.innerHTML = `<h3>${label}: ${result.violated ? "ATTACK SUCCEEDS" : "ATTACK BLOCKED"}</h3>
+    <div class="small">${disable ? `removed <code>${disable}</code>` : "every control on"}${live ? ` · ${result.milliseconds} ms` : ""}</div>
+    ${result.attempts.map((a) => `<div class="mono">${a.violated ? "⚠ " + esc(a.observation) : "✕ " + esc(a.code || "held")}</div>`).join("")}`;
+  $("runs").prepend(card);
+}
+
+const control = () => document.querySelector('input[name="ctl"]:checked')?.value;
+$("run-enabled").addEventListener("click", () => run("Enabled", ""));
+$("run-disabled").addEventListener("click", () => control() && run("Control removed", control()));
+$("run-restored").addEventListener("click", () => run("Restored", ""));
+
+async function trace(model) {
+  document.querySelectorAll("[data-model]").forEach((b) => b.classList.toggle("primary", b.dataset.model === model));
+  const t = live ? await api(`/api/trace?model=${model}`) : RECORDED?.traces?.[model];
+  if (!t) return;
+  $("trace-outcome").textContent = `Model: ${t.model} · ${t.outcome}`;
+  $("steps").innerHTML = t.steps.map((s) => {
+    const cls = s.status === "ALLOWED" ? "allow" : s.status === "DENIED" ? "deny" : "";
+    return `<li class="${cls}"><span class="mono">${s.step}</span><span class="plane"><b>${s.name}</b></span>
+      <span>${esc(s.code || s.status)}${s.detail ? " — " + esc(s.detail) : ""}</span></li>`;
+  }).join("");
+  $("literacy").innerHTML = Object.entries(t.system_literacy).map(([k, v]) =>
+    `<div class="card"><b>${k}</b><div class="mono">${esc(typeof v === "string" ? v : JSON.stringify(v))}</div></div>`).join("");
+}
+document.querySelectorAll("[data-model]").forEach((b) => b.addEventListener("click", () => trace(b.dataset.model)));
+
+async function loadScore() {
+  const s = live ? await api("/api/scorecard") : RECORDED?.scorecard;
+  const f = s?.figures || {};
+  const items = [
+    ["Falsifiers held", `${f.falsifiers_held ?? "–"} / ${f.falsifiers ?? "–"}`],
+    ["Attacks blocked", `${f.blocked_attacks ?? "–"} / ${f.attack_attempts ?? "–"}`],
+    ["Load-bearing ablations", `${f.ablation_load_bearing ?? "–"} / ${f.ablation_rows ?? "–"}`],
+    ["Stateful steps, violations", `${f.stateful_steps ?? "–"}, ${f.stateful_violations ?? "–"}`],
+    ["Identity values seen by model", f.identity_values_seen_by_model ?? "–"],
+    ["Readable locations after erasure", f.erasure_readable_locations ?? "–"],
+  ];
+  $("score").innerHTML = items.map(([k, v]) => `<div><strong>${esc(v)}</strong><span class="small">${k}</span></div>`).join("");
+}
+init();
+</script>
+</body>
+</html>

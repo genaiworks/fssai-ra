@@ -1,0 +1,218 @@
+{
+  "kind": "data-flow",
+  "pipeline": [
+    "raw record",
+    "classification",
+    "authorization (context gate)",
+    "decryption under custody",
+    "tokenization",
+    "minimum necessary",
+    "attested model",
+    "labelled output",
+    "release authorization",
+    "identity restoration"
+  ],
+  "tokenized_context": {
+    "fields": [
+      "student_name",
+      "attendance_rate",
+      "current_grades",
+      "support_plan"
+    ],
+    "tokens": 2,
+    "identity_values_seen_by_model": 0,
+    "plaintext_name_in_encrypted_store": false
+  },
+  "output_retokenization": {
+    "model_wrote_real_name": true,
+    "name_in_stored_output": false
+  },
+  "release": {
+    "academic_advisor": {
+      "released": true,
+      "identity_restored": true
+    },
+    "teaching_assistant_chat": "RECIPIENT_CLASS_NOT_CLEARED",
+    "external_email": "RECIPIENT_CLASS_NOT_CLEARED"
+  },
+  "malicious_router": {
+    "unauthorized_model": {
+      "suggested": {
+        "endpoint": "shadow_model_not_declared",
+        "fields": [
+          "support_plan",
+          "student_name"
+        ],
+        "purpose": "academic-support",
+        "tokenize": true,
+        "note": "unauthorized_model"
+      },
+      "decision": "MODEL_ENDPOINT_UNREGISTERED",
+      "identity_reached_model": false,
+      "unrequested_sensitive_reached_model": false
+    },
+    "wrong_zone": {
+      "suggested": {
+        "endpoint": "public_chatbot_api",
+        "fields": [
+          "support_plan",
+          "student_name"
+        ],
+        "purpose": "academic-support",
+        "tokenize": true,
+        "note": "wrong_zone"
+      },
+      "decision": "MODEL_ENDPOINT_UNREGISTERED",
+      "identity_reached_model": false,
+      "unrequested_sensitive_reached_model": false
+    },
+    "additional_fields": {
+      "suggested": {
+        "endpoint": "campus_local_model",
+        "fields": [
+          "support_plan",
+          "student_name",
+          "counselling_notes",
+          "household_income"
+        ],
+        "purpose": "academic-support",
+        "tokenize": true,
+        "note": "additional_fields"
+      },
+      "decision": "FIELD_NOT_MINIMUM_NECESSARY",
+      "identity_reached_model": false,
+      "unrequested_sensitive_reached_model": false
+    },
+    "different_purpose": {
+      "suggested": {
+        "endpoint": "campus_local_model",
+        "fields": [
+          "support_plan",
+          "student_name"
+        ],
+        "purpose": "institutional-research",
+        "tokenize": true,
+        "note": "different_purpose"
+      },
+      "decision": "PURPOSE_MISMATCH",
+      "identity_reached_model": false,
+      "unrequested_sensitive_reached_model": false
+    },
+    "bypass_tokenization": {
+      "suggested": {
+        "endpoint": "campus_local_model",
+        "fields": [
+          "support_plan",
+          "student_name"
+        ],
+        "purpose": "academic-support",
+        "tokenize": false,
+        "note": "bypass_tokenization"
+      },
+      "decision": "RELEASED_WITH_TOKENS",
+      "identity_reached_model": false,
+      "unrequested_sensitive_reached_model": false
+    },
+    "lower_security_model": {
+      "suggested": {
+        "endpoint": "approved_edu_cloud",
+        "fields": [
+          "support_plan",
+          "student_name"
+        ],
+        "purpose": "academic-support",
+        "tokenize": true,
+        "note": "lower_security_model"
+      },
+      "decision": "MODEL_CLASS_NOT_APPROVED",
+      "identity_reached_model": false,
+      "unrequested_sensitive_reached_model": false
+    }
+  },
+  "erasure": {
+    "subject": "stu-a1f3",
+    "complete": false,
+    "governed_locations": 9,
+    "scope": "supplied locations only; not a complete copy inventory",
+    "unverified_locations": [
+      "primary_record_store_bytes",
+      "backup_bytes:snapshot-1",
+      "evidence_ledger_gate_1",
+      "released_outputs_outside_boundary",
+      "model_runtime_memory"
+    ],
+    "readable_locations": [],
+    "checks": [
+      {
+        "location": "primary_record_store",
+        "status": "unreadable",
+        "detail": "stu-a1f3 (erased)"
+      },
+      {
+        "location": "primary_record_store_bytes",
+        "status": "unverified",
+        "detail": "0 known plaintext hit(s); a negative scan is not proof of erasure"
+      },
+      {
+        "location": "backup:snapshot-1",
+        "status": "unreadable",
+        "detail": "stu-a1f3 (erased)"
+      },
+      {
+        "location": "backup_bytes:snapshot-1",
+        "status": "unverified",
+        "detail": "0 known plaintext hit(s); a negative scan is not proof of erasure"
+      },
+      {
+        "location": "key_backup_1_restored_with_journal",
+        "status": "unreadable",
+        "detail": "stu-a1f3 (erased)"
+      },
+      {
+        "location": "token_map",
+        "status": "absent",
+        "detail": "0 of 0 token(s) still reversible"
+      },
+      {
+        "location": "vector_index",
+        "status": "unreadable",
+        "detail": "0 of 1 embedding(s) decryptable"
+      },
+      {
+        "location": "derived_outputs_gate_1",
+        "status": "absent",
+        "detail": "0 output(s) still linked, 0 plaintext hit(s)"
+      },
+      {
+        "location": "evidence_ledger_gate_1",
+        "status": "unverified",
+        "detail": "0 known plaintext hit(s); a negative scan is not proof of erasure"
+      },
+      {
+        "location": "released_outputs_outside_boundary",
+        "status": "declared-residual",
+        "detail": "content already released to an entitled person or system is outside custody; erasure there is that recipient's obligation"
+      },
+      {
+        "location": "model_runtime_memory",
+        "status": "declared-residual",
+        "detail": "restricted classes run only on stateless local endpoints that receive tokens, not identity; the runtime's own memory is not inspected by this check"
+      }
+    ],
+    "certificate": {
+      "subject": "stu-a1f3",
+      "classes": [
+        "derived-embedding",
+        "identity-token-map",
+        "student-academic",
+        "student-financial",
+        "student-health",
+        "student-identity",
+        "student-support-sensitive"
+      ],
+      "journal_seq": 1,
+      "erased_by": "privacy-officer-ng",
+      "reason": "synthetic erasure request"
+    }
+  }
+}
