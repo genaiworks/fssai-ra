@@ -60,14 +60,18 @@ class EncryptedRecordSource:
 
     def load(self, subject: str, fields: dict[str, str]) -> None:
         with self._lock:
+            unknown = set(fields) - set(self._classes)
+            if unknown:
+                raise KeyError(f"fields have no declared class: {sorted(unknown)}")
             version = self._versions.get(subject, 0) + 1
-            self._versions[subject] = version
-            for name, value in fields.items():
-                if name not in self._classes:
-                    raise KeyError(f"field {name} has no declared class")
-                self._rows[(subject, name)] = self._custody.encrypt(
+            staged = {
+                (subject, name): self._custody.encrypt(
                     self._writer, subject=subject, field=name, data_class=self._classes[name],
                     plaintext=str(value), version=version)
+                for name, value in fields.items()
+            }
+            self._rows.update(staged)
+            self._versions[subject] = version
 
     def fetch(self, subject: str, fields: Iterable[str]) -> dict[str, str]:
         names = list(fields)
@@ -101,6 +105,9 @@ class EncryptedRecordSource:
     def restore_snapshot(self, snapshot: RecordSnapshot) -> None:
         with self._lock:
             self._rows = dict(snapshot.rows)
+            # Preserve the live high-water mark and recover it on a fresh instance.
+            for (subject, _name), ciphertext in self._rows.items():
+                self._versions[subject] = max(self._versions.get(subject, 0), ciphertext.version)
 
     def raw_bytes(self) -> bytes:
         with self._lock:
@@ -155,7 +162,7 @@ class GovernedVectorIndex:
                     self._reader, ciphertext, subject=subject, field=f"embedding:{entry_id}"))
             except CustodyDenied:
                 continue
-            scored.append((subject, entry_id, sum(a * b for a, b in zip(probe, vector))))
+            scored.append((subject, entry_id, sum(a * b for a, b in zip(probe, vector, strict=True))))
         return sorted(scored, key=lambda item: -item[2])[:limit]
 
     def readable_entries(self, subject: str) -> int:

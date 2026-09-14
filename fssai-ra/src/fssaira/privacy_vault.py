@@ -1,4 +1,4 @@
-"""Tokenization: a model may reason about *which* person, never learn *who*.
+"""Tokenization reduces exposure of declared identifiers; it does not establish anonymity.
 
 Redaction deletes the thing a model needs to reason about ("the same student
 appears in both records"). Pseudonyms that are stable across sessions let any
@@ -13,7 +13,8 @@ two contexts be joined back into a profile. This vault does neither.
   reappear inside the token by chance).
 * The **token map** holds each identifier encrypted under the subject's own data
   key in :class:`fssaira.key_custody.KeyCustody`. Destroying that key makes every
-  token of that subject irreversible, in every session, at once.
+  token mapping unreadable through live custody; independently retained keys and
+  runtime memory remain outside that claim.
 * **Restoration** needs a custody credential with ``decrypt``. The vault never
   decides who may see identity; :class:`fssaira.privacy_pipeline.PrivacyGate`
   decides that at release, against the recipient's entitlement, and only then
@@ -23,18 +24,19 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import re
 import secrets
 import threading
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .key_custody import Ciphertext, CustodyDenied, KeyCustody
+from .key_custody import Ciphertext, CustodyCode, CustodyDenied, KeyCustody, KeyDestroyed
 
 #: Class under which identity values are encrypted in the token map.
 IDENTITY_CLASS = "identity-token-map"
 
-TOKEN_PATTERN = re.compile(r"\[\[([A-Z][A-Z_]{1,24})_([0-9A-F]{10})\]\]")
+TOKEN_PATTERN = re.compile(r"\[\[([A-Z][A-Z_]{0,24})_([0-9A-F]{10})\]\]")
 
 _DETECTORS = (
     ("EMAIL", re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]{2,}\b")),
@@ -78,32 +80,40 @@ class TokenVault:
         self._credential = credential
         self._key = key if key is not None else secrets.token_bytes(32)
         self._entries: dict[tuple[str, str], TokenEntry] = {}
-        self._forward: dict[tuple[str, str, str, str], str] = {}
+        self._forward: dict[tuple[str, str, str], str] = {}
         self._lock = threading.RLock()
 
     # -- tokenize ------------------------------------------------------------
     def token_for(self, *, session_id: str, subject: str, kind: str, value: str) -> str:
         """The session's token for one identifier of one subject."""
         label = re.sub(r"[^A-Z_]", "_", kind.upper())[:24] or "ID"
+        if not label[0].isalpha():
+            label = "ID" + label[:22]
+        encoded = json.dumps([session_id, subject, kind, value], ensure_ascii=False).encode()
+        fingerprint = hmac.new(self._key, b"lookup:" + encoded, hashlib.sha256).hexdigest()
+        lookup = (session_id, subject, fingerprint)
         with self._lock:
-            known = self._forward.get((session_id, subject, kind, value))
+            if self._custody.is_destroyed(subject):
+                raise KeyDestroyed(CustodyCode.KEY_DESTROYED, "subject was erased")
+            known = self._forward.get(lookup)
             if known is not None:
                 return known
             counter = 0
-            while True:
-                mac = hmac.new(self._key, f"{session_id}|{subject}|{kind}|{value}|{counter}".encode(),
+            for counter in range(1024):
+                mac = hmac.new(self._key, b"token:" + encoded + str(counter).encode(),
                                hashlib.sha256).hexdigest().upper()[:10]
                 token = f"[[{label}_{mac}]]"
                 if not _shares_run(mac, value) and not _shares_run(mac, subject) \
                         and (session_id, token) not in self._entries:
                     break
-                counter += 1
+            else:
+                raise VaultDenied(VaultCode.TOKEN_UNKNOWN, "token allocation exhausted")
             ciphertext = self._custody.encrypt(self._credential, subject=subject,
                                                field=f"token:{token}", data_class=IDENTITY_CLASS,
                                                plaintext=value)
             self._entries[(session_id, token)] = TokenEntry(session_id, token, subject, kind,
                                                             ciphertext)
-            self._forward[(session_id, subject, kind, value)] = token
+            self._forward[lookup] = token
             return token
 
     def tokenize_text(self, text: str, *, session_id: str,
@@ -115,17 +125,41 @@ class TokenVault:
         of replacements made.
         """
         replacements = 0
-        items = sorted({(s, k, v) for s, k, v in identifiers if v and len(v.strip()) >= 2},
-                       key=lambda item: len(item[2]), reverse=True)
-        out = text
+        items = sorted({(s, k, v) for s, k, v in identifiers if v and v.strip()},
+                       key=lambda item: (-len(item[2]), item))
+        if not items:
+            return text, 0
+        by_value = {}
         for subject, kind, value in items:
-            pattern = re.compile(re.escape(value), re.IGNORECASE)
-            if pattern.search(out):
-                token = self.token_for(session_id=session_id, subject=subject, kind=kind,
-                                       value=value)
-                out, count = pattern.subn(token, out)
-                replacements += count
-        return out, replacements
+            by_value.setdefault(value.casefold(), (subject, kind, value))
+        pattern = re.compile("|".join(re.escape(v) for _, _, v in items), re.IGNORECASE)
+
+        def replace(match):
+            nonlocal replacements
+            item = by_value.get(match.group(0).casefold())
+            if item is None:
+                # Unicode case-insensitive matching can be broader than casefold.
+                item = next(item for item in items
+                            if re.fullmatch(re.escape(item[2]), match.group(0), re.IGNORECASE))
+            subject, kind, value = item
+            replacements += 1
+            return self.token_for(session_id=session_id, subject=subject, kind=kind, value=value)
+
+        # Do not match a later identifier against token text created earlier, or
+        # reinterpret an existing token's label as someone's identifier.
+        parts, offset = [], 0
+        for token in TOKEN_PATTERN.finditer(text):
+            parts.append(pattern.sub(replace, text[offset:token.start()]))
+            parts.append(token.group(0))
+            offset = token.end()
+        parts.append(pattern.sub(replace, text[offset:]))
+        return "".join(parts), replacements
+
+    def forget_subject(self, subject: str) -> None:
+        """Remove live indexes; this does not promise Python heap zeroization."""
+        with self._lock:
+            self._forward = {k: v for k, v in self._forward.items() if k[1] != subject}
+            self._entries = {k: v for k, v in self._entries.items() if v.subject != subject}
 
     @staticmethod
     def detect_contact_details(text: str) -> list[tuple[str, str]]:

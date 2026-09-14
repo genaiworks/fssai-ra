@@ -58,11 +58,7 @@ class RoutingRefused(DisclosureDenied):
     """No endpoint may lawfully and verifiably process this request."""
 
 
-_STOPWORDS = frozenset("""
-a an and are as at be but by for from has have i in into is it its me my of on or our please
-so that the their them then there these this to up us was we what when which who will with you
-your can could would should just also any all each every some about over per via
-""".split())
+_STOPWORDS = frozenset(["a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "from", "has", "have", "i", "in", "into", "is", "it", "its", "me", "my", "of", "on", "or", "our", "please", "so", "that", "the", "their", "them", "then", "there", "these", "this", "to", "up", "us", "was", "we", "what", "when", "which", "who", "will", "with", "you", "your", "can", "could", "would", "should", "just", "also", "any", "all", "each", "every", "some", "about", "over", "per", "via"])
 _WORD = re.compile(r"[a-z]+")
 
 

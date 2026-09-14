@@ -25,6 +25,7 @@ request to the component that does.
 """
 from __future__ import annotations
 
+import json
 import os
 from contextlib import asynccontextmanager
 from dataclasses import asdict
@@ -276,6 +277,15 @@ def create_app(
         if request.url.path.startswith("/v1/"):
             response.headers["Cache-Control"] = "no-store"
         return response
+
+    from .key_custody import CustodyDenied
+    from .privacy_vault import VaultDenied
+
+    @app.exception_handler(CustodyDenied)
+    @app.exception_handler(VaultDenied)
+    async def privacy_denied_handler(_request: Request, exc):
+        return JSONResponse(status_code=403, content={"error": exc.code,
+                                                     "detail": "privacy operation denied"})
 
     # -- error translation -------------------------------------------------
     @app.exception_handler(ExecutionDenied)
@@ -629,6 +639,8 @@ def create_app(
         evidence = [UntrustedEvidence(source="operator-supplied", text=item)
                     for item in request.evidence]
         context = None
+        if disclosure is not None and disclosure.privacy_gate is not None and request.governed_context is None:
+            raise HTTPException(status_code=422, detail="privacy profile requires governed context")
         if request.governed_context is not None:
             if disclosure is None:
                 raise HTTPException(
@@ -640,10 +652,18 @@ def create_app(
                 UntrustedEvidence(source=f"governed:{context.receipt_id}", text=f"{key}: {value}")
                 for key, value in sorted(context.values.items())
             ]
+        model_task = request.task
+        if context is not None and disclosure.privacy_gate is not None:
+            sanitize = disclosure.privacy_gate.sanitize_text
+            model_task = sanitize(requester=caller.subject, session_id=context.session_id,
+                                  content=model_task)
+            evidence = [UntrustedEvidence(source=item.source,
+                text=sanitize(requester=caller.subject, session_id=context.session_id,
+                              content=item.text)) for item in evidence]
         try:
-            calls = backend.propose(request.task, evidence)
+            calls = backend.propose(model_task, evidence)
         except Exception as exc:
-            raise HTTPException(status_code=502, detail=f"model backend failed: {exc}") from exc
+            raise HTTPException(status_code=502, detail="model backend failed") from exc
         proposals = []
         for call in calls:
             capability = catalogue.get(call.tool)
@@ -669,6 +689,8 @@ def create_app(
         }
         if context is not None:
             output = proposals_output(disclosure, caller, context.session_id, proposals)
+            if disclosure.privacy_gate is not None:
+                payload["proposals"] = json.loads(output.content)
             payload["disclosure"] = {
                 "context_receipt": context.receipt_id,
                 "output_id": output.output_id,

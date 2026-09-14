@@ -86,6 +86,7 @@ class ReleaseRequest(BaseModel):
     recipient: str = Name
     purpose: str = Name
     recipient_id: str = Field(default="", max_length=200)
+    restore_identity: bool = False
 
 
 class TokenGrant(BaseModel):
@@ -142,7 +143,7 @@ class DisclosureRuntime:
 
     def __init__(self, profile, evidence, evidence_token: str, *,
                  model_endpoint: str | None = None, store=None, records=None,
-                 consent=None, token_verifier=None) -> None:
+                 consent=None, token_verifier=None, privacy=None) -> None:
         from .disclosure_store import open_disclosure_store
 
         if profile.disclosure is None:
@@ -160,12 +161,26 @@ class DisclosureRuntime:
         consent = consent if consent is not None else consent_from_env()
         if records is None:
             records = records_from_env()
+        self.privacy_config = privacy
+        if privacy is not None:
+            privacy.validate()
+            if self.store.kind != "memory":
+                raise ValueError("privacy reference profile requires memory store; durable custody is unqualified")
+            if records is not None and records is not privacy.records:
+                raise ValueError("privacy profile cannot use a different record source")
+            records = privacy.records
         self.gate = DisclosureGate(
             self.policy, records if records is not None else {}, evidence, evidence_token,
             grant_keys=self.grant_authority.trusted_keys,
             declassification_keys=self.declassifier.trusted_keys,
             store=self.store, consent=consent, token_verifier=self.token_verifier,
         )
+        self.privacy_gate = None
+        if privacy is not None:
+            from .privacy_pipeline import PrivacyGate
+            self.privacy_gate = PrivacyGate(
+                self.gate, privacy.vault, privacy.records,
+                identity_fields=privacy.identity_fields, restore_credential=privacy.restore_credential)
         self.model_endpoint = model_endpoint if model_endpoint is not None else os.getenv(
             "FSSAI_MODEL_ENDPOINT", "")
 
@@ -188,12 +203,28 @@ class DisclosureRuntime:
         return {governance.data_owner, governance.privacy_owner} if governance else set()
 
     def assemble(self, caller: Principal, request: ContextRequest, now: float):
-        return self.gate.assemble_context(
+        if self.privacy_config is not None:
+            config = self.privacy_config
+            try:
+                digest, model_id = config.runtime_identity(self.model_endpoint)
+            except Exception as exc:
+                raise DisclosureDenied("MODEL_IDENTITY_UNAVAILABLE",
+                                       "serving identity could not be established") from exc
+            config.registry.attest(
+                self.model_endpoint, digest, presented_model_id=model_id, now=now,
+                purpose=request.purpose,
+                classes={self.policy.field_classes.get(name, "undeclared") for name in request.fields})
+        assemble = self.privacy_gate.context_for_model if self.privacy_gate else self.gate.assemble_context
+        return assemble(
             requester=caller.subject, session_id=request.session_id,
             grant=self.get_grant(request.grant_id), purpose=request.purpose,
             subjects=request.subjects, fields=request.fields,
             model_endpoint=self.model_endpoint, now=now,
         )
+
+    def derive(self, *, requester: str, session_id: str, content: str):
+        derive = self.privacy_gate.derive if self.privacy_gate else self.gate.derive_output
+        return derive(requester=requester, session_id=session_id, content=content)
 
 
 def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, caller_type: Any,
@@ -220,6 +251,7 @@ def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, 
         rt = need()
         return {
             "policy": rt.policy.summary(),
+            "privacy_profile": "tokenized-memory-reference" if rt.privacy_gate else "disclosure-only",
             "model_endpoint": rt.model_endpoint or None,
             "model_endpoint_zone": rt.policy.endpoints.get(rt.model_endpoint),
             "grants_held_by_server": rt.grant_count(),
@@ -306,7 +338,7 @@ def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, 
     @app.post("/v1/disclosure/outputs", status_code=201, tags=["disclosure"])
     def derive_output(request: OutputCreate, caller: caller_type):
         rt = need()
-        output = rt.gate.derive_output(requester=caller.subject, session_id=request.session_id,
+        output = rt.derive(requester=caller.subject, session_id=request.session_id,
                                        content=request.content)
         return {"output_id": output.output_id, "label": _label(output.label),
                 "content_digest": output.digest}
@@ -333,6 +365,16 @@ def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, 
         if output.holder != caller.subject:
             raise HTTPException(status_code=403,
                                 detail="only the principal holding an output may release it")
+        if rt.privacy_gate is not None:
+            released = rt.privacy_gate.release(
+                output, recipient=request.recipient, recipient_id=request.recipient_id,
+                purpose=request.purpose, now=now(), restore_identity=request.restore_identity)
+            return {"receipt_id": released.receipt.receipt_id, "output_id": output.output_id,
+                    "recipient": request.recipient, "purpose": request.purpose,
+                    "label": _label(released.receipt.label), "content": released.content,
+                    "identity_restored": released.identity_restored}
+        if request.restore_identity:
+            raise HTTPException(status_code=409, detail="identity restoration requires the privacy profile")
         receipt = rt.gate.release(output, recipient=request.recipient,
                                   recipient_id=request.recipient_id,
                                   purpose=request.purpose, now=now())
@@ -355,7 +397,7 @@ def register_disclosure_routes(app: FastAPI, runtime: DisclosureRuntime | None, 
 def proposals_output(runtime: DisclosureRuntime, caller: Principal, session_id: str,
                      proposals: list[dict]):
     """Label a model's proposal set as a governed output of its session."""
-    return runtime.gate.derive_output(
+    return runtime.derive(
         requester=caller.subject, session_id=session_id,
         content=json.dumps(proposals, sort_keys=True, default=str),
     )

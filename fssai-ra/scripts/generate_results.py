@@ -553,8 +553,10 @@ def _test_count() -> int:
              "-p", "no:warnings"],
             cwd=ROOT, capture_output=True, text=True, timeout=300,
         )
-    except Exception:  # pragma: no cover - pytest unavailable in a packaged install
-        return 0
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError("cannot establish test collection for the evidence bundle") from exc
+    if result.returncode != 0:
+        raise RuntimeError("test collection failed; refusing to publish a partial test count")
     # Quiet collection prints one "path/to/test_file.py: N" line per module.
     per_file = re.findall(r"^\S+\.py: (\d+)$", result.stdout, flags=re.MULTILINE)
     if per_file:

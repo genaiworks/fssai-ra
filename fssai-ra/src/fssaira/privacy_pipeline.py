@@ -21,16 +21,24 @@ function returned.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
-from .disclosure import DataLabel, DisclosureGate, GovernedOutput, ReleaseReceipt
+from .disclosure import (
+    DataLabel,
+    DisclosureCode,
+    DisclosureDenied,
+    DisclosureGate,
+    GovernedOutput,
+    ReleaseReceipt,
+)
 from .disclosure_sources import RecordNotFound
 from .encrypted_records import EncryptedRecordSource, GovernedVectorIndex, RecordSnapshot
 from .evidence import EvidenceLedger
-from .key_custody import CustodyBackup, ErasureCertificate, ErasureEntry, KeyCustody
+from .key_custody import CustodyBackup, CustodyDenied, ErasureCertificate, ErasureEntry, KeyCustody
 from .privacy_vault import TOKEN_PATTERN, TokenVault, VaultDenied
 
 #: The pipeline's own ablatable controls, separate from the gate's fourteen.
@@ -59,6 +67,7 @@ class ModelContext:
     purposes: tuple[str, ...]
     model_endpoint: str
     tokens: tuple[str, ...] = ()
+    label: DataLabel | None = None
 
     def as_text(self) -> str:
         return "\n".join(f"{key}: {value}" for key, value in sorted(self.values.items()))
@@ -82,6 +91,9 @@ class PrivacyGate:
         self.gate = gate
         self.vault = vault
         self._records = records
+        unknown_fields = set(identity_fields) - set(gate.policy.field_classes)
+        if not identity_fields or unknown_fields:
+            raise ValueError("identity fields must be nonempty and declared in policy")
         self.identity_fields = dict(identity_fields)
         self._restore_credential = restore_credential
         self.enforce = frozenset(enforce)
@@ -116,66 +128,88 @@ class PrivacyGate:
     def context_for_model(self, *, requester: str, session_id: str, grant: Any, purpose: str,
                           subjects: Iterable[str], fields: Iterable[str], model_endpoint: str,
                           now: float) -> ModelContext:
-        context = self.gate.assemble_context(
-            requester=requester, session_id=session_id, grant=grant, purpose=purpose,
-            subjects=subjects, fields=fields, model_endpoint=model_endpoint, now=now)
-        self._session_subjects.setdefault(session_id, set()).update(context.label.subjects)
-        if not self._on("tokenization"):
-            values = dict(context.values)
-            tokens: tuple[str, ...] = ()
-            replacements = 0
-        else:
-            identifiers = self._identifiers(session_id)
-            kind = self.gate.policy.subject_kind.upper()
-            values, replacements = {}, 0
-            for key, text in sorted(context.values.items()):
-                subject, _, name = key.rpartition(".")
-                subject_token = self.vault.token_for(session_id=session_id, subject=subject,
-                                                     kind=kind, value=subject)
-                clean, count = self.vault.tokenize_text(text, session_id=session_id,
-                                                        identifiers=identifiers)
-                for detail_kind, detail in self.vault.detect_contact_details(clean):
-                    token = self.vault.token_for(session_id=session_id, subject=subject,
-                                                 kind=detail_kind, value=detail)
-                    clean = clean.replace(detail, token)
-                    count += 1
-                values[f"{subject_token}.{name}"] = clean
-                replacements += count
-            tokens = tuple(sorted({m.group(0) for v in [*values, *values.values()]
-                                   for m in TOKEN_PATTERN.finditer(v)}))
-        model_context = ModelContext(
-            session_id=session_id, receipt_id=context.receipt_id, values=values,
-            classes=tuple(sorted(context.label.classes)),
-            purposes=tuple(sorted(context.label.purposes)), model_endpoint=model_endpoint,
-            tokens=tokens)
-        self._record("context_tokenized", {
-            "receipt_id": context.receipt_id, "session_id": session_id,
-            "fields": sorted({k.rpartition(".")[2] for k in values}),
-            "tokens": len(tokens), "replacements": replacements,
-            "tokenization_enforced": self._on("tokenization"),
-        })
-        return model_context
+        with self.gate.store.atomic():
+            context = self.gate.assemble_context(
+                requester=requester, session_id=session_id, grant=grant, purpose=purpose,
+                subjects=subjects, fields=fields, model_endpoint=model_endpoint, now=now)
+            self._session_subjects.setdefault(session_id, set()).update(context.label.subjects)
+            if not self._on("tokenization"):
+                values = dict(context.values)
+                tokens: tuple[str, ...] = ()
+                replacements = 0
+            else:
+                identifiers = self._identifiers(session_id)
+                kind = self.gate.policy.subject_kind.upper()
+                values, replacements = {}, 0
+                for key, text in sorted(context.values.items()):
+                    subject, _, name = key.rpartition(".")
+                    subject_token = self.vault.token_for(session_id=session_id, subject=subject,
+                                                         kind=kind, value=subject)
+                    clean, count = self.vault.tokenize_text(text, session_id=session_id,
+                                                            identifiers=identifiers)
+                    for detail_kind, detail in self.vault.detect_contact_details(clean):
+                        token = self.vault.token_for(session_id=session_id, subject=subject,
+                                                     kind=detail_kind, value=detail)
+                        clean = clean.replace(detail, token)
+                        count += 1
+                    values[f"{subject_token}.{name}"] = clean
+                    replacements += count
+                tokens = tuple(sorted({m.group(0) for v in [*values, *values.values()]
+                                       for m in TOKEN_PATTERN.finditer(v)}))
+            model_context = ModelContext(
+                session_id=session_id, receipt_id=context.receipt_id, values=values,
+                classes=tuple(sorted(context.label.classes)),
+                purposes=tuple(sorted(context.label.purposes)), model_endpoint=model_endpoint,
+                tokens=tokens, label=context.label)
+            self._record("context_tokenized", {
+                "receipt_id": context.receipt_id, "session_id": session_id,
+                "fields": sorted({k.rpartition(".")[2] for k in values}),
+                "tokens": len(tokens), "replacements": replacements,
+                "tokenization_enforced": self._on("tokenization"),
+            })
+            return model_context
+
+    def sanitize_text(self, *, requester: str, session_id: str, content: str) -> str:
+        with self.gate.store.atomic() as tx:
+            state = tx.get_session(session_id)
+            if state is None or state["holder"] != requester:
+                raise DisclosureDenied(DisclosureCode.SESSION_HOLDER_MISMATCH,
+                                       "a held context session is required")
+            clean, _ = self.vault.tokenize_text(
+                content, session_id=session_id, identifiers=self._identifiers(session_id))
+            if self.vault.detect_contact_details(clean):
+                raise DisclosureDenied("UNCLASSIFIED_CONTACT_DETAILS",
+                                       "undeclared contact details require classification")
+            return clean
 
     # -- derivation ----------------------------------------------------------
     def derive(self, *, requester: str, session_id: str, content: str,
                claimed_label: DataLabel | None = None) -> GovernedOutput:
         """Label an output; first re-tokenize any identity the model wrote in clear."""
-        replacements = 0
-        if self._on("output_retokenization"):
-            content, replacements = self.vault.tokenize_text(
-                content, session_id=session_id, identifiers=self._identifiers(session_id))
-        output = self.gate.derive_output(requester=requester, session_id=session_id,
-                                         content=content, claimed_label=claimed_label)
-        self._record("output_retokenized", {"output_id": output.output_id,
-                                            "identifiers_retokenized": replacements})
-        return output
+        with self.gate.store.atomic() as tx:
+            state = tx.get_session(session_id)
+            if state is None or state["holder"] != requester:
+                raise DisclosureDenied(DisclosureCode.SESSION_HOLDER_MISMATCH,
+                                       "a held context session is required")
+            replacements = 0
+            if self._on("output_retokenization"):
+                content, replacements = self.vault.tokenize_text(
+                    content, session_id=session_id, identifiers=self._identifiers(session_id))
+            if self.vault.detect_contact_details(content):
+                raise DisclosureDenied("UNCLASSIFIED_CONTACT_DETAILS",
+                                       "undeclared output contact details require classification")
+            output = self.gate.derive_output(requester=requester, session_id=session_id,
+                                             content=content, claimed_label=claimed_label)
+            self._record("output_retokenized", {"output_id": output.output_id,
+                                                "identifiers_retokenized": replacements})
+            return output
 
     # -- release and restoration ---------------------------------------------------
     def identity_entitlement(self, recipient: str, recipient_id: str,
                              label: DataLabel) -> tuple[bool, str]:
         policy = self.gate.policy
         rule = policy.recipients.get(recipient)
-        if rule is None or not label.subjects:
+        if rule is None or not label.subjects or not self.identity_fields:
             return False, PrivacyCode.NOTHING_TO_RESTORE if rule else PrivacyCode.IDENTITY_NOT_ENTITLED
         identity_classes = {policy.field_classes[name] for name in self.identity_fields
                             if name in policy.field_classes}
@@ -187,32 +221,38 @@ class PrivacyGate:
 
     def release(self, output: GovernedOutput, *, recipient: str, purpose: str, now: float,
                 recipient_id: str = "", restore_identity: bool = False) -> ReleasedOutput:
-        receipt = self.gate.release(output, recipient=recipient, recipient_id=recipient_id,
-                                    purpose=purpose, now=now)
-        stored = self.gate.output(output.output_id)
-        content = stored.content
-        if not restore_identity:
-            return ReleasedOutput(receipt, content, False, PrivacyCode.NOTHING_TO_RESTORE)
-        if self._on("identity_restoration_entitlement"):
-            entitled, code = self.identity_entitlement(recipient, recipient_id, receipt.label)
-        else:
-            entitled, code = True, PrivacyCode.IDENTITY_RESTORED
-        restored = 0
-        if entitled:
-            base_session = stored.session_id.split("/", 1)[0]
-            subjects = receipt.label.subjects or self._session_subjects.get(base_session, set())
-            try:
+        with self.gate.store.atomic():
+            stored = self.gate.output(output.output_id)
+            # Validate the supplied object, not just its public identifier.
+            if stored != output:
+                raise DisclosureDenied(DisclosureCode.OUTPUT_UNKNOWN, "output does not match stored artifact")
+            content, restored = stored.content, 0
+            entitled, code = False, PrivacyCode.NOTHING_TO_RESTORE
+            if restore_identity:
+                if self._on("identity_restoration_entitlement"):
+                    entitled, code = self.identity_entitlement(recipient, recipient_id, stored.label)
+                else:
+                    entitled, code = True, PrivacyCode.IDENTITY_RESTORED
+                if not entitled:
+                    raise DisclosureDenied(PrivacyCode.IDENTITY_NOT_ENTITLED,
+                                           "recipient may not restore this output's identities")
+                for token in TOKEN_PATTERN.finditer(content):
+                    entry = self.vault.entry(stored.session_id, token.group(0))
+                    if entry is None or entry.subject not in stored.label.subjects:
+                        raise DisclosureDenied(PrivacyCode.IDENTITY_NOT_ENTITLED,
+                                               "unknown or out-of-scope identity token")
                 content, restored = self.vault.restore_text(
-                    self._restore_credential, session_id=base_session, text=content,
-                    subjects=subjects)
-            except VaultDenied as exc:
-                entitled, code = False, exc.code
-        self._record("identity_restoration", {
-            "receipt_id": receipt.receipt_id, "output_id": output.output_id,
-            "recipient": recipient, "restored": entitled, "code": code,
-            "tokens_restored": restored,
-        })
-        return ReleasedOutput(receipt, content, entitled, code, restored)
+                    self._restore_credential, session_id=stored.session_id, text=content,
+                    subjects=stored.label.subjects)
+            receipt = self.gate.release(stored, recipient=recipient, recipient_id=recipient_id,
+                                        purpose=purpose, now=now)
+            self._record("identity_restoration", {
+                "receipt_id": receipt.receipt_id, "output_id": stored.output_id,
+                "recipient": recipient, "restored": bool(restored), "code": code,
+                "tokens_restored": restored,
+                "released_content_digest": hashlib.sha256(content.encode()).hexdigest(),
+            })
+            return ReleasedOutput(receipt, content, bool(restored), code, restored)
 
 
 # ---------------------------------------------------------------------------
@@ -291,6 +331,7 @@ class ErasureService:
         for gate in self.gates:
             with gate.store.atomic() as tx:
                 purged += tx.purge_subject_outputs(subject)
+        self.vault.forget_subject(subject)
         self.certificates[subject] = certificate
         if self._evidence is not None and self._token is not None:
             self._evidence.append("subject_erased", {
@@ -320,8 +361,8 @@ class ErasureService:
 
         def scan(blob: bytes, where: str) -> None:
             hits = sum(1 for text in secrets_ if text.encode("utf-8") in blob)
-            checks.append(LocationCheck(where, "READABLE" if hits else "absent",
-                                        f"{hits} plaintext value(s) found in stored bytes"))
+            checks.append(LocationCheck(where, "READABLE" if hits else "unverified",
+                                        f"{hits} known plaintext hit(s); a negative scan is not proof of erasure"))
 
         read_back(self.records, "primary_record_store")
         scan(self.records.raw_bytes(), "primary_record_store_bytes")
@@ -333,20 +374,33 @@ class ErasureService:
             scan(json.dumps(sorted(str(v.body.hex()) for v in snapshot.rows.values())).encode(),
                  f"backup_bytes:{snapshot.snapshot_id}")
         for index, (backup, journal) in enumerate(custody_backups, start=1):
-            self.custody.restore(self._restore_admin(), backup, journal)
-            read_back(self.records, f"key_backup_{index}_restored_with_journal")
+            # Probe a separate custody/record instance. Verification must never
+            # replace live keys while investigating whether a backup is readable.
+            self.custody._authorize(self._restore_admin(), "backup")
+            probe_custody = KeyCustody(master_seed=self.custody._master)
+            admin = probe_custody.register_principal("verification", ["backup", "decrypt"])
+            try:
+                probe_custody.restore(admin, backup, journal)
+                probe = EncryptedRecordSource(dict(self.records._classes), probe_custody,
+                                              writer_credential="", reader_credential=admin)
+                with self.records._lock:
+                    probe.restore_snapshot(RecordSnapshot("probe", 0, dict(self.records._rows)))
+                read_back(probe, f"key_backup_{index}_restored_with_journal")
+            except CustodyDenied as exc:
+                checks.append(LocationCheck(f"key_backup_{index}", "unverified", exc.code))
 
         entries = self.vault.entries_for(subject)
-        reversible = 0
+        reversible, unverified = 0, 0
         for entry in entries:
             try:
                 self.vault.restore(restore_credential or self.records._reader,
                                    session_id=entry.session_id, token=entry.token)
                 reversible += 1
-            except VaultDenied:
-                continue
+            except VaultDenied as exc:
+                if exc.code != "VAULT_TOKEN_IRREVERSIBLE":
+                    unverified += 1
         checks.append(LocationCheck("token_map", "READABLE" if reversible else
-                                    ("unreadable" if entries else "absent"),
+                                    ("unverified" if unverified else "unreadable" if entries else "absent"),
                                     f"{reversible} of {len(entries)} token(s) still reversible"))
 
         if self.vector_index is not None:

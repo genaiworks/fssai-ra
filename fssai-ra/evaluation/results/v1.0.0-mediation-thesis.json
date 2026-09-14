@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "kind": "mediation-thesis-falsification",
-  "generated_at": "2026-09-14T00:46:28.593823+00:00",
+  "generated_at": "2026-09-14T01:17:39.081351+00:00",
   "thesis": "Intelligence is untrusted. Power and data are mediated.",
   "commitments": [
     "Untrusted intelligence: treat every model as capable, persuasive, and possibly mistaken, manipulated, or misaligned; its output is a proposal or a request",

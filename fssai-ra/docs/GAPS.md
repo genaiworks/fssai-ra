@@ -67,8 +67,9 @@ The expanded `paper/trust-by-construction.md` now makes the trusted substrate,
 GenAI integration contract, cross-mediator composition, distributed semantics,
 and promotion gates explicit. `paper/foundation-claims.json` separates runnable
 fixture evidence from source-only components and unqualified deployment claims.
-The optional privacy wrapper, registry, notary and pack floor require explicit
-end-to-end API binding evidence. The four-pack disclosure result is not an
+The optional in-memory privacy wrapper and strict registry now have HTTP
+integration evidence in `tests/test_privacy_integration.py`. Persistent custody,
+notary and pack-floor deployment binding remain open. See `PRIVACY_REFERENCE.md`. The four-pack disclosure result is not an
 education privacy evaluation or proof of the complete privacy pipeline.
 
 The audit fixed predictable default keys in the model publisher and notary,

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "base_commit": "89fa5afb4addc361c7ffc1b8cb9d0aa5db09aff9",
+  "base_commit": "9ade5be7c947d57a5c06c4efe9e1712e2d27992d",
   "scope": "Full-paper audit; not an exhaustive vulnerability audit or production certification.",
   "overall_implementation_percentage": null,
   "claims": [
@@ -121,47 +121,53 @@
     {
       "id": "tokens",
       "claim": "Identifier tokenization and restoration",
-      "status": "source-present-unqualified",
+      "status": "fixture-tested",
       "implementation": [
         "src/fssaira/privacy_vault.py",
-        "src/fssaira/privacy_pipeline.py"
+        "src/fssaira/privacy_pipeline.py",
+        "src/fssaira/privacy_runtime.py",
+        "src/fssaira/disclosure_api.py"
       ],
       "enforcement_point": "Privacy wrapper",
-      "tests": [],
-      "reproduction_command": null,
-      "evidence": null,
-      "limitation": "Not anonymous; plaintext forward lookup and in-process memory remain sensitive; no complete production path shown."
+      "tests": [
+        "tests/test_privacy_integration.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_privacy_integration.py",
+      "evidence": "revision-verification.json and test-results.xml record the second-audit execution.",
+      "limitation": "Opt-in in-memory HTTP integration tested. Lookup uses keyed digests; heap zeroization, anonymous outputs and durable custody are not established."
     },
     {
       "id": "erasure",
       "claim": "Scoped erasure completion reporting",
-      "status": "selected-regressions-tested",
+      "status": "fixture-tested",
       "implementation": [
         "src/fssaira/privacy_pipeline.py",
         "src/fssaira/key_custody.py"
       ],
       "enforcement_point": "Erasure service",
       "tests": [
-        "tests/test_foundation_security.py"
+        "tests/test_foundation_security.py",
+        "tests/test_privacy_integration.py"
       ],
-      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py",
-      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
-      "limitation": "Unknown locations and residuals prevent complete status. Restorable key backups and arbitrary copies remain unresolved."
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py tests/test_privacy_integration.py",
+      "evidence": "revision-verification.json and test-results.xml record the second-audit execution.",
+      "limitation": "Isolated restore probes and known-history journal checks tested; negative scans remain unverified. External copies and independently retained decryptable key backups remain unresolved."
     },
     {
       "id": "registry",
       "claim": "Signed manifests and expiry",
-      "status": "selected-regressions-tested",
+      "status": "fixture-tested",
       "implementation": [
         "src/fssaira/model_registry.py"
       ],
       "enforcement_point": "Model registry",
       "tests": [
-        "tests/test_foundation_security.py"
+        "tests/test_foundation_security.py",
+        "tests/test_privacy_integration.py"
       ],
-      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py",
-      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
-      "limitation": "Runtime-reported digest is not hardware attestation; no end-to-end registry binding established."
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py tests/test_privacy_integration.py",
+      "evidence": "revision-verification.json and test-results.xml record the second-audit execution.",
+      "limitation": "Strict registry is bound to opt-in HTTP privacy context and model-task routes; serving identity is server-reported, not hardware-rooted."
     },
     {
       "id": "notary",
@@ -305,6 +311,23 @@
       "reproduction_command": null,
       "evidence": null,
       "limitation": "Exact deployment qualification, independent review and measurements required."
+    },
+    {
+      "id": "privacy-http",
+      "claim": "Opt-in in-memory privacy HTTP path",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/privacy_runtime.py",
+        "src/fssaira/disclosure_api.py",
+        "src/fssaira/api.py"
+      ],
+      "enforcement_point": "Strict registry and privacy wrapper around disclosure gate",
+      "tests": [
+        "tests/test_privacy_integration.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_privacy_integration.py",
+      "evidence": "revision-verification.json and test-results.xml",
+      "limitation": "Reference configuration only; not persistent custody, general identity detection, or cross-mediator action authorization."
     }
   ]
 }

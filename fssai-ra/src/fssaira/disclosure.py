@@ -78,6 +78,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 import threading
 import uuid
 from collections.abc import Callable, Iterable, Iterator
@@ -1289,18 +1290,25 @@ class DisclosureGate:
 
         # The gate applies the transform, refetching released values so the store
         # never holds them. Redaction is a floor, not de-identification.
-        base_session = known.session_id.split("/", 1)[0]
+        base_session = known.session_id
         state = tx.get_session(base_session)
+        if state is None and (known.grants or known.label.subjects):
+            raise DisclosureDenied(DisclosureCode.SESSION_HOLDER_MISMATCH,
+                                   "declassification source session is unavailable")
         texts = self._texts(state["keys"]) if state else {}
         content = known.content
         for value in sorted((v for v in texts.values() if v), key=len, reverse=True):
-            content = content.replace(value, "[withheld]")
+            content = re.sub(re.escape(value), "[withheld]", content, flags=re.IGNORECASE)
         subjects = known.label.subjects
         if rule.removes_subject_identity:
+            from .privacy_vault import TOKEN_PATTERN
+
+            content = TOKEN_PATTERN.sub("[identity withheld]", content)
             # The pseudonym must not be able to reproduce an identifier: an earlier
             # form, "[patient-1]", re-created the subject id "patient-1" verbatim.
             for index, subject in enumerate(sorted(subjects, key=len, reverse=True), start=1):
-                content = content.replace(subject, f"[{self.policy.subject_kind} withheld #{index}]")
+                content = re.sub(re.escape(subject), f"[{self.policy.subject_kind} withheld #{index}]",
+                                 content, flags=re.IGNORECASE)
             if any(subject in content for subject in subjects):
                 raise DisclosureDenied(DisclosureCode.DECLASSIFICATION_OUT_OF_RULE,
                                        "a subject identifier survived redaction")
@@ -1313,7 +1321,7 @@ class DisclosureGate:
         # A declassification that removes subject identity is a new disclosure
         # decision by an independent authority; it no longer depends on the grants
         # or consent of the people it no longer identifies.
-        new = GovernedOutput(tx.next_id("output"), f"{base_session}/declassified",
+        new = GovernedOutput(tx.next_id("output"), base_session,
                              known.holder, content, label, declassified_by=approved_by,
                              grants=frozenset() if rule.removes_subject_identity else known.grants,
                              provenance=known.provenance)

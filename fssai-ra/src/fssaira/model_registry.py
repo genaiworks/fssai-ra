@@ -242,8 +242,11 @@ class ModelRegistry:
                 f"{declared!r}",
             )
 
-    def register(self, manifest: ModelManifest) -> None:
+    def register(self, manifest: ModelManifest, *, reinstate: bool = False) -> None:
         self.verify(manifest)
+        if manifest.endpoint in self._revoked and not reinstate:
+            raise ModelAttestationDenied(ModelAttestationCode.MANIFEST_REVOKED,
+                                         "reinstatement requires an explicit administrative decision")
         self._manifests[manifest.endpoint] = manifest
         self._revoked.discard(manifest.endpoint)
 
@@ -307,6 +310,10 @@ class ModelRegistry:
         if manifest.expires_at and checked_at >= manifest.expires_at:
             raise ModelAttestationDenied(ModelAttestationCode.MANIFEST_EXPIRED,
                                          f"the approval of {endpoint} expired")
+        classes = tuple(classes)
+        if self.strict and (not purpose or not classes):
+            raise ModelAttestationDenied(ModelAttestationCode.MANIFEST_INCOMPLETE,
+                                         "strict use requires a purpose and data classes")
         if purpose is not None and manifest.allowed_purposes and \
                 purpose not in manifest.allowed_purposes:
             raise ModelAttestationDenied(ModelAttestationCode.PURPOSE_NOT_APPROVED,

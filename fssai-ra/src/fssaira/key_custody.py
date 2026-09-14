@@ -36,7 +36,8 @@ The classic hole in cryptographic erasure is the key backup: restore last week's
 custody backup and the destroyed key comes back. :meth:`KeyCustody.restore`
 therefore replays the journal over every restore, and refuses a restore that is
 not given the journal. The journal holds surrogate identifiers and timestamps,
-never keys or personal data, so it can be retained and replicated freely.
+never keys, but identifiers and reasons can still be personal data; protect it
+and apply a justified retention policy.
 
 What erasure here does not reach, and must not be claimed to reach: plaintext that
 already left the governed boundary (an output released to a person, a screen, a
@@ -79,7 +80,7 @@ class CustodyDenied(PermissionError):
 
 
 class KeyDestroyed(CustodyDenied):
-    """The subject's data key was destroyed; the ciphertext is permanently unreadable."""
+    """The subject key was destroyed in this custody instance."""
 
 
 def _aesgcm():
@@ -140,7 +141,7 @@ class ErasureEntry:
 
 @dataclass(frozen=True)
 class ErasureCertificate:
-    """What custody destroyed. Contains no key material and no personal data."""
+    """What custody destroyed. Metadata may be sensitive; no key material is included."""
 
     subject: str
     classes: tuple[str, ...]
@@ -277,14 +278,14 @@ class KeyCustody:
                                 "ciphertext is bound to a different subject or field")
         with self._lock:
             dek, _generation = self._unwrap(subject, ciphertext.data_class)
-        try:
-            plain = _aesgcm()(dek).decrypt(
-                ciphertext.nonce, ciphertext.body,
-                _binding(subject, field, ciphertext.data_class, ciphertext.version))
-        except Exception as exc:  # cryptography.exceptions.InvalidTag
-            raise CustodyDenied(CustodyCode.CIPHERTEXT_BINDING,
-                                "ciphertext failed authentication under its claimed binding") from exc
-        return plain.decode("utf-8")
+            try:
+                plain = _aesgcm()(dek).decrypt(
+                    ciphertext.nonce, ciphertext.body,
+                    _binding(subject, field, ciphertext.data_class, ciphertext.version))
+            except Exception as exc:  # cryptography.exceptions.InvalidTag
+                raise CustodyDenied(CustodyCode.CIPHERTEXT_BINDING,
+                                    "ciphertext failed authentication under its claimed binding") from exc
+            return plain.decode("utf-8")
 
     def destroy_subject(self, credential: str, subject: str, *, erased_by: str,
                         reason: str) -> ErasureCertificate:
@@ -359,7 +360,16 @@ class KeyCustody:
             raise CustodyDenied(CustodyCode.RESTORE_WITHOUT_JOURNAL,
                                 "a key backup may be restored only together with the erasure journal")
         entries = tuple(journal or ())
+        if replay_journal:
+            expected = list(range(1, len(entries) + 1))
+            if [entry.seq for entry in entries] != expected or len(entries) < backup.journal_length:
+                raise CustodyDenied(CustodyCode.RESTORE_WITHOUT_JOURNAL,
+                                    "erasure journal is incomplete or out of sequence")
         with self._lock:
+            if replay_journal and (len(entries) < len(self._journal) or
+                    any(a != b for a, b in zip(self._journal, entries, strict=False))):
+                raise CustodyDenied(CustodyCode.RESTORE_WITHOUT_JOURNAL,
+                                    "restore cannot roll back or replace known erasure history")
             self._wrapped = dict(backup.wrapped)
             removed = 0
             if replay_journal:

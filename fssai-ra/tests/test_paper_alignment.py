@@ -745,15 +745,15 @@ def test_no_path_cuts_a_slide_the_script_says_is_never_cut(script, deck_slides):
 
 
 # Full manuscript: previously omitted from alignment checks despite the builder's claim.
-@pytest.mark.parametrize("key,template", [
-    ("domain_pack_scenarios_contained", "{value} of 180 hostile scenarios"),
-    ("disclosure_contained", "{value} of 106 hostile data flows"),
-    ("thesis_attempts_display", "{value} bounded attempts"),
-    ("domain_pack_benign_completed", "{value} of 58 benign tasks"),
+@pytest.mark.parametrize("template", [
+    "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios",
+    "{disclosure_contained} of {disclosure_hostile_total} hostile data flows",
+    "{thesis_attempts_display} bounded attempts",
+    "{domain_pack_benign_completed} of {domain_pack_benign_total} benign tasks",
 ])
-def test_full_manuscript_metrics_match_generated_results(key, template, figures):
+def test_full_manuscript_metrics_match_generated_results(template, figures):
     manuscript = (ROOT / "paper" / "trust-by-construction.md").read_text()
-    assert template.format(value=figures[key]) in manuscript
+    assert template.format(**figures) in manuscript
 
 
 def test_foundation_claims_have_real_evidence_locators_and_scoped_status():
