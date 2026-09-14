@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import threading
 import time
 import uuid
 from collections.abc import Iterable
@@ -153,13 +154,16 @@ class ApprovalUseStore:
 
     def __init__(self) -> None:
         self._uses: dict[str, str] = {}
+        self._lock = threading.Lock()
 
     def bind(self, approval_id: str, request_id: str) -> tuple[str, bool]:
-        current = self._uses.get(approval_id)
-        if current is not None:
-            return current, False
-        self._uses[approval_id] = request_id
-        return request_id, True
+        # Check and set are one step: unlocked, two threads can both see "unused".
+        with self._lock:
+            current = self._uses.get(approval_id)
+            if current is not None:
+                return current, False
+            self._uses[approval_id] = request_id
+            return request_id, True
 
 
 class CaseRegister:
@@ -169,6 +173,7 @@ class CaseRegister:
         self._cases = {key: dict(value) for key, value in cases.items()}
         self._results: dict[str, ExecutionResult] = {}
         self.mutation_count = 0
+        self._lock = threading.RLock()
 
     def get(self, case_id: str) -> dict:
         return dict(self._cases[case_id])
@@ -186,6 +191,11 @@ class CaseRegister:
         return None if result is None else ExecutionResult(**asdict(result))
 
     def transition(self, proposal: ActionProposal) -> ExecutionResult:
+        # Version check, state check, and write are one step under concurrency.
+        with self._lock:
+            return self._transition(proposal)
+
+    def _transition(self, proposal: ActionProposal) -> ExecutionResult:
         if proposal.request_id in self._results:
             prior = self._results[proposal.request_id]
             validate_replay(proposal, prior)
@@ -292,6 +302,55 @@ class ApprovalAuthority:
         ).hexdigest()
 
 
+class AsymmetricApprovalAuthority(ApprovalAuthority):
+    """Approvals signed with Ed25519, so the executor holds only a public key.
+
+    With the HMAC authority, the executor must hold the same secret the approval
+    service signs with, which means a compromised executor can mint approvals for
+    itself: the power mediator and the authority it checks collapse into one
+    component. With this authority the executor can verify and cannot sign, which
+    removes the approval key from the executor's trusted base.
+    """
+
+    def __init__(self, audience: str = "case-register-executor", *,
+                 key_id: str = "approval-ed25519-1", seed: bytes | None = None,
+                 oversight=None) -> None:
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+        material = seed if seed is not None else hashlib.sha256(key_id.encode()).digest()
+        super().__init__(audience, key_id=key_id, signing_key="ed25519", oversight=oversight)
+        self._private = Ed25519PrivateKey.from_private_bytes(material)
+
+    @property
+    def public_key(self) -> bytes:
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+        return self._private.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+
+    @property
+    def verification_keys(self) -> dict[str, bytes]:
+        return {self.key_id: self.public_key}
+
+    def _sign(self, approval: Approval) -> str:
+        return self._private.sign(_approval_signing_payload(approval).encode("utf-8")).hex()
+
+
+def _approval_signature_valid(key: str | bytes, approval: Approval) -> bool:
+    """HMAC for a shared-secret key, Ed25519 for a 32-byte public key."""
+    payload = _approval_signing_payload(approval).encode("utf-8")
+    if isinstance(key, bytes):
+        from cryptography.exceptions import InvalidSignature
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+        try:
+            Ed25519PublicKey.from_public_bytes(key).verify(bytes.fromhex(approval.signature), payload)
+            return True
+        except (InvalidSignature, ValueError):
+            return False
+    expected = hmac.new(key.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    return isinstance(approval.signature, str) and hmac.compare_digest(approval.signature, expected)
+
+
 def _approval_signing_payload(approval: Approval) -> str:
     """Canonical payload authenticated by the teaching approval authority."""
     return json.dumps(
@@ -374,12 +433,7 @@ class AccountableExecutor:
         signing_key = self._approval_keys.get(approval.key_id)
         if signing_key is None:
             raise ExecutionDenied("APPROVAL_KEY_UNTRUSTED", "approval key is not trusted by executor")
-        expected_signature = hmac.new(
-            signing_key.encode("utf-8"),
-            _approval_signing_payload(approval).encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
-        if not hmac.compare_digest(approval.signature, expected_signature):
+        if not _approval_signature_valid(signing_key, approval):
             raise ExecutionDenied("APPROVAL_SIGNATURE_INVALID", "approval fields were not authenticated")
         if approval.audience != self._audience:
             raise ExecutionDenied("APPROVAL_AUDIENCE_MISMATCH", "approval targets another executor")

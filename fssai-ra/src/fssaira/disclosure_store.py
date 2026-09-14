@@ -37,6 +37,11 @@ class StoreUnavailable(RuntimeError):
     """The disclosure state could not be read or written; nothing is released."""
 
 
+def _erased_output(body: dict) -> dict:
+    return {**body, "content": "[erased]", "erased": True,
+            "label": {**body.get("label", {}), "subjects": []}}
+
+
 # ---------------------------------------------------------------------------
 # Memory
 # ---------------------------------------------------------------------------
@@ -129,6 +134,22 @@ class MemoryDisclosureStore:
     def get_output(self, output_id: str) -> dict | None:
         body = self._outputs.get(output_id)
         return json.loads(json.dumps(body)) if body is not None else None
+
+    def purge_subject_outputs(self, subject: str) -> int:
+        """Erase the content of every stored output derived from ``subject``.
+
+        Derived data inherits erasure: the output keeps its identifier so a later
+        release fails closed as altered, but its content and label no longer exist.
+        """
+        purged = 0
+        for output_id, body in self._outputs.items():
+            if subject in body.get("label", {}).get("subjects", ()):
+                self._outputs[output_id] = _erased_output(body)
+                purged += 1
+        return purged
+
+    def output_bodies(self) -> list[dict]:
+        return [json.loads(json.dumps(body)) for body in self._outputs.values()]
 
     # emergency access
     def lock_holder(self, holder: str) -> None:
@@ -284,6 +305,21 @@ class _SqlTx:
 
     def get_output(self, output_id: str) -> dict | None:
         return self._body("disclosure_outputs", "output_id", output_id)
+
+    def output_bodies(self) -> list[dict]:
+        return [json.loads(row[0]) for row in
+                self._u.all(f"SELECT body FROM {self._t('disclosure_outputs')}")]
+
+    def purge_subject_outputs(self, subject: str) -> int:
+        purged = 0
+        for row in self._u.all(f"SELECT output_id, body FROM {self._t('disclosure_outputs')}"):
+            body = json.loads(row[1])
+            if subject in body.get("label", {}).get("subjects", ()):
+                self._u.execute(
+                    f"UPDATE {self._t('disclosure_outputs')} SET body = ? WHERE output_id = ?",
+                    (json.dumps(_erased_output(body), sort_keys=True), row[0]))
+                purged += 1
+        return purged
 
     def lock_holder(self, holder: str) -> None:
         self._u.execute(f"INSERT INTO {self._t('disclosure_holder_locks')} (holder) VALUES (?) "

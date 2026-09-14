@@ -116,6 +116,8 @@ class DelegationCode:
     REQUESTER_NOT_CHAIN_LEAF = "REQUESTER_NOT_CHAIN_LEAF"
     PRINCIPAL_NOT_NAMED = "PRINCIPAL_NOT_NAMED"
     BENEFICIARY_SCOPE_EXCEEDED = "BENEFICIARY_SCOPE_EXCEEDED"
+    PURPOSE_NOT_ATTENUATED = "PURPOSE_NOT_ATTENUATED"
+    DELEGATION_REVOKED = "DELEGATION_REVOKED"
     ADMITTED = "ADMITTED"
 
 
@@ -246,10 +248,18 @@ class Delegation:
                 "expires_at": self.expires_at,
                 "key_id": self.key_id,
                 "human_approved": self.human_approved,
+                # Signed since the purpose-attenuation fix: an unsigned purpose
+                # could be rewritten after issue without breaking the signature.
+                "purpose": self.purpose,
             },
             sort_keys=True,
             separators=(",", ":"),
         )
+
+    @property
+    def digest(self) -> str:
+        """Stable identity of this hop, used to revoke it and everything below it."""
+        return hashlib.sha256(self.signing_payload().encode("utf-8")).hexdigest()
 
     def signed_with(self, signing_key: str) -> Delegation:
         signature = hmac.new(
@@ -433,6 +443,14 @@ class DelegationAuthority:
     policy: DelegationPolicy = field(default_factory=DelegationPolicy)
     keys: dict = field(default_factory=lambda: {DELEGATION_KEY_ID: DELEGATION_SIGNING_KEY})
     refusals: dict = field(default_factory=dict)
+    #: Digests of revoked hops. A chain is checked against this at every use, so
+    #: revoking one hop revokes every descendant below it with no propagation
+    #: window: children hold no authority of their own to outlive the parent.
+    revoked: set = field(default_factory=set)
+
+    def revoke(self, hop: Delegation) -> str:
+        self.revoked.add(hop.digest)
+        return hop.digest
 
     # -- issuing -----------------------------------------------------------
     def issue(
@@ -570,6 +588,25 @@ class DelegationAuthority:
                 return refuse(
                     DelegationCode.DELEGATION_SIGNATURE_INVALID,
                     f"hop {depth} ({hop.delegator} -> {hop.delegate}) is not authentic",
+                )
+
+            # Revocation propagates by construction: an ancestor's revocation is
+            # found here, at use, for every chain that passes through it.
+            if hop.digest in self.revoked:
+                return refuse(
+                    DelegationCode.DELEGATION_REVOKED,
+                    f"hop {depth} ({hop.delegator} -> {hop.delegate}) has been revoked; "
+                    "everything delegated through it is revoked with it",
+                )
+
+            # Purpose only narrows. Once a hop names a purpose, every hop below it
+            # must name the same one; a blank purpose would silently widen it.
+            if index > 0 and chain[index - 1].purpose and hop.purpose != chain[index - 1].purpose:
+                return refuse(
+                    DelegationCode.PURPOSE_NOT_ATTENUATED,
+                    f"hop {depth} changes purpose {chain[index - 1].purpose!r} to "
+                    f"{hop.purpose!r}; authority granted for one purpose is not "
+                    "authority for another",
                 )
 
             # The chain must actually be a chain.

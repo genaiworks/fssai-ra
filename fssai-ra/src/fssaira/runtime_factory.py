@@ -60,6 +60,17 @@ class Warning_:
 
 def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPlane:
     """Assemble the control plane described by the environment."""
+    # Fail secure, not fail loud. A deployment that declares itself a pilot or
+    # production system does not start while a blocking teaching default is
+    # active: a warning on /health is read after the forgeable key was used.
+    declared = os.getenv("FSSAI_DEPLOYMENT_PROFILE", "teaching").strip().lower()
+    if declared in {"pilot", "production"}:
+        blocking = [item for item in configuration_warnings() if item.severity == "blocking"]
+        if blocking:
+            raise RuntimeError(
+                f"refusing to start a {declared} deployment with teaching defaults active: "
+                + "; ".join(item.code for item in blocking)
+            )
     profile = ApplicationProfile.load(
         Path(profile_path or os.getenv("FSSAI_PROFILE", "profiles/student_support.yaml"))
     )

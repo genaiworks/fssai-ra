@@ -20,6 +20,7 @@ Two design choices matter for fail-secure behaviour:
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import threading
 import time
@@ -65,7 +66,8 @@ class EvidenceLedger:
 
     def append(self, kind: str, payload: dict, *, token: str) -> EvidenceRecord:
         """Append a record. Requires the append token (separate write path)."""
-        if token != self._append_token:
+        # Constant time: the append token is the evidence plane's write credential.
+        if not isinstance(token, str) or not hmac.compare_digest(token, self._append_token):
             raise EvidenceError("no evidence write authority")
         with self._lock:
             seq = len(self._records)

@@ -59,6 +59,11 @@ class ModelAttestationCode:
     MANIFEST_ENDPOINT_UNDECLARED = "MODEL_MANIFEST_ENDPOINT_UNDECLARED"
     ARTIFACT_DIGEST_MISMATCH = "MODEL_ARTIFACT_DIGEST_MISMATCH"
     MANIFEST_REVOKED = "MODEL_MANIFEST_REVOKED"
+    MANIFEST_EXPIRED = "MODEL_MANIFEST_EXPIRED"
+    MANIFEST_INCOMPLETE = "MODEL_MANIFEST_INCOMPLETE"
+    IDENTITY_MISMATCH = "MODEL_IDENTITY_MISMATCH"
+    PURPOSE_NOT_APPROVED = "MODEL_PURPOSE_NOT_APPROVED"
+    CLASS_NOT_APPROVED = "MODEL_CLASS_NOT_APPROVED"
 
 
 class ModelAttestationDenied(DisclosureDenied):
@@ -103,6 +108,17 @@ class ModelManifest:
     signer: str
     key_id: str = ""
     signature: str = ""
+    #: What the model is approved *for*, not only what it is. Empty tuples mean
+    #: "not declared"; a strict registry refuses an undeclared manifest outright.
+    capabilities: tuple[str, ...] = ()
+    allowed_classes: tuple[str, ...] = ()
+    allowed_purposes: tuple[str, ...] = ()
+    #: Approval is time-bound: an evaluation card goes stale as the model, the
+    #: data, and the threats change. ``0.0`` means no expiry was declared.
+    expires_at: float = 0.0
+    #: Honest name for the evidence behind the approval. A runtime-reported digest
+    #: is not a hardware quote, and the manifest says which one it is.
+    attestation_method: str = "publisher-signed-manifest+runtime-reported-digest"
 
     def signing_payload(self) -> bytes:
         return json.dumps({
@@ -110,6 +126,10 @@ class ModelManifest:
             "model_id": self.model_id, "artifact_digest": self.artifact_digest,
             "version": self.version, "evaluation_card": self.evaluation_card,
             "signer": self.signer, "key_id": self.key_id,
+            "capabilities": sorted(self.capabilities),
+            "allowed_classes": sorted(self.allowed_classes),
+            "allowed_purposes": sorted(self.allowed_purposes),
+            "expires_at": self.expires_at, "attestation_method": self.attestation_method,
         }, sort_keys=True).encode("utf-8")
 
     def to_dict(self) -> dict:
@@ -147,12 +167,16 @@ class ManifestPublisher:
         return replace(unsigned, signature=self._key.sign(unsigned.signing_payload()).hex())
 
     def issue(self, *, endpoint: str, zone: str, provider: str, model_id: str,
-              artifact: bytes, version: str = "1", evaluation_card: str = "") -> ModelManifest:
+              artifact: bytes, version: str = "1", evaluation_card: str = "",
+              capabilities: Iterable[str] = (), allowed_classes: Iterable[str] = (),
+              allowed_purposes: Iterable[str] = (), expires_at: float = 0.0) -> ModelManifest:
         return self.sign(ModelManifest(
             endpoint=endpoint, zone=zone, provider=provider, model_id=model_id,
             artifact_digest=artifact_digest(artifact), version=version,
             evaluation_card=evaluation_card or f"evaluation-cards/{endpoint}-{version}.md",
-            signer=self.signer,
+            signer=self.signer, capabilities=tuple(sorted(capabilities)),
+            allowed_classes=tuple(sorted(allowed_classes)),
+            allowed_purposes=tuple(sorted(allowed_purposes)), expires_at=float(expires_at),
         ))
 
 
@@ -180,9 +204,14 @@ class ModelRegistry:
     where an endpoint sits.
     """
 
-    def __init__(self, declared_endpoints: dict[str, str], trusted_keys: dict[str, bytes]) -> None:
+    def __init__(self, declared_endpoints: dict[str, str], trusted_keys: dict[str, bytes],
+                 *, strict: bool = False) -> None:
         self._declared = dict(declared_endpoints)
         self._trusted = dict(trusted_keys)
+        #: A strict registry refuses manifests that do not declare expiry, classes,
+        #: and purposes. Governed deployments run strict; the legacy router
+        #: fixtures predate those fields.
+        self.strict = strict
         self._manifests: dict[str, ModelManifest] = {}
         self._revoked: set[str] = set()
 
@@ -231,11 +260,17 @@ class ModelRegistry:
         """Write a manifest without verification: models tampering with registry storage."""
         self._manifests[manifest.endpoint] = manifest
 
-    def attest(self, endpoint: str, presented_digest: str) -> AttestedEndpoint:
-        """Refuse unless ``endpoint`` has a valid manifest whose digest was presented.
+    def attest(self, endpoint: str, presented_digest: str, *, now: float | None = None,
+               purpose: str | None = None, classes: Iterable[str] = (),
+               presented_model_id: str | None = None) -> AttestedEndpoint:
+        """Refuse unless ``endpoint`` has a valid, current manifest approving this use.
 
         The stored manifest is verified again here rather than trusted from
-        registration, so a manifest altered in storage is caught at use.
+        registration, so a manifest altered in storage is caught at use. Beyond
+        identity (signature, zone, digest), the manifest must still be in date and
+        must approve the purpose and every data class of the context about to be
+        sent: a model approved for coursework feedback is not thereby approved for
+        counselling notes.
         """
         manifest = self._manifests.get(endpoint)
         if manifest is None:
@@ -250,6 +285,30 @@ class ModelRegistry:
                 ModelAttestationCode.ARTIFACT_DIGEST_MISMATCH,
                 f"{endpoint} presented an artifact that is not the one its manifest approves",
             )
+        if presented_model_id is not None and presented_model_id != manifest.model_id:
+            raise ModelAttestationDenied(
+                ModelAttestationCode.IDENTITY_MISMATCH,
+                f"{endpoint} is serving {presented_model_id!r}; its manifest approves "
+                f"{manifest.model_id!r}",
+            )
+        if self.strict and (not manifest.expires_at or not manifest.allowed_classes
+                            or not manifest.allowed_purposes):
+            raise ModelAttestationDenied(
+                ModelAttestationCode.MANIFEST_INCOMPLETE,
+                f"the manifest for {endpoint} does not declare expiry, classes, and purposes",
+            )
+        if manifest.expires_at and now is not None and now >= manifest.expires_at:
+            raise ModelAttestationDenied(ModelAttestationCode.MANIFEST_EXPIRED,
+                                         f"the approval of {endpoint} expired")
+        if purpose is not None and manifest.allowed_purposes and \
+                purpose not in manifest.allowed_purposes:
+            raise ModelAttestationDenied(ModelAttestationCode.PURPOSE_NOT_APPROVED,
+                                         f"{endpoint} is not approved for {purpose!r}")
+        outside = sorted(set(classes) - set(manifest.allowed_classes)) \
+            if manifest.allowed_classes or self.strict else []
+        if outside:
+            raise ModelAttestationDenied(ModelAttestationCode.CLASS_NOT_APPROVED,
+                                         f"{endpoint} is not approved for: {', '.join(outside)}")
         return AttestedEndpoint(endpoint, manifest.zone, manifest.model_id,
                                 manifest.artifact_digest,
                                 hashlib.sha256(manifest.signing_payload()).hexdigest())
