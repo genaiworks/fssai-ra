@@ -1,0 +1,107 @@
+{
+  "budget_per_track": 300,
+  "seed": 20260921,
+  "split": "all",
+  "controls_removed": [],
+  "independent_oracle": "forbidden effects judged from world observations, not denial logs; denials reported separately",
+  "tracks": [
+    {
+      "attacker": "static",
+      "ran": true,
+      "note": "",
+      "episodes": 300,
+      "queries": 300,
+      "forbidden_outcomes": 0,
+      "by_class": {},
+      "denials_observed": {
+        "APPROVAL_PAYLOAD_MISMATCH": 66,
+        "APPROVAL_REQUIRED": 17,
+        "APPROVAL_SIGNATURE_INVALID": 20,
+        "DELEGATION_FIELDS_ESCALATION": 3,
+        "DELEGATION_SUBJECTS_ESCALATION": 22,
+        "FIELD_NOT_MINIMUM_NECESSARY": 1,
+        "GRANT_HOLDER_MISMATCH": 4,
+        "GRANT_NOT_SUPPLIED": 12,
+        "MODEL_CLASS_NOT_APPROVED": 8,
+        "MODEL_ENDPOINT_UNREGISTERED": 81,
+        "MODEL_PURPOSE_NOT_APPROVED": 18,
+        "PURPOSE_MISMATCH": 10,
+        "RECIPIENT_CLASS_NOT_CLEARED": 36,
+        "SUBJECT_OUT_OF_SCOPE": 2
+      },
+      "first_forbidden_outcome": null
+    },
+    {
+      "attacker": "random",
+      "ran": true,
+      "note": "",
+      "episodes": 300,
+      "queries": 300,
+      "forbidden_outcomes": 0,
+      "by_class": {},
+      "denials_observed": {
+        "APPROVAL_PAYLOAD_MISMATCH": 56,
+        "APPROVAL_REQUIRED": 24,
+        "APPROVAL_SIGNATURE_INVALID": 24,
+        "DELEGATION_FIELDS_ESCALATION": 2,
+        "DELEGATION_SUBJECTS_ESCALATION": 23,
+        "FIELD_NOT_MINIMUM_NECESSARY": 3,
+        "GRANT_HOLDER_MISMATCH": 3,
+        "GRANT_NOT_SUPPLIED": 20,
+        "MODEL_CLASS_NOT_APPROVED": 9,
+        "MODEL_ENDPOINT_UNREGISTERED": 66,
+        "MODEL_PURPOSE_NOT_APPROVED": 26,
+        "PURPOSE_MISMATCH": 4,
+        "RECIPIENT_CLASS_NOT_CLEARED": 40
+      },
+      "first_forbidden_outcome": null
+    },
+    {
+      "attacker": "bandit",
+      "ran": true,
+      "note": "",
+      "episodes": 300,
+      "queries": 300,
+      "forbidden_outcomes": 0,
+      "by_class": {},
+      "denials_observed": {
+        "APPROVAL_PAYLOAD_MISMATCH": 50,
+        "APPROVAL_REQUIRED": 9,
+        "APPROVAL_SIGNATURE_INVALID": 6,
+        "DELEGATION_FIELDS_ESCALATION": 2,
+        "DELEGATION_SUBJECTS_ESCALATION": 4,
+        "FIELD_NOT_MINIMUM_NECESSARY": 1,
+        "GRANT_HOLDER_MISMATCH": 3,
+        "GRANT_NOT_SUPPLIED": 4,
+        "MODEL_CLASS_NOT_APPROVED": 3,
+        "MODEL_ENDPOINT_UNREGISTERED": 24,
+        "MODEL_PURPOSE_NOT_APPROVED": 13,
+        "PURPOSE_MISMATCH": 5,
+        "RECIPIENT_CLASS_NOT_CLEARED": 176
+      },
+      "first_forbidden_outcome": null
+    }
+  ],
+  "positive_control": {
+    "control_removed": "execution_mediator",
+    "attacker": "bandit",
+    "ran": true,
+    "note": "",
+    "episodes": 300,
+    "queries": 300,
+    "forbidden_outcomes": 300,
+    "by_class": {
+      "unauthorized_mutation": 300
+    },
+    "denials_observed": {},
+    "first_forbidden_outcome": {
+      "move": "altered_proposal",
+      "outcomes": [
+        {
+          "kind": "unauthorized_mutation",
+          "detail": "altered_proposal produced a real forbidden effect"
+        }
+      ]
+    }
+  }
+}

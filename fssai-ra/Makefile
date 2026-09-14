@@ -1,7 +1,7 @@
 PYTHON ?= python3
 
 .PHONY: help install test lint results figures demo check api gateway console dev-env \
-        stack-up stack-down verify evaluate conformance doctor openapi clean \
+        stack-up stack-down verify evaluate conformance doctor openapi clean adaptive \
         reviewer oversight challenge second-domain domain-packs disclosure threats thesis lab
 
 help:  ## Show this help
@@ -112,6 +112,9 @@ security:  ## Kernel floor, education pack failure tests, privacy custody, and c
 
 falsify:  ## Run every falsifier, or one: make falsify F=F19
 	$(PYTHON) -m fssaira.cli conference falsify $(F)
+
+adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
+	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
 
 ablation:  ## Enabled / disabled / restored for every control, or one falsifier: make ablation F=F10
 	$(PYTHON) -m fssaira.cli conference ablation $(F)
