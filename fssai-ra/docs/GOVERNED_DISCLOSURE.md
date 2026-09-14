@@ -282,6 +282,17 @@ and session labels. Each has a production replacement, and each fails closed.
 A refusal never reveals whether a subject exists: the record source is read only
 after every authorization check passes.
 
+### Rechecking authority before an action
+
+An action built on a read must not execute after that read's authority lapses.
+`DisclosureGate.authorize_only` re-runs every read authorization check through the
+same routine the read path uses, so a recheck can never be weaker than the read. It
+fetches no values and writes no session, value, output, or emergency-access state.
+It leaves one `authorization_recheck` evidence record, which pilot indicators
+report separately from reads, and it refuses if that record cannot be written.
+Tests show it refuses with exactly the code a read would, for every grant defect,
+in every sector pack.
+
 ## Mapping to real systems
 
 The gate is an interface, not a product. A deployment keeps the checks and replaces

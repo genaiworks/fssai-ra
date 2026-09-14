@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import hashlib
 import re
-import uuid
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -491,12 +490,19 @@ class EducationWorld:
         fields; if any now fails the write is refused. This is the action/read
         composition the architecture claims and, before this check, did not enforce
         in the execution path.
+
+        The recheck uses the gate's side-effect-free :meth:`authorize_only`, which
+        runs the same shared authorization routine as a read but fetches no record
+        values and writes no session, value, or read evidence -- so it does not
+        inflate the read count -- recording only one ``authorization_recheck``
+        event. It fails closed if that event cannot be written.
         """
         try:
-            self.gate.assemble_context(
-                requester=grant.holder, session_id=f"execguard-{uuid.uuid4().hex}",
-                grant=grant, purpose=grant.purpose, subjects=sorted(grant.subjects),
-                fields=sorted(grant.fields), model_endpoint=self.model_endpoint, now=self.now)
+            self.gate.authorize_only(
+                requester=grant.holder, grant=grant, purpose=grant.purpose,
+                subjects=sorted(grant.subjects), fields=sorted(grant.fields),
+                model_endpoint=self.model_endpoint, now=self.now,
+                reason="execute consequential transition")
         except DisclosureDenied as exc:
             raise ExecutionDenied(
                 "CONTEXT_AUTHORITY_WITHDRAWN",

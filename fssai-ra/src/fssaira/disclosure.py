@@ -992,8 +992,14 @@ class DisclosureGate:
     def _deny(self, code: str, detail: str) -> DisclosureDenied:
         return DisclosureDenied(code, detail)
 
-    def _assemble(self, tx, requester, session_id, grant, purpose, subjects, fields,
-                  model_endpoint, now) -> GovernedContext:
+    def _authorize(self, tx, requester, grant, purpose, subjects, fields, model_endpoint, now,
+                   *, existing: dict | None) -> set:
+        """Every authorization check for a read, shared by reads and rechecks.
+
+        One routine, so a recheck can never be weaker than the read it vouches
+        for. ``existing`` is the session being extended, on the read path only.
+        Returns the data classes the request covers.
+        """
         policy = self.policy
         if grant is None:
             raise self._deny(DisclosureCode.GRANT_NOT_SUPPLIED, "no grant presented")
@@ -1009,7 +1015,6 @@ class DisclosureGate:
         if self._on("grant_signature"):
             self._verify_grant_signature(grant)
 
-        existing = tx.get_session(session_id)
         if self._on("holder_binding"):
             if grant.holder != requester:
                 raise self._deny(DisclosureCode.GRANT_HOLDER_MISMATCH,
@@ -1089,6 +1094,56 @@ class DisclosureGate:
             if unreviewed >= rule.max_unreviewed_per_holder:
                 raise self._deny(DisclosureCode.BREAK_GLASS_REVIEW_OVERDUE,
                                  f"{unreviewed} earlier emergency access(es) still unreviewed")
+
+        return classes
+
+    def authorize_only(self, *, requester: str, grant: DisclosureGrant | None, purpose: str,
+                       subjects: Iterable[str], fields: Iterable[str], model_endpoint: str,
+                       now: float, reason: str = "") -> None:
+        """Re-run every read authorization check without reading anything.
+
+        An action built on a read must not execute after that read's authority has
+        lapsed. Re-running :meth:`assemble_context` to find out would fetch the
+        protected values again, write session and value state, and count as a
+        second disclosure. This method runs exactly the same checks, through the
+        same routine, inside one store transaction, and then stops: no record-source
+        call, no session, value, output, or emergency-access write, and no
+        ``disclosure_intent`` or ``disclosure_outcome`` record.
+
+        A recheck is still an authorization decision, so it leaves one
+        ``authorization_recheck`` record. If that record cannot be written, the
+        recheck refuses.
+        """
+        subjects = tuple(sorted(set(subjects)))
+        fields = tuple(sorted(set(fields)))
+        refusal: DisclosureDenied | None = None
+        try:
+            with self._state() as tx:
+                self._authorize(tx, requester, grant, purpose, subjects, fields,
+                                model_endpoint, now, existing=None)
+        except DisclosureDenied as denied:
+            refusal = denied
+        try:
+            self._record("authorization_recheck", {
+                "requester": requester, "grant_id": grant.grant_id if grant else None,
+                "purpose": purpose, "subjects": list(subjects), "fields": list(fields),
+                "model_endpoint": model_endpoint, "authorized": refusal is None,
+                "code": refusal.code if refusal else "AUTHORIZED", "reason": reason,
+            })
+        except EvidenceError as exc:
+            raise DisclosureDenied(
+                DisclosureCode.EVIDENCE_UNAVAILABLE,
+                f"recheck evidence could not be written; not authorized ({exc})",
+            ) from exc
+        if refusal is not None:
+            raise refusal
+
+    def _assemble(self, tx, requester, session_id, grant, purpose, subjects, fields,
+                  model_endpoint, now) -> GovernedContext:
+        policy = self.policy
+        existing = tx.get_session(session_id)
+        self._authorize(tx, requester, grant, purpose, subjects, fields, model_endpoint, now,
+                        existing=existing)
 
         # Authorised. Only now does the gate touch the record source, so a request
         # that fails any check cannot learn whether a subject exists.

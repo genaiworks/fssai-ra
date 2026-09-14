@@ -20,6 +20,12 @@
 - Domain packs may declare a validated `disclosure` section. The corporate and
   healthcare packs now do, and `/v1/profile` and `fssaira profiles --verify`
   report it. Contract domain 9 adds seven bound requirements, GD-1 to GD-7.
+- Added `DisclosureGate.authorize_only`, a side-effect-free recheck of read
+  authority for actions built on a read. Reads and rechecks now share one
+  authorization routine, so they cannot drift. A recheck fetches nothing, writes no
+  state, and records one `authorization_recheck` entry that pilot indicators count
+  separately. Tests show code parity with a real read across twelve grant defects
+  in all four sector packs.
 - **Production gaps closed in software.** The disclosure gate now keeps its state
   in a store: in memory for teaching, or a transactional SQLite or PostgreSQL store
   where each decision is one transaction, restarts forget nothing, and the store
