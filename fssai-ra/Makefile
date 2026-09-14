@@ -113,6 +113,9 @@ security:  ## Kernel floor, education pack failure tests, privacy custody, and c
 falsify:  ## Run every falsifier, or one: make falsify F=F19
 	$(PYTHON) -m fssaira.cli conference falsify $(F)
 
+adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
+	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
+
 ablation:  ## Enabled / disabled / restored for every control, or one falsifier: make ablation F=F10
 	$(PYTHON) -m fssaira.cli conference ablation $(F)
 

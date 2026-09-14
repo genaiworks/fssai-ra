@@ -315,9 +315,20 @@ class AsymmetricApprovalAuthority(ApprovalAuthority):
     def __init__(self, audience: str = "case-register-executor", *,
                  key_id: str = "approval-ed25519-1", seed: bytes | None = None,
                  oversight=None) -> None:
+        import secrets
+
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-        material = seed if seed is not None else hashlib.sha256(key_id.encode()).digest()
+        # The private key must never be derivable from anything public. The former
+        # default derived the seed from ``key_id`` -- a value published with the
+        # verification key -- so anyone who knew the key id could reconstruct the
+        # signing key and mint approvals. A fixture that wants a reproducible key
+        # passes ``seed`` explicitly; every other construction gets a random key
+        # that exists only inside this process, which is what a signing service
+        # provides in deployment.
+        if seed is not None and len(seed) != 32:
+            raise ValueError("an Ed25519 seed is exactly 32 bytes")
+        material = seed if seed is not None else secrets.token_bytes(32)
         super().__init__(audience, key_id=key_id, signing_key="ed25519", oversight=oversight)
         self._private = Ed25519PrivateKey.from_private_bytes(material)
 

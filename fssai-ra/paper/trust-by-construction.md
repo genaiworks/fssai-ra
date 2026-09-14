@@ -3,7 +3,7 @@
 **Submission:** Expanded research draft for UNU Macau AI Conference 2026 — *AI × Education: AI for Learning, Learning for AI*, 25–26 November 2026, Macau SAR, China.
 **Proposed panel:** Agentic AI in the Loop — From Autonomous Tools to Shared Capacity.
 **Keywords:** agentic AI; reference architecture; secure data governance; privacy by construction; institutional sovereignty; fail-secure systems; system literacy; digital public goods.
-**Reference implementation:** Apache-2.0, https://github.com/genaiworks/fssai-ra, version `1.0.0` reference baseline, audited working tree based on commit `5c587c361cf114125e39344caa6802efd4eaff11`, with preserved author changes and the joined-path revision. Quantitative fixture results regenerate with `make results`; the new deployment requirements below are specifications, not measured results. This expanded draft is not a claim of conference acceptance or compliance with a final page limit.
+**Reference implementation:** Apache-2.0, https://github.com/genaiworks/fssai-ra, version `1.0.0` reference baseline, audited working tree based on commit `5c587c361cf114125e39344caa6802efd4eaff11`, with preserved author changes, the joined-path revision, and a key-secrecy and composition hardening pass (Section 9.2). Quantitative fixture results regenerate with `make results`; the new deployment requirements below are specifications, not measured results. This expanded draft is not a claim of conference acceptance or compliance with a final page limit.
 
 ## Abstract
 
@@ -31,7 +31,7 @@ The paper makes five contributions:
 
 The architecture deliberately inherits rather than invents its mechanisms. The reference monitor and the principles of least privilege, complete mediation, and fail-safe defaults [12] place every access behind a mediator. Lattice information flow [13] lets restriction accumulate as data moves. Well-formed transactions and separation of duties [14] make integrity a property of the process, not of the actor. Zero trust architecture [1] removes implicit trust from network location.
 
-Recent work applies these ideas to language-model agents. CaMeL separates control flow from untrusted data and attaches capabilities to values [15]; FIDES tracks confidentiality and integrity labels through an agent's planner [16]; AI control designs protocols that remain safe when the model actively tries to subvert them [17]. Governance frameworks supply the vocabulary of risk and management: the NIST AI RMF generative AI profile [2], ISO/IEC 42001 [6], the OWASP agentic top ten [3] and agent control standard [4], and MITRE ATLAS [5]. Data-protection law adds purpose limitation, pseudonymisation, and the right to erasure [18], and the EU AI Act adds obligations for high-risk systems [19].
+Recent work applies these ideas to language-model agents. CaMeL separates control flow from untrusted data and attaches capabilities to values [15]; FIDES tracks confidentiality and integrity labels through an agent's planner [16]; AI control designs protocols that remain safe when the model actively tries to subvert them [17]. Governance frameworks supply the vocabulary of risk and management: the NIST AI RMF generative AI profile [2], ISO/IEC 42001 [6], the OWASP agentic top ten [3] and agent control standard [4], and MITRE ATLAS [5]. Data-protection law adds purpose limitation, pseudonymisation, and the right to erasure [18], and the EU AI Act adds obligations for high-risk systems [19]. Recent agent defences combine reference-monitor enforcement or information-flow control with selective human confirmation — symbolic privilege rules on every tool call [24] and dependency-screened tool execution [25] — so the contribution here is the cross-sector integration and transfer method, not the enforcement idea. Robustness claims for such defences do not survive without adaptive attackers, which break defences that reported near-perfect containment against static suites [21, 22], and three limiting results bound any such architecture: access control confines only explicit flows, leaving covert channels and inference from rare attributes [27, 28, 29]; differential privacy, not tokenization, is what would bound re-identification [30]; and a hard authorization boundary must not depend on a model honestly explaining itself, because chain-of-thought monitoring is optional and defeatable [32, 33].
 
 Our contribution is an integration and transfer method: linking reference-monitor enforcement and information-flow controls to institutional purpose, review capacity, recovery, contestability, and executable evidence. We do not claim to invent mediation or to establish that prior work cannot support multiple agents. The comparison arms in Section 7 are local implementations of specified weaker policies, not evaluations of CaMeL, FIDES, or commercial products. Standards alignment supplies design requirements; it does not establish certification or legal compliance.
 
@@ -270,6 +270,8 @@ Record loading now stages all fields before committing changes, and snapshot res
 
 Erasure verification now probes restored keys in an isolated custody instance rather than replacing live keys. It reports bad probe credentials and negative literal scans as unverified, and custody rejects journal rollback relative to known history or the backup's recorded journal length. A fresh restore still needs an independently retained current journal or watermark to establish completeness beyond that bound. Finally, failed test collection stops evidence generation instead of publishing a partial count. These repairs are covered by the separate privacy-integration suite; production isolation, unlearning, institutional outcomes, and independent assurance remain unverified.
 
+A further pass closed two defects the earlier suites did not exercise. First, the demonstration's approval signing key was reconstructible: the asymmetric authority derived its private key from the *public* key identifier, and the education world seeded it from a constant in source, so a party who read the open repository could mint an approval that executed a wrong-student grade change — Rule 1 resting on a key that was not in fact secret. The key is now generated per instance and the executor holds only the public verification key; forging from either former seed is refused, and the assumption that the private key lives in a signing service the model cannot reach is now stated rather than silently contradicted. Second, on the earlier education execution path an approved action still executed after the grant behind its context read had been revoked; that path now re-runs the gate's currency, consent, and scope checks over the grant before the write and refuses with a stable code, matching the composition the joined workflow enforces on its own path. An additional offline adaptive attacker (`fssaira conference adaptive`), scored by an independent effect oracle rather than denial logs and paired with a positive control that removes a mediator to prove it is not a no-op, found 0 forbidden outcomes with every control on; a learning-based and a frontier-model attacker remain not run, consistent with Section 7.8 [20, 21, 22, 32, 33].
+
 ### 9.3 Promotion and operational governance
 
 Use three explicit stages. A teaching sandbox contains synthetic data and no institutional credentials. A shadow pilot may draft and compare outcomes under approved data access but performs no autonomous consequential mutation. A bounded operational pilot enables only named capabilities after Table 4's applicable evidence is accepted. The institution signs thresholds for utility, unacceptable harm, maximum stale-authorization interval, review backlog, recovery objectives, and appeal turnaround before the pilot begins. Thresholds are domain decisions; this paper does not invent universally safe values.
@@ -327,3 +329,33 @@ An AI system should be governed less like an application and more like an instit
 [18] European Parliament and Council (2016). *Regulation (EU) 2016/679 (General Data Protection Regulation)*. https://eur-lex.europa.eu/eli/reg/2016/679/oj
 
 [19] European Parliament and Council (2024). *Regulation (EU) 2024/1689 (Artificial Intelligence Act)*. https://eur-lex.europa.eu/eli/reg/2024/1689/oj
+
+[20] Perez, E., Huang, S., Song, F., Cai, T., Ring, R., Aslanides, J., Glaese, A., McAleese, N., and Irving, G. (2022). Red teaming language models with language models. *EMNLP 2022*, 3419–3448. https://aclanthology.org/2022.emnlp-main.225/
+
+[21] Nasr, M., Carlini, N., Sitawarin, C., et al. (2025). *The attacker moves second: stronger adaptive attacks bypass defenses against LLM jailbreaks and prompt injections*. https://arxiv.org/abs/2510.09023
+
+[22] Zhan, Q., Fang, R., Panchal, H. S., and Kang, D. (2025). Adaptive attacks break defenses against indirect prompt injection attacks on LLM agents. *Findings of NAACL 2025*, 7101–7117. https://arxiv.org/abs/2503.00061
+
+[23] Debenedetti, E., Zhang, J., Balunović, M., Beurer-Kellner, L., Fischer, M., and Tramèr, F. (2024). AgentDojo: a dynamic environment to evaluate prompt injection attacks and defenses for LLM agents. *NeurIPS 2024 Datasets and Benchmarks Track*. https://doi.org/10.52202/079017-2636
+
+[24] Shi, T., He, J., Wang, Z., Li, H., Wu, L., Guo, W., and Song, D. (2025). *Progent: securing AI agents with privilege control*. https://arxiv.org/abs/2504.11703
+
+[25] Zhong, P. Y., Chen, S., Wang, R., McCall, M., Titzer, B. L., Miller, H., and Gibbons, P. B. (2025). *RTBAS: defending LLM agents against prompt injection and privacy leakage*. https://arxiv.org/abs/2502.08966
+
+[26] Anderson, J. P. (1972). *Computer security technology planning study*. ESD-TR-73-51, Vol. I. https://apps.dtic.mil/sti/tr/pdf/AD0758206.pdf
+
+[27] Lampson, B. W. (1973). A note on the confinement problem. *Communications of the ACM*, 16(10), 613–615. https://doi.org/10.1145/362375.362389
+
+[28] Sweeney, L. (2002). k-anonymity: a model for protecting privacy. *International Journal of Uncertainty, Fuzziness and Knowledge-Based Systems*, 10(5), 557–570. https://doi.org/10.1142/S0218488502001648
+
+[29] Narayanan, A., and Shmatikov, V. (2008). Robust de-anonymization of large sparse datasets. *IEEE Symposium on Security and Privacy*, 111–125. https://doi.org/10.1109/SP.2008.33
+
+[30] Dwork, C. (2006). Differential privacy. *ICALP 2006*, LNCS 3927, 1–12. https://doi.org/10.1007/11787006_1
+
+[31] Helland, P. (2012). Idempotence is not a medical condition. *Communications of the ACM*, 55(5), 56–65. https://doi.org/10.1145/2160718.2160734
+
+[32] Baker, B., Huizinga, J., Gao, L., Dou, Z., Guan, M. Y., Madry, A., Zaremba, W., Pachocki, J., and Farhi, D. (2025). *Monitoring reasoning models for misbehavior and the risks of promoting obfuscation*. https://arxiv.org/abs/2503.11926
+
+[33] Korbak, T., Balesni, M., Barnes, E., Bengio, Y., et al. (2025). *Chain of thought monitorability: a new and fragile opportunity for AI safety*. https://arxiv.org/abs/2507.11473
+
+[34] Hardy, N. (1988). The confused deputy (or why capabilities might have been invented). *ACM SIGOPS Operating Systems Review*, 22(4), 36–38. https://doi.org/10.1145/54289.871709

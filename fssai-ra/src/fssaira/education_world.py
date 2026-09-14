@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import uuid
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -207,7 +208,8 @@ class WorldObservations:
 
 class EducationWorld:
     def __init__(self, controls: Iterable[str] = ALL_CONTROLS, *, pack_path: Path = PACK_PATH,
-                 model_endpoint: str = "campus_local_model") -> None:
+                 model_endpoint: str = "campus_local_model",
+                 approval_seed: bytes | None = None) -> None:
         self.controls = frozenset(controls)
         unknown = sorted(self.controls - set(ALL_CONTROLS))
         if unknown:
@@ -281,8 +283,17 @@ class EducationWorld:
         self.register = CredentialedRegister(
             {rid: {"status": status, "version": 1} for rid, status in RESOURCES.items()},
             credential=self._register_key, world=self)
+        # The approval signing key is generated fresh for every world and lives
+        # only in this process. Rule 1 depends on its secrecy, so it must NOT be a
+        # constant an attacker who reads this source (generated code and the model
+        # are in the threat model) could reconstruct. The executor is handed only
+        # the matching *public* verification key. A test that needs a reproducible
+        # key passes ``approval_seed``; the default is a random key, as a real
+        # signing service would hold. (The notary, publisher, and custody keys stay
+        # seeded: they make the *evidence* reproducible and are verification keys,
+        # not the secret Rule 1 rests on.)
         self.approvals = AsymmetricApprovalAuthority("student-records-executor",
-                                                     seed=hashlib.sha256(b"approval-service").digest())
+                                                     seed=approval_seed)
         self.executor = AccountableExecutor(
             _ExecutorView(self.register, self._register_key), self.ledger, EVIDENCE_TOKEN,
             audience="student-records-executor", approval_keys=self.approvals.verification_keys,
@@ -469,14 +480,40 @@ class EducationWorld:
         return replace(approval, key_id=self.approvals.key_id,
                        signature=self.approvals._sign(replace(approval, key_id=self.approvals.key_id)))
 
+    def context_authority_live(self, grant: DisclosureGrant) -> None:
+        """Re-authorize the read a proposal relied on, at the moment of the write.
+
+        Exact-proposal approval stops substitution of *what* is done, but it does
+        not by itself carry the authority of the *read* the proposal was built on.
+        A proposal drafted over a context that was later revoked, expired, or had
+        its consent withdrawn must not still execute. The gate re-runs its own
+        currency, consent, and scope checks over the grant's declared subjects and
+        fields; if any now fails the write is refused. This is the action/read
+        composition the architecture claims and, before this check, did not enforce
+        in the execution path.
+        """
+        try:
+            self.gate.assemble_context(
+                requester=grant.holder, session_id=f"execguard-{uuid.uuid4().hex}",
+                grant=grant, purpose=grant.purpose, subjects=sorted(grant.subjects),
+                fields=sorted(grant.fields), model_endpoint=self.model_endpoint, now=self.now)
+        except DisclosureDenied as exc:
+            raise ExecutionDenied(
+                "CONTEXT_AUTHORITY_WITHDRAWN",
+                f"the read context this proposal relied on is no longer authorized ({exc.code})",
+            ) from exc
+
     def execute(self, proposal: ActionProposal, approval: Approval | None, *, presenter: str | None = None,
-                model_endpoint: str | None = None, chain: tuple = (), root: RootGrant | None = None) -> dict:
+                model_endpoint: str | None = None, chain: tuple = (), root: RootGrant | None = None,
+                context_grant: DisclosureGrant | None = None) -> dict:
         """The power mediator. Returns a signed receipt; raises with a stable code on refusal."""
         if not self.on("execution_mediator"):
             result = self.register.transition(proposal, credential=self._register_key)
             self.decision("none", proposal.operation, True, "UNMEDIATED_WRITE")
             return {"result": result, "receipt": None}
         try:
+            if context_grant is not None and self.on("context_gate"):
+                self.context_authority_live(context_grant)
             if model_endpoint is not None and self.on("model_attestation"):
                 self.attest(model_endpoint, purpose="transcript-correction", fields=("current_grades",))
             if root is not None and self.on("action_delegation"):
