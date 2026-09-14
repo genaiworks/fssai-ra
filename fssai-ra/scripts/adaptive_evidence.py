@@ -27,6 +27,10 @@ BUDGET, SEED = 300, 20260921
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true", help="regenerate the artifact")
+    # --check is a no-op alias for the default verify mode, so this script reads
+    # the same as scripts/conference_evidence.py --check for a reviewer.
+    parser.add_argument("--check", action="store_true",
+                        help="verify the committed artifact matches a fresh run (the default)")
     args = parser.parse_args()
     report = run_adaptive(budget=BUDGET, seed=SEED, split="all", prove_attacker=True)
     encoded = json.dumps(report.to_dict(), indent=2, default=str) + "\n"
