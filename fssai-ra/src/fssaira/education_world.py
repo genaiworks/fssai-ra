@@ -5,7 +5,7 @@ governed-learning pack: key custody and encrypted records (data plane), the cont
 gate and privacy pipeline (data mediator), the model registry (intelligence plane
 admission), delegation (authority), the accountable executor with Ed25519 approvals
 (power mediator), the bounded review queue (human oversight), and the evidence
-ledger with a signing notary (evidence). Nothing is mocked.
+ledger with a signing notary (evidence). Model outputs and human decisions are scripted; storage and cryptographic components execute locally. This is not an isolated deployment.
 
 ``controls`` names what is switched on. The default is everything. The falsification
 engine and the attack lab build the same world with exactly one control removed and

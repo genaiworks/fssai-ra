@@ -107,9 +107,13 @@ def run_governed_request(world: EducationWorld | None = None, *, model: Any = No
     # 1 ADMIT
     step = by["ADMIT"]
     documents: tuple[str, ...] = ()
+    # This legacy entry point is a scripted teaching driver, not authentication.
     known = requester in {"support-agent", "sub-agent-b"} or requester in PEOPLE
     if not known:
         step.status, step.code, step.decided_by = "DENIED", "CALLER_NOT_AUTHENTICATED", "boundary"
+        halted = True
+    elif requester in {"support-agent", "sub-agent-b"} and student != "stu-a1f3":
+        step.status, step.code, step.decided_by = "DENIED", "STUDENT_NOT_ASSIGNED", "boundary"
         halted = True
     else:
         try:
@@ -119,7 +123,7 @@ def run_governed_request(world: EducationWorld | None = None, *, model: Any = No
                 documents = (admitted["text"],)
                 step.evidence = {"injection_markers": admitted["injection_markers"]}
             step.status, step.code, step.decided_by = "ALLOWED", "ADMITTED", "boundary"
-            step.detail = f"caller {requester} authenticated" + (
+            step.detail = f"scripted caller {requester}; simulated identity (not authentication)" + (
                 f"; document carried as data with {len(step.evidence.get('injection_markers', []))} "
                 "instruction-like marker(s)" if document else "")
         except DENIALS as exc:
@@ -197,8 +201,10 @@ def run_governed_request(world: EducationWorld | None = None, *, model: Any = No
         # The reviewer reads the case file, not the model's rationale: approve only the
         # correction that was actually requested, for the student it was requested for.
         matches_case = (proposal.case_id == f"transcript:{student}:MATH101"
-                        and proposal.to_status == target_grade)
-        step.evidence = {"proposal_matches_case_file": matches_case}
+                        and proposal.to_status == target_grade
+                        and target_grade == "grade:B")
+        step.evidence = {"proposal_matches_case_file": matches_case,
+                         "instructor_confirmation": "scripted fixture only; use joined_demo for separate authenticated confirmation"}
         try:
             approval = world.review_and_approve(proposal, reviewer=reviewer, approve=matches_case)
             step.status, step.code, step.decided_by = "ALLOWED", "HUMAN_APPROVED", f"{reviewer} ({PEOPLE.get(reviewer)})"
@@ -269,7 +275,7 @@ def run_governed_request(world: EducationWorld | None = None, *, model: Any = No
             step.status, step.code = "ALLOWED", "REVOKED_AUTHORITY_REFUSED"
             step.detail = f"revocation drill: next read refused with {denial_code(exc)}; pending outcomes {world.executor.pending_outcome_count}"
     trace.outcome = next((f"DENIED at step {s.number} {s.name} by {s.decided_by or s.plane}: {s.code}"
-                          for s in steps if s.status == "DENIED" and s.number <= 8), "COMPLETED with evidence")
+                          for s in steps if s.status == "DENIED"), "COMPLETED with evidence")
     facts["redress"] = ("file_challenge → academic_appeals_officer may uphold (reverse) or dismiss; "
                         "the student sees the receipt digest, the policy, and who approved")
     trace.facts = facts
