@@ -26,6 +26,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,7 +48,9 @@ CHROME_CANDIDATES = (
 )
 
 CSS = """
-@page { size: A4; margin: 21mm 20mm 22mm 20mm; }
+@page { size: A4; margin: 21mm 20mm 22mm 20mm;
+  @bottom-center { content: counter(page); font: 8pt Helvetica, Arial, sans-serif; color: #555; }
+}
 :root { color-scheme: light; }
 html { background: #ffffff; }
 body { margin: 0 auto; max-width: 170mm; padding-block: 12mm; padding-inline: 16px;
@@ -81,10 +84,11 @@ figcaption b, .table-caption b { font-family: "Helvetica Neue", Helvetica, Arial
 .table-caption { margin: 10pt 0 4pt; break-after: avoid; }
 .scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; margin: 0 0 11pt; font-size: 8.4pt;
-  line-height: 1.3; break-inside: avoid; page-break-inside: avoid; }
+  line-height: 1.3; break-inside: auto; page-break-inside: auto; }
 th { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 8pt;
   text-align: left; vertical-align: bottom; border-bottom: 0.9pt solid #555;
   padding: 3pt 4pt; }
+tr { break-inside: avoid; page-break-inside: avoid; }
 td { vertical-align: top; padding: 3pt 4pt; border-bottom: 0.5pt solid #d6d5cf; }
 td:first-child { font-weight: 700; }
 .references p { font-size: 8.6pt; line-height: 1.3; margin: 0 0 2.5pt;

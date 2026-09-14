@@ -60,3 +60,18 @@ Before consequential use, retain one bundle containing:
 The bundle is deployment evidence, not a transferable badge. A new domain,
 backend, model, reviewer regime, or authority chain changes the claim and must
 regenerate the relevant evidence.
+
+## Full-paper foundation audit
+
+The expanded `paper/trust-by-construction.md` now makes the trusted substrate,
+GenAI integration contract, cross-mediator composition, distributed semantics,
+and promotion gates explicit. `paper/foundation-claims.json` separates runnable
+fixture evidence from source-only components and unqualified deployment claims.
+The optional privacy wrapper, registry, notary and pack floor require explicit
+end-to-end API binding evidence. The four-pack disclosure result is not an
+education privacy evaluation or proof of the complete privacy pipeline.
+
+The audit fixed predictable default keys in the model publisher and notary,
+omitted-time expiry bypass, non-finite authorization time, overbroad erasure
+completion reporting, and the inconsistent legitimate-delegation fixture. These
+repairs do not close institutional, hardware, human-study, or deployment gaps.

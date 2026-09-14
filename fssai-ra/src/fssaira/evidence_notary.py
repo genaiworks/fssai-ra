@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import secrets
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -105,7 +106,7 @@ class EvidenceNotary:
     def __init__(self, *, key_id: str = "evidence-notary-1", seed: bytes | None = None,
                  clock=None) -> None:
         private_cls, *_ = _ed25519()
-        material = seed if seed is not None else hashlib.sha256(key_id.encode()).digest()
+        material = seed if seed is not None else secrets.token_bytes(32)
         self._key = private_cls.from_private_bytes(material)
         self.key_id = key_id
         self._clock = clock or time.time

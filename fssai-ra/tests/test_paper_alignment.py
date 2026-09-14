@@ -742,3 +742,29 @@ def test_no_path_cuts_a_slide_the_script_says_is_never_cut(script, deck_slides):
         assert not missing, (
             f"the {name} path cuts slide(s) {missing}, which the script says are never cut"
         )
+
+
+# Full manuscript: previously omitted from alignment checks despite the builder's claim.
+@pytest.mark.parametrize("key,template", [
+    ("domain_pack_scenarios_contained", "{value} of 180 hostile scenarios"),
+    ("disclosure_contained", "{value} of 106 hostile data flows"),
+    ("thesis_attempts_display", "{value} bounded attempts"),
+    ("domain_pack_benign_completed", "{value} of 58 benign tasks"),
+])
+def test_full_manuscript_metrics_match_generated_results(key, template, figures):
+    manuscript = (ROOT / "paper" / "trust-by-construction.md").read_text()
+    assert template.format(value=figures[key]) in manuscript
+
+
+def test_foundation_claims_have_real_evidence_locators_and_scoped_status():
+    register = json.loads((ROOT / "paper" / "foundation-claims.json").read_text())
+    ids = [claim["id"] for claim in register["claims"]]
+    assert len(ids) == len(set(ids))
+    for claim in register["claims"]:
+        assert claim["limitation"] and claim["enforcement_point"]
+        for path in claim["implementation"] + claim["tests"]:
+            assert (ROOT / path).is_file(), path
+        if claim["status"] in {"fixture-tested", "selected-regressions-tested", "simulated"}:
+            assert claim["tests"] and claim["reproduction_command"]
+        else:
+            assert claim["status"] in {"source-present-unqualified", "deployment-requirement", "empirical-open"}

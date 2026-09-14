@@ -238,7 +238,9 @@ class ErasureVerification:
 
     @property
     def complete(self) -> bool:
-        return not any(check.status == "READABLE" for check in self.checks)
+        return bool(self.checks) and all(
+            check.status in {"unreadable", "absent"} for check in self.checks
+        )
 
     @property
     def governed_locations(self) -> int:
@@ -247,6 +249,9 @@ class ErasureVerification:
     def to_dict(self) -> dict:
         return {"subject": self.subject, "complete": self.complete,
                 "governed_locations": self.governed_locations,
+                "scope": "supplied locations only; not a complete copy inventory",
+                "unverified_locations": [c.location for c in self.checks
+                                         if c.status not in {"unreadable", "absent", "READABLE"}],
                 "readable_locations": [c.location for c in self.checks if c.status == "READABLE"],
                 "checks": [c.to_dict() for c in self.checks], "certificate": self.certificate}
 

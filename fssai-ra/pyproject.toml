@@ -39,6 +39,7 @@ Issues = "https://github.com/genaiworks/fssai-ra/issues"
 fssaira = "fssaira.cli:main"
 
 [project.optional-dependencies]
+privacy = ["cryptography>=43.0"]
 api = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "httpx2>=2.0"]
 redis = ["redis>=5.0"]
 postgres = ["psycopg[binary]>=3.2"]

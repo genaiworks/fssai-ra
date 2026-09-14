@@ -2,6 +2,8 @@
 
 | File | What it is |
 |---|---|
+| [`trust-by-construction.md`](trust-by-construction.md) | **Expanded foundation paper.** Audited threat model, GenAI integration contract, distributed semantics, evidence limits, and deployment gates. HTML/PDF are built with `scripts/build_paper.py`. |
+| [`foundation-claims.json`](foundation-claims.json) | Scoped claims and implementation/evidence gaps from the full-paper audit. |
 | [`extended-abstract.md`](extended-abstract.md) | **The proceedings version.** The full argument for the UNU Macau AI Conference 2026 and its UNU–Springer proceedings. |
 | [`form-ready-abstract.md`](form-ready-abstract.md) | **What goes in the form.** Written to the submission form's four capped fields, validated by `scripts/check_submission.py`, and plain ASCII so it pastes without mojibake. |
 | [`composition-supplement.md`](composition-supplement.md) | Delegated authority and assisted review in full — the two contributions the abstract states in compressed form. |

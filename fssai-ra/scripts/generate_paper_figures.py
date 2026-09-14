@@ -228,13 +228,13 @@ def figure_architecture(figures: dict) -> tuple[str, str]:
              "base.", size=9.5, fill=MUTED),
     ]
     caption = (
-        "The Trust by Construction reference architecture. Untrusted intelligence works "
+        "Target deployment architecture, conditional on trusted-service isolation. Intelligence works "
         "on vault tokens and can only propose actions and request data. Every request "
         f"crosses the {fields}-field control contract to one of two mediators, each the "
         "sole holder of what the model lacks: the execution plane holds the write "
         "credential (Rule 1); the context gate holds record access and data keys "
         "(Rule 2). The semantic router advises which attested model to use; the gate "
-        "decides where data may go. Planes are logical responsibilities, not products."
+        "decides where data may go. Logical planes do not prove process isolation or full API integration."
     )
     label = "Seven-plane reference architecture with two mediators around a control contract"
     return svg(760, 566, label, body), caption
@@ -321,9 +321,9 @@ def figure_request_steps(figures: dict) -> tuple[str, str]:
                      f"H{card_w + 19}", marker))
     height = 5 * card_h + 4 * gap
     caption = (
-        "One governed request in ten steps. The sequence is identical in every domain; "
+        "Target lifecycle in ten steps, requiring end-to-end integration evidence; "
         "only the domain pack changes what each step checks. Steps outlined in dark blue "
-        "are enforced by a mediator the model cannot bypass. The grey step is the only "
+        "require independently enforced boundaries, qualified on the deployed stack. The grey step is the only "
         "one performed by untrusted intelligence, and it produces a proposal or a draft, "
         "never an effect or a disclosure."
     )
@@ -361,7 +361,7 @@ def figure_lifecycle(figures: dict) -> tuple[str, str]:
     body = [arrow_marker(marker)]
     positions = [(0, 0), (1, 0), (2, 0), (3, 0), (0, 1), (1, 1), (2, 1)]
     for index, ((name, description, artifact, gate), (column, row)) in enumerate(
-            zip(LIFECYCLE, positions)):
+            zip(LIFECYCLE, positions, strict=True)):
         x = column * (card_w + gap)
         y = row * (card_h + row_gap)
         stroke, width = (ACCENT_DARK, 2) if name == "Falsify" else (AXIS, 1)
@@ -600,7 +600,7 @@ def figure_domain_packs(figures: dict) -> tuple[str, str]:
         cells = (f"{pack['scenarios_contained']}/{pack['scenarios_total']}",
                  f"{pack['benign_completed']}/{pack['benign_total']}",
                  str(pack["unauthorized_mutations"]))
-        for (cx, _, _), cell in zip(columns, cells):
+        for (cx, _, _), cell in zip(columns, cells, strict=True):
             body.append(text(cx, y + 12.5, cell, size=10.5, anchor="middle"))
 
     total_y = axis_bottom + 34
@@ -611,7 +611,7 @@ def figure_domain_packs(figures: dict) -> tuple[str, str]:
     totals = (f"{figures['domain_pack_scenarios_contained']}/{figures['domain_pack_scenarios_total']}",
               f"{figures['domain_pack_benign_completed']}/{figures['domain_pack_benign_total']}",
               str(figures["domain_pack_unauthorized_mutations"]))
-    for (cx, _, _), cell in zip(columns, totals):
+    for (cx, _, _), cell in zip(columns, totals, strict=True):
         body.append(text(cx, total_y, cell, size=10.5, weight=700, anchor="middle"))
 
     caption = (

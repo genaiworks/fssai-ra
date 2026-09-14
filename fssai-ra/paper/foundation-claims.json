@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "base_commit": "89fa5afb4addc361c7ffc1b8cb9d0aa5db09aff9",
+  "scope": "Full-paper audit; not an exhaustive vulnerability audit or production certification.",
+  "overall_implementation_percentage": null,
+  "claims": [
+    {
+      "id": "action",
+      "claim": "Independent exact-action authorization",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/exact_action.py",
+        "src/fssaira/atomic_execution.py"
+      ],
+      "enforcement_point": "Executor",
+      "tests": [
+        "tests/test_exact_action.py",
+        "tests/test_atomic_execution.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_exact_action.py tests/test_atomic_execution.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Institutional process isolation and remote side effects are not established."
+    },
+    {
+      "id": "disclosure",
+      "claim": "Purpose/subject/field/release checks",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/disclosure.py",
+        "src/fssaira/disclosure_api.py"
+      ],
+      "enforcement_point": "Context/release gate",
+      "tests": [
+        "tests/test_disclosure.py",
+        "tests/test_disclosure_api.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_disclosure.py tests/test_disclosure_api.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Four disclosure-domain fixtures; not the full tokenizing privacy profile."
+    },
+    {
+      "id": "delegation",
+      "claim": "Rooted authority attenuation",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/delegation.py"
+      ],
+      "enforcement_point": "Chain verifier",
+      "tests": [
+        "tests/test_delegation.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_delegation.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Real orchestrator and global revocation freshness remain unqualified; purposes are exact identifiers."
+    },
+    {
+      "id": "replay",
+      "claim": "Local atomic mutation and evidence",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/atomic_execution.py"
+      ],
+      "enforcement_point": "Transactional executor",
+      "tests": [
+        "tests/test_atomic_execution.py",
+        "tests/test_concurrent_replay.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_atomic_execution.py tests/test_concurrent_replay.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Cannot guarantee exactly-once arbitrary external effects."
+    },
+    {
+      "id": "contract",
+      "claim": "Executable bindings",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/coverage.py",
+        "src/fssaira/contract.py"
+      ],
+      "enforcement_point": "Contract validator",
+      "tests": [
+        "tests/test_coverage.py",
+        "tests/test_contract.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_coverage.py tests/test_contract.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Binding existence is not behavioral coverage or whole-architecture percentage."
+    },
+    {
+      "id": "stateful",
+      "claim": "Disclosure sequence invariants",
+      "status": "fixture-tested",
+      "implementation": [
+        "src/fssaira/disclosure_stateful.py"
+      ],
+      "enforcement_point": "Disclosure gate",
+      "tests": [
+        "tests/test_disclosure.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_disclosure.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Finite author-defined state space, not security probabilities."
+    },
+    {
+      "id": "review",
+      "claim": "Bounded reviewer capacity and assistant correlation",
+      "status": "simulated",
+      "implementation": [
+        "src/fssaira/oversight.py",
+        "src/fssaira/assisted_review.py"
+      ],
+      "enforcement_point": "Approval issuer",
+      "tests": [
+        "tests/test_oversight.py",
+        "tests/test_assisted_review.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_oversight.py tests/test_assisted_review.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Declared behavior; no human or named-model effectiveness study."
+    },
+    {
+      "id": "tokens",
+      "claim": "Identifier tokenization and restoration",
+      "status": "source-present-unqualified",
+      "implementation": [
+        "src/fssaira/privacy_vault.py",
+        "src/fssaira/privacy_pipeline.py"
+      ],
+      "enforcement_point": "Privacy wrapper",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Not anonymous; plaintext forward lookup and in-process memory remain sensitive; no complete production path shown."
+    },
+    {
+      "id": "erasure",
+      "claim": "Scoped erasure completion reporting",
+      "status": "selected-regressions-tested",
+      "implementation": [
+        "src/fssaira/privacy_pipeline.py",
+        "src/fssaira/key_custody.py"
+      ],
+      "enforcement_point": "Erasure service",
+      "tests": [
+        "tests/test_foundation_security.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Unknown locations and residuals prevent complete status. Restorable key backups and arbitrary copies remain unresolved."
+    },
+    {
+      "id": "registry",
+      "claim": "Signed manifests and expiry",
+      "status": "selected-regressions-tested",
+      "implementation": [
+        "src/fssaira/model_registry.py"
+      ],
+      "enforcement_point": "Model registry",
+      "tests": [
+        "tests/test_foundation_security.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Runtime-reported digest is not hardware attestation; no end-to-end registry binding established."
+    },
+    {
+      "id": "notary",
+      "claim": "Unpredictable default signing keys",
+      "status": "selected-regressions-tested",
+      "implementation": [
+        "src/fssaira/evidence_notary.py"
+      ],
+      "enforcement_point": "Notary",
+      "tests": [
+        "tests/test_foundation_security.py"
+      ],
+      "reproduction_command": ".venv/bin/python -m pytest tests/test_foundation_security.py",
+      "evidence": "See revision-verification.json for this audit run; tests are not inferred to pass from existence.",
+      "limitation": "Fresh keys are not persisted/rotated HSM custody or independent checkpoint publication."
+    },
+    {
+      "id": "pack-floor",
+      "claim": "Immutable policy minimum",
+      "status": "source-present-unqualified",
+      "implementation": [
+        "src/fssaira/pack_floor.py"
+      ],
+      "enforcement_point": "Pack-floor validator",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Presence alone does not establish activation on every deployed route."
+    },
+    {
+      "id": "composition",
+      "claim": "Action tied to trusted context receipt and versions",
+      "status": "deployment-requirement",
+      "implementation": [],
+      "enforcement_point": "Executor and context gate",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Separate passing suites do not prove joined end-to-end path."
+    },
+    {
+      "id": "isolation",
+      "claim": "Host/process/credential separation",
+      "status": "deployment-requirement",
+      "implementation": [],
+      "enforcement_point": "Host/network/IAM",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "No malicious code execution containment from Python object boundaries."
+    },
+    {
+      "id": "memory",
+      "claim": "RAG/cache/vector/handoff label propagation",
+      "status": "deployment-requirement",
+      "implementation": [
+        "src/fssaira/encrypted_records.py"
+      ],
+      "enforcement_point": "Context gate and all stores",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Demonstration vector index is not complete production RAG or memory governance."
+    },
+    {
+      "id": "multimodal",
+      "claim": "Streaming/OCR/audio/generated-code controls",
+      "status": "deployment-requirement",
+      "implementation": [],
+      "enforcement_point": "Boundary and release adapters",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "No comprehensive modality or streaming qualification."
+    },
+    {
+      "id": "supply-chain",
+      "claim": "Bundle pinning and tool-server egress",
+      "status": "deployment-requirement",
+      "implementation": [],
+      "enforcement_point": "Platform and tool adapters",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Model names or tool schemas alone do not establish endpoint authenticity or safety."
+    },
+    {
+      "id": "revocation",
+      "claim": "Distributed freshness and linearization",
+      "status": "deployment-requirement",
+      "implementation": [
+        "src/fssaira/grant_delegation.py",
+        "src/fssaira/disclosure_store.py"
+      ],
+      "enforcement_point": "Authority services and dispatchers",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Must measure stale-use window on actual topology; no instantaneous global guarantee."
+    },
+    {
+      "id": "education",
+      "claim": "Integrated student privacy and correction workflow",
+      "status": "deployment-requirement",
+      "implementation": [],
+      "enforcement_point": "Education context gate and registrar executor",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Current education action fixtures do not establish integrated education disclosure."
+    },
+    {
+      "id": "redress",
+      "claim": "Accessible, fair and timely institutional appeals",
+      "status": "empirical-open",
+      "implementation": [],
+      "enforcement_point": "Independent appeals owner",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Requires affected-user participation and completed operational appeal evidence."
+    },
+    {
+      "id": "learning",
+      "claim": "Educational effectiveness",
+      "status": "empirical-open",
+      "implementation": [],
+      "enforcement_point": "Study owner",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Lab and rubric do not establish learning; comparison and retention study required."
+    },
+    {
+      "id": "field",
+      "claim": "Production, independent assurance, cost and energy",
+      "status": "empirical-open",
+      "implementation": [],
+      "enforcement_point": "Adopting institution",
+      "tests": [],
+      "reproduction_command": null,
+      "evidence": null,
+      "limitation": "Exact deployment qualification, independent review and measurements required."
+    }
+  ]
+}

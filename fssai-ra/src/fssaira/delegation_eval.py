@@ -328,11 +328,13 @@ def build_chains() -> dict:
     }
 
     # The control case. This must complete.
+    # Purpose is an exact policy identifier; narrower record/tool scope below
+    # expresses a subtask without inventing an unregistered purpose hierarchy.
     chains["benign_two_hop"] = {
         "chain": (
             hop("orchestrator-1", "agent-a", drafting, purpose="draft support recommendations"),
             hop("agent-a", "agent-b", _scope({"read_case"}, resources={"S-104"}),
-                purpose="read the assigned case only"),
+                purpose="draft support recommendations"),
         ),
         "claimed_scope": _scope({"read_case"}, resources={"S-104"}),
         "call": {"tool": "read_case", "operation": "read_case",

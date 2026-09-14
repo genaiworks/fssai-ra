@@ -1,6 +1,6 @@
 # Results — v1.0.0
 
-Generated 2026-09-13T16:26:40.546378+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
+Generated 2026-09-14T00:46:35.028043+00:00 on Python 3.14.6, macOS-26.5-arm64-arm-64bit-Mach-O.
 
 Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes comes from this table, and `tests/test_paper_alignment.py` fails the build if the two disagree.
 
@@ -25,7 +25,7 @@ Regenerate with `python scripts/generate_results.py`. Every figure the paper quo
 | Assisted review — merit failures | `5 → 1` | dependent then independent review assistant, identical lowered floor; every runtime mechanism passed in both |
 | Assisted review — benign completed | `7 → 35` | unaided then assisted: assistance is worth 5.0x in completed legitimate work, which is why institutions will buy it |
 | Contract coverage — machine-verified | `41/44` | 3 organizationally attested, 0 unverified; every requirement bound to a check that is itself checked to exist |
-| Deterministic tests | `724` | no network, no model weights |
+| Deterministic tests | `745` | no network, no model weights |
 | Oversight — sustainable review | `2,640/day` | for a roster of 11, bound by the policy quota; declared capacity, not a measurement of reviewers |
 | Oversight — merit failures executed | `4 → 0` | without load control, then with it, on a queue at 5.0x declared attentive capacity |
 | Oversight — sensitivity sweep | `16/20` | cells where the control was load-bearing out of those where harm was possible; harm reached zero in 16; 4 did not bind (no deliberation floor configured); 5 had no harm to contain |

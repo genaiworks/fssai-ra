@@ -40,6 +40,9 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
+import secrets
+import time
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
@@ -146,7 +149,7 @@ class ManifestPublisher:
     def __init__(self, *, key_id: str = "model-publisher-1", signer: str = "model-risk-office",
                  seed: bytes | None = None) -> None:
         private_cls, *_ = _ed25519()
-        material = seed if seed is not None else hashlib.sha256(key_id.encode()).digest()
+        material = seed if seed is not None else secrets.token_bytes(32)
         if len(material) != 32:
             raise ValueError("an Ed25519 seed is exactly 32 bytes")
         self._key = private_cls.from_private_bytes(material)
@@ -297,7 +300,11 @@ class ModelRegistry:
                 ModelAttestationCode.MANIFEST_INCOMPLETE,
                 f"the manifest for {endpoint} does not declare expiry, classes, and purposes",
             )
-        if manifest.expires_at and now is not None and now >= manifest.expires_at:
+        checked_at = time.time() if now is None else now
+        if not math.isfinite(checked_at) or not math.isfinite(manifest.expires_at):
+            raise ModelAttestationDenied(ModelAttestationCode.MANIFEST_INCOMPLETE,
+                                         "model authorization timestamps must be finite")
+        if manifest.expires_at and checked_at >= manifest.expires_at:
             raise ModelAttestationDenied(ModelAttestationCode.MANIFEST_EXPIRED,
                                          f"the approval of {endpoint} expired")
         if purpose is not None and manifest.allowed_purposes and \

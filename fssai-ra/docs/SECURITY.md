@@ -126,8 +126,10 @@ nobody has shown to be load-bearing should not appear in a threat model.
   (`FSSAI_TRUST_PROXY_HEADERS`). Bearer tokens are the default; OIDC is available.
   A production ingress must still authenticate people and workloads and
   overwrite—not trust—caller-supplied headers.
-- Concurrency and distributed failure modes are not evaluated. The bounded model
-  checker is single-threaded and states so in its own `bounds` field.
+- Selected thread/process replay races and abrupt-exit recovery are evaluated in
+  `tests/test_concurrent_replay.py` and `tests/test_atomic_execution.py`. These do not
+  qualify arbitrary distributed failure modes. The bounded model checker remains
+  single-threaded and states so in its own `bounds` field.
 - Randomised property testing covers ~6,800 generated calls against the
   enforcement point. That is broader than a hand-written suite and is still not a
   proof.
