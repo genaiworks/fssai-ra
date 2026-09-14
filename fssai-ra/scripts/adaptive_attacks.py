@@ -77,7 +77,7 @@ def episode(strategy, seed, qtable, control=True, training=False, steps=8, deny_
                 break
             obs = observation(refs)
             values = qtable.setdefault(obs, [0.0] * len(ACTIONS))
-            if strategy == 'static':
+            if strategy == 'static' or (training and seed % 5 == 0):
                 name = STATIC[i % len(STATIC)]
             elif strategy == 'random' or (training and rng.random() < .25):
                 name = rng.choice(ACTIONS)
@@ -146,7 +146,7 @@ def main():
     report = {'config_version': 1, 'steps_per_episode': 8, 'time_limit_seconds_per_episode': 5,
               'training_episodes': args.training, 'training_successes': training_success,
               'training_seeds': [0, args.training-1], 'heldout_seeds': [100000,100000+args.episodes-1],
-              'learning': 'tabular Q-learning; epsilon=.25 alpha=.4 gamma=.9; sparse outcome reward=10',
+              'learning': 'tabular Q-learning; epsilon=.25 alpha=.4 gamma=.9; every fifth training episode uses scripted exploration; sparse outcome reward=10',
               'training_environment': 'source-confirmation control removed; evaluation uses frozen learned table',
               'split_limit': 'held-out seeds only; action grammar and task family overlap with training',
               'attacker_boundary': 'enumerated action selector cannot submit Python or edit defender/oracle; same trusted harness process',

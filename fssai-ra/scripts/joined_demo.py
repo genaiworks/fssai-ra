@@ -17,6 +17,8 @@ def run(path, pack='education', control=True, wrong=False):
         transcript.append({'request': q, 'result': result})
         return result
 
+    step(op='read', subject='s2')
+    step(op='tool', url='http://127.0.0.1/controlled-sink')
     c = step(op='read')['context']
     p = step(op='propose', context=c, operation=w.pack['operation'], recipient='recipient',
              value=w.pack['wrong'] if wrong else w.pack['supported'],
@@ -24,7 +26,9 @@ def run(path, pack='education', control=True, wrong=False):
     confirmed = step('demo-instructor', op='confirm', proposal=p)
     if confirmed['ok']:
         a = step('demo-registrar', op='approve', proposal=p, confirmation=confirmed['confirmation'])['approval']
+        step(op='execute', proposal=p, approval=a, value='tampered-after-approval')
         step(op='execute', proposal=p, approval=a)
+        step(op='release', proposal=p)
         # Simulate losing the response after a real commit, then reopen the database.
         w.close()
         w = Workflow(path, pack=pack, control=control)

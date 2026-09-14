@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from fssaira.joined_workflow import TOKENS, Workflow, call
+from fssaira.joined_workflow import Workflow, call
 
 
 @pytest.fixture
@@ -98,7 +98,7 @@ def test_delegation_attenuation_and_sibling_budget(world):
         grants.append(call(world, op='delegate', holder=child, operations=['read'], budget=10)['grant'])
     allowed = 0
     for _ in range(12):
-        for child, grant in zip(('child1', 'child2'), grants):
+        for child, grant in zip(('child1', 'child2'), grants, strict=True):
             allowed += call(world, 'demo-' + child, op='read', grant=grant)['ok']
     assert allowed == 18  # two delegation calls also consumed root budget
     assert world.db.execute("SELECT remaining FROM grants WHERE id='root'").fetchone()[0] == 0

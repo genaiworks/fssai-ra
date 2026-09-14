@@ -7,7 +7,7 @@
 <text x="0" y="0" font-size="9.5" font-weight="400" fill="#52514e" text-anchor="middle" transform="translate(41,269) rotate(-90)">authenticated ingress and egress, quarantine, one-way seam</text>
 <rect x="76" y="0" width="684" height="96" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
 <text x="92" y="22" font-size="12" font-weight="700" fill="#0b0b0b" text-anchor="start">INTELLIGENCE PLANE  -  untrusted</text>
-<text x="92" y="40" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">Sees vault tokens, never identities. May propose and request; holds no credential or key.</text>
+<text x="92" y="40" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">Declared identifiers tokenized; inference remains possible. Isolation must protect credentials and keys.</text>
 <rect x="92" y="50" width="155.5" height="36" rx="5" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
 <text x="101" y="65" font-size="10" font-weight="700" fill="#0b0b0b" text-anchor="start">Semantic router</text>
 <text x="101" y="79" font-size="8.8" font-weight="400" fill="#77756f" text-anchor="start">advisory: intent + sensitivity</text>
@@ -47,8 +47,8 @@
 <text x="290" y="237" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">EXECUTION PLANE  -  Rule 1</text>
 <text x="290" y="256" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Rechecks policy, identity, version,</text>
 <text x="290" y="271" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">approval, and replay; binds the</text>
-<text x="290" y="286" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">exact proposal digest; one write,</text>
-<text x="290" y="301" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">one receipt.</text>
+<text x="290" y="286" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">exact proposal digest; local atomicity,</text>
+<text x="290" y="301" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">external reconciliation.</text>
 <text x="290" y="325" font-size="9.5" font-weight="700" fill="#184f95" text-anchor="start">Sole holder of the write credential</text>
 <rect x="528" y="216" width="232" height="120" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
 <text x="542" y="237" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">CONTEXT GATE  -  Rule 2</text>
@@ -61,10 +61,10 @@
 <text x="90" y="405" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">EVIDENCE PLANE</text>
 <text x="90" y="425" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Binds intent to outcome;</text>
 <text x="90" y="440" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">receipts from both mediators;</text>
-<text x="90" y="455" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">digests, never values</text>
+<text x="90" y="455" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">digests and sensitive metadata</text>
 <rect x="276" y="384" width="484" height="82" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>
 <text x="290" y="405" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="start">GOVERNED DATA PLANE</text>
-<text x="290" y="425" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Encrypted at rest under per-subject keys; erased by destroying the key.</text>
+<text x="290" y="425" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Per-subject encryption; key deletion has limits on retained copies.</text>
 <text x="290" y="440" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Stable identifiers, replayable events, versioned snapshots.</text>
 <text x="290" y="455" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Read only through the gate; changed only by the executor.</text>
 <rect x="76" y="486" width="684" height="52" rx="6" fill="#f4f3ef" stroke="#c3c2b7" stroke-width="1"/>

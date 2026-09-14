@@ -9,7 +9,7 @@
 <text x="358" y="22" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">BOUNDARY PLANE</text>
 <text x="44" y="42" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Authenticate every caller and source; quarantine</text>
 <text x="44" y="56.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">untrusted content so it is handled as data, not code.</text>
-<text x="44" y="76" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Nothing unauthenticated enters.</text>
+<text x="44" y="76" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Authenticate at each supported interface.</text>
 <path d="M22,86 V99" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
 <rect x="0" y="100" width="370" height="86" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
 <circle cx="22" cy="122" r="13" fill="#184f95"/>
@@ -18,7 +18,7 @@
 <text x="358" y="122" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">GOVERNED DATA PLANE</text>
 <text x="44" y="142" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Detect personal data and replace it with vault tokens;</text>
 <text x="44" y="156.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">encrypt sensitive fields under per-subject keys.</text>
-<text x="44" y="176" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Identities never reach a model.</text>
+<text x="44" y="176" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Tokenization is not anonymity.</text>
 <path d="M22,186 V199" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
 <rect x="0" y="200" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
 <circle cx="22" cy="222" r="13" fill="#2a78d6"/>
@@ -61,8 +61,8 @@
 <text x="434" y="123" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Execute</text>
 <text x="748" y="122" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">EXECUTION PLANE</text>
 <text x="434" y="142" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Recheck policy, identity, version, approval, and</text>
-<text x="434" y="156.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">replay; make one write and issue one receipt.</text>
-<text x="434" y="176" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Exactly one checked effect.</text>
+<text x="434" y="156.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">replay; make one write and issue external reconciliation.</text>
+<text x="434" y="176" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Local replay bound; external effects uncertain.</text>
 <path d="M412,186 V199" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
 <rect x="390" y="200" width="370" height="86" rx="6" fill="#ffffff" stroke="#184f95" stroke-width="2"/>
 <circle cx="412" cy="222" r="13" fill="#184f95"/>
@@ -71,7 +71,7 @@
 <text x="748" y="222" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">CONTEXT GATE</text>
 <text x="434" y="242" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Label the output by everything it used; restore real</text>
 <text x="434" y="256.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">values only for a recipient entitled to see them.</text>
-<text x="434" y="276" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Nothing is laundered out.</text>
+<text x="434" y="276" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Release checks cover supported paths.</text>
 <path d="M412,286 V299" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
 <rect x="390" y="300" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
 <circle cx="412" cy="322" r="13" fill="#2a78d6"/>
@@ -79,8 +79,8 @@
 <text x="434" y="323" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Record</text>
 <text x="748" y="322" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">EVIDENCE PLANE</text>
 <text x="434" y="342" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Bind intent to outcome in an append-only chain that</text>
-<text x="434" y="356.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">stores digests, never the protected values.</text>
-<text x="434" y="376" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Every outcome can be reconstructed.</text>
+<text x="434" y="356.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">stores digests and access-controlled metadata.</text>
+<text x="434" y="376" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Missing evidence requires reconciliation.</text>
 <path d="M412,386 V399" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
 <rect x="390" y="400" width="370" height="86" rx="6" fill="#ffffff" stroke="#c3c2b7" stroke-width="1"/>
 <circle cx="412" cy="422" r="13" fill="#2a78d6"/>
@@ -88,7 +88,7 @@
 <text x="434" y="423" font-size="12.5" font-weight="700" fill="#0b0b0b" text-anchor="start">Recover</text>
 <text x="748" y="422" font-size="8.5" font-weight="700" fill="#77756f" text-anchor="end">RESILIENCE PLANE</text>
 <text x="434" y="442" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">Revoke, reconcile uncertain effects, fall back to</text>
-<text x="434" y="456.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">manual work, and erase a subject by destroying its key.</text>
-<text x="434" y="476" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Failure is safe; erasure is real.</text>
+<text x="434" y="456.5" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">manual work, and verify deletion across known copies.</text>
+<text x="434" y="476" font-size="10" font-weight="700" fill="#184f95" text-anchor="start">Recovery and erasure require qualification.</text>
 <path d="M370,443.0 H380 V43.0 H389" fill="none" stroke="#52514e" stroke-width="1.5" marker-end="url(#steps-arrow)"/>
 </svg>

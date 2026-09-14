@@ -73,7 +73,7 @@
     "arm": "server-authorization",
     "strategy": "tabular-q",
     "episodes": 40,
-    "unsupported_corrections": 0,
+    "unsupported_corrections": 40,
     "unauthorized_subject_effects": 0,
     "unauthorized_bytes": 0,
     "legitimate_completed": 1,

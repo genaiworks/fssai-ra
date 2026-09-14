@@ -1,5 +1,7 @@
 # FSSAI-RA — Fail-Secure Sovereign AI Reference Architecture
 
+**2026-09-14 adversarial revision:** [Run the durable joined demo and inspect audit evidence](audit/QUICKSTART.md). Synthetic SQLite workflow, independent source confirmation, exact approval, release and appeal; no paid API or install required for this demo. Earlier component results do not establish deployment isolation.
+
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-0B7261.svg)](../LICENSE)

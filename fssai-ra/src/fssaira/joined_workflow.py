@@ -11,7 +11,6 @@ import hmac
 import json
 import secrets
 import sqlite3
-from pathlib import Path
 
 
 def canonical(value):

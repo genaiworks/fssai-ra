@@ -155,3 +155,12 @@ openapi:  ## Export the OpenAPI schema
 clean:  ## Remove build and cache artifacts
 	find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true
 	rm -rf .pytest_cache .ruff_cache build dist *.egg-info src/*.egg-info
+
+joined-demo:  ## Durable joined workflow, synthetic data, no model API
+	PYTHONPATH=src $(PYTHON) scripts/joined_demo.py --output audit/demo-fresh
+
+joined-test:  ## Execute joined-path adversarial regressions
+	$(PYTHON) -m pytest tests/test_joined_workflow.py tests/test_joined_legacy_regressions.py
+
+adaptive:  ## Offline search and trained tabular-Q evaluation (not LLM RL)
+	PYTHONPATH=src $(PYTHON) scripts/adaptive_attacks.py
