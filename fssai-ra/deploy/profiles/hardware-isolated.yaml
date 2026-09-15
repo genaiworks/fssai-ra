@@ -1,0 +1,35 @@
+# Hardware-isolated profile: institutional profile plus a certified one-way
+# transfer device replacing the software no-read-back seam at the boundary.
+profile: hardware-isolated
+stage: bounded_operational_pilot
+consequential: true
+extends: institutional
+data:
+  records: institutional
+  institutional_credentials: held_by_mediators_only
+isolation:
+  process_isolation_required: true
+  requirements:
+    - Everything required by the institutional profile
+    - The boundary seam is a certified one-way device; the software diode (fssaira.diode) is disabled
+    - The high side has no network return path; the interface inventory names every path a claim depends on
+  statement: >-
+    A hardware diode removes the read-back path at the boundary. It does not
+    isolate mediators from each other, protect keys, or make a model trustworthy.
+ablation_switches: forbidden
+backends:
+  allowed: [postgres, kafka, iceberg]
+  conformance_required: true
+required_gates:
+  - contract_complete
+  - failure_tests_exist
+  - claims_register_no_unverified
+  - pack_floor_passes
+  - no_model_holds_a_key
+  - falsifiers_zero_counterexamples
+  - ablations_restore_harm
+  - backend_conformance_current
+  - evidence_matches_fresh_run
+  - table4_obligations_signed
+  - interface_inventory_owned
+fallback: Named manual service; transfer resumes only after device re-certification

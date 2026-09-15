@@ -103,6 +103,30 @@ no attribute of a live agent.
 **Reopen when.** An agent needs to write evidence. It should not: evidence is
 written by the enforcement point.
 
+## D9 — Lifecycle stage 2 is `fssaira contract --gate`, not a new command
+
+**Decision.** `fssaira contract` already shows the contract, and the README
+documents `fssaira contract --output contract.json`. Registering a second
+`contract` parser raised `conflicting subparser`. Stage 2 is therefore an opt-in
+`--gate` flag on the existing command. Without it the command is unchanged,
+which a test asserts. The other stages are new top-level commands: `frame`,
+`pack`, `bind`, `falsify`, `promote`, `operate`.
+
+## D10 — The ablation gate does not demand that every single control be load-bearing
+
+**Decision.** `ablations_restore_harm` requires three things. Every ablation row
+must show no harm with controls enabled and after restoring them. Every
+falsifier must have at least one load-bearing control or declared control pair.
+And the rows where another control independently stopped the attack are
+reported as defence in depth.
+
+**Why.** In the education suite, some single-control rows are honestly "NO":
+the router attack needs residency and model attestation removed together, and
+replay needs digest binding and single-use approval removed together. Requiring
+every single row to be load-bearing would push someone to delete a redundant
+control to pass a gate. A redundant defence need not become dispensable to
+qualify (paper §6, stage 5).
+
 ## D7 — Backend assurance is a signed-off record, checked at construction
 
 **Decision.** `kernel/assurance.py` refuses to hand out a backend unless a

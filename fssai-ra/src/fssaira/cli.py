@@ -1183,9 +1183,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate_contract.add_argument("contract_directory", type=Path)
     validate_contract.set_defaults(func=cmd_validate_contract)
 
-    contract = add_output(sub.add_parser("contract", help="show the seven-field control contract"))
+    contract = add_output(sub.add_parser(
+        "contract", help="show the seven-field control contract; with --gate, run lifecycle stage 2"))
     contract.add_argument("contract_directory", type=Path, nargs="?", default=Path("contract"))
-    contract.set_defaults(func=cmd_contract_show)
+    from .lifecycle.cli import add_contract_gate
+    add_contract_gate(contract, show=cmd_contract_show)
 
     evaluate = add_output(sub.add_parser(
         "evaluate", help="adversarial scenarios, utility baseline, and control ablations"))
@@ -1370,6 +1372,10 @@ def build_parser() -> argparse.ArgumentParser:
         "thesis", help="try to refute the Mediation Thesis: six falsifiers, every domain pack",
     ))
     thesis.set_defaults(func=cmd_thesis)
+
+    # The seven-stage lifecycle: frame, contract, pack, bind, falsify, promote, operate.
+    from .lifecycle.cli import register as register_lifecycle
+    register_lifecycle(sub)
 
     pilot = add_output(sub.add_parser(
         "pilot-report", help="field indicators for a governed-disclosure pilot, from exported evidence",

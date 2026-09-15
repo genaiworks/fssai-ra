@@ -1,0 +1,36 @@
+# Institutional profile: shadow pilot and bounded operational pilot (paper §9.3,
+# stages 2 and 3). Real data under approved access; consequential mutation only
+# for named capabilities whose Table 4 evidence has been accepted.
+profile: institutional
+stage: bounded_operational_pilot
+consequential: true
+data:
+  records: institutional
+  institutional_credentials: held_by_mediators_only
+isolation:
+  process_isolation_required: true
+  requirements:
+    - Executor and context gate run under separate workload identities and least-privilege accounts
+    - Model and worker containers have no credentials, privileged mounts, direct record ports, or arbitrary outbound sockets
+    - Generated code runs in a container, VM or separate OS user; the in-process sandbox is not sufficient
+    - Evidence checkpoint witness sits outside the evidence writer's administrative boundary
+  statement: >-
+    Logical planes are not process isolation. This profile is not satisfied by
+    the repository; it is satisfied by a deployment whose negative tests are run
+    from the actual model and worker containers.
+ablation_switches: forbidden
+backends:
+  allowed: [sqlite, postgres, redis, kafka, iceberg]
+  conformance_required: true
+required_gates:
+  - contract_complete
+  - failure_tests_exist
+  - claims_register_no_unverified
+  - pack_floor_passes
+  - no_model_holds_a_key
+  - falsifiers_zero_counterexamples
+  - ablations_restore_harm
+  - backend_conformance_current
+  - evidence_matches_fresh_run
+  - table4_obligations_signed
+fallback: Named manual service with declared capacity; overload defers, never auto-approves
