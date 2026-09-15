@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from .accountable_action import PolicyEnforcementPoint, Tool, ToolCall
-from .evidence import EvidenceLedger
 from .metrics import Metrics
 
 
@@ -78,13 +77,17 @@ class Agent:
 
 
 class BoundedAgent:
+    """An untrusted agent: it proposes tool calls; the enforcement point decides.
+
+    It holds no evidence write credential. Evidence is written by the
+    enforcement point, which holds that credential on a separate path.
+    """
+
     def __init__(self, agent: Agent, model: ModelBackend, pep: PolicyEnforcementPoint,
-                 evidence: EvidenceLedger, append_token: str, metrics: Metrics) -> None:
+                 metrics: Metrics) -> None:
         self.agent = agent
         self.model = model
         self.pep = pep
-        self._evidence = evidence
-        self._token = append_token
         self._m = metrics
 
     @property

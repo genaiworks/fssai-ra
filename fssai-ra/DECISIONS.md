@@ -83,6 +83,26 @@ code from the same OS user's files or network. The executed host-isolation
 probe in `audit/host-isolation-probe.json` stays the honest result. A container,
 VM or separate user is a deployment obligation.
 
+## D8 — The untrusted agent no longer receives the evidence write credential
+
+**Decision.** `BoundedAgent.__init__` drops its `evidence` and `append_token`
+parameters, and `FSSAIRAPipeline.make_agent` stops passing them. This is a
+constructor signature change to a public class. The pipeline was the only caller
+in the repository.
+
+**Why.** The first run of `tests/planes/test_planes.py` found that the pipeline
+handed `BoundedAgent`, an intelligence-plane component, the same
+`EVIDENCE_TOKEN` the ledger and enforcement point use. The agent stored it and
+never used it. The model interface (`propose(task, evidence_items)`) gave the
+model no path to it. But planes in one process are not isolation, and "the
+intelligence plane holds no key, token map or write credential" was true only by
+convention. Removing an unused credential costs nothing and makes the rule
+checkable. The instance-level test now asserts the credential value appears in
+no attribute of a live agent.
+
+**Reopen when.** An agent needs to write evidence. It should not: evidence is
+written by the enforcement point.
+
 ## D7 — Backend assurance is a signed-off record, checked at construction
 
 **Decision.** `kernel/assurance.py` refuses to hand out a backend unless a

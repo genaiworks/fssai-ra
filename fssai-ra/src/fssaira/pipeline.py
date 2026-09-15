@@ -108,7 +108,7 @@ class FSSAIRAPipeline:
             from .models.deterministic import DeterministicModel
 
             backend = DeterministicModel(agent_id, catalogue=self.catalogue)
-        return BoundedAgent(agent, backend, self.pep, self.evidence, EVIDENCE_TOKEN, self.metrics)
+        return BoundedAgent(agent, backend, self.pep, self.metrics)
 
     def make_student_support_agent(self, agent_id: str = "student-support-1", *, model=None) -> BoundedAgent:
         return self.make_agent(
