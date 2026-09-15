@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fssaira"
 version = "1.0.0"
-description = "Fail-Secure Sovereign AI Reference Architecture: a runnable, extensible reference platform for bounded, accountable, sovereign agentic AI."
+description = "Trust by Construction: a runnable, extensible reference implementation for bounded, accountable, governed agentic AI."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"

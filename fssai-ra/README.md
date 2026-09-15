@@ -1,4 +1,6 @@
-# FSSAI-RA — Fail-Secure Sovereign AI Reference Architecture
+# Trust by Construction — a reference architecture for governed agentic AI
+
+<sub>Repository and Python package: `fssai-ra` / `fssaira`.</sub>
 
 **2026-09-14 adversarial revision:** [Run the durable joined demo and inspect audit evidence](audit/QUICKSTART.md). Synthetic SQLite workflow, independent source confirmation, exact approval, release and appeal; no paid API or install required for this demo. Earlier component results do not establish deployment isolation.
 

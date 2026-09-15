@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "FSSAI-RA Control Plane",
+    "title": "Trust by Construction Control Plane",
     "description": "Reference API for exact-action proposals, human approval, execution, evidence, recovery, and machine-checked assurance. A model may propose an action; it cannot manufacture the authority to execute it.",
     "version": "1.0.0"
   },
@@ -1983,6 +1983,96 @@
         }
       }
     },
+    "/v1/disclosure/grants/token": {
+      "post": {
+        "tags": [
+          "disclosure"
+        ],
+        "summary": "Register Token Grant",
+        "description": "Register a grant issued by the institutional authorization server.",
+        "operationId": "register_token_grant_v1_disclosure_grants_token_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-fssai-identity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Identity"
+            }
+          },
+          {
+            "name": "x-fssai-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fssai-Role"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenGrant"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/disclosure/grants/{grant_id}/revoke": {
       "post": {
         "tags": [
@@ -3125,6 +3215,11 @@
             "maxLength": 200,
             "title": "Recipient Id",
             "default": ""
+          },
+          "restore_identity": {
+            "type": "boolean",
+            "title": "Restore Identity",
+            "default": false
           }
         },
         "type": "object",
@@ -3176,6 +3271,21 @@
           "reason"
         ],
         "title": "RevocationCreate"
+      },
+      "TokenGrant": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 16000,
+            "minLength": 20,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "TokenGrant"
       },
       "ValidationError": {
         "properties": {

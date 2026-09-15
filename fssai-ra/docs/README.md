@@ -1,11 +1,11 @@
-# Documentation map: what FSSAI-RA means and where to go next
+# Documentation map: Trust by Construction, and where to go next
 
 > **Start here if you opened this repository for the first time.** Choose a
 > route below. Every main document links back to this map.
 
 ## What this repository means
 
-FSSAI-RA is a **reference architecture and teaching testbed for governing the
+Trust by Construction is a **reference architecture and teaching testbed for governing the
 authority of AI agents**. It is not a general chatbot, a finished student system,
 or a claim that AI makes policy fair.
 
