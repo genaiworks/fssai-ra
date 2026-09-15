@@ -318,8 +318,11 @@ the mechanisms.
   The gate recomputes the label, refuses values it did not issue, and falls back
   to the session label when an unnamed value appears verbatim, but it cannot see a
   value the model paraphrased. Session labels remain the default.
-- A model can paraphrase, encode, or infer values. Those are governed only because
-  the whole session is labelled. Nothing here detects them in content.
+- Text copied verbatim around the gate into another session, by the same holder or
+  a different principal, is caught: when an output is labelled, the gate scans it
+  for values released in any other session and joins those sessions' labels.
+  Values shorter than eight characters are not scanned. A model can still
+  paraphrase, encode, or infer values, and nothing here detects that in content.
 - Purposes, consent semantics, and recipient clearances are institutional
   declarations. They are not validated against any law.
 - All results come from synthetic records and an in-process gate. No real record

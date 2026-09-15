@@ -165,6 +165,11 @@ class DisclosureCode:
     EVIDENCE_UNAVAILABLE = "EVIDENCE_UNAVAILABLE"
 
 
+#: Released values shorter than this are not scanned for verbatim copies, because
+#: short common values ("yes", "M", a year) would over-label unrelated text.
+MIN_VERBATIM_SCAN_LENGTH = 8
+
+
 class DisclosurePolicyError(ValueError):
     """A domain pack's disclosure section is incomplete or inconsistent."""
 
@@ -858,6 +863,44 @@ class DisclosureGate:
             texts.update({f"{subject}.{name}": row.get(name, "") for name in names})
         return texts
 
+    def _foreign_sources(self, tx, session_id: str, content: str,
+                         exclude_keys: set) -> tuple[DataLabel, set, bool]:
+        """Other sessions whose released values appear verbatim in ``content``.
+
+        A session label binds an output to what its own session read. Text copied
+        around the gate into another session, by the same holder or by a different
+        principal, would otherwise arrive with no label at all. So the gate scans
+        the content for every value released in any other session, refetched from
+        the record source, and joins the labels and grants of the sessions those
+        values came from. Keys the current session already holds are skipped,
+        because the current session's own label already covers them.
+
+        Values shorter than :data:`MIN_VERBATIM_SCAN_LENGTH` are not scanned. A
+        record source that cannot answer counts as a match: the output is
+        over-labelled, never under-labelled. Paraphrase, encoding, and inference are
+        not detected, and remain a stated residual.
+        """
+        label = DataLabel.bottom(self.policy)
+        grants: set = set()
+        matched = False
+        for other_id, state in tx.all_sessions():
+            if other_id == session_id:
+                continue
+            keys = [key for key in state["keys"] if key not in exclude_keys]
+            if not keys:
+                continue
+            try:
+                texts = self._texts(keys)
+                hit = any(len(text) >= MIN_VERBATIM_SCAN_LENGTH and text in content
+                          for text in texts.values())
+            except DisclosureDenied:
+                hit = True
+            if hit:
+                matched = True
+                label = label.join(DataLabel.from_dict(state["label"]))
+                grants |= set(state["grants"])
+        return label, grants, matched
+
     def _consent_permits(self, subject: str, purpose: str) -> bool:
         from .disclosure_sources import ConsentServiceUnavailable
 
@@ -1199,21 +1242,29 @@ class DisclosureGate:
         with self._state() as tx:
             state = tx.get_session(session_id)
             bottom = DataLabel.bottom(self.policy)
+            grants = set(state["grants"]) if state else set()
+            copied = False
             if self._on("session_taint"):
                 if state is not None and state["holder"] != requester:
                     raise DisclosureDenied(DisclosureCode.SESSION_HOLDER_MISMATCH,
                                            "the session belongs to another principal")
                 label = DataLabel.from_dict(state["label"]) if state else bottom
+                foreign, foreign_grants, copied = self._foreign_sources(
+                    tx, session_id, content, set(state["keys"]) if state else set())
+                if copied:
+                    label = label.join(foreign)
+                    grants |= foreign_grants
             else:
                 label = claimed_label if claimed_label is not None else bottom
             output = GovernedOutput(tx.next_id("output"), session_id, requester, content, label,
-                                    grants=frozenset(state["grants"]) if state else frozenset())
+                                    grants=frozenset(grants))
             tx.put_output(output.output_id, output.to_record())
             downgrade = claimed_label is not None and not claimed_label.dominates(label)
             self._record("output_labelled", {
                 "output_id": output.output_id, "session_id": session_id,
                 "holder": requester, "content_digest": output.digest,
                 "label": label.to_dict(), "provenance": "session",
+                "cross_session_source_detected": copied,
                 "claimed_label": claimed_label.to_dict() if claimed_label else None,
                 "claimed_downgrade_attempt": downgrade,
             })
@@ -1238,6 +1289,7 @@ class DisclosureGate:
             state = tx.get_session(session_id)
             bottom = DataLabel.bottom(self.policy)
             undeclared = False
+            copied = False
             if self._on("session_taint"):
                 if state is None:
                     raise DisclosureDenied(DisclosureCode.VALUE_NOT_ISSUED,
@@ -1268,6 +1320,11 @@ class DisclosureGate:
                 if undeclared:
                     label = DataLabel.from_dict(state["label"])
                     grants = set(state["grants"])
+                foreign, foreign_grants, copied = self._foreign_sources(
+                    tx, session_id, content, set(state["keys"]))
+                if copied:
+                    label = label.join(foreign)
+                    grants |= foreign_grants
             else:
                 label = claimed_label if claimed_label is not None else bottom
                 grants = set(state["grants"]) if state else set()
@@ -1281,6 +1338,7 @@ class DisclosureGate:
                 "holder": requester, "content_digest": output.digest,
                 "label": label.to_dict(), "provenance": "values", "sources": list(source_ids),
                 "undeclared_source_detected": undeclared,
+                "cross_session_source_detected": copied,
                 "claimed_label": claimed_label.to_dict() if claimed_label else None,
                 "claimed_downgrade_attempt": downgrade,
             })

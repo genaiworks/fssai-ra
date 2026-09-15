@@ -20,6 +20,12 @@
 - Domain packs may declare a validated `disclosure` section. The corporate and
   healthcare packs now do, and `/v1/profile` and `fssaira profiles --verify`
   report it. Contract domain 9 adds seven bound requirements, GD-1 to GD-7.
+- Closed a Rule 2 gap found by the kernel-packs reconciliation: text copied around
+  the gate into a fresh session, by the same holder or another principal, was
+  labelled at the bottom and could be released. Output labelling now scans content
+  for values released in any other session and joins those sessions' labels and
+  grants, on both the session and value paths. Values under eight characters are
+  not scanned, a source outage over-labels, and paraphrase remains a residual.
 - Added `DisclosureGate.authorize_only`, a side-effect-free recheck of read
   authority for actions built on a read. Reads and rechecks now share one
   authorization routine, so they cannot drift. A recheck fetches nothing, writes no

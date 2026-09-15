@@ -121,6 +121,9 @@ class MemoryDisclosureStore:
     def put_session(self, session_id: str, body: dict) -> None:
         self._sessions[session_id] = json.loads(json.dumps(body))
 
+    def all_sessions(self) -> list[tuple[str, dict]]:
+        return [(sid, json.loads(json.dumps(body))) for sid, body in self._sessions.items()]
+
     def put_value(self, value_id: str, body: dict) -> None:
         self._values[value_id] = dict(body)
 
@@ -291,6 +294,10 @@ class _SqlTx:
     def put_session(self, session_id: str, body: dict) -> None:
         self._upsert("disclosure_sessions", "session_id",
                      {"session_id": session_id, "body": json.dumps(body, sort_keys=True)})
+
+    def all_sessions(self) -> list[tuple[str, dict]]:
+        rows = self._u.all(f"SELECT session_id, body FROM {self._t('disclosure_sessions')}")
+        return [(row[0], json.loads(row[1])) for row in rows]
 
     def put_value(self, value_id: str, body: dict) -> None:
         self._u.execute(f"INSERT INTO {self._t('disclosure_values')} (value_id, body) VALUES (?, ?)",

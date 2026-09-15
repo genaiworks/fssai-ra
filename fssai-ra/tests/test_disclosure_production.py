@@ -417,3 +417,64 @@ def test_authorize_only_refuses_when_its_evidence_cannot_be_written():
     fx = DisclosureFixture(_policy())
     gate = _gate(fx, ledger=Unavailable("w"))
     assert _code(lambda: _recheck(gate, fx, fx.grant())) == DisclosureCode.EVIDENCE_UNAVAILABLE
+
+
+# -- laundering around the gate across sessions ---------------------------------
+
+
+@pytest.mark.parametrize("copier", [AGENT, OTHER_AGENT], ids=["same-holder", "other-principal"])
+def test_text_copied_around_the_gate_into_another_session_keeps_its_label(copier):
+    fx = DisclosureFixture(_policy())
+    recipient, purpose = fx.laundering_recipient()
+    ledger = EvidenceLedger("w")
+    gate = _gate(fx, ledger=ledger)
+    context = fx.read(gate, fx.grant())
+    copied = gate.derive_output(requester=copier, session_id="fresh-session",
+                                content="notes: " + " ".join(context.values.values()))
+    assert copied.label.dominates(fx.honest_label())
+    assert ledger.find("output_labelled")[-1].payload["cross_session_source_detected"] is True
+    assert _code(lambda: gate.release(copied, recipient=recipient, purpose=purpose, now=NOW + 2)) \
+        .startswith("RECIPIENT_")
+
+
+def test_value_labels_also_catch_values_copied_from_another_session():
+    fx = DisclosureFixture(_policy())
+    recipient, low, high = fx.precision_path()
+    ledger = EvidenceLedger("w")
+    gate = _gate(fx, ledger=ledger)
+    first = fx.read(gate, fx.grant())
+    low_class = fx.policy.field_classes[low]
+    second = fx.read(gate, fx.grant(grant_id="grant-2", fields=[low], classes={low_class}),
+                     fields=[low], session_id="session-2")
+    low_key, high_key = f"{SUBJECT_A}.{low}", f"{SUBJECT_A}.{high}"
+    output = gate.derive_from_values(
+        requester=AGENT, session_id="session-2",
+        content=f"{second.values[low_key]} {first.values[high_key]}",
+        sources=[second.value_ids[low_key]])
+    assert fx.policy.field_classes[high] in output.label.classes
+    assert ledger.find("output_labelled")[-1].payload["cross_session_source_detected"] is True
+    assert _code(lambda: gate.release(output, recipient=recipient, purpose=fx.purpose, now=NOW + 2))
+
+
+def test_short_values_are_not_scanned_so_common_words_do_not_over_label():
+    fx = DisclosureFixture(_policy())
+    records = {subject: dict(row) for subject, row in fx.records.items()}
+    records[SUBJECT_A][fx.granted_fields()[0]] = "yes"
+    gate = _gate(fx, records=records)
+    fx.read(gate, fx.grant())
+    output = gate.derive_output(requester=AGENT, session_id="fresh-session",
+                                content="yes, the appointment is confirmed")
+    assert not output.label.classes
+
+
+def test_the_cross_session_scan_is_part_of_session_taint_and_goes_with_it():
+    fx = DisclosureFixture(_policy())
+    recipient, purpose = fx.laundering_recipient()
+    gate = DisclosureGate(fx.policy, fx.records, EvidenceLedger("w"), "w",
+                          grant_keys=fx.authority.trusted_keys,
+                          enforce=set(__import__("fssaira.disclosure", fromlist=["ALL_CHECKS"]).ALL_CHECKS)
+                          - {"session_taint"})
+    context = fx.read(gate, fx.grant())
+    copied = gate.derive_output(requester=AGENT, session_id="fresh-session",
+                                content=" ".join(context.values.values()))
+    assert gate.release(copied, recipient=recipient, purpose=purpose, now=NOW + 2)
