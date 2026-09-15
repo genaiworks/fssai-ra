@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import secrets
 import sqlite3
 
@@ -30,9 +31,16 @@ def strict_json(raw):
                 raise ValueError("DUPLICATE_FIELD")
             out[key] = value
         return out
+    def finite(text):
+        # parse_constant only sees NaN/Infinity literals; an overflowing literal
+        # such as 1e999 reaches parse_float and would otherwise become inf.
+        value = float(text)
+        if not math.isfinite(value):
+            raise ValueError("NONFINITE")
+        return value
     if len(raw.encode()) > 16384:
         raise ValueError("REQUEST_TOO_LARGE")
-    return json.loads(raw, object_pairs_hook=pairs,
+    return json.loads(raw, object_pairs_hook=pairs, parse_float=finite,
                       parse_constant=lambda _: (_ for _ in ()).throw(ValueError("NONFINITE")))
 
 
