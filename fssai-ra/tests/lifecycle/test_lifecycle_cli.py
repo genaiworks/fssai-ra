@@ -51,6 +51,13 @@ def test_contract_without_gate_still_shows_the_contract(tmp_path, capsys):
     assert payload["count"] == len(payload["requirements"]) > 0
 
 
+def test_pack_passes_on_the_repository_and_refuses_the_unfilled_template(capsys):
+    assert main(["pack", "--root", str(ROOT)]) == 0
+    assert "stage pack: PASS" in capsys.readouterr().out
+    assert main(["pack", "--root", str(ROOT), str(ROOT / "packs" / "template.pack.yaml")]) == 1
+    capsys.readouterr()
+
+
 def test_bind_passes_on_the_repository(capsys):
     assert main(["bind", "--root", str(ROOT), "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
