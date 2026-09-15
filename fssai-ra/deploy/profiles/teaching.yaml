@@ -1,0 +1,24 @@
+# Teaching sandbox (paper §9.3, stage 1).
+# Synthetic data only, no institutional credentials. The only profile in which
+# the attack lab's control ablation may be switched on.
+profile: teaching
+stage: sandbox
+consequential: false
+data:
+  records: synthetic
+  institutional_credentials: forbidden
+isolation:
+  process_isolation_required: false
+  statement: >-
+    Logical planes run in one process. A same-OS-user process can read the
+    synthetic store (audit/host-isolation-probe.json). Acceptable only because
+    nothing here is real.
+ablation_switches: allowed_in_lab_only
+backends:
+  allowed: [memory, sqlite]
+  conformance_required: false
+required_gates:
+  - contract_complete
+  - failure_tests_exist
+  - falsifiers_zero_counterexamples
+fallback: Manual process outside the sandbox; nothing is automated for real subjects
