@@ -1017,6 +1017,7 @@ const SLIDES = [
     </div>`,
   notes: `The invitation slide. Say the ask out loud: contribute one attack.
   <p>The defect it found is worth ten seconds — harm was counted by tool name, so records leaving through a tool not classified as egress scored as no harm at all. The enforcement point caught the attack; the instrument measuring it could not see what had been prevented.</p>
+  <p>If pushed on "you wrote your own attacks": beyond the corpus, an offline adaptive attacker searches request sequences and is scored by an independent effect oracle, not denial logs; with every control on it finds nothing, and a positive control that removes a mediator drives it to a high rate — so the null result is the defence's, not a broken attacker. A learned-policy and a frontier-model attacker are named as not run. See the "Advanced capabilities" backup.</p>
   <p>Leave the URL on screen if you can.</p>`
 },
 {
@@ -1201,6 +1202,42 @@ const SLIDES = [
       </div>
     </div>`,
   notes: `Backup. This is the honest answer to “but you have a data diode, so you're secure?” — no: we govern one link, and here is the list of everything else.`
+},
+{
+  eyebrow: ["Backup", "What the audits broke"],
+  time: "—",
+  html: `
+    <h2>Three audits attacked our own demonstration. Two broke it. Both are fixed.</h2>
+    <div class="body">
+      <p class="lead">A safety case is only worth the attacks it survived from people trying to break it. These were executed against the real world and judged from actual state, not denial logs.</p>
+      <div class="ledger">
+        <div><span class="seq">key secrecy</span><span>the approval key could be rebuilt from a <em>public</em> identifier, so a party who read the source could forge an approval that executed a wrong-student grade change</span><span class="hash"><b class="bad">broke</b></span></div>
+        <div><span class="seq">composition</span><span>an approved action still executed after the read it was built on was revoked — exact approval is not a standing licence</span><span class="hash"><b class="bad">broke</b></span></div>
+        <div><span class="seq">host isolation</span><span>a same-OS-user process read the synthetic store directly, past the JSON interface</span><span class="hash"><b>honest</b></span></div>
+      </div>
+      <div class="callout">
+        <p><strong>Fixes.</strong> The signing key is generated per instance and the executor holds only its public half. Execution now rechecks the read's live authority before the write, with a side-effect-free check. The host-isolation finding is reported as what it is: logical checks in one process do not isolate hostile code — that is a deployment obligation, not a claim we make.</p>
+      </div>
+      <p class="faint">The wrong-but-approved case has its own answer: an authorized decision that is factually wrong is reversed through an independent appeal, because provenance and recovery, not approval alone, answer a misled reviewer.</p>
+    </div>`,
+  notes: `Backup. Use if someone asks "did you try to break it yourselves?" or "what did the audits find?". The point: we report what broke and how it was judged, and the host-isolation limit is stated, not hidden.`
+},
+{
+  eyebrow: ["Backup", "Advanced capabilities"],
+  time: "—",
+  html: `
+    <h2>The next capability is an input to a check, never a substitute for one.</h2>
+    <div class="body">
+      <p class="lead">Chain of thought, self-improvement, new skills and tools, and reinforcement-learning attackers enlarge what the untrusted side can attempt. None of them moves the boundary, because authority and entitlement live in mediators the model cannot reach.</p>
+      <div class="entries">
+        <div class="entry"><span class="k">reasoning</span><p>Authorization never reads the model's rationale — no such field exists. A confident false explanation changes no outcome; a reasoning monitor is optional and reported apart.</p></div>
+        <div class="entry"><span class="k">self-improvement</span><p>A more capable model is still a proposer, and a changed model must be re-attested. Delegation only narrows, so a stronger sub-agent confers no more than its parent held.</p></div>
+        <div class="entry"><span class="k">skills &amp; tools</span><p>An undeclared skill or tool is refused, not trusted. A signed document is data, not a command. A declared action class is overridden by the authoritative catalogue.</p></div>
+        <div class="entry"><span class="k">learned attackers</span><p>An RL or search attacker is scored on real forbidden effects by an oracle it cannot edit — 0 with every control on, and a positive control proves the attacker works.</p></div>
+      </div>
+      <p class="faint">A language-model-RL and a frontier-model attacker are named as not run. The claim is not that no learned attacker can ever win, but that winning requires a real effect the mediators decide.</p>
+    </div>`,
+  notes: `Backup. Use if the panel asks "does this survive smarter models / agents that improve themselves / tool use / RL?". The one line: every capability is an input to a check, never a substitute for one — which is what makes the pattern adoptable without predicting which capability arrives next.`
 }
 ];
 
