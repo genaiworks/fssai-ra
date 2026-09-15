@@ -91,6 +91,42 @@ def test_an_emptied_contract_field_fails_the_contract_stage(tmp_path):
     assert "open governance decision" in result.gate("contract_complete").detail
 
 
+# -- pack ------------------------------------------------------------------
+
+def test_the_repository_pack_stage_passes_and_reports_exemptions():
+    result = stages.pack(ROOT)
+    gate = result.gate("pack_floor_passes")
+    assert result.passed, gate.detail
+    assert gate.observed["denominator"] == gate.observed["loaded"] == 5
+    exemptions = [e for items in gate.observed["floor_exemptions"].values() for e in items]
+    assert any("REVIEW" in e.upper() for e in exemptions), "review capacity gap must be reported"
+    assert all(p["limits"] for p in result.artifact["packs"])
+
+
+def test_the_template_pack_is_refused_until_it_is_filled():
+    result = stages.pack(ROOT, paths=[ROOT / "packs" / stages.TEMPLATE_PACK])
+    assert not result.passed
+    assert result.gate("pack_floor_passes").observed["failures"]
+
+
+def test_a_pack_that_drifts_from_its_profile_is_refused(tmp_path):
+    source = ROOT / "packs" / "corporate.pack.yaml"
+    doc = yaml.safe_load(source.read_text())
+    doc["purposes"] = [*doc["purposes"], "purpose_the_runtime_never_enforces"]
+    drifted = tmp_path / "corporate.pack.yaml"
+    text = yaml.safe_dump(doc)
+    drifted.write_text(text.replace("../profiles/", str(ROOT / "profiles") + "/"))
+    result = stages.pack(ROOT, paths=[drifted])
+    assert not result.passed
+
+
+def test_pack_evidence_regenerates_for_one_pack():
+    result = stages.pack(ROOT, paths=[ROOT / "packs" / "corporate.pack.yaml"], evaluate=True)
+    gate = result.gate("pack_evidence_regenerates")
+    assert gate.passed, gate.detail
+    assert gate.observed["incomplete"] == []
+
+
 # -- bind ------------------------------------------------------------------
 
 def test_the_repository_bind_stage_passes():

@@ -47,6 +47,22 @@ def cmd_frame(args: argparse.Namespace) -> int:
     return _finish(stages.frame(args.path), args)
 
 
+def cmd_pack(args: argparse.Namespace) -> int:
+    return _finish(stages.pack(args.root.resolve(), paths=args.paths or None, evaluate=args.evaluate), args)
+
+
+def register_pack(sub: argparse._SubParsersAction) -> None:
+    """``fssaira pack``: lifecycle stage 3."""
+    parser = _common(sub.add_parser(
+        "pack", help="lifecycle 3: packs load drift-free at or above the kernel floor"))
+    _root(parser)
+    parser.add_argument("paths", nargs="*", type=Path,
+                        help="pack manifests (default: every packs/*.pack.yaml except the template)")
+    parser.add_argument("--evaluate", action="store_true",
+                        help="also regenerate each pack's evidence and require it complete")
+    parser.set_defaults(func=cmd_pack)
+
+
 def cmd_bind(args: argparse.Namespace) -> int:
     return _finish(stages.bind(args.root.resolve()), args)
 
@@ -93,6 +109,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     frame = _common(sub.add_parser("frame", help="lifecycle 1: frame one consequential capability"))
     frame.add_argument("path", type=Path, help="framing YAML: capability, asset, harm, owner, fallback")
     frame.set_defaults(func=cmd_frame)
+
+    register_pack(sub)
 
     bind = _common(sub.add_parser("bind", help="lifecycle 4: fail if any model holds a key or credential"))
     _root(bind)

@@ -116,6 +116,71 @@ def contract(root: Path = ROOT, *, register_out: Path | None = None) -> StageRes
     return result
 
 
+# -- 3. pack ---------------------------------------------------------------
+
+TEMPLATE_PACK = "template.pack.yaml"
+
+
+def _full(ratio: object) -> bool:
+    return ratio.numerator == ratio.denominator  # type: ignore[attr-defined]
+
+
+def pack(root: Path = ROOT, *, paths: Iterable[Path] | None = None, evaluate: bool = False) -> StageResult:
+    """Every pack loads drift-free at or above the kernel floor; optionally regenerate its evidence.
+
+    The shipped template is excluded from the repository-wide run because its
+    ``REPLACE_ME`` placeholders are designed to fail until an author fills them.
+    """
+    from dataclasses import asdict as _asdict
+
+    from fssaira.kernel.packs import PackError, evaluate_pack, load_pack
+
+    root = Path(root)
+    chosen = ([Path(p) for p in paths] if paths else
+              sorted(p for p in (root / "packs").glob("*.pack.yaml") if p.name != TEMPLATE_PACK))
+    result = StageResult("pack")
+    loaded = []
+    failures: list[dict] = []
+    for path in chosen:
+        try:
+            loaded.append(load_pack(path, root=root))
+        except PackError as exc:
+            failures.append({"pack": str(path),
+                             "findings": [f"{f.code} at {f.where}: {f.detail}" for f in exc.findings]})
+    ok = bool(chosen) and not failures
+    result.gates.append(GateOutcome(
+        "pack_floor_passes", ok,
+        (f"{len(loaded)} of {len(chosen)} packs load drift-free at or above the kernel floor"
+         if ok else f"{len(failures)} of {len(chosen)} packs refused" if chosen else "no pack found"),
+        {"loaded": len(loaded), "denominator": len(chosen), "failures": failures,
+         "floor_exemptions": {m.sector: list(m.floor_exemptions) for m in loaded}}))
+
+    if evaluate and loaded:
+        incomplete: list[str] = []
+        evaluations: list[dict] = []
+        for manifest in loaded:
+            evaluation = evaluate_pack(manifest)
+            evaluations.append(_asdict(evaluation))
+            for action in evaluation.action:
+                if (not action.invariants_hold or action.violations.value or action.unauthorized_mutations.value
+                        or not _full(action.scenarios) or not _full(action.benign)):
+                    incomplete.append(f"{manifest.sector}:{action.profile_id}:action")
+            for disclosure in evaluation.disclosure:
+                if not (_full(disclosure.hostile) and _full(disclosure.benign) and _full(disclosure.checks)):
+                    incomplete.append(f"{manifest.sector}:{disclosure.profile_id}:disclosure")
+        result.gates.append(GateOutcome(
+            "pack_evidence_regenerates", not incomplete,
+            ("every pack's hostile scenarios contained, benign tasks completed, checks load-bearing, "
+             "zero violations and zero unauthorized mutations" if not incomplete
+             else f"incomplete: {incomplete}"),
+            {"evaluations": evaluations, "incomplete": incomplete}))
+
+    result.artifact = {"packs": [
+        {"sector": m.sector, "path": str(m.path), "limits": list(m.limits),
+         "floor_exemptions": list(m.floor_exemptions)} for m in loaded]}
+    return result
+
+
 # -- 4. bind ---------------------------------------------------------------
 
 def _credential_parameters(component: object) -> list[str]:
