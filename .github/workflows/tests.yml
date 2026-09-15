@@ -91,6 +91,22 @@ jobs:
           python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
           python -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
 
+      # The lifecycle gates, run against the repository itself. Each exits
+      # non-zero when a gate fails: an empty contract field or a missing named
+      # test, a credential reachable from the untrusted side, or a falsifier
+      # counterexample (or a positive control that finds nothing).
+      - name: "Lifecycle 2: contract complete, named tests exist, no unverified claim"
+        working-directory: fssai-ra
+        run: python -m fssaira.cli contract contract --gate
+
+      - name: "Lifecycle 4: no model holds a key or credential"
+        working-directory: fssai-ra
+        run: python -m fssaira.cli bind
+
+      - name: "Lifecycle 5: falsifiers find zero counterexamples; ablations restore harm"
+        working-directory: fssai-ra
+        run: python -m fssaira.cli falsify
+
       - name: Committed results have not drifted
         working-directory: fssai-ra
         run: python scripts/generate_results.py --check

@@ -56,6 +56,15 @@ def cmd_falsify(args: argparse.Namespace) -> int:
                                   conference_only=args.only or None), args)
 
 
+def cmd_operate(args: argparse.Namespace) -> int:
+    result = stages.operate(args.root.resolve(), falsify_artifact=args.falsify_artifact)
+    code = _finish(result, args)
+    if not args.json:
+        for item in result.artifact.get("not_run", []):
+            print(f"  [NOT RUN] {item['gate']}: {item['reason']}")
+    return code
+
+
 def add_contract_gate(parser: argparse.ArgumentParser, *, show: Callable[[argparse.Namespace], int]) -> None:
     """Turn the existing ``fssaira contract`` command into stage 2 when ``--gate`` is given.
 
@@ -95,3 +104,10 @@ def register(sub: argparse._SubParsersAction) -> None:
     falsify.add_argument("--only", action="append", help="conference falsifier id (repeatable)")
     falsify.add_argument("--no-ablation", action="store_true", help="skip the ablation gate")
     falsify.set_defaults(func=cmd_falsify)
+
+    operate = _common(sub.add_parser(
+        "operate", help="lifecycle 7: fail if the governed configuration changed since falsification"))
+    _root(operate)
+    operate.add_argument("--falsify-artifact", type=Path,
+                         help="JSON written by `fssaira falsify --out`")
+    operate.set_defaults(func=cmd_operate)
