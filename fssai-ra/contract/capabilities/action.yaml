@@ -1,0 +1,64 @@
+# Seven-field capability contracts for Rule 1 (action authority).
+# Every failure_test is a pytest node; `fssaira.kernel.contract` refuses to load
+# this file if any field is empty or any named node does not exist.
+domain: action
+capabilities:
+  - id: CAP-ACT-1
+    rule: "1"
+    protected_asset: The governed resource a transition would change
+    permitted_operation: Execute exactly the approved proposal (target, arguments, transition, resource version)
+    enforcement_point: AccountableExecutor, sole holder of the write credential, recomputes the canonical proposal digest
+    accountable_owner: Service owner of the governed register
+    failure_test: tests/test_exact_action.py::test_target_or_arguments_changed_after_approval_are_denied
+    evidence_artifact: Intent and outcome receipts linked by request id and proposal digest
+    failure_response: Deny before mutation; require a new approval for the changed proposal
+
+  - id: CAP-ACT-2
+    rule: "1"
+    protected_asset: The integrity of the approval decision
+    permitted_operation: A requester may propose but never approve their own proposal
+    enforcement_point: AccountableExecutor separation-of-duties check on the authenticated approver
+    accountable_owner: Program registrar
+    failure_test: tests/test_exact_action.py::test_requester_cannot_approve_own_proposal
+    evidence_artifact: Denied-authorization record naming requester and approver identities
+    failure_response: Refuse execution and record the attempt
+
+  - id: CAP-ACT-3
+    rule: "1"
+    protected_asset: Single-use approvals
+    permitted_operation: One approval authorizes one execution of one request
+    enforcement_point: ApprovalUseStore replay check inside the executor
+    accountable_owner: Platform security
+    failure_test: tests/test_exact_action.py::test_retry_is_idempotent_and_cross_request_reuse_is_denied
+    evidence_artifact: Existing outcome returned for the same request; denial receipt for cross-request reuse
+    failure_response: Return the recorded outcome; deny reuse
+
+  - id: CAP-ACT-4
+    rule: "1"
+    protected_asset: Completeness of the decision record after a partial failure
+    permitted_operation: A completed mutation with a missing outcome is reconciled exactly once
+    enforcement_point: PendingOutcomeStore and reconcile_pending in the executor
+    accountable_owner: Student support service owner
+    failure_test: tests/test_exact_action.py::test_completed_mutation_is_marked_uncertain_then_reconciled_once
+    evidence_artifact: Uncertain marker followed by exactly one reconciled outcome record
+    failure_response: Never retry blindly; reconcile, then escalate to the owner if unresolved
+
+  - id: CAP-ACT-5
+    rule: "1"
+    protected_asset: Authorization decisions under persuasive model output
+    permitted_operation: A proposal is decided on its action and authenticated approvals, never on its rationale
+    enforcement_point: Joined-workflow executor, which discards rationale before any authority check
+    accountable_owner: Registrar
+    failure_test: tests/test_joined_workflow.py::test_false_rationale_cannot_confirm_wrong_grade
+    evidence_artifact: Identical denial for absent, reassuring, fabricated and misleading rationale
+    failure_response: Deny; record that rationale was ignored
+
+  - id: CAP-ACT-6
+    rule: "1"
+    protected_asset: The lifecycle of a consequential effect
+    permitted_operation: An effect moves only along declared transitions, evidenced before taking effect
+    enforcement_point: fssaira.kernel.state_machine.EffectRecord
+    accountable_owner: Service owner
+    failure_test: tests/kernel/test_kernel_state_machine.py::test_only_declared_transitions_are_legal
+    evidence_artifact: effect_transition records in the hash chain
+    failure_response: Refuse the transition; an uncertain effect is reconciled, never retried

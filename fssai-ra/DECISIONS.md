@@ -34,13 +34,23 @@ paper quotes. A prose `test:` cannot be checked to exist.
 
 ## D3 — Test existence is resolved by AST, not substring
 
-**Decision.** A locator resolves only if the file parses and defines a function
-or method with that exact name at any nesting depth (`file::fn` or
-`file::Class::fn`). A named-but-missing test raises `ContractError`, which fails
-`pytest` and every lifecycle gate.
+**Decision.** A **test** locator resolves only if the file parses and defines
+that exact pytest node (`tests/f.py::test_x` or `tests/f.py::TestC::test_x`). The
+final name must start with `test` and any class with `Test`. A **source**
+locator (`src/f.py::name`) resolves to that exact path, or to exactly one
+definition carrying the name (`file::method` shorthand); two candidates make it
+ambiguous and unresolved. Comments and strings never count. A named-but-missing
+test raises `ContractError`, which fails `pytest` and every lifecycle gate. A
+separate test runs `pytest --collect-only` on every capability failure test, so
+existence in source is also checked against collection.
 
 **Why.** The audit found that the existing check accepted a symbol appearing
-anywhere as a substring and matched only column-0 `def`.
+anywhere as a substring and matched only column-0 `def`. The first strict run
+flagged four legacy bindings (IB-1, RD-1, BI-1, AA-3) naming
+`src/fssaira/evaluation.py::<method>`. These are real methods of the evaluation
+runner written without their class, not missing checks. The shorthand is
+therefore accepted for source locators only when unambiguous, and
+`contract/bindings/core.yaml` is left unchanged (F6 citations).
 
 ## D4 — `audit/results.json` is a collector, not a recomputation
 
