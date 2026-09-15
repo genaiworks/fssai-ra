@@ -82,6 +82,8 @@ middle — never from either end.
 | 15:50 | 27 · Close | Both rules, then the stake. Then stop. |
 | — | 28 · Backup | The five domains, if the panel turns technical. |
 | — | 29 · Backup | The interface inventory, for "but you have a diode". |
+| — | 30 · Backup | What the audits broke and fixed, for "did you try to break it yourselves?". |
+| — | 31 · Backup | Advanced capabilities as inputs, for "does this survive smarter models, agents, tools, or RL?". |
 
 **If you are given twelve minutes rather than seventeen,** take the twelve-minute
 path above: cut 3, 6, 9, 10, 11, 13 and 17, and fold the domain-pack matrix (20) and the
@@ -209,6 +211,12 @@ Twenty, in the order they are most likely to come. Each has a short answer, a
 deeper one if pressed, and the thing in the repository that backs it.
 
 The first six are new, and the first one is the likeliest question in the room.
+
+---
+
+**00 · "Does this survive smarter models — chain-of-thought, agents that improve themselves, new tools and skills, reinforcement learning?"**
+*The framing question for a 2026 room, and the answer is the whole thesis in one move.* Each of those enlarges what the untrusted side can attempt; none moves the boundary, because authority and entitlement live in mediators the model cannot reach. Authorization never reads the model's reasoning, so a persuasive or deceptive rationale changes nothing. A self-improved or replaced model is still a proposer and must be re-attested, and delegation only narrows, so a stronger sub-agent inherits no more than its parent. An undeclared skill or tool is refused, and a signed document is data, not a command. A reinforcement-learning or search attacker is scored on real forbidden effects by an oracle it cannot edit — zero with every control on, and a positive control proves the attacker works.
+*Deeper:* the honest limits are named — a language-model-RL attacker and a frontier-model attacker are not run, and a co-located process with the host's OS user can still read the store, which is a deployment-isolation obligation, not a claim we make. *Backing:* the "Advanced capabilities" backup slide, paper §6.3, and `tests/test_capability_exploits.py`.
 
 ---
 
