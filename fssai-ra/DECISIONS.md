@@ -127,6 +127,40 @@ every single row to be load-bearing would push someone to delete a redundant
 control to pass a gate. A redundant defence need not become dispensable to
 qualify (paper §6, stage 5).
 
+## D11 — A pack manifest references enforced configuration and must match it exactly
+
+**Decision.** `packs/*.pack.yaml` carries no enforcement. It references
+`profiles/*.yaml` (and, for education, the governed-learning pack). `load_pack`
+fails on any mismatch between what the manifest declares and what the profiles
+enforce, in either direction: purposes, classes and zones, recipients,
+transitions and approvers, declassification, emergency access.
+
+**Why.** Two copies of a policy drift. A manifest claiming more than the runtime
+enforces is exactly the failure this project exists to prevent.
+
+**Reopen when.** Profiles and pack manifests merge into one format.
+
+## D12 — Floor rules that cannot apply to action profiles are reported, not skipped
+
+**Decision.** `PACK_CONTROL_CONTRACT_MISSING` and `PACK_REVIEW_OVERLOAD_FAILS_OPEN`
+are recorded in each pack's `floor_exemptions` only when the profile has no
+`controls` or `review` key. Kernel capability contracts stand in for
+per-operation controls: CAP-ACT-1, 2, 3 and CAP-EVI-1, plus CAP-DIS-1 and 2 when
+disclosure is declared. **Nothing stands in for review capacity.** Every pack's
+`limits` says so, and the promotion gate reports it.
+
+**Reopen when.** The action-profile format gains a `review` section.
+
+## D13 — `evaluate_pack` covers what the published matrix covers, nothing more
+
+**Decision.** It runs `verify_profile`, `EvaluationRunner` and
+`run_disclosure_suite` for each referenced profile, and returns separate figures
+with named units and no pooled total. The governed-learning pack is checked
+against the floor at load time but is not evaluated. It is listed in
+`not_evaluated`, so education has no disclosure figures, consistent with Table 3.
+A transfer test proves a new sector built only in a temporary directory loads,
+passes the floor and evaluates, with kernel and mediator source hashes unchanged.
+
 ## D7 — Backend assurance is a signed-off record, checked at construction
 
 **Decision.** `kernel/assurance.py` refuses to hand out a backend unless a

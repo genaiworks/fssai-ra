@@ -1,0 +1,80 @@
+# Public-benefits domain pack. Declarative: every value below is cross-checked
+# against the enforced source by fssaira.kernel.packs.load_pack.
+# See packs/template.pack.yaml and docs/PACK_AUTHORING.md.
+schema_version: "1.0"
+sector: benefits
+title: Government benefit eligibility, decisions, and appeals (synthetic)
+sources:
+  profiles:
+    - ../profiles/government_benefits.yaml
+capabilities: [CAP-ACT-1, CAP-ACT-2, CAP-ACT-3, CAP-ACT-4, CAP-ACT-5, CAP-ACT-6, CAP-EVI-1, CAP-EVI-3,
+               CAP-DIS-1, CAP-DIS-2, CAP-DIS-3, CAP-DIS-4]
+purposes: [eligibility-assessment, appeal-review, applicant-access, statistical-reporting, urgent-safeguarding]
+data_classes:
+  citizen-identifier: [government-sovereign]
+  household-financial: [government-sovereign, accredited-cloud]
+  health-disability: [government-sovereign]
+  immigration-status: [government-sovereign]
+  case-notes: [government-sovereign, accredited-cloud]
+  statistical-aggregate: [government-sovereign, accredited-cloud, external]
+recipients:
+  eligibility_officer:
+    classes: [citizen-identifier, household-financial, health-disability, case-notes]
+    purposes: [eligibility-assessment, urgent-safeguarding]
+    zone: government-sovereign
+  appeals_officer:
+    classes: [citizen-identifier, household-financial, health-disability, case-notes]
+    purposes: [appeal-review]
+    zone: government-sovereign
+  applicant_portal:
+    classes: [citizen-identifier, household-financial, health-disability, immigration-status, case-notes]
+    purposes: [applicant-access]
+    zone: government-sovereign
+    subject_scope: self
+  payments_system:
+    classes: [household-financial]
+    purposes: [eligibility-assessment]
+    zone: accredited-cloud
+  statistics_office:
+    classes: [statistical-aggregate]
+    purposes: [statistical-reporting]
+    zone: accredited-cloud
+  enforcement_agency:
+    classes: []
+    purposes: []
+    zone: external
+transitions:
+  verify_applicant_identity: {approver_roles: [intake_officer], consequential: false}
+  assess_eligibility: {approver_roles: [eligibility_officer], consequential: true}
+  approve_benefit: {approver_roles: [benefit_approver], consequential: true}
+  deny_benefit: {approver_roles: [benefit_approver], consequential: true}
+  open_appeal: {approver_roles: [appeals_clerk], consequential: false}
+  decide_appeal: {approver_roles: [independent_appeals_officer], consequential: true}
+  close_case_under_retention_rule: {approver_roles: [data_protection_officer], consequential: true}
+declassification:
+  aggregate_for_official_statistics:
+    from_classes: [citizen-identifier, household-financial, health-disability, case-notes]
+    to_class: statistical-aggregate
+    purposes: [statistical-reporting]
+    approval_role: data_protection_officer
+    removes_subject_identity: true
+emergency_access:
+  - purposes: [urgent-safeguarding]
+    max_ttl_seconds: 3600
+    max_unreviewed_per_holder: 1
+    review_role: data_protection_officer
+fallback: >-
+  Keep the application and any award unchanged and route the case to a benefit approver
+  or the independent appeals office through the staffed decision and appeal process.
+tests:
+  - tests/test_domain_packs.py::test_the_same_authority_kernel_holds_outside_education
+  - tests/test_disclosure.py::test_every_hostile_disclosure_scenario_is_contained_in_every_pack
+  - tests/test_disclosure.py::test_break_glass_opens_review_obligation_and_blocks_repeat
+  - tests/test_disclosure.py::test_every_domain_pack_reaches_every_declared_status_from_its_start
+  - tests/packs/test_kernel_packs.py::test_every_shipped_pack_loads_through_the_kernel
+  - tests/packs/test_pack_transfer.py::test_pack_action_denominators_agree_with_the_committed_matrix
+limits:
+  - Synthetic applicants, fixtures, and an in-process gate only; no benefits, identity, or payment system is exercised.
+  - Eligibility and appeal decisions are governed for authority only; decision correctness and fairness are not assessed.
+  - Not evidence of compliance with any social-security, administrative-law, immigration, or data-protection obligation.
+  - The action-profile format declares no reviewer capacity, so review load is not governed by this pack.

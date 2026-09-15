@@ -1,0 +1,79 @@
+# Consumer-finance domain pack. Declarative: every value below is cross-checked
+# against the enforced source by fssaira.kernel.packs.load_pack.
+# See packs/template.pack.yaml and docs/PACK_AUTHORING.md.
+schema_version: "1.0"
+sector: finance
+title: Consumer financial data and credit decisions (synthetic)
+sources:
+  profiles:
+    - ../profiles/financial_consumer_data.yaml
+capabilities: [CAP-ACT-1, CAP-ACT-2, CAP-ACT-3, CAP-ACT-4, CAP-ACT-6, CAP-EVI-1, CAP-EVI-3,
+               CAP-DIS-1, CAP-DIS-2, CAP-DIS-3, CAP-DIS-4]
+purposes: [credit-decision, fraud-investigation, customer-access, regulatory-reporting]
+data_classes:
+  customer-identifier: [bank-private]
+  account-financial: [bank-private, vendor-contracted]
+  credit-bureau: [bank-private]
+  transaction-history: [bank-private]
+  fraud-signal: [bank-private]
+  aggregate-statistics: [bank-private, vendor-contracted, external]
+recipients:
+  credit_analyst:
+    classes: [customer-identifier, account-financial, credit-bureau]
+    purposes: [credit-decision]
+    zone: bank-private
+  affordability_service:
+    classes: [account-financial]
+    purposes: [credit-decision]
+    zone: vendor-contracted
+  fraud_investigator:
+    classes: [customer-identifier, account-financial, transaction-history, fraud-signal]
+    purposes: [fraud-investigation]
+    zone: bank-private
+  customer_portal:
+    classes: [customer-identifier, account-financial, credit-bureau, transaction-history]
+    purposes: [customer-access]
+    zone: bank-private
+    subject_scope: self
+  regulator_reporting:
+    classes: [aggregate-statistics]
+    purposes: [regulatory-reporting]
+    zone: external
+  marketing_partner:
+    classes: []
+    purposes: []
+    zone: external
+transitions:
+  verify_customer_identity: {approver_roles: [customer_service_agent], consequential: false}
+  request_credit_limit_change: {approver_roles: [credit_analyst], consequential: true}
+  approve_credit_limit_change: {approver_roles: [credit_risk_officer], consequential: true}
+  decline_credit_limit_change: {approver_roles: [credit_risk_officer], consequential: true}
+  place_fraud_hold: {approver_roles: [fraud_investigator], consequential: true}
+  release_fraud_hold: {approver_roles: [compliance_officer], consequential: true}
+declassification:
+  aggregate_for_regulatory_reporting:
+    from_classes: [account-financial, credit-bureau, transaction-history]
+    to_class: aggregate-statistics
+    purposes: [regulatory-reporting]
+    approval_role: compliance_officer
+    removes_subject_identity: true
+emergency_access:
+  - purposes: [fraud-investigation]
+    max_ttl_seconds: 1800
+    max_unreviewed_per_holder: 1
+    review_role: compliance_officer
+fallback: >-
+  Keep the account and credit limit unchanged and route the request to a credit risk
+  officer or the compliance team through the staffed credit, fraud, or reporting process.
+tests:
+  - tests/test_domain_packs.py::test_the_same_authority_kernel_holds_outside_education
+  - tests/test_disclosure.py::test_every_hostile_disclosure_scenario_is_contained_in_every_pack
+  - tests/test_disclosure.py::test_break_glass_opens_review_obligation_and_blocks_repeat
+  - tests/test_disclosure.py::test_every_domain_pack_reaches_every_declared_status_from_its_start
+  - tests/packs/test_kernel_packs.py::test_every_shipped_pack_loads_through_the_kernel
+  - tests/packs/test_pack_transfer.py::test_pack_action_denominators_agree_with_the_committed_matrix
+limits:
+  - Synthetic accounts, fixtures, and an in-process gate only; no core-banking, bureau, or payment system is exercised.
+  - Credit decisions are governed for authority only; fairness, affordability accuracy, and model risk are not assessed.
+  - Not evidence of compliance with any consumer-credit, anti-fraud, or financial-privacy obligation.
+  - The action-profile format declares no reviewer capacity, so review load is not governed by this pack.

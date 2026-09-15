@@ -1,0 +1,117 @@
+# Education domain pack. Declarative: every value below is cross-checked against the
+# enforced sources by fssaira.kernel.packs.load_pack.
+#
+# Education binds three sources: two action profiles (student support casework and
+# academic record correction) and the conference governed-learning pack, which is held
+# to the full kernel floor. See packs/template.pack.yaml and docs/PACK_AUTHORING.md.
+schema_version: "1.0"
+sector: education
+title: Student support, academic record correction, and governed learning (synthetic)
+sources:
+  profiles:
+    - ../profiles/student_support.yaml
+    - ../profiles/academic_record_correction.yaml
+  governed_learning_pack: ../conference/education/governed-learning-pack.yaml
+capabilities: [CAP-ACT-1, CAP-ACT-2, CAP-ACT-3, CAP-ACT-4, CAP-ACT-5, CAP-ACT-6, CAP-EVI-1, CAP-EVI-2,
+               CAP-EVI-3, CAP-DIS-1, CAP-DIS-2, CAP-DEL-1, CAP-DEL-2]
+# The only machine-enforced purposes in the education sources are the governed-learning
+# pack's disclosure purposes. The action profiles state their purpose as prose only.
+purposes: [academic-support, transcript-correction, financial-aid-review, student-self-access,
+           institutional-research, student-safety-emergency]
+# null: the class is declared by an action profile, but no source enforces a processing
+# zone for it. The manifest says so rather than inventing one.
+data_classes:
+  synthetic-education-record: null
+  restricted: null
+  synthetic-academic-record: null
+  student-identity: [campus-on-premises]
+  student-academic: [campus-on-premises, approved-cloud]
+  student-support-sensitive: [campus-on-premises]
+  student-health: [campus-on-premises]
+  student-financial: [campus-on-premises]
+  de-identified-cohort: [campus-on-premises, approved-cloud]
+recipients:
+  academic_advisor:
+    classes: [student-identity, student-academic, student-support-sensitive]
+    purposes: [academic-support]
+    zone: campus-on-premises
+  teaching_assistant_chat:
+    classes: [student-academic]
+    purposes: [academic-support]
+    zone: campus-on-premises
+  registrar_office:
+    classes: [student-identity, student-academic]
+    purposes: [transcript-correction]
+    zone: campus-on-premises
+  financial_aid_officer:
+    classes: [student-identity, student-academic, student-financial]
+    purposes: [financial-aid-review]
+    zone: campus-on-premises
+  student_portal:
+    classes: [student-identity, student-academic, student-support-sensitive, student-financial]
+    purposes: [student-self-access]
+    zone: campus-on-premises
+    subject_scope: self
+  research_office:
+    classes: [de-identified-cohort]
+    purposes: [institutional-research]
+    zone: approved-cloud
+  counselling_service:
+    classes: [student-identity, student-health, student-support-sensitive]
+    purposes: [student-safety-emergency]
+    zone: campus-on-premises
+  external_email:
+    classes: []
+    purposes: []
+    zone: external
+transitions:
+  # profiles/student_support.yaml
+  prepare_case_for_review: {approver_roles: [student_support_officer], consequential: true}
+  return_case_for_correction: {approver_roles: [student_support_officer], consequential: true}
+  # profiles/academic_record_correction.yaml
+  submit_correction_request: {approver_roles: [records_clerk], consequential: false}
+  confirm_by_instructor: {approver_roles: [course_instructor], consequential: true}
+  apply_correction: {approver_roles: [registrar], consequential: true}
+  reject_correction: {approver_roles: [registrar], consequential: true}
+  reopen_for_appeal: {approver_roles: [academic_appeals_officer], consequential: true}
+  # conference/education/governed-learning-pack.yaml
+  correct_transcript_grade: {approver_roles: [university_registrar], consequential: true}
+  recommend_aid: {approver_roles: [financial_aid_officer], consequential: false}
+  decide_aid_award: {approver_roles: [financial_aid_committee], consequential: true}
+  decide_aid_denial: {approver_roles: [financial_aid_committee], consequential: true}
+  release_feedback: {approver_roles: [course_instructor], consequential: true}
+  file_challenge: {approver_roles: [student_services_clerk], consequential: false}
+  uphold_challenge: {approver_roles: [academic_appeals_officer], consequential: true}
+  dismiss_challenge: {approver_roles: [academic_appeals_officer], consequential: true}
+  approve_cohort_research: {approver_roles: [institutional_research_board], consequential: true}
+  review_emergency_access: {approver_roles: [dean_of_students], consequential: true}
+declassification:
+  deidentify_for_cohort_research:
+    from_classes: [student-academic]
+    to_class: de-identified-cohort
+    purposes: [institutional-research]
+    approval_role: institutional_research_board
+    removes_subject_identity: true
+emergency_access:
+  - purposes: [student-safety-emergency]
+    max_ttl_seconds: 1800
+    max_unreviewed_per_holder: 1
+    review_role: dean_of_students
+fallback: >-
+  Leave the case or record unchanged, route it to student services or the registrar for
+  staffed handling under the published appeals procedure, and tell the student how to follow it up.
+tests:
+  - tests/test_profiles_and_evaluation.py::test_student_support_profile_loads_and_builds_enforcing_executor
+  - tests/test_generalization.py::test_a_declared_role_is_enforced_on_every_transition
+  - tests/test_generalization.py::test_the_unchanged_model_checker_holds_on_a_second_domain
+  - tests/test_education_pack.py::test_the_governed_learning_pack_is_at_or_above_the_floor
+  - tests/test_education_pack.py::test_wrong_student_grade_change_is_denied
+  - tests/test_education_pack.py::test_emergency_access_opens_a_review_obligation
+  - tests/packs/test_kernel_packs.py::test_every_shipped_pack_loads_through_the_kernel
+  - tests/packs/test_pack_transfer.py::test_pack_action_denominators_agree_with_the_committed_matrix
+limits:
+  - Education has action fixtures only in the published evaluation; no generated disclosure fixture exists for education, and the governed-disclosure matrix contains no education row.
+  - The governed-learning pack declares a disclosure policy that is floor-checked at load and exercised by its named tests, but evaluate_pack does not evaluate it and no education disclosure denominator is reported.
+  - Synthetic student records only; no student-information system, learning platform, or model is exercised.
+  - Not evidence of fairness, learning benefit, or compliance with any student-record or data-protection obligation.
+  - The two action profiles declare no reviewer capacity; only the governed-learning pack declares review load.

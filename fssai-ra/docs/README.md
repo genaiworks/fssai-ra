@@ -191,6 +191,8 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`README.md`](README.md) — this map.
 - [`START_HERE.md`](START_HERE.md) — self-directed repository walkthrough.
 - [`REFERENCE_ARCHITECTURE.md`](REFERENCE_ARCHITECTURE.md) — seven-plane cross-sector pattern, invariants, lifecycle, adoption sequence, and policy and engineering gates.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — where the pattern lives in code: kernel, the two mediators, planes with test-bound must-NOT lists, the GenAI integration contract, and the lifecycle commands.
+- [`DEPLOYMENT.md`](DEPLOYMENT.md) — deployment profiles, promotion gates, isolation obligations, and the stop conditions a consequential deployment must meet.
 - [`THESIS.md`](THESIS.md) — the Mediation Thesis: intelligence is untrusted; power and data are mediated. Three commitments, precise invariants, six falsifiers, predictions, and what an institution does next.
 - [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) — the study that closes the field-evidence gap: pre-conditions, evidence indicators, human-judged outcomes, and stop criteria.
 - [`SPECIFICATION.md`](SPECIFICATION.md) — normative requirements in six conformance classes, each tied to an executable test, attestation, or measurement.
@@ -200,6 +202,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`PRIVACY_REFERENCE.md`](PRIVACY_REFERENCE.md) — the opt-in HTTP privacy profile: session tokens, encrypted records, a strict model registry, entitled identity restoration, and its limits.
 - [`../conference/README.md`](../conference/README.md) — the UNU Macau demonstration package: education pack, falsifiers, ablation, attack lab, and generated evidence.
 - [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — reusable corporate, healthcare, and education domain packs.
+- [`PACK_AUTHORING.md`](PACK_AUTHORING.md) — author a new sector pack in five steps (frame, contract, pack, bind, falsify), loaded through the kernel floor with drift checks.
 - [`GLOSSARY.md`](GLOSSARY.md) — policy and engineering vocabulary in one table.
 - [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) — education framework and rubric.
 - [`DEMO.md`](DEMO.md) — demonstration guide.

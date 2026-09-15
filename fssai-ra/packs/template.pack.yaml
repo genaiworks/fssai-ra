@@ -1,0 +1,90 @@
+# TEMPLATE DOMAIN PACK MANIFEST
+#
+# Copy this file to packs/<sector>.pack.yaml, replace every REPLACE_ME_* value, and
+# load it with fssaira.kernel.packs.load_pack(path, root=<repository root>).
+# A file that still contains a REPLACE_ME marker never loads.
+#
+# What a manifest is: the policy-readable declaration of one sector. It carries no
+# enforcement of its own. It REFERENCES the sources the runtime enforces and the
+# kernel capability contracts, and the loader refuses it when:
+#   * a key is unknown or a required value is empty (an open governance decision);
+#   * a named test does not exist as an exact pytest node;
+#   * any declaration disagrees with what the referenced sources enforce ("drift"),
+#     in either direction: you may not claim more, and you may not omit anything;
+#   * any source, or the manifest, is below the kernel floor.
+# Every finding is reported at once. See docs/PACK_AUTHORING.md for the full route.
+#
+# As shipped, the non-placeholder values below mirror profiles/template.yaml, so a copy
+# with the placeholders filled and REPLACE_ME_PROFILE_PATH pointing at that file loads.
+#
+# schema_version: the manifest format this file is written against. Always "1.0".
+schema_version: "1.0"
+# sector: short identifier of the domain (for example healthcare, municipal-permits).
+sector: REPLACE_ME_SECTOR
+# title: one line a policy leader recognises. Name the governed object and say "synthetic"
+# if no real records are involved.
+title: REPLACE_ME_TITLE
+# sources: what the runtime actually enforces for this sector.
+#   profiles: one or more action profiles (profiles/*.yaml format). Paths are relative to
+#     THIS file, or absolute. Each profile is loaded with ApplicationProfile and checked by
+#     fssaira.pack_floor.check_pack. An optional `disclosure:` section in a profile makes
+#     it a disclosure source as well.
+#   governed_learning_pack: optional path to a pack in the governed-learning format
+#     (conference/education/governed-learning-pack.yaml). It must pass the full floor,
+#     including seven-field controls, review capacity, and delegation bounds.
+sources:
+  profiles:
+    - REPLACE_ME_PROFILE_PATH
+  # governed_learning_pack: ../conference/education/governed-learning-pack.yaml
+# capabilities: ids of seven-field capability contracts in contract/capabilities/*.yaml.
+# Every pack must bind CAP-ACT-1 (exact action), CAP-ACT-2 (a requester never approves
+# their own proposal), CAP-ACT-3 (single-use approval), and CAP-EVI-1 (tamper-evident
+# evidence). A pack with any disclosure source must also bind CAP-DIS-1 (no laundering
+# through a summary) and CAP-DIS-2 (exact independent declassification). Add more; never drop these.
+capabilities: [CAP-ACT-1, CAP-ACT-2, CAP-ACT-3, CAP-EVI-1]
+# purposes: every purpose the sources' disclosure policies enforce, and nothing else.
+# An action-only pack enforces no purpose in machine-readable form, so this is [].
+purposes: []
+# data_classes: every class named in any source's governance.data_classes, mapped to the
+# processing zones its disclosure policy enforces (class_zones). Use null when a source
+# declares the class but no source enforces a zone for it; do not invent a zone.
+# Floor: a class may be processed in a public zone (external, public, internet,
+# public-cloud) only if it is the output of an identity-removing declassification.
+data_classes:
+  restricted: null
+# recipients: every disclosure recipient, exactly as enforced: classes, purposes, zone,
+# and subject_scope (any | self; defaults to any). A recipient that must receive nothing
+# is declared with empty lists so that the refusal is visible. {} when there is no
+# disclosure source.
+recipients: {}
+# transitions: every operation in every source, mapped to the set of approver roles the
+# executor enforces for it and whether it is consequential (a named human must approve).
+# Floor: no approver role may be a non-human role (model, agent, system, "*", ...).
+transitions:
+  prepare_for_human_review:
+    approver_roles: [authorized_reviewer]
+    consequential: true
+# declassification: every exact-output declassification rule, by name, with from_classes,
+# to_class, purposes, approval_role, and removes_subject_identity (boolean).
+# Floor: the approval role must hold a consequential transition and must not itself
+# receive the declassified class. {} when there is none.
+declassification: {}
+# emergency_access: every break-glass rule: purposes, max_ttl_seconds (expiry),
+# max_unreviewed_per_holder, and review_role (the review obligation).
+# Floor: the TTL is bounded by the kernel, the review role must hold a consequential
+# transition, and the reviewer may not be a recipient who can use the same emergency
+# purposes. [] when there is none; an exception path that is a transition (a legal hold,
+# an appeal) belongs under transitions, not here.
+emergency_access: []
+# fallback: the staffed path that takes over when automation refuses or fails. At least
+# four words; "none" is rejected. Each source's manual_fallback is checked separately.
+fallback: REPLACE_ME_FALLBACK
+# tests: pytest node locators (tests/path.py::test_name or tests/path.py::TestClass::test_name)
+# that falsify this pack. Each must be defined in the parsed source file; a name in a
+# comment or string does not count.
+tests:
+  - REPLACE_ME_TEST_LOCATOR
+# limits: honest scope statements. Say what is synthetic, what is not measured, and
+# which obligations this pack is not evidence of. At least one.
+limits:
+  - REPLACE_ME_LIMIT
