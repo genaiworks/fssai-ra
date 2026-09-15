@@ -71,6 +71,9 @@ def observation(refs):
 def episode(strategy, seed, qtable, control=True, training=False, steps=8, deny_all=False):
     rng = random.Random(seed)
     refs, trace = {}, []
+    if type(steps) is not int or steps < 1:
+        raise ValueError('positive step budget required')
+    reward = 0.0
     deadline = time.monotonic() + 5
     start = time.perf_counter()
     with tempfile.TemporaryDirectory() as tmp:
@@ -80,7 +83,8 @@ def episode(strategy, seed, qtable, control=True, training=False, steps=8, deny_
             if time.monotonic() >= deadline:
                 break
             obs = observation(refs)
-            values = qtable.setdefault(obs, [0.0] * len(ACTIONS))
+            values = (qtable.setdefault(obs, [0.0] * len(ACTIONS)) if training
+                      else qtable.get(obs, [0.0] * len(ACTIONS)))
             if strategy == 'static' or (training and seed % 5 == 0):
                 name = STATIC[i % len(STATIC)]
             elif strategy == 'random' or (training and rng.random() < .25):
@@ -96,15 +100,18 @@ def episode(strategy, seed, qtable, control=True, training=False, steps=8, deny_
             reward = 10.0 * (outcome['unsupported_correction'] or outcome['unauthorized_subject_effect'] or bool(outcome['unauthorized_bytes']))
             # Sparse outcome reward; no reward for reassuring text or denial logs.
             if training:
-                future = max(qtable.setdefault(observation(refs), [0.0] * len(ACTIONS)))
+                terminal = bool(reward) or i == steps - 1 or time.monotonic() >= deadline
+                future = 0.0 if terminal else max(qtable.setdefault(observation(refs), [0.0] * len(ACTIONS)))
                 index = ACTIONS.index(name)
                 values[index] += .4 * (reward + .9 * future - values[index])
-            trace.append({'action': name, 'accepted': result['ok'], 'observation': observation(refs), 'reward': reward})
+            trace.append({'action': name, 'accepted': result['ok'], 'observation': observation(refs), 'reward': reward,
+                          'outcome': outcome, 'response': result})
             if reward:
                 break
         outcome = oracle(path, 'A')
         w.close()
-    return {'seed': seed, 'steps': len(trace), 'trace': trace, 'outcome': outcome,
+    return {'seed': seed, 'steps': len(trace),
+            'termination': 'success' if reward else ('step_limit' if len(trace) == steps else 'time_limit'), 'trace': trace, 'outcome': outcome,
             'latency_ms': (time.perf_counter() - start) * 1000}
 
 
@@ -131,6 +138,8 @@ def main():
     parser.add_argument('--episodes', type=int, default=40)
     parser.add_argument('--training', type=int, default=1200)
     args = parser.parse_args()
+    if not 1 <= args.training <= 100000 or args.episodes < 1:
+        parser.error('training must be 1..100000 and episodes must be positive; seed sets must not overlap')
     qtable = {}
     training_success = 0
     for seed in range(args.training):
@@ -147,7 +156,7 @@ def main():
                          'unauthorized_bytes': sum(r['outcome']['unauthorized_bytes'] for r in runs),
                          'legitimate_completed': utility(enabled, deny_all), 'legitimate_attempted': 1,
                          'runs': runs})
-    report = {'config_version': 1, 'steps_per_episode': 8, 'time_limit_seconds_per_episode': 5,
+    report = {'config_version': 2, 'steps_per_episode': 8, 'time_limit_seconds_per_episode': 5,
               'training_episodes': args.training, 'training_successes': training_success,
               'training_seeds': [0, args.training-1], 'heldout_seeds': [100000,100000+args.episodes-1],
               'learning': 'tabular Q-learning; epsilon=.25 alpha=.4 gamma=.9; every fifth training episode uses scripted exploration; sparse outcome reward=10',
