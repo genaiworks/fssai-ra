@@ -18,7 +18,7 @@ def test_evaluation_does_not_modify_frozen_policy():
 
 def test_terminal_step_does_not_bootstrap_future_reward():
     values = [5.0] * len(adaptive.ACTIONS)
-    table = {'0000': values, '1000': [100.0] * len(adaptive.ACTIONS)}
+    table = {'0000:1': values, '1000:0': [100.0] * len(adaptive.ACTIONS)}
     result = adaptive.episode('static', 0, table, training=True, steps=1)
     assert result['termination'] == 'step_limit'
     assert values[adaptive.ACTIONS.index('read')] == 3.0
