@@ -63,10 +63,29 @@ def validate(text: str) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", nargs="?", type=Path, default=Path("paper/form-ready-abstract.md"))
+    parser.add_argument(
+        "--full-paper", action="store_true",
+        help="also bind every numeric claim in paper/trust-by-construction.md to "
+             "audit/results.json via paper/metric_bindings.yaml (scripts/bind_paper_metrics.py)")
     args = parser.parse_args()
     report = validate(args.path.read_text(encoding="utf-8"))
     print(json.dumps(report, indent=2))
-    return 0 if report["valid"] else 1
+    if not args.full_paper:
+        return 0 if report["valid"] else 1
+    return full_paper_check(report["valid"])
+
+
+def full_paper_check(form_valid: bool) -> int:
+    """Run the full-paper metric binder after the form check; fail if either fails."""
+    import sys
+
+    scripts = Path(__file__).resolve().parent
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
+    import bind_paper_metrics
+
+    binding = bind_paper_metrics.main([])
+    return 0 if form_valid and binding == 0 else 1
 
 
 if __name__ == "__main__":

@@ -1,0 +1,568 @@
+# Full-paper metric bindings for paper/trust-by-construction.md.
+#
+# Checked by scripts/bind_paper_metrics.py (and scripts/check_submission.py --full-paper).
+# Every number-bearing token in the paper body (References and URLs excluded) must lie
+# inside a quote below. A `result` quote covers only the tokens its bound values match;
+# `specification`, `citation` and `parameter` quotes cover every token they contain and
+# carry a justification. Pointers resolve into audit/results.json, which is itself read
+# from committed machine-written results by scripts/collect_results.py.
+#
+# Deliberately NOT bound, because no committed machine-written result backs them; the
+# binder reports them so they are reconciled rather than hidden:
+#   "five contract bindings named functions that did not exist"   (Section 7.5)
+#   "eighteen of twenty-eight were prose bound to nothing"         (Section 7.5)
+#   "executed 841 baseline tests successfully"                     (Section 7.8; text log only)
+#   "Five synthetic rationale variants"                            (Section 7.9)
+#   "closed two defects the earlier suites did not exercise"       (Section 9.2)
+version: 1
+results: audit/results.json
+bindings:
+
+# ---------------------------------------------------------------------------
+# Front matter
+# ---------------------------------------------------------------------------
+- quote: "UNU Macau AI Conference 2026"
+  kind: citation
+  justification: venue name and year
+- quote: "25–26 November 2026"
+  kind: citation
+  justification: conference dates
+- quote: "Apache-2.0"
+  kind: specification
+  justification: licence identifier
+- quote: "version `1.0.0` reference baseline"
+  kind: specification
+  justification: software version identifier
+
+# ---------------------------------------------------------------------------
+# Abstract
+# ---------------------------------------------------------------------------
+- quote: "Two constitutional rules follow."
+  kind: specification
+  justification: the architecture defines two rules
+- quote: "seven-field"
+  kind: specification
+  justification: the control contract is specified with seven fields (Table 1)
+- quote: "seven logical planes, and two mediators"
+  kind: specification
+  justification: architectural specification (Section 3.3)
+- quote: "seven-stage lifecycle"
+  kind: specification
+  justification: lifecycle specification (Section 6)
+- quote: "six action-domain packs contained 180 of 180 hostile scenarios and completed 58 of 58 benign tasks"
+  kind: result
+  values:
+    - pointer: /transfer/reported_totals/packs
+    - pointer: /transfer/reported_totals/scenarios
+      as: fraction
+    - pointer: /transfer/reported_totals/benign_tasks
+      as: fraction
+- quote: "four disclosure packs contained 106 of 106 hostile data flows and completed 15 of 15 legitimate flows"
+  kind: result
+  values:
+    - pointer: /disclosure/packs
+    - pointer: /disclosure/hostile_flows
+      as: fraction
+    - pointer: /disclosure/legitimate_flows
+      as: fraction
+- quote: "104,997 bounded attempts found no counterexample"
+  kind: result
+  values:
+    - pointer: /safety_case/falsifiers/attempts
+- quote: "25 of 25 falsifiers held"
+  kind: result
+  values:
+    - pointer: /education_demo/falsifiers
+      as: fraction
+- quote: "300 red-team attempts produced 0 successes"
+  kind: result
+  values:
+    - pointer: /education_demo/redteam/successes
+      as: denominator
+    - pointer: /education_demo/redteam/successes
+- quote: "25 of 29 ablations"
+  kind: result
+  values:
+    - pointer: /education_demo/ablations
+      as: fraction
+
+# ---------------------------------------------------------------------------
+# Section, table, figure and list numbering
+# ---------------------------------------------------------------------------
+- {quote: "## 1. Introduction", kind: specification, justification: section heading number}
+- {quote: "## 2. Background and related work", kind: specification, justification: section heading number}
+- {quote: "## 3. The architecture", kind: specification, justification: section heading number}
+- {quote: "### 3.1 Two constitutional rules", kind: specification, justification: section heading number and the two rules}
+- {quote: "### 3.2 The control contract", kind: specification, justification: section heading number}
+- {quote: "### 3.3 Seven planes and two mediators", kind: specification, justification: section heading number and architectural specification}
+- {quote: "### 3.4 Threat model and trusted computing base", kind: specification, justification: section heading number}
+- {quote: "### 3.5 Invariants and composition rules", kind: specification, justification: section heading number}
+- {quote: "## 4. One governed request in ten steps", kind: specification, justification: section heading number and the ten-step path}
+- {quote: "## 5. One kernel, many domains", kind: specification, justification: section heading number}
+- {quote: "## 6. Building future AI systems", kind: specification, justification: section heading number}
+- {quote: "### 6.1 GenAI integration contract", kind: specification, justification: section heading number}
+- {quote: "### 6.2 Distributed execution and revocation semantics", kind: specification, justification: section heading number}
+- {quote: "### 6.3 Advanced capabilities are untrusted inputs", kind: specification, justification: section heading number}
+- {quote: "## 7. Evaluation", kind: specification, justification: section heading number}
+- {quote: "### 7.1 Method", kind: specification, justification: section heading number}
+- {quote: "### 7.2 Mediation against conventional controls", kind: specification, justification: section heading number}
+- {quote: "### 7.3 Review capacity", kind: specification, justification: section heading number}
+- {quote: "### 7.4 Transfer across sectors", kind: specification, justification: section heading number}
+- {quote: "### 7.5 A safety case that does not rest on alignment", kind: specification, justification: section heading number}
+- {quote: "### 7.6 What the evidence can and cannot establish", kind: specification, justification: section heading number}
+- {quote: "### 7.7 Earlier component demonstration in education", kind: specification, justification: section heading number}
+- {quote: "### 7.8 Joined workflow", kind: specification, justification: section heading number}
+- {quote: "### 7.9 Observable reasoning and integration limits", kind: specification, justification: section heading number}
+- {quote: "## 8. Education as the dissemination mechanism", kind: specification, justification: section heading number}
+- {quote: "### 8.1 Education workflow and study protocol", kind: specification, justification: section heading number}
+- {quote: "## 9. Qualification, unresolved hurdles, and acceptance gates", kind: specification, justification: section heading number}
+- {quote: "### 9.1 Evidence levels and implementation status", kind: specification, justification: section heading number}
+- {quote: "### 9.2 Second-audit implementation findings", kind: specification, justification: section heading number}
+- {quote: "### 9.3 Promotion and operational governance", kind: specification, justification: section heading number}
+- {quote: "## 10. Conclusion", kind: specification, justification: section heading number}
+- {quote: "Section 3", kind: specification, justification: cross-reference}
+- {quote: "Section 4", kind: specification, justification: cross-reference}
+- {quote: "Section 5", kind: specification, justification: cross-reference}
+- {quote: "Section 6", kind: specification, justification: cross-reference}
+- {quote: "Section 7", kind: specification, justification: cross-reference}
+- {quote: "Section 8", kind: specification, justification: cross-reference}
+- {quote: "Section 9", kind: specification, justification: cross-reference}
+- {quote: "Section 7.8", kind: specification, justification: cross-reference}
+- {quote: "Section 9.2", kind: specification, justification: cross-reference}
+- {quote: "Sections 3.5 and 8.1", kind: specification, justification: cross-reference}
+- {quote: "Sections 3 and 6", kind: specification, justification: cross-reference}
+- {quote: "(Table 1)", kind: specification, justification: table reference}
+- {quote: "**Table 1.** The seven fields of the control contract", kind: specification, justification: table caption number and the seven-field specification}
+- {quote: "**Table 2.**", kind: specification, justification: table caption number}
+- {quote: "Table 3 shows the same steps expressed in five sectors", kind: specification, justification: table reference; the five sector packs shown are declared (Table 3)}
+- {quote: "**Table 3.** The same architecture in five sectors.", kind: specification, justification: table caption number; five declared sector columns}
+- {quote: "while the four other columns also have disclosure fixtures", kind: specification, justification: describes the four non-education columns of Table 3}
+- {quote: "Table 4 states", kind: specification, justification: table reference}
+- {quote: "**Table 4.**", kind: specification, justification: table caption number}
+- {quote: "Table 4's applicable evidence", kind: specification, justification: table reference}
+- {quote: "**Table 5.**", kind: specification, justification: table caption number}
+- {quote: "(Fig. 1)", kind: specification, justification: figure reference}
+- {quote: "(Fig. 2)", kind: specification, justification: figure reference}
+- {quote: "Figure 3 gives the lifecycle every new AI capability follows, in any sector (Fig. 3)", kind: specification, justification: figure references}
+- {quote: "(Fig. 5)", kind: specification, justification: figure reference}
+- {quote: "(Fig. 6)", kind: specification, justification: figure reference}
+- {quote: "1. **A reference architecture** that separates seven planes around an executable control contract and two mediators", kind: specification, justification: contribution list number and architectural specification}
+- {quote: "2. **A governed request path in ten steps**", kind: specification, justification: contribution list number and the ten-step path}
+- {quote: "3. **A transfer method**", kind: specification, justification: contribution list number}
+- {quote: "illustrated across five sectors", kind: specification, justification: five declared sector packs in Table 3}
+- {quote: "4. **Evidence that tests the architecture", kind: specification, justification: contribution list number}
+- {quote: "5. **A teaching method", kind: specification, justification: contribution list number}
+- {quote: "**Steps 1–2: admit and protect.**", kind: specification, justification: request-path step numbers}
+- {quote: "**Steps 3–4: route and entitle.**", kind: specification, justification: request-path step numbers}
+- {quote: "**Steps 5–6: reason and authorize.**", kind: specification, justification: request-path step numbers}
+- {quote: "**Steps 7–8: execute and release.**", kind: specification, justification: request-path step numbers}
+- {quote: "**Steps 9–10: record and recover.**", kind: specification, justification: request-path step numbers}
+- {quote: "Declared purposes (4, 8)", kind: specification, justification: request-path step references in Table 3}
+- {quote: "where it may be processed (2–4)", kind: specification, justification: request-path step references in Table 3}
+- {quote: "independent approver (6–7)", kind: specification, justification: request-path step references in Table 3}
+- {quote: "Governed release (8)", kind: specification, justification: request-path step reference in Table 3}
+- {quote: "Exception path (10)", kind: specification, justification: request-path step reference in Table 3}
+- {quote: "fraud break-glass, thirty minutes", kind: specification, justification: break-glass duration declared in the released consumer-finance pack}
+- {quote: "1. **Frame.**", kind: specification, justification: lifecycle stage number}
+- {quote: "2. **Contract.** Fill the seven fields.", kind: specification, justification: lifecycle stage number and the seven-field contract}
+- {quote: "3. **Pack.**", kind: specification, justification: lifecycle stage number}
+- {quote: "4. **Bind.**", kind: specification, justification: lifecycle stage number}
+- {quote: "5. **Falsify.**", kind: specification, justification: lifecycle stage number}
+- {quote: "6. **Promote.**", kind: specification, justification: lifecycle stage number}
+- {quote: "7. **Operate.**", kind: specification, justification: lifecycle stage number}
+- {quote: "returns to stage 5", kind: specification, justification: lifecycle stage reference}
+- {quote: "1. **Build on the Mediation Thesis.**", kind: specification, justification: conclusion list number}
+- {quote: "2. **Govern reads as strictly as writes.**", kind: specification, justification: conclusion list number}
+- {quote: "3. **Minimize identification risk.**", kind: specification, justification: conclusion list number}
+- {quote: "4. **Make every consequential capability contractable.** No capability ships without the seven fields", kind: specification, justification: conclusion list number and the seven-field contract}
+- {quote: "5. **Treat sovereignty", kind: specification, justification: conclusion list number}
+- {quote: "6. **Publish authority", kind: specification, justification: conclusion list number}
+- {quote: "7. **Build sectors", kind: specification, justification: conclusion list number}
+
+# ---------------------------------------------------------------------------
+# Citations
+# ---------------------------------------------------------------------------
+- {quote: "Zero trust architecture [1]", kind: citation, justification: named standard and reference number}
+- {quote: "[2]", kind: citation, justification: reference number}
+- {quote: "OWASP agentic top ten [3]", kind: citation, justification: named standard and reference number}
+- {quote: "[4]", kind: citation, justification: reference number}
+- {quote: "[5]", kind: citation, justification: reference number}
+- {quote: "ISO/IEC 42001 [6]", kind: citation, justification: standard identifier and reference number}
+- {quote: "[7]", kind: citation, justification: reference number}
+- {quote: "[8]", kind: citation, justification: reference number}
+- {quote: "[9]", kind: citation, justification: reference number}
+- {quote: "[10]", kind: citation, justification: reference number}
+- {quote: "[11]", kind: citation, justification: reference number}
+- {quote: "[12]", kind: citation, justification: reference number}
+- {quote: "[13]", kind: citation, justification: reference number}
+- {quote: "[14]", kind: citation, justification: reference number}
+- {quote: "[15]", kind: citation, justification: reference number}
+- {quote: "[16]", kind: citation, justification: reference number}
+- {quote: "[17]", kind: citation, justification: reference number}
+- {quote: "[18]", kind: citation, justification: reference number}
+- {quote: "[19]", kind: citation, justification: reference number}
+- {quote: "[24]", kind: citation, justification: reference number}
+- {quote: "[25]", kind: citation, justification: reference number}
+- {quote: "[21, 22]", kind: citation, justification: reference numbers}
+- {quote: "[27, 28, 29]", kind: citation, justification: reference numbers}
+- {quote: "three limiting results bound any such architecture", kind: citation, justification: "enumerates the three cited limiting results (confinement refs 27-29, differential privacy ref 30, chain-of-thought monitoring refs 32-33)"}
+- {quote: "[30]", kind: citation, justification: reference number}
+- {quote: "[32, 33]", kind: citation, justification: reference numbers}
+- {quote: "[20, 21, 22, 32, 33]", kind: citation, justification: reference numbers}
+
+# ---------------------------------------------------------------------------
+# Prose specifications (counts that define the design, not measured results)
+# ---------------------------------------------------------------------------
+- {quote: "faces four structural problems", kind: specification, justification: the paper's framing enumerates four problems}
+- {quote: "answers all four with one thesis and three commitments", kind: specification, justification: framing; three stated commitments}
+- {quote: "The paper makes five contributions", kind: specification, justification: enumerated contribution list}
+- {quote: "its **seven fields** name", kind: specification, justification: control-contract specification}
+- {quote: "the pattern separates seven planes", kind: specification, justification: architectural specification}
+- {quote: "Two components are mediators", kind: specification, justification: architectural specification}
+- {quote: "two-person promotion", kind: specification, justification: required deployment control (Table 2)}
+- {quote: "Two mediators mean two enforcement responsibilities, not two mutually independent security domains.", kind: specification, justification: architectural specification}
+- {quote: "a transactional store and two narrowly permissioned interfaces", kind: specification, justification: minimal-deployment specification}
+- {quote: "The two interfaces must compose.", kind: specification, justification: architectural specification}
+- {quote: "A single request passes through ten steps", kind: specification, justification: request-path specification}
+- {quote: "can demand the seven fields", kind: specification, justification: control-contract specification}
+- {quote: "Five vectors are worth stating explicitly", kind: specification, justification: enumerated list in Section 6.3}
+- {quote: "the two are reported apart", kind: specification, justification: reporting design (reward and denials)}
+- {quote: "in all three arms", kind: specification, justification: the comparison design has three arms}
+- {quote: "Zero counterexamples therefore supports only the enumerated invariants", kind: specification, justification: methodological statement; asserts no count}
+- {quote: "seven-axis delegation", kind: specification, justification: component specification of the education demonstration}
+- {quote: "A two-hour offline lab", kind: specification, justification: lab design duration}
+- {quote: "should join two current strengths", kind: specification, justification: design statement}
+- {quote: "Use three explicit stages.", kind: specification, justification: promotion-stage specification}
+- {quote: "Rule 1 resting on a key", kind: specification, justification: name of the first constitutional rule}
+
+# ---------------------------------------------------------------------------
+# 7.2 Mediation against conventional controls
+# ---------------------------------------------------------------------------
+- quote: "the same seven attacks delivered 28, 8, and 0 harmful actions"
+  kind: result
+  values:
+    - pointer: /comparison_arms/actions/attacks
+    - pointer: /comparison_arms/actions/arms/0/harmful_actions
+    - pointer: /comparison_arms/actions/arms/1/harmful_actions
+    - pointer: /comparison_arms/actions/arms/2/harmful_actions
+- quote: "**30 of 30 adversarial scenarios contained**"
+  kind: result
+  values:
+    - pointer: /reference_profile/scenarios
+      as: fraction
+- quote: "**240 configurations with zero violations**"
+  kind: result
+  values:
+    - pointer: /reference_profile/configurations
+    - pointer: /reference_profile/violations
+- quote: "**11 distinct denial controls**"
+  kind: result
+  values:
+    - pointer: /reference_profile/distinct_denial_controls
+- quote: "**8 of 8 ablated controls restored their harm when removed**"
+  kind: result
+  values:
+    - pointer: /reference_profile/ablations
+      as: fraction
+- quote: "**26 conformance checks passing on 2 backend profiles**"
+  kind: result
+  values:
+    - pointer: /reference_profile/conformance/per_backend/0/checks
+    - pointer: /reference_profile/conformance/backends
+- quote: "**6 of 6 benign tasks completed, false-denial rate 0.0**"
+  kind: result
+  values:
+    - pointer: /reference_profile/benign_tasks
+      as: fraction
+    - pointer: /reference_profile/false_denial_rate
+- quote: "**32-caller race produced 1 mutation and 1 receipt**"
+  kind: result
+  values:
+    - pointer: /reference_profile/race/callers
+    - pointer: /reference_profile/race/mutations
+    - pointer: /reference_profile/race/receipts
+- quote: "**106 of 106 hostile data flows were contained**"
+  kind: result
+  values:
+    - pointer: /disclosure/hostile_flows
+      as: fraction
+- quote: "**contained 32**"
+  kind: result
+  values:
+    - pointer: /comparison_arms/disclosure_flows/arms/1/contained
+- quote: "**All 14 checks were load-bearing**"
+  kind: result
+  values:
+    - pointer: /disclosure/load_bearing_checks
+- quote: "**24,272 read and release configurations showed zero violations**"
+  kind: result
+  values:
+    - pointer: /disclosure/configurations
+    - pointer: /disclosure/violations
+- quote: "15 of 15 legitimate flows completed"
+  kind: result
+  values:
+    - pointer: /disclosure/legitimate_flows
+      as: fraction
+- quote: "**800 sequences and 32,000 operations**"
+  kind: result
+  values:
+    - pointer: /disclosure/stateful_sequences
+    - pointer: /disclosure/stateful_operations
+- quote: "Nine invariants, from attenuation and rootedness to holder binding, are all load-bearing across **768 enumerated chain shapes and zero violations**"
+  kind: result
+  values:
+    - pointer: /delegation/invariants_load_bearing
+    - pointer: /delegation/chain_shapes
+    - pointer: /delegation/violations
+- quote: "**contains 2 of 10 risk classes where verifying the chain contains 10**"
+  kind: result
+  values:
+    - pointer: /delegation/risk_classes_by_arm/caller_checked
+      as: fraction
+    - pointer: /delegation/risk_classes_by_arm/this_architecture
+
+# ---------------------------------------------------------------------------
+# 7.3 Review capacity
+# ---------------------------------------------------------------------------
+- quote: "**a roster of 11 reviewers sustains 2,640 consequential actions per day**"
+  kind: result
+  values:
+    - pointer: /review_capacity/roster
+    - pointer: /review_capacity/sustainable_per_day
+- quote: "where 40 arrivals reach one reviewer"
+  kind: result
+  values:
+    - pointer: /review_capacity/arrivals
+- quote: "**Without load control, 4 such merit failures execute. With it, 0 do, and 32 actions defer to manual review**"
+  kind: result
+  values:
+    - pointer: /review_capacity/queue_arms/0/harmful_executed
+    - pointer: /review_capacity/queue_arms/1/harmful_executed
+    - pointer: /review_capacity/queue_arms/1/deferred_to_manual
+- quote: "Across 25 parameter combinations the control was load-bearing in 16 of the 20 where harm was possible"
+  kind: result
+  values:
+    - pointer: /review_capacity/sweep/cells
+    - pointer: /review_capacity/sweep/load_bearing
+    - pointer: /review_capacity/sweep/load_bearing
+      as: denominator
+- quote: "harm reached zero in 16"
+  kind: result
+  values:
+    - pointer: /review_capacity/sweep/harm_reached_zero
+- quote: "harm reached zero in"
+  kind: specification
+  justification: names the counted outcome (harm equal to zero); the count itself is bound above
+- quote: "**drove the false-positive cost to 0**"
+  kind: result
+  values:
+    - pointer: /review_capacity/sweep/false_positive_deferrals
+- quote: "**5 merit failures with a dependent assistant, 1 with an independent one**"
+  kind: result
+  values:
+    - pointer: /review_capacity/assisted_arms/1/harmful_executed
+    - pointer: /review_capacity/assisted_arms/2/harmful_executed
+
+# ---------------------------------------------------------------------------
+# 7.4 Transfer across sectors
+# ---------------------------------------------------------------------------
+- quote: "**6 independently reported domain packs cover 55,440 bounded configurations, 180 of 180 hostile scenarios contained, 58 of 58 benign tasks completed, and zero unauthorized mutations.**"
+  kind: result
+  values:
+    - pointer: /transfer/reported_totals/packs
+    - pointer: /transfer/reported_totals/configurations
+    - pointer: /transfer/reported_totals/scenarios
+      as: fraction
+    - pointer: /transfer/reported_totals/benign_tasks
+      as: fraction
+    - pointer: /transfer/reported_totals/unauthorized_mutations
+- quote: "**4,800 configurations with zero violations, 30 of 30 scenarios contained, 9 of 9 benign tasks, 26 conformance checks**"
+  kind: result
+  values:
+    - pointer: /transfer/packs/1/configurations
+    - pointer: /transfer/packs/1/violations
+    - pointer: /transfer/packs/1/scenarios
+      as: fraction
+    - pointer: /transfer/packs/1/benign_tasks
+      as: fraction
+    - pointer: /transfer/academic_record_correction_conformance
+
+# ---------------------------------------------------------------------------
+# 7.5 Safety case and self-application
+# ---------------------------------------------------------------------------
+- quote: "A catalogue of 36 failure classes"
+  kind: result
+  values:
+    - pointer: /safety_case/threat_classes/total
+- quote: "**21 contained, 10 bounded, and 5 residual**"
+  kind: result
+  values:
+    - pointer: /safety_case/threat_classes/contained
+    - pointer: /safety_case/threat_classes/bounded
+    - pointer: /safety_case/threat_classes/residual
+- quote: "Six falsifiers then try to refute the thesis"
+  kind: result
+  values:
+    - pointer: /safety_case/falsifiers/count
+- quote: "**104,997 bounded attempts found zero counterexamples**"
+  kind: result
+  values:
+    - pointer: /safety_case/falsifiers/attempts
+    - pointer: /safety_case/falsifiers/counterexamples
+- quote: "**reading 41, 3, 0 in the baseline contract register**"
+  kind: result
+  values:
+    - pointer: /self_application/legacy_contract_counts/machine_verified
+    - pointer: /self_application/legacy_contract_counts/attested
+    - pointer: /self_application/legacy_contract_counts/unverified
+
+# ---------------------------------------------------------------------------
+# 7.7 Earlier component demonstration in education
+# ---------------------------------------------------------------------------
+- quote: "**34 of 34 attack attempts were blocked**"
+  kind: result
+  values:
+    - pointer: /education_demo/attacks_blocked
+      as: fraction
+- quote: "The other four are single controls that another control independently backs"
+  kind: result
+  values:
+    - pointer: /education_demo/ablation_redundant_single_controls
+- quote: "**3,000 steps with 0 violations and 0 false denials**"
+  kind: result
+  values:
+    - pointer: /education_demo/stateful/steps
+    - pointer: /education_demo/stateful/violations
+    - pointer: /education_demo/stateful/false_denials
+- quote: "removing one control produced between 1 and 154 violations"
+  kind: result
+  note: the smallest (consent) and largest (context_gate) per-control counts
+  values:
+    - pointer: /education_demo/stateful/violations_when_control_removed/consent
+    - pointer: /education_demo/stateful/violations_when_control_removed/context_gate
+- quote: "with the context gate removed, 79 of 150 succeeded"
+  kind: result
+  values:
+    - pointer: /education_demo/redteam/successes_when_one_control_removed/context_gate
+      as: fraction
+- quote: "**38 findings**"
+  kind: result
+  values:
+    - pointer: /education_demo/malicious_pack_findings
+- quote: "**6 of 6 delegation escalations**"
+  kind: result
+  values:
+    - pointer: /education_demo/delegation_escalations
+      as: fraction
+- quote: "**5 of 5 model-substitution attacks**"
+  kind: result
+  values:
+    - pointer: /education_demo/model_substitution
+      as: fraction
+- quote: "**0 identity values**"
+  kind: result
+  values:
+    - pointer: /education_demo/identity_values_seen_by_model
+- quote: "**0 of 9 checked locations**"
+  kind: result
+  values:
+    - pointer: /education_demo/erasure
+      as: fraction
+- quote: "128 concurrent callers produced **1 mutation**"
+  kind: result
+  values:
+    - pointer: /education_demo/concurrency/callers
+    - pointer: /education_demo/concurrency/mutations
+- quote: "**31 of 31 register claims**"
+  kind: result
+  values:
+    - pointer: /education_demo/claims
+      as: fraction
+- quote: "not included in the six-pack or four-pack denominators"
+  kind: result
+  values:
+    - pointer: /transfer/reported_totals/packs
+    - pointer: /disclosure/packs
+
+# ---------------------------------------------------------------------------
+# 7.8 Joined workflow and Table 5
+# ---------------------------------------------------------------------------
+- quote: "trains for 1,200 episodes"
+  kind: parameter
+  justification: declared training budget, set in the adaptive run configuration
+  values:
+    - pointer: /joined_workflow/config/training_episodes
+- quote: "with an eight-request and five-second cap per episode"
+  kind: parameter
+  justification: declared per-episode caps, set in the adaptive run configuration
+  values:
+    - pointer: /joined_workflow/config/steps_per_episode
+    - pointer: /joined_workflow/config/time_limit_seconds_per_episode
+- quote: "learning rate 0.4, discount 0.9 and exploratory probability 0.25"
+  kind: parameter
+  justification: declared tabular-Q hyperparameters recorded in the adaptive run configuration
+  evidence:
+    source: "audit/adaptive-results.json#/learning"
+    contains: "epsilon=.25 alpha=.4 gamma=.9"
+- quote: "evaluated on 40 new seeds per arm and strategy"
+  kind: result
+  values:
+    - pointer: /joined_workflow/table5/cells/0/unsupported_corrections
+      as: denominator
+- quote: "Unsupported corrections in 40 episodes per cell"
+  kind: result
+  values:
+    - pointer: /joined_workflow/table5/cells/0/unsupported_corrections
+      as: denominator
+- quote: "| Static | 0/40 | 40/40 | 0/40 |"
+  kind: result
+  values:
+    - {pointer: /joined_workflow/table5/cells/0/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/4/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/8/unsupported_corrections, as: fraction}
+- quote: "| Random | 0/40 | 0/40 | 0/40 |"
+  kind: result
+  values:
+    - {pointer: /joined_workflow/table5/cells/1/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/5/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/9/unsupported_corrections, as: fraction}
+- quote: "| Adaptive search | 0/40 | 40/40 | 0/40 |"
+  kind: result
+  values:
+    - {pointer: /joined_workflow/table5/cells/2/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/6/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/10/unsupported_corrections, as: fraction}
+- quote: "| Trained tabular Q | 0/40 | 40/40 | 0/40 |"
+  kind: result
+  values:
+    - {pointer: /joined_workflow/table5/cells/3/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/7/unsupported_corrections, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/11/unsupported_corrections, as: fraction}
+- quote: "joined and server authorization complete 1/1, deny-all completes 0/1"
+  kind: result
+  note: one token pair states all joined and server-authorization cells; the static cells are bound
+  values:
+    - {pointer: /joined_workflow/table5/cells/0/legitimate_completed, as: fraction}
+    - {pointer: /joined_workflow/table5/cells/8/legitimate_completed, as: fraction}
+- quote: "unauthorized sink bytes are zero in each bounded run"
+  kind: result
+  values:
+    - pointer: /joined_workflow/table5/cells/4/unauthorized_sink_bytes
+- quote: "four fresh local `llama3.2:1b` prompts"
+  kind: result
+  values:
+    - pointer: /joined_workflow/live_local/prompts
+
+# ---------------------------------------------------------------------------
+# 8.1 and 9.2
+# ---------------------------------------------------------------------------
+- quote: "four-pack disclosure denominator"
+  kind: result
+  values:
+    - pointer: /disclosure/packs
+- quote: "found 0 forbidden outcomes with every control on"
+  kind: result
+  note: the conference adaptive attacker; every track reports zero, the static track is bound
+  values:
+    - pointer: /education_demo/adaptive/tracks/0/forbidden_outcomes

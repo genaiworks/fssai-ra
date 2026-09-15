@@ -1,0 +1,2546 @@
+{
+  "generated_by": "scripts/collect_results.py",
+  "schema_version": 1,
+  "reading": "Every leaf is {value, denominator, unit, source}. Units differ between suites (scenario, configuration, sequence, ablation, task, episode) and must never be pooled into one percentage.",
+  "comparison_arms": {
+    "note": "three independent suites with different units; never pooled",
+    "actions": {
+      "unit": "attack",
+      "attacks": {
+        "value": 7,
+        "denominator": null,
+        "unit": "distinct attacks sent to every arm",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/comparison_attacks"
+      },
+      "arms": [
+        {
+          "arm": "A · unguarded",
+          "attacks_succeeded": {
+            "value": 7,
+            "denominator": 7,
+            "unit": "attacks that succeeded",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/0/attacks_succeeded",
+            "denominator_source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/0/attacks_attempted"
+          },
+          "harmful_actions": {
+            "value": 28,
+            "denominator": null,
+            "unit": "harmful actions reaching the protected asset",
+            "source": "evaluation/results/v1.0.0-summary.json#/figures/arm_a_harms"
+          },
+          "containment_rate": {
+            "value": 0.0,
+            "denominator": null,
+            "unit": "share of attacks contained (rate)",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/0/containment_rate"
+          },
+          "benign_completed": {
+            "value": 2,
+            "denominator": 2,
+            "unit": "benign tasks completed",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/0/benign_completed",
+            "denominator_source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/0/benign_attempted"
+          }
+        },
+        {
+          "arm": "B · prompt-guarded",
+          "attacks_succeeded": {
+            "value": 5,
+            "denominator": 7,
+            "unit": "attacks that succeeded",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/1/attacks_succeeded",
+            "denominator_source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/1/attacks_attempted"
+          },
+          "harmful_actions": {
+            "value": 8,
+            "denominator": null,
+            "unit": "harmful actions reaching the protected asset",
+            "source": "evaluation/results/v1.0.0-summary.json#/figures/arm_b_harms"
+          },
+          "containment_rate": {
+            "value": 0.2857,
+            "denominator": null,
+            "unit": "share of attacks contained (rate)",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/1/containment_rate"
+          },
+          "benign_completed": {
+            "value": 2,
+            "denominator": 2,
+            "unit": "benign tasks completed",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/1/benign_completed",
+            "denominator_source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/1/benign_attempted"
+          }
+        },
+        {
+          "arm": "C · This work",
+          "attacks_succeeded": {
+            "value": 0,
+            "denominator": 7,
+            "unit": "attacks that succeeded",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/2/attacks_succeeded",
+            "denominator_source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/2/attacks_attempted"
+          },
+          "harmful_actions": {
+            "value": 0,
+            "denominator": null,
+            "unit": "harmful actions reaching the protected asset",
+            "source": "evaluation/results/v1.0.0-summary.json#/figures/arm_c_harms"
+          },
+          "containment_rate": {
+            "value": 1.0,
+            "denominator": null,
+            "unit": "share of attacks contained (rate)",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/2/containment_rate"
+          },
+          "benign_completed": {
+            "value": 2,
+            "denominator": 2,
+            "unit": "benign tasks completed",
+            "source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/2/benign_completed",
+            "denominator_source": "evaluation/results/v1.0.0-architecture-comparison.json#/arms/2/benign_attempted"
+          }
+        }
+      ]
+    },
+    "disclosure_flows": {
+      "unit": "hostile data flow",
+      "arms": [
+        {
+          "arm": "unguarded",
+          "contained": {
+            "value": 0,
+            "denominator": 106,
+            "unit": "hostile data flows contained",
+            "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_contained_unguarded",
+            "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_hostile_total"
+          },
+          "per_pack": [
+            {
+              "pack": "corporate-confidential-data",
+              "contained": {
+                "value": 0,
+                "denominator": 25,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/contained_by_arm/unguarded",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "financial-consumer-data",
+              "contained": {
+                "value": 0,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/contained_by_arm/unguarded",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "government-benefits",
+              "contained": {
+                "value": 0,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/contained_by_arm/unguarded",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "healthcare-record-access",
+              "contained": {
+                "value": 0,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/contained_by_arm/unguarded",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/hostile_scenarios"
+              }
+            }
+          ]
+        },
+        {
+          "arm": "access_controlled",
+          "contained": {
+            "value": 32,
+            "denominator": 106,
+            "unit": "hostile data flows contained",
+            "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_contained_access_controlled",
+            "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_hostile_total"
+          },
+          "per_pack": [
+            {
+              "pack": "corporate-confidential-data",
+              "contained": {
+                "value": 8,
+                "denominator": 25,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/contained_by_arm/access_controlled",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "financial-consumer-data",
+              "contained": {
+                "value": 8,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/contained_by_arm/access_controlled",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "government-benefits",
+              "contained": {
+                "value": 8,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/contained_by_arm/access_controlled",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "healthcare-record-access",
+              "contained": {
+                "value": 8,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/contained_by_arm/access_controlled",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/hostile_scenarios"
+              }
+            }
+          ]
+        },
+        {
+          "arm": "this_architecture",
+          "contained": {
+            "value": 106,
+            "denominator": 106,
+            "unit": "hostile data flows contained",
+            "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_contained",
+            "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_hostile_total"
+          },
+          "per_pack": [
+            {
+              "pack": "corporate-confidential-data",
+              "contained": {
+                "value": 25,
+                "denominator": 25,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/contained_by_arm/this_architecture",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "financial-consumer-data",
+              "contained": {
+                "value": 27,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/contained_by_arm/this_architecture",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "government-benefits",
+              "contained": {
+                "value": 27,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/contained_by_arm/this_architecture",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/hostile_scenarios"
+              }
+            },
+            {
+              "pack": "healthcare-record-access",
+              "contained": {
+                "value": 27,
+                "denominator": 27,
+                "unit": "hostile data flows contained",
+                "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/contained_by_arm/this_architecture",
+                "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/hostile_scenarios"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "delegation_chains": {
+      "unit": "delegation risk class",
+      "arms": [
+        {
+          "arm": "unguarded",
+          "contained": {
+            "value": 0,
+            "denominator": 10,
+            "unit": "hostile delegation risk classes contained",
+            "source": "evaluation/results/v1.0.0-delegation.json#/arms/unguarded/contained",
+            "denominator_source": "evaluation/results/v1.0.0-delegation.json#/arms/unguarded/of"
+          },
+          "benign_chain_completed": {
+            "value": true,
+            "denominator": null,
+            "unit": "benign two-hop chain completed (boolean)",
+            "source": "evaluation/results/v1.0.0-delegation.json#/arms/unguarded/benign_chain_completed"
+          }
+        },
+        {
+          "arm": "caller_checked",
+          "contained": {
+            "value": 2,
+            "denominator": 10,
+            "unit": "hostile delegation risk classes contained",
+            "source": "evaluation/results/v1.0.0-delegation.json#/arms/caller_checked/contained",
+            "denominator_source": "evaluation/results/v1.0.0-delegation.json#/arms/caller_checked/of"
+          },
+          "benign_chain_completed": {
+            "value": true,
+            "denominator": null,
+            "unit": "benign two-hop chain completed (boolean)",
+            "source": "evaluation/results/v1.0.0-delegation.json#/arms/caller_checked/benign_chain_completed"
+          }
+        },
+        {
+          "arm": "this_architecture",
+          "contained": {
+            "value": 10,
+            "denominator": 10,
+            "unit": "hostile delegation risk classes contained",
+            "source": "evaluation/results/v1.0.0-delegation.json#/arms/this_architecture/contained",
+            "denominator_source": "evaluation/results/v1.0.0-delegation.json#/arms/this_architecture/of"
+          },
+          "benign_chain_completed": {
+            "value": true,
+            "denominator": null,
+            "unit": "benign two-hop chain completed (boolean)",
+            "source": "evaluation/results/v1.0.0-delegation.json#/arms/this_architecture/benign_chain_completed"
+          }
+        }
+      ]
+    }
+  },
+  "reference_profile": {
+    "scenarios": {
+      "value": 30,
+      "denominator": 30,
+      "unit": "adversarial scenarios contained",
+      "source": "evaluation/results/v1.0.0-student-support.json#/containment/scenarios_contained",
+      "denominator_source": "evaluation/results/v1.0.0-student-support.json#/containment/scenarios_total"
+    },
+    "unauthorized_mutations": {
+      "value": 0,
+      "denominator": null,
+      "unit": "unauthorized mutations",
+      "source": "evaluation/results/v1.0.0-student-support.json#/containment/unauthorized_mutations"
+    },
+    "configurations": {
+      "value": 240,
+      "denominator": null,
+      "unit": "bounded configurations explored",
+      "source": "evaluation/results/v1.0.0-verification.json#/summary/states_explored"
+    },
+    "violations": {
+      "value": 0,
+      "denominator": null,
+      "unit": "invariant violations",
+      "source": "evaluation/results/v1.0.0-verification.json#/summary/violations"
+    },
+    "invariants_checked": {
+      "value": 5,
+      "denominator": null,
+      "unit": "invariants checked",
+      "source": "evaluation/results/v1.0.0-verification.json#/summary/invariants_checked"
+    },
+    "distinct_denial_controls": {
+      "value": 11,
+      "denominator": null,
+      "unit": "distinct denial controls reached",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/distinct_denial_codes"
+    },
+    "ablations": {
+      "value": 8,
+      "denominator": 8,
+      "unit": "ablated controls that restored their harm",
+      "source": "evaluation/results/v1.0.0-student-support.json#/attribution/controls_load_bearing",
+      "denominator_source": "evaluation/results/v1.0.0-student-support.json#/attribution/controls_declared"
+    },
+    "conformance": {
+      "backends": {
+        "value": 2,
+        "denominator": null,
+        "unit": "backend profiles verified",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/conformance_backends_verified"
+      },
+      "per_backend": [
+        {
+          "backend": "memory",
+          "checks": {
+            "value": 26,
+            "denominator": 26,
+            "unit": "conformance checks passed",
+            "source": "evaluation/results/v1.0.0-conformance-memory.json#/summary/checks_passed",
+            "denominator_source": "evaluation/results/v1.0.0-conformance-memory.json#/summary/checks_total"
+          }
+        },
+        {
+          "backend": "sql",
+          "checks": {
+            "value": 26,
+            "denominator": 26,
+            "unit": "conformance checks passed",
+            "source": "evaluation/results/v1.0.0-conformance-sql.json#/summary/checks_passed",
+            "denominator_source": "evaluation/results/v1.0.0-conformance-sql.json#/summary/checks_total"
+          }
+        }
+      ]
+    },
+    "benign_tasks": {
+      "value": 6,
+      "denominator": 6,
+      "unit": "benign tasks completed",
+      "source": "evaluation/results/v1.0.0-student-support.json#/utility/benign_tasks_completed",
+      "denominator_source": "evaluation/results/v1.0.0-student-support.json#/utility/benign_tasks_total"
+    },
+    "false_denial_rate": {
+      "value": 0.0,
+      "denominator": null,
+      "unit": "false-denial rate",
+      "source": "evaluation/results/v1.0.0-student-support.json#/utility/false_denial_rate"
+    },
+    "race": {
+      "callers": {
+        "value": 32,
+        "denominator": null,
+        "unit": "concurrent callers",
+        "source": "evaluation/results/v1.0.0-race.json#/callers"
+      },
+      "mutations": {
+        "value": 1,
+        "denominator": null,
+        "unit": "mutations",
+        "source": "evaluation/results/v1.0.0-race.json#/mutations"
+      },
+      "receipts": {
+        "value": 1,
+        "denominator": null,
+        "unit": "distinct receipts",
+        "source": "evaluation/results/v1.0.0-race.json#/distinct_receipts"
+      },
+      "replayed": {
+        "value": 31,
+        "denominator": null,
+        "unit": "replay responses",
+        "source": "evaluation/results/v1.0.0-race.json#/replayed"
+      }
+    }
+  },
+  "disclosure": {
+    "packs": {
+      "value": 4,
+      "denominator": null,
+      "unit": "disclosure packs",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_packs"
+    },
+    "hostile_flows": {
+      "value": 106,
+      "denominator": 106,
+      "unit": "hostile data flows contained",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_contained",
+      "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_hostile_total"
+    },
+    "load_bearing_checks": {
+      "value": 14,
+      "denominator": 14,
+      "unit": "checks load-bearing in every pack",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_checks_load_bearing",
+      "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_checks_ablated",
+      "note": "summary takes the minimum load-bearing and maximum ablated over packs"
+    },
+    "configurations": {
+      "value": 24272,
+      "denominator": null,
+      "unit": "read and release configurations explored",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_states_explored"
+    },
+    "violations": {
+      "value": 0,
+      "denominator": null,
+      "unit": "invariant violations",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_violations"
+    },
+    "legitimate_flows": {
+      "value": 15,
+      "denominator": 15,
+      "unit": "legitimate flows completed",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_benign_completed",
+      "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_benign_total"
+    },
+    "stateful_sequences": {
+      "value": 800,
+      "denominator": null,
+      "unit": "stateful operation sequences",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_stateful_sequences"
+    },
+    "stateful_operations": {
+      "value": "32,000",
+      "denominator": null,
+      "unit": "stateful operations (display string)",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_stateful_steps_display",
+      "note": "the committed summary carries this total only as a display string"
+    },
+    "stateful_disagreements": {
+      "value": 0,
+      "denominator": null,
+      "unit": "disagreements with the reference model",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/disclosure_stateful_disagreements"
+    },
+    "per_pack": [
+      {
+        "pack": "corporate-confidential-data",
+        "hostile_contained": {
+          "value": 25,
+          "denominator": 25,
+          "unit": "hostile data flows contained",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/contained_by_arm/this_architecture",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/hostile_scenarios"
+        },
+        "load_bearing_checks": {
+          "value": 14,
+          "denominator": 14,
+          "unit": "checks load-bearing",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/checks_load_bearing",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/checks_ablated"
+        },
+        "legitimate_flows": {
+          "value": 3,
+          "denominator": 3,
+          "unit": "legitimate flows completed",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/summary/benign_total"
+        },
+        "configurations": {
+          "value": 3992,
+          "denominator": null,
+          "unit": "read and release configurations explored",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/verification/summary/states_explored"
+        },
+        "stateful_sequences": {
+          "value": 200,
+          "denominator": null,
+          "unit": "stateful operation sequences",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/stateful/summary/sequences"
+        },
+        "stateful_operations": {
+          "value": 8000,
+          "denominator": null,
+          "unit": "stateful operations",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/0/stateful/summary/steps"
+        }
+      },
+      {
+        "pack": "financial-consumer-data",
+        "hostile_contained": {
+          "value": 27,
+          "denominator": 27,
+          "unit": "hostile data flows contained",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/contained_by_arm/this_architecture",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/hostile_scenarios"
+        },
+        "load_bearing_checks": {
+          "value": 14,
+          "denominator": 14,
+          "unit": "checks load-bearing",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/checks_load_bearing",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/checks_ablated"
+        },
+        "legitimate_flows": {
+          "value": 4,
+          "denominator": 4,
+          "unit": "legitimate flows completed",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/summary/benign_total"
+        },
+        "configurations": {
+          "value": 6688,
+          "denominator": null,
+          "unit": "read and release configurations explored",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/verification/summary/states_explored"
+        },
+        "stateful_sequences": {
+          "value": 200,
+          "denominator": null,
+          "unit": "stateful operation sequences",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/stateful/summary/sequences"
+        },
+        "stateful_operations": {
+          "value": 8000,
+          "denominator": null,
+          "unit": "stateful operations",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/1/stateful/summary/steps"
+        }
+      },
+      {
+        "pack": "government-benefits",
+        "hostile_contained": {
+          "value": 27,
+          "denominator": 27,
+          "unit": "hostile data flows contained",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/contained_by_arm/this_architecture",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/hostile_scenarios"
+        },
+        "load_bearing_checks": {
+          "value": 14,
+          "denominator": 14,
+          "unit": "checks load-bearing",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/checks_load_bearing",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/checks_ablated"
+        },
+        "legitimate_flows": {
+          "value": 4,
+          "denominator": 4,
+          "unit": "legitimate flows completed",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/summary/benign_total"
+        },
+        "configurations": {
+          "value": 7336,
+          "denominator": null,
+          "unit": "read and release configurations explored",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/verification/summary/states_explored"
+        },
+        "stateful_sequences": {
+          "value": 200,
+          "denominator": null,
+          "unit": "stateful operation sequences",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/stateful/summary/sequences"
+        },
+        "stateful_operations": {
+          "value": 8000,
+          "denominator": null,
+          "unit": "stateful operations",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/2/stateful/summary/steps"
+        }
+      },
+      {
+        "pack": "healthcare-record-access",
+        "hostile_contained": {
+          "value": 27,
+          "denominator": 27,
+          "unit": "hostile data flows contained",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/contained_by_arm/this_architecture",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/hostile_scenarios"
+        },
+        "load_bearing_checks": {
+          "value": 14,
+          "denominator": 14,
+          "unit": "checks load-bearing",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/checks_load_bearing",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/checks_ablated"
+        },
+        "legitimate_flows": {
+          "value": 4,
+          "denominator": 4,
+          "unit": "legitimate flows completed",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/summary/benign_total"
+        },
+        "configurations": {
+          "value": 6256,
+          "denominator": null,
+          "unit": "read and release configurations explored",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/verification/summary/states_explored"
+        },
+        "stateful_sequences": {
+          "value": 200,
+          "denominator": null,
+          "unit": "stateful operation sequences",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/stateful/summary/sequences"
+        },
+        "stateful_operations": {
+          "value": 8000,
+          "denominator": null,
+          "unit": "stateful operations",
+          "source": "evaluation/results/v1.0.0-governed-disclosure.json#/profiles/3/stateful/summary/steps"
+        }
+      }
+    ]
+  },
+  "delegation": {
+    "chain_shapes": {
+      "value": 768,
+      "denominator": null,
+      "unit": "enumerated delegation chain shapes",
+      "source": "evaluation/results/v1.0.0-delegation-verification.json#/states_explored"
+    },
+    "violations": {
+      "value": 0,
+      "denominator": null,
+      "unit": "invariant violations",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/delegation_violations"
+    },
+    "invariants_load_bearing": {
+      "value": 9,
+      "denominator": 9,
+      "unit": "delegation invariants load-bearing",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/delegation_invariants_load_bearing",
+      "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/delegation_invariants_ablated"
+    },
+    "risk_classes_by_arm": {
+      "unguarded": {
+        "value": 0,
+        "denominator": 10,
+        "unit": "risk classes contained",
+        "source": "evaluation/results/v1.0.0-delegation.json#/arms/unguarded/contained",
+        "denominator_source": "evaluation/results/v1.0.0-delegation.json#/arms/unguarded/of"
+      },
+      "caller_checked": {
+        "value": 2,
+        "denominator": 10,
+        "unit": "risk classes contained",
+        "source": "evaluation/results/v1.0.0-delegation.json#/arms/caller_checked/contained",
+        "denominator_source": "evaluation/results/v1.0.0-delegation.json#/arms/caller_checked/of"
+      },
+      "this_architecture": {
+        "value": 10,
+        "denominator": 10,
+        "unit": "risk classes contained",
+        "source": "evaluation/results/v1.0.0-delegation.json#/arms/this_architecture/contained",
+        "denominator_source": "evaluation/results/v1.0.0-delegation.json#/arms/this_architecture/of"
+      }
+    },
+    "note": "caller_checked validates each hop against its immediate caller; this_architecture verifies the full chain"
+  },
+  "review_capacity": {
+    "note": "simulation with declared reviewer parameters; not a measurement of reviewers",
+    "roster": {
+      "value": 11,
+      "denominator": null,
+      "unit": "reviewers (declared roster)",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/oversight_reviewer_roster"
+    },
+    "sustainable_per_day": {
+      "value": 2640.0,
+      "denominator": null,
+      "unit": "consequential actions per day",
+      "source": "evaluation/results/v1.0.0-summary.json#/figures/oversight_sustainable_per_day"
+    },
+    "arrivals": {
+      "value": 40,
+      "denominator": null,
+      "unit": "arrivals in the queue trial",
+      "source": "evaluation/results/v1.0.0-oversight.json#/arrivals"
+    },
+    "attentive_capacity": {
+      "value": 8,
+      "denominator": null,
+      "unit": "declared attentive capacity (arrivals)",
+      "source": "evaluation/results/v1.0.0-oversight.json#/reviewer_model/attentive_until"
+    },
+    "queue_arms": [
+      {
+        "arm": "no_load_control",
+        "harmful_executed": {
+          "value": 4,
+          "denominator": 5,
+          "unit": "merit failures executed",
+          "source": "evaluation/results/v1.0.0-oversight.json#/arms/no_load_control/harmful_executed",
+          "denominator_source": "evaluation/results/v1.0.0-oversight.json#/arms/no_load_control/merit_refusals_required"
+        },
+        "benign_executed": {
+          "value": 35,
+          "denominator": null,
+          "unit": "legitimate actions completed",
+          "source": "evaluation/results/v1.0.0-oversight.json#/arms/no_load_control/benign_executed"
+        },
+        "deferred_to_manual": {
+          "value": 0,
+          "denominator": null,
+          "unit": "actions deferred to manual review",
+          "source": "evaluation/results/v1.0.0-oversight.json#/arms/no_load_control/deferred_to_manual_fallback"
+        }
+      },
+      {
+        "arm": "declared_load_control",
+        "harmful_executed": {
+          "value": 0,
+          "denominator": 5,
+          "unit": "merit failures executed",
+          "source": "evaluation/results/v1.0.0-oversight.json#/arms/declared_load_control/harmful_executed",
+          "denominator_source": "evaluation/results/v1.0.0-oversight.json#/arms/declared_load_control/merit_refusals_required"
+        },
+        "benign_executed": {
+          "value": 7,
+          "denominator": null,
+          "unit": "legitimate actions completed",
+          "source": "evaluation/results/v1.0.0-oversight.json#/arms/declared_load_control/benign_executed"
+        },
+        "deferred_to_manual": {
+          "value": 32,
+          "denominator": null,
+          "unit": "actions deferred to manual review",
+          "source": "evaluation/results/v1.0.0-oversight.json#/arms/declared_load_control/deferred_to_manual_fallback"
+        }
+      }
+    ],
+    "sweep": {
+      "cells": {
+        "value": 25,
+        "denominator": null,
+        "unit": "parameter combinations",
+        "source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/cells_total"
+      },
+      "harm_possible": {
+        "value": 20,
+        "denominator": 25,
+        "unit": "cells where harm was possible",
+        "source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/cells_where_harm_was_possible",
+        "denominator_source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/cells_total"
+      },
+      "load_bearing": {
+        "value": 16,
+        "denominator": 20,
+        "unit": "cells where the control was load-bearing",
+        "source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/cells_where_the_control_was_load_bearing",
+        "denominator_source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/cells_where_harm_was_possible"
+      },
+      "harm_reached_zero": {
+        "value": 16,
+        "denominator": 20,
+        "unit": "cells where harm reached zero",
+        "source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/cells_where_harm_reached_zero",
+        "denominator_source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/cells_where_harm_was_possible"
+      },
+      "false_positive_deferrals": {
+        "value": 0,
+        "denominator": null,
+        "unit": "deferrals with no harm to contain",
+        "source": "evaluation/results/v1.0.0-oversight-sweep.json#/summary/deferrals_where_there_was_no_harm_to_contain"
+      }
+    },
+    "assisted_arms": [
+      {
+        "arm": "unaided_full_floor",
+        "harmful_executed": {
+          "value": 0,
+          "denominator": 5,
+          "unit": "merit failures executed",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/unaided_full_floor/harmful_executed",
+          "denominator_source": "evaluation/results/v1.0.0-assisted-review.json#/arms/unaided_full_floor/merit_refusals_required"
+        },
+        "benign_executed": {
+          "value": 7,
+          "denominator": null,
+          "unit": "legitimate actions completed",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/unaided_full_floor/benign_executed"
+        },
+        "deferred_to_manual": {
+          "value": 32,
+          "denominator": null,
+          "unit": "actions deferred to manual review",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/unaided_full_floor/deferred_to_manual_fallback"
+        },
+        "deliberation_floor_seconds": {
+          "value": 45.0,
+          "denominator": null,
+          "unit": "seconds",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/unaided_full_floor/deliberation_floor_seconds"
+        }
+      },
+      {
+        "arm": "assisted_dependent_lowered_floor",
+        "harmful_executed": {
+          "value": 5,
+          "denominator": 5,
+          "unit": "merit failures executed",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_dependent_lowered_floor/harmful_executed",
+          "denominator_source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_dependent_lowered_floor/merit_refusals_required"
+        },
+        "benign_executed": {
+          "value": 35,
+          "denominator": null,
+          "unit": "legitimate actions completed",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_dependent_lowered_floor/benign_executed"
+        },
+        "deferred_to_manual": {
+          "value": 0,
+          "denominator": null,
+          "unit": "actions deferred to manual review",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_dependent_lowered_floor/deferred_to_manual_fallback"
+        },
+        "deliberation_floor_seconds": {
+          "value": 10.0,
+          "denominator": null,
+          "unit": "seconds",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_dependent_lowered_floor/deliberation_floor_seconds"
+        }
+      },
+      {
+        "arm": "assisted_independent_lowered_floor",
+        "harmful_executed": {
+          "value": 1,
+          "denominator": 5,
+          "unit": "merit failures executed",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_independent_lowered_floor/harmful_executed",
+          "denominator_source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_independent_lowered_floor/merit_refusals_required"
+        },
+        "benign_executed": {
+          "value": 35,
+          "denominator": null,
+          "unit": "legitimate actions completed",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_independent_lowered_floor/benign_executed"
+        },
+        "deferred_to_manual": {
+          "value": 0,
+          "denominator": null,
+          "unit": "actions deferred to manual review",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_independent_lowered_floor/deferred_to_manual_fallback"
+        },
+        "deliberation_floor_seconds": {
+          "value": 10.0,
+          "denominator": null,
+          "unit": "seconds",
+          "source": "evaluation/results/v1.0.0-assisted-review.json#/arms/assisted_independent_lowered_floor/deliberation_floor_seconds"
+        }
+      }
+    ],
+    "dependent_configuration_refused": {
+      "value": true,
+      "denominator": null,
+      "unit": "dependent assistant refused at configuration (boolean)",
+      "source": "evaluation/results/v1.0.0-assisted-review.json#/summary/configuration_gate_refused_the_harmful_arm"
+    }
+  },
+  "transfer": {
+    "packs": [
+      {
+        "pack": "student-support",
+        "configurations": {
+          "value": 240,
+          "denominator": null,
+          "unit": "bounded configurations explored",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/0/states_explored"
+        },
+        "violations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "invariant violations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/0/violations"
+        },
+        "scenarios": {
+          "value": 30,
+          "denominator": 30,
+          "unit": "hostile scenarios contained",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/0/scenarios_contained",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/0/scenarios_total"
+        },
+        "benign_tasks": {
+          "value": 6,
+          "denominator": 6,
+          "unit": "benign tasks completed",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/0/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/0/benign_total"
+        },
+        "unauthorized_mutations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "unauthorized mutations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/0/unauthorized_mutations"
+        }
+      },
+      {
+        "pack": "academic-record-correction",
+        "configurations": {
+          "value": 4800,
+          "denominator": null,
+          "unit": "bounded configurations explored",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/1/states_explored"
+        },
+        "violations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "invariant violations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/1/violations"
+        },
+        "scenarios": {
+          "value": 30,
+          "denominator": 30,
+          "unit": "hostile scenarios contained",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/1/scenarios_contained",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/1/scenarios_total"
+        },
+        "benign_tasks": {
+          "value": 9,
+          "denominator": 9,
+          "unit": "benign tasks completed",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/1/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/1/benign_total"
+        },
+        "unauthorized_mutations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "unauthorized mutations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/1/unauthorized_mutations"
+        }
+      },
+      {
+        "pack": "corporate-confidential-data",
+        "configurations": {
+          "value": 8400,
+          "denominator": null,
+          "unit": "bounded configurations explored",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/2/states_explored"
+        },
+        "violations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "invariant violations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/2/violations"
+        },
+        "scenarios": {
+          "value": 30,
+          "denominator": 30,
+          "unit": "hostile scenarios contained",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/2/scenarios_contained",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/2/scenarios_total"
+        },
+        "benign_tasks": {
+          "value": 10,
+          "denominator": 10,
+          "unit": "benign tasks completed",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/2/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/2/benign_total"
+        },
+        "unauthorized_mutations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "unauthorized mutations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/2/unauthorized_mutations"
+        }
+      },
+      {
+        "pack": "healthcare-record-access",
+        "configurations": {
+          "value": 20160,
+          "denominator": null,
+          "unit": "bounded configurations explored",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/3/states_explored"
+        },
+        "violations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "invariant violations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/3/violations"
+        },
+        "scenarios": {
+          "value": 30,
+          "denominator": 30,
+          "unit": "hostile scenarios contained",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/3/scenarios_contained",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/3/scenarios_total"
+        },
+        "benign_tasks": {
+          "value": 12,
+          "denominator": 12,
+          "unit": "benign tasks completed",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/3/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/3/benign_total"
+        },
+        "unauthorized_mutations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "unauthorized mutations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/3/unauthorized_mutations"
+        }
+      },
+      {
+        "pack": "financial-consumer-data",
+        "configurations": {
+          "value": 8400,
+          "denominator": null,
+          "unit": "bounded configurations explored",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/4/states_explored"
+        },
+        "violations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "invariant violations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/4/violations"
+        },
+        "scenarios": {
+          "value": 30,
+          "denominator": 30,
+          "unit": "hostile scenarios contained",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/4/scenarios_contained",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/4/scenarios_total"
+        },
+        "benign_tasks": {
+          "value": 10,
+          "denominator": 10,
+          "unit": "benign tasks completed",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/4/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/4/benign_total"
+        },
+        "unauthorized_mutations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "unauthorized mutations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/4/unauthorized_mutations"
+        }
+      },
+      {
+        "pack": "government-benefits",
+        "configurations": {
+          "value": 13440,
+          "denominator": null,
+          "unit": "bounded configurations explored",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/5/states_explored"
+        },
+        "violations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "invariant violations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/5/violations"
+        },
+        "scenarios": {
+          "value": 30,
+          "denominator": 30,
+          "unit": "hostile scenarios contained",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/5/scenarios_contained",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/5/scenarios_total"
+        },
+        "benign_tasks": {
+          "value": 11,
+          "denominator": 11,
+          "unit": "benign tasks completed",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/5/benign_completed",
+          "denominator_source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/5/benign_total"
+        },
+        "unauthorized_mutations": {
+          "value": 0,
+          "denominator": null,
+          "unit": "unauthorized mutations",
+          "source": "evaluation/results/v1.0.0-domain-pack-matrix.json#/profiles/5/unauthorized_mutations"
+        }
+      }
+    ],
+    "reported_totals": {
+      "note": "totals the result generator itself committed; each pack keeps its own denominators above",
+      "packs": {
+        "value": 6,
+        "denominator": null,
+        "unit": "independently reported domain packs",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/domains_verified"
+      },
+      "configurations": {
+        "value": 55440,
+        "denominator": null,
+        "unit": "bounded configurations explored",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/domain_pack_states_explored"
+      },
+      "scenarios": {
+        "value": 180,
+        "denominator": 180,
+        "unit": "hostile scenarios contained",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/domain_pack_scenarios_contained",
+        "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/domain_pack_scenarios_total"
+      },
+      "benign_tasks": {
+        "value": 58,
+        "denominator": 58,
+        "unit": "benign tasks completed",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/domain_pack_benign_completed",
+        "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/domain_pack_benign_total"
+      },
+      "unauthorized_mutations": {
+        "value": 0,
+        "denominator": null,
+        "unit": "unauthorized mutations",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/domain_pack_unauthorized_mutations"
+      }
+    },
+    "academic_record_correction_conformance": {
+      "value": 26,
+      "denominator": 26,
+      "unit": "conformance checks passed",
+      "source": "evaluation/results/v1.0.0-conformance-second-domain.json#/summary/checks_passed",
+      "denominator_source": "evaluation/results/v1.0.0-conformance-second-domain.json#/summary/checks_total"
+    }
+  },
+  "safety_case": {
+    "threat_classes": {
+      "total": {
+        "value": 36,
+        "denominator": null,
+        "unit": "failure classes",
+        "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/threats"
+      },
+      "contained": {
+        "value": 21,
+        "denominator": 36,
+        "unit": "failure classes contained",
+        "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/contained",
+        "denominator_source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/threats"
+      },
+      "bounded": {
+        "value": 10,
+        "denominator": 36,
+        "unit": "failure classes bounded",
+        "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/bounded",
+        "denominator_source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/threats"
+      },
+      "residual": {
+        "value": 5,
+        "denominator": 36,
+        "unit": "failure classes residual",
+        "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/residual",
+        "denominator_source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/threats"
+      },
+      "alignment": {
+        "value": 12,
+        "denominator": 36,
+        "unit": "alignment failure classes",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/threats_alignment_total",
+        "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/threats_total"
+      },
+      "missing_locators": {
+        "value": 0,
+        "denominator": null,
+        "unit": "evidence locators that do not exist",
+        "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/missing_locators"
+      },
+      "by_family": {
+        "alignment": {
+          "contained": {
+            "value": 6,
+            "denominator": null,
+            "unit": "alignment failure classes contained",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/alignment/contained"
+          },
+          "bounded": {
+            "value": 5,
+            "denominator": null,
+            "unit": "alignment failure classes bounded",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/alignment/bounded"
+          },
+          "residual": {
+            "value": 1,
+            "denominator": null,
+            "unit": "alignment failure classes residual",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/alignment/residual"
+          }
+        },
+        "security": {
+          "contained": {
+            "value": 8,
+            "denominator": null,
+            "unit": "security failure classes contained",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/security/contained"
+          },
+          "bounded": {
+            "value": 3,
+            "denominator": null,
+            "unit": "security failure classes bounded",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/security/bounded"
+          },
+          "residual": {
+            "value": 2,
+            "denominator": null,
+            "unit": "security failure classes residual",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/security/residual"
+          }
+        },
+        "data": {
+          "contained": {
+            "value": 7,
+            "denominator": null,
+            "unit": "data failure classes contained",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/data/contained"
+          },
+          "bounded": {
+            "value": 0,
+            "denominator": null,
+            "unit": "data failure classes bounded",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/data/bounded"
+          },
+          "residual": {
+            "value": 1,
+            "denominator": null,
+            "unit": "data failure classes residual",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/data/residual"
+          }
+        },
+        "systemic": {
+          "contained": {
+            "value": 0,
+            "denominator": null,
+            "unit": "systemic failure classes contained",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/systemic/contained"
+          },
+          "bounded": {
+            "value": 2,
+            "denominator": null,
+            "unit": "systemic failure classes bounded",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/systemic/bounded"
+          },
+          "residual": {
+            "value": 1,
+            "denominator": null,
+            "unit": "systemic failure classes residual",
+            "source": "evaluation/results/v1.0.0-threat-catalogue.json#/summary/by_family/systemic/residual"
+          }
+        }
+      }
+    },
+    "falsifiers": {
+      "count": {
+        "value": 6,
+        "denominator": null,
+        "unit": "falsifiers",
+        "source": "evaluation/results/v1.0.0-mediation-thesis.json#/summary/falsifiers"
+      },
+      "attempts": {
+        "value": 104997,
+        "denominator": null,
+        "unit": "bounded attempts",
+        "source": "evaluation/results/v1.0.0-mediation-thesis.json#/summary/attempts"
+      },
+      "counterexamples": {
+        "value": 0,
+        "denominator": null,
+        "unit": "counterexamples",
+        "source": "evaluation/results/v1.0.0-mediation-thesis.json#/summary/counterexamples"
+      },
+      "per_falsifier": [
+        {
+          "id": "F1",
+          "name": "Unmediated effect",
+          "attempts": {
+            "value": 55620,
+            "denominator": null,
+            "unit": "bounded attempts",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/0/attempts"
+          },
+          "counterexamples": {
+            "value": 0,
+            "denominator": null,
+            "unit": "counterexamples",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/0/counterexamples"
+          }
+        },
+        {
+          "id": "F2",
+          "name": "Unentitled read",
+          "attempts": {
+            "value": 14336,
+            "denominator": null,
+            "unit": "bounded attempts",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/1/attempts"
+          },
+          "counterexamples": {
+            "value": 0,
+            "denominator": null,
+            "unit": "counterexamples",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/1/counterexamples"
+          }
+        },
+        {
+          "id": "F3",
+          "name": "Laundered release",
+          "attempts": {
+            "value": 33936,
+            "denominator": null,
+            "unit": "bounded attempts",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/2/attempts"
+          },
+          "counterexamples": {
+            "value": 0,
+            "denominator": null,
+            "unit": "counterexamples",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/2/counterexamples"
+          }
+        },
+        {
+          "id": "F4",
+          "name": "Amplified delegation",
+          "attempts": {
+            "value": 768,
+            "denominator": null,
+            "unit": "bounded attempts",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/3/attempts"
+          },
+          "counterexamples": {
+            "value": 0,
+            "denominator": null,
+            "unit": "counterexamples",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/3/counterexamples"
+          }
+        },
+        {
+          "id": "F5",
+          "name": "Decorative control",
+          "attempts": {
+            "value": 113,
+            "denominator": null,
+            "unit": "bounded attempts",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/4/attempts"
+          },
+          "counterexamples": {
+            "value": 0,
+            "denominator": null,
+            "unit": "counterexamples",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/4/counterexamples"
+          }
+        },
+        {
+          "id": "F6",
+          "name": "Phantom evidence",
+          "attempts": {
+            "value": 224,
+            "denominator": null,
+            "unit": "bounded attempts",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/5/attempts"
+          },
+          "counterexamples": {
+            "value": 0,
+            "denominator": null,
+            "unit": "counterexamples",
+            "source": "evaluation/results/v1.0.0-mediation-thesis.json#/falsifiers/5/counterexamples"
+          }
+        }
+      ]
+    },
+    "positive_control": {
+      "note": "education-demo adaptive attacker with one mediator removed; proves the attacker and oracle are not a no-op",
+      "control_removed": "execution_mediator",
+      "forbidden_outcomes": {
+        "value": 300,
+        "denominator": 300,
+        "unit": "episodes with a forbidden outcome",
+        "source": "conference/evidence/adaptive-results.json#/positive_control/forbidden_outcomes",
+        "denominator_source": "conference/evidence/adaptive-results.json#/positive_control/episodes"
+      }
+    }
+  },
+  "self_application": {
+    "note": "the register is computed from the contract files at collection time; its legacy-contract rows must agree with the committed summary",
+    "claims_register": {
+      "all": {
+        "machine_verified": {
+          "value": 56,
+          "denominator": null,
+          "unit": "register rows machine_verified",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "all",
+            "class": "machine_verified",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        },
+        "attested": {
+          "value": 3,
+          "denominator": null,
+          "unit": "register rows attested",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "all",
+            "class": "attested",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        },
+        "unverified": {
+          "value": 0,
+          "denominator": null,
+          "unit": "register rows unverified",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "all",
+            "class": "unverified",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        }
+      },
+      "capability": {
+        "machine_verified": {
+          "value": 15,
+          "denominator": null,
+          "unit": "register rows machine_verified",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "capability",
+            "class": "machine_verified",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        },
+        "attested": {
+          "value": 0,
+          "denominator": null,
+          "unit": "register rows attested",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "capability",
+            "class": "attested",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        },
+        "unverified": {
+          "value": 0,
+          "denominator": null,
+          "unit": "register rows unverified",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "capability",
+            "class": "unverified",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        }
+      },
+      "contract": {
+        "machine_verified": {
+          "value": 41,
+          "denominator": null,
+          "unit": "register rows machine_verified",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "contract",
+            "class": "machine_verified",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        },
+        "attested": {
+          "value": 3,
+          "denominator": null,
+          "unit": "register rows attested",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "contract",
+            "class": "attested",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        },
+        "unverified": {
+          "value": 0,
+          "denominator": null,
+          "unit": "register rows unverified",
+          "source": "contract/",
+          "derivation": {
+            "op": "claims_register",
+            "row_source": "contract",
+            "class": "unverified",
+            "call": "fssaira.kernel.claims.build_register(ROOT).counts()"
+          }
+        }
+      }
+    },
+    "legacy_contract_counts": {
+      "machine_verified": {
+        "value": 41,
+        "denominator": 44,
+        "unit": "requirements machine-verified",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/coverage_machine_verified",
+        "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/coverage_requirements"
+      },
+      "attested": {
+        "value": 3,
+        "denominator": 44,
+        "unit": "requirements organizationally attested",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/coverage_organizationally_attested",
+        "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/coverage_requirements"
+      },
+      "unverified": {
+        "value": 0,
+        "denominator": 44,
+        "unit": "requirements unverified",
+        "source": "evaluation/results/v1.0.0-summary.json#/figures/coverage_unverified",
+        "denominator_source": "evaluation/results/v1.0.0-summary.json#/figures/coverage_requirements"
+      }
+    },
+    "legacy_counts_agree": true
+  },
+  "education_demo": {
+    "scope": {
+      "value": "Synthetic education pack in one process. Fixture observations, not field results.",
+      "denominator": null,
+      "unit": "scope statement",
+      "source": "conference/evidence/summary.json#/scope"
+    },
+    "falsifiers": {
+      "value": 25,
+      "denominator": 25,
+      "unit": "falsifiers held",
+      "source": "conference/evidence/summary.json#/figures/falsifiers_held",
+      "denominator_source": "conference/evidence/summary.json#/figures/falsifiers"
+    },
+    "attacks_blocked": {
+      "value": 34,
+      "denominator": 34,
+      "unit": "attack attempts blocked",
+      "source": "conference/evidence/summary.json#/figures/blocked_attacks",
+      "denominator_source": "conference/evidence/summary.json#/figures/attack_attempts"
+    },
+    "attacks_succeeded": {
+      "value": 0,
+      "denominator": 34,
+      "unit": "attack attempts succeeded",
+      "source": "conference/evidence/summary.json#/figures/successful_attacks",
+      "denominator_source": "conference/evidence/summary.json#/figures/attack_attempts"
+    },
+    "ablations": {
+      "value": 25,
+      "denominator": 29,
+      "unit": "ablations that restored harm",
+      "source": "conference/evidence/summary.json#/figures/ablation_load_bearing",
+      "denominator_source": "conference/evidence/summary.json#/figures/ablation_rows"
+    },
+    "ablation_redundant_single_controls": {
+      "value": 4,
+      "denominator": 29,
+      "unit": "single controls independently backed",
+      "source": "conference/evidence/summary.json#/figures/ablation_redundant_single_controls",
+      "denominator_source": "conference/evidence/summary.json#/figures/ablation_rows"
+    },
+    "stateful": {
+      "sequences": {
+        "value": 120,
+        "denominator": null,
+        "unit": "stateful sequences",
+        "source": "conference/evidence/summary.json#/figures/stateful_sequences"
+      },
+      "steps": {
+        "value": 3000,
+        "denominator": null,
+        "unit": "stateful steps",
+        "source": "conference/evidence/summary.json#/figures/stateful_steps"
+      },
+      "violations": {
+        "value": 0,
+        "denominator": null,
+        "unit": "violations",
+        "source": "conference/evidence/summary.json#/figures/stateful_violations"
+      },
+      "false_denials": {
+        "value": 0,
+        "denominator": null,
+        "unit": "false denials",
+        "source": "conference/evidence/summary.json#/figures/stateful_false_denials"
+      },
+      "violations_when_control_removed": {
+        "grant_currency": {
+          "value": 7,
+          "denominator": null,
+          "unit": "violations with grant_currency removed",
+          "source": "conference/evidence/summary.json#/figures/stateful_violations_when_control_removed/grant_currency"
+        },
+        "consent": {
+          "value": 1,
+          "denominator": null,
+          "unit": "violations with consent removed",
+          "source": "conference/evidence/summary.json#/figures/stateful_violations_when_control_removed/consent"
+        },
+        "data_delegation_attenuation": {
+          "value": 41,
+          "denominator": null,
+          "unit": "violations with data_delegation_attenuation removed",
+          "source": "conference/evidence/summary.json#/figures/stateful_violations_when_control_removed/data_delegation_attenuation"
+        },
+        "context_gate": {
+          "value": 154,
+          "denominator": null,
+          "unit": "violations with context_gate removed",
+          "source": "conference/evidence/summary.json#/figures/stateful_violations_when_control_removed/context_gate"
+        }
+      }
+    },
+    "conformance": {
+      "value": 25,
+      "denominator": 25,
+      "unit": "conformance requirements passing",
+      "source": "conference/evidence/summary.json#/figures/conformance_pass",
+      "denominator_source": "conference/evidence/summary.json#/figures/conformance_requirements"
+    },
+    "malicious_pack_findings": {
+      "value": 38,
+      "denominator": null,
+      "unit": "kernel-floor findings on a malicious pack",
+      "source": "conference/evidence/summary.json#/figures/malicious_pack_findings"
+    },
+    "education_pack_findings": {
+      "value": 0,
+      "denominator": null,
+      "unit": "kernel-floor findings on the education pack",
+      "source": "conference/evidence/summary.json#/figures/education_pack_findings"
+    },
+    "delegation_escalations": {
+      "value": 6,
+      "denominator": 6,
+      "unit": "delegation escalations refused",
+      "source": "conference/evidence/summary.json#/figures/delegation_escalations_refused",
+      "denominator_source": "conference/evidence/summary.json#/figures/delegation_escalation_cases"
+    },
+    "model_substitution": {
+      "value": 5,
+      "denominator": 5,
+      "unit": "model-substitution attacks refused",
+      "source": "conference/evidence/summary.json#/figures/model_attestation_attacks_refused",
+      "denominator_source": "conference/evidence/summary.json#/figures/model_attestation_attacks"
+    },
+    "identity_values_seen_by_model": {
+      "value": 0,
+      "denominator": null,
+      "unit": "identity values seen by the model",
+      "source": "conference/evidence/summary.json#/figures/identity_values_seen_by_model"
+    },
+    "erasure": {
+      "value": 0,
+      "denominator": 9,
+      "unit": "locations readable after erasure",
+      "source": "conference/evidence/summary.json#/figures/erasure_readable_locations",
+      "denominator_source": "conference/evidence/summary.json#/figures/erasure_locations_checked"
+    },
+    "concurrency": {
+      "callers": {
+        "value": 128,
+        "denominator": null,
+        "unit": "concurrent callers",
+        "source": "conference/evidence/concurrency-results.json#/in_memory_executor/128",
+        "derivation": {
+          "op": "key_name"
+        },
+        "note": "the source keys each race by its caller count"
+      },
+      "mutations": {
+        "value": 1,
+        "denominator": null,
+        "unit": "mutations",
+        "source": "conference/evidence/concurrency-results.json#/in_memory_executor/128/mutations"
+      }
+    },
+    "overload_approved_without_human": {
+      "value": 0,
+      "denominator": null,
+      "unit": "overload approvals without a human",
+      "source": "conference/evidence/summary.json#/figures/overload_approved_without_human"
+    },
+    "ten_step_traces": {
+      "value": 5,
+      "denominator": null,
+      "unit": "ten-step traces",
+      "source": "conference/evidence/summary.json#/figures/ten_step_traces"
+    },
+    "redteam": {
+      "successes": {
+        "value": 0,
+        "denominator": 300,
+        "unit": "red-team successes",
+        "source": "conference/evidence/summary.json#/figures/redteam_successes",
+        "denominator_source": "conference/evidence/summary.json#/figures/redteam_attempts"
+      },
+      "attempts_per_removed_control": {
+        "value": 150,
+        "denominator": null,
+        "unit": "red-team attempts per removed control",
+        "source": "conference/evidence/redteam-results.json#/successes_when_one_control_removed_150_attempts",
+        "derivation": {
+          "op": "key_name"
+        },
+        "note": "the source declares this denominator only in its key name"
+      },
+      "successes_when_one_control_removed": {
+        "context_gate": {
+          "value": 79,
+          "denominator": 150,
+          "unit": "red-team successes with context_gate removed",
+          "source": "conference/evidence/redteam-results.json#/successes_when_one_control_removed_150_attempts/context_gate",
+          "denominator_source": "conference/evidence/redteam-results.json#/successes_when_one_control_removed_150_attempts",
+          "denominator_derivation": {
+            "op": "key_name"
+          }
+        },
+        "execution_mediator": {
+          "value": 60,
+          "denominator": 150,
+          "unit": "red-team successes with execution_mediator removed",
+          "source": "conference/evidence/redteam-results.json#/successes_when_one_control_removed_150_attempts/execution_mediator",
+          "denominator_source": "conference/evidence/redteam-results.json#/successes_when_one_control_removed_150_attempts",
+          "denominator_derivation": {
+            "op": "key_name"
+          }
+        },
+        "recipient_clearance": {
+          "value": 13,
+          "denominator": 150,
+          "unit": "red-team successes with recipient_clearance removed",
+          "source": "conference/evidence/redteam-results.json#/successes_when_one_control_removed_150_attempts/recipient_clearance",
+          "denominator_source": "conference/evidence/redteam-results.json#/successes_when_one_control_removed_150_attempts",
+          "denominator_derivation": {
+            "op": "key_name"
+          }
+        }
+      }
+    },
+    "claims": {
+      "value": 31,
+      "denominator": 31,
+      "unit": "register claims passing",
+      "source": "conference/evidence/summary.json#/figures/claims_pass",
+      "denominator_source": "conference/evidence/summary.json#/figures/claims"
+    },
+    "adaptive": {
+      "tracks": [
+        {
+          "attacker": "static",
+          "forbidden_outcomes": {
+            "value": 0,
+            "denominator": 300,
+            "unit": "episodes with a forbidden outcome",
+            "source": "conference/evidence/adaptive-results.json#/tracks/0/forbidden_outcomes",
+            "denominator_source": "conference/evidence/adaptive-results.json#/tracks/0/episodes"
+          }
+        },
+        {
+          "attacker": "random",
+          "forbidden_outcomes": {
+            "value": 0,
+            "denominator": 300,
+            "unit": "episodes with a forbidden outcome",
+            "source": "conference/evidence/adaptive-results.json#/tracks/1/forbidden_outcomes",
+            "denominator_source": "conference/evidence/adaptive-results.json#/tracks/1/episodes"
+          }
+        },
+        {
+          "attacker": "bandit",
+          "forbidden_outcomes": {
+            "value": 0,
+            "denominator": 300,
+            "unit": "episodes with a forbidden outcome",
+            "source": "conference/evidence/adaptive-results.json#/tracks/2/forbidden_outcomes",
+            "denominator_source": "conference/evidence/adaptive-results.json#/tracks/2/episodes"
+          }
+        }
+      ],
+      "positive_control": {
+        "value": 300,
+        "denominator": 300,
+        "unit": "episodes with a forbidden outcome, one mediator removed",
+        "source": "conference/evidence/adaptive-results.json#/positive_control/forbidden_outcomes",
+        "denominator_source": "conference/evidence/adaptive-results.json#/positive_control/episodes"
+      }
+    }
+  },
+  "joined_workflow": {
+    "method": "Table 5 cells counted from raw per-episode records (rows[*].runs[*].outcome) in audit/adaptive-results.json and cross-checked against each row's summary fields; legitimate completion read from row summary fields (no raw record exists)",
+    "arms": [
+      "joined",
+      "server-authorization",
+      "deny-all"
+    ],
+    "strategies": [
+      "static",
+      "random",
+      "adaptive-search",
+      "tabular-q"
+    ],
+    "config": {
+      "training_episodes": {
+        "value": 1200,
+        "denominator": null,
+        "unit": "training episodes",
+        "source": "audit/adaptive-results.json#/training_episodes"
+      },
+      "steps_per_episode": {
+        "value": 8,
+        "denominator": null,
+        "unit": "requests per episode (cap)",
+        "source": "audit/adaptive-results.json#/steps_per_episode"
+      },
+      "time_limit_seconds_per_episode": {
+        "value": 5,
+        "denominator": null,
+        "unit": "seconds per episode (cap)",
+        "source": "audit/adaptive-results.json#/time_limit_seconds_per_episode"
+      },
+      "learning": {
+        "value": "tabular Q-learning; epsilon=.25 alpha=.4 gamma=.9; every fifth training episode uses scripted exploration; sparse outcome reward=10",
+        "denominator": null,
+        "unit": "learning parameters (declared string)",
+        "source": "audit/adaptive-results.json#/learning"
+      },
+      "training_environment": {
+        "value": "source-confirmation control removed; evaluation uses frozen learned table",
+        "denominator": null,
+        "unit": "training environment (declared string)",
+        "source": "audit/adaptive-results.json#/training_environment"
+      },
+      "language_model_RL": {
+        "value": "NOT RUN",
+        "denominator": null,
+        "unit": "status",
+        "source": "audit/adaptive-results.json#/language_model_RL"
+      }
+    },
+    "table5": {
+      "unit": "episode; one legitimate workflow per arm and strategy",
+      "cells": [
+        {
+          "arm": "joined",
+          "strategy": "static",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/0/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/0/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/0/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/0/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/0/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/0/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/0/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/0/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/0/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/0/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "joined",
+          "strategy": "random",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/1/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/1/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/1/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/1/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/1/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/1/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/1/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/1/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/1/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/1/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "joined",
+          "strategy": "adaptive-search",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/2/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/2/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/2/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/2/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/2/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/2/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/2/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/2/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/2/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/2/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "joined",
+          "strategy": "tabular-q",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/3/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/3/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/3/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/3/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/3/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/3/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/3/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/3/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/3/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/3/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "server-authorization",
+          "strategy": "static",
+          "unsupported_corrections": {
+            "value": 40,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/4/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/4/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/4/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/4/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/4/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/4/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/4/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/4/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/4/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/4/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "server-authorization",
+          "strategy": "random",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/5/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/5/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/5/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/5/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/5/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/5/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/5/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/5/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/5/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/5/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "server-authorization",
+          "strategy": "adaptive-search",
+          "unsupported_corrections": {
+            "value": 40,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/6/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/6/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/6/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/6/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/6/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/6/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/6/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/6/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/6/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/6/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "server-authorization",
+          "strategy": "tabular-q",
+          "unsupported_corrections": {
+            "value": 40,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/7/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/7/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/7/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/7/episodes"
+          },
+          "legitimate_completed": {
+            "value": 1,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/7/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/7/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/7/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/7/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/7/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/7/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "deny-all",
+          "strategy": "static",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/8/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/8/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/8/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/8/episodes"
+          },
+          "legitimate_completed": {
+            "value": 0,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/8/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/8/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/8/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/8/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/8/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/8/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "deny-all",
+          "strategy": "random",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/9/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/9/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/9/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/9/episodes"
+          },
+          "legitimate_completed": {
+            "value": 0,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/9/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/9/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/9/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/9/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/9/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/9/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "deny-all",
+          "strategy": "adaptive-search",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/10/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/10/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/10/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/10/episodes"
+          },
+          "legitimate_completed": {
+            "value": 0,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/10/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/10/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/10/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/10/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/10/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/10/unauthorized_bytes"
+          }
+        },
+        {
+          "arm": "deny-all",
+          "strategy": "tabular-q",
+          "unsupported_corrections": {
+            "value": 0,
+            "denominator": 40,
+            "unit": "episodes with an unsupported correction",
+            "source": "audit/adaptive-results.json#/rows/11/runs",
+            "derivation": {
+              "op": "count_where_positive",
+              "field": "/outcome/unsupported_correction"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/11/unsupported_corrections",
+            "denominator_source": "audit/adaptive-results.json#/rows/11/runs",
+            "denominator_derivation": {
+              "op": "length"
+            },
+            "denominator_cross_check": "audit/adaptive-results.json#/rows/11/episodes"
+          },
+          "legitimate_completed": {
+            "value": 0,
+            "denominator": 1,
+            "unit": "legitimate workflows completed",
+            "source": "audit/adaptive-results.json#/rows/11/legitimate_completed",
+            "denominator_source": "audit/adaptive-results.json#/rows/11/legitimate_attempted"
+          },
+          "unauthorized_subject_mutations": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized subject mutations",
+            "source": "audit/adaptive-results.json#/rows/11/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_subject_effect"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/11/unauthorized_subject_effects"
+          },
+          "unauthorized_sink_bytes": {
+            "value": 0,
+            "denominator": null,
+            "unit": "unauthorized sink bytes",
+            "source": "audit/adaptive-results.json#/rows/11/runs",
+            "derivation": {
+              "op": "sum_field",
+              "field": "/outcome/unauthorized_bytes"
+            },
+            "cross_check": "audit/adaptive-results.json#/rows/11/unauthorized_bytes"
+          }
+        }
+      ]
+    },
+    "live_local": {
+      "model": {
+        "value": "llama3.2:1b",
+        "denominator": null,
+        "unit": "local model",
+        "source": "audit/live-local.json#/model"
+      },
+      "prompts": {
+        "value": 4,
+        "denominator": null,
+        "unit": "fresh local prompts",
+        "source": "audit/live-local.json#/cases",
+        "derivation": {
+          "op": "length"
+        }
+      },
+      "sink_count": {
+        "value": 0,
+        "denominator": null,
+        "unit": "released outputs",
+        "source": "audit/live-local.json#/cases",
+        "derivation": {
+          "op": "sum_field",
+          "field": "/sink_count"
+        }
+      }
+    }
+  },
+  "sources": {
+    "audit/adaptive-results.json": "b6a08bfd046f130a28f17d0883310a1e9a6bdfa38b3c2dd1c0e0b5dc9692ae66",
+    "audit/live-local.json": "28074fceedc5c103f862952a5cd515791e9b25da9327a0e9e64618a2eec431e4",
+    "conference/evidence/adaptive-results.json": "8586f15cb83792c1792fac7ae51c465f0e4917e5a1df2c23dfc9c5cc0509e0cf",
+    "conference/evidence/concurrency-results.json": "4359aed9643f781b9043b1568056fc5ffb478fa45b052c6819fa3cbbeb8f548c",
+    "conference/evidence/redteam-results.json": "ae7ff6545dc628bb9a1b0263b73461a5ddbac19bb05d662a6d068d8fa2cbe640",
+    "conference/evidence/summary.json": "edb37b69a79f0440bbb7ad64373b9956bdf300591146f85663fdf32173bf5ac7",
+    "contract/1_import_boundary.yaml": "67b25be9fd154eb1305d8d30e72fad757ed8205a1144aba15183260a2aba49ec",
+    "contract/2_event_transport.yaml": "7753ffdfcb09612eeb354929ba1cfcf45cfb68b281ac2f331caef49a7328cc67",
+    "contract/3_reproducible_data.yaml": "fe87fdc289b37a8878563ad1f63830b2a58ce3610f2c9e9e88c642f960c561bb",
+    "contract/4_bounded_intelligence.yaml": "fec1e9d458168d3637a9a2c60c6ad9e9cb5d1c41e2a5486fdcddaf962c0a399a",
+    "contract/5_accountable_action.yaml": "29ec26debd212f81484256097d09d8ac99f329eada450cd01ad4535f84d8e9c9",
+    "contract/6_cross_cutting.yaml": "a4905570167134c5c4a10ee9363c1ccda6c8de49fe68a2cd43eeb4fd19ab1b54",
+    "contract/7_delegated_authority.yaml": "24791b54a7685d05618400fb58ad12a8d21875fa5f947393742ca5217e819baf",
+    "contract/8_assisted_review.yaml": "e4303b981fb317c52e7d4e5dcc68c2837228a68ed4c14085f40d3c63333dd04b",
+    "contract/9_governed_disclosure.yaml": "593735260aecb25ea20ccf046ae2eb6e2f0920a6980230f2a2a230a6a988ba91",
+    "contract/bindings/core.yaml": "6baf040e363bb0a3004a4c5d343901d6dbee2b7313d8de6800fa9500a4af7ccf",
+    "contract/capabilities/action.yaml": "8af0278a0576d17800ded006b8023dcfda5432ebe3695e23c1fd1ce09c269f61",
+    "contract/capabilities/delegation.yaml": "519310e5b62882541c6bba9189c6cda1bca5e2026fa5d07bd88d8ed7086ed214",
+    "contract/capabilities/disclosure.yaml": "d81ae71f450835e865bf1d90ce57357904f3cbc38f8d8398cdc8e92d05b9bc73",
+    "contract/capabilities/evidence.yaml": "c590e37c1fe605ce7e4cfcde2797c25d7aaac4a954a2623d913358c396c3d2f1",
+    "evaluation/results/v1.0.0-architecture-comparison.json": "597ffa3d5ee90aa2d7853711ba9b14c54100c4efa27d8537f5ec40829e714e71",
+    "evaluation/results/v1.0.0-assisted-review.json": "f2f81b88b9a0cd3e711deb9d8973e36ae67061ff330a4927fd7cffbdbec4d34e",
+    "evaluation/results/v1.0.0-conformance-memory.json": "66bc267dede02cbf687841c4c30b66596d56e92f3770ce45b4e3d881014262f6",
+    "evaluation/results/v1.0.0-conformance-second-domain.json": "34fcb0ed34f583ed76ccb2297791f2aadedf40a673bf51371855e51a6570000f",
+    "evaluation/results/v1.0.0-conformance-sql.json": "be3265661f169ecda99aedcc00c0f0511b6dff55a8a2601c99ea91f1a677497f",
+    "evaluation/results/v1.0.0-delegation-verification.json": "b89f76486e678ce1cb7a4ce1c92e862abc09c03195ec469b5b59101295a02fb0",
+    "evaluation/results/v1.0.0-delegation.json": "20aabfe831576ccf5d90e9a0455ab378f8259893d726ec2331ab9b6d18bd66ef",
+    "evaluation/results/v1.0.0-domain-pack-matrix.json": "8a51cd8e685580e042d0dc2127ba9fa3813af1b58d9ba553de46d1123968606d",
+    "evaluation/results/v1.0.0-governed-disclosure.json": "cd5a7177bc4a6b0d57538aeebcbb96617974eff92288de64cfed9316ac98cae2",
+    "evaluation/results/v1.0.0-mediation-thesis.json": "d155da83b1e58ca344e7289c880742576b74a1c952f860dbcbb599458e523b75",
+    "evaluation/results/v1.0.0-oversight-sweep.json": "099c7150ac0119b658242d25d1eda87f5f12b3b61319d7a0f9ef7ee8688325a7",
+    "evaluation/results/v1.0.0-oversight.json": "d87a68a39c862511a7530de0cd65311929c951c15c5dfd7801a4987212d5e813",
+    "evaluation/results/v1.0.0-race.json": "1f8a719f4d4fdcc79081367643532f6b22f85ef7b4f4a5bcedbf8a9af792439b",
+    "evaluation/results/v1.0.0-student-support.json": "7f38872eee32a172e21184c7a9eeb693ecec559572b6cb8584e4b03c13e1f625",
+    "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02",
+    "evaluation/results/v1.0.0-threat-catalogue.json": "136bae328403258763df1672d50a3f070721e4f773964307109c32ab0ab87255",
+    "evaluation/results/v1.0.0-verification.json": "d7f8adf870e8c1783b6e0fcbbc6970daaec49de9347ed0a5695adc43300a4a2d"
+  }
+}
