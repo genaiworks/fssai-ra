@@ -67,7 +67,7 @@ def test_the_demo_states_what_it_does_not_prove(output):
 
 
 def test_the_comparison_act_reports_all_three_arms(output):
-    assert "unguarded" in output and "prompt-guarded" in output and "FSSAI-RA" in output
+    assert "unguarded" in output and "prompt-guarded" in output and "This work" in output
     assert "0/7 contained" in output
     assert "7/7 contained" in output
     assert "The containment cost nothing" in output

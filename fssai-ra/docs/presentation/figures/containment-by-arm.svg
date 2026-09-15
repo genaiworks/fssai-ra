@@ -1,5 +1,5 @@
-<svg viewBox="0 0 760 290" role="img" aria-labelledby="t-49459" class="chart">
-<title id="t-49459">Attacks contained, by architecture. Seven attacks. Identical hostile proposals to all three arms.</title>
+<svg viewBox="0 0 760 290" role="img" aria-labelledby="t-85357" class="chart">
+<title id="t-85357">Attacks contained, by architecture. Seven attacks. Identical hostile proposals to all three arms.</title>
 <text x="0" y="14" class="c-title">Attacks contained, by architecture</text>
 <text x="0" y="29" class="c-sub">Seven attacks. Identical hostile proposals to all three arms.</text>
 <line x1="210" y1="38" x2="210" y2="234" class="c-axis"/>
@@ -11,9 +11,9 @@
 <text x="198" y="142" text-anchor="end" class="c-note">2/7 contained</text>
 <rect x="210" y="112" width="132.8" height="22" rx="4" fill="var(--ink)"><title>B · prompt-guarded: 29%</title></rect>
 <text x="352.82" y="129" class="c-value">29%</text>
-<text x="198" y="197" text-anchor="end" class="c-label">C · FSSAI-RA</text>
+<text x="198" y="197" text-anchor="end" class="c-label">C · This work</text>
 <text x="198" y="212" text-anchor="end" class="c-note">7/7 contained</text>
-<rect x="210" y="182" width="458.0" height="22" rx="4" fill="var(--ink)"><title>C · FSSAI-RA: 100%</title></rect>
+<rect x="210" y="182" width="458.0" height="22" rx="4" fill="var(--ink)"><title>C · This work: 100%</title></rect>
 <text x="678.0" y="199" class="c-value">100%</text>
 <text x="210" y="278" class="c-note">0–100% of attempted attacks contained</text>
 </svg>

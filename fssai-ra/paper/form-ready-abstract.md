@@ -53,7 +53,7 @@ Impact. For institutions, trust becomes something a buyer can demand and an audi
 
 ## Conclusion
 
-Trust by Construction moves AI governance from the model to the system. Its claim is simple and testable: intelligence is untrusted; power and data are mediated. A model may reason, draft, and propose, but it cannot act without granted authority, see data without entitlement, learn identities it does not need, or rewrite the record of what happened.
+Trust by Construction moves AI governance from the model to the system. Its claim is simple and testable: intelligence is untrusted; power and data are mediated. A model may reason, draft, and propose, but it cannot act without granted authority, see data without entitlement, learn identities it does not need, or rewrite the record of what happened. This holds as capability grows: chain-of-thought, self-improvement, new tools and skills, and trained attackers widen what a model can attempt, never what it may authorize.
 
 Five steps follow for any institution adopting AI. Name the mediators and the keys only they hold. Minimize identity exposure and qualify restricted-data model endpoints. Bind every consequential act and sensitive read to a purpose, an owner, and a failure test. Declare review capacity before automation targets. Rerun the evidence whenever a model, vendor, or backend changes.
 
