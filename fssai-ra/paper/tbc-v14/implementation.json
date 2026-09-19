@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "source": "paper/tbc-v14/TBC_v14_Developer_Security_Revision.docx",
-  "source_sha256": "dd5f507c2b35ad23f0d15dfeed694fc30540155f98a3d9cf561119edc1ecc93d",
+  "source_sha256": "eb8e84524a732e57261b048efb85f33c2d0d5232cea96c91e9402b20bb51b13e",
   "derived_from": "paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx",
   "build": "scripts/build_paper_v14.py",
-  "regression_tests": 1400,
-  "executed_contracts": 33,
+  "regression_tests": 1445,
+  "executed_contracts": 37,
   "claims": [
     {
       "paper_anchor": "Versioned JSON ingress rejects ambiguous keys",
@@ -101,12 +101,6 @@
       "tests": [
         "tests/test_integration_contract.py::test_destination_rejects_parser_differential_paths",
         "tests/test_integration_contract.py::test_destination_preserves_safe_unreserved_encoding_and_mixed_dns_denial"
-      ]
-    },
-    {
-      "paper_anchor": "Thirty-three contracts are verified by executing their named tests",
-      "tests": [
-        "tests/test_kernel_contracts.py::test_actual_execution_distinguishes_pass_failure_and_skip"
       ]
     },
     {
@@ -268,6 +262,71 @@
       "tests": [
         "tests/test_developer_security_demo.py::test_developer_demo_executes_transport_and_settlement"
       ]
+    },
+    {
+      "paper_anchor": "Thirty-seven contracts are verified by executing their named tests",
+      "tests": [
+        "tests/test_kernel_contracts.py::test_actual_execution_distinguishes_pass_failure_and_skip"
+      ]
+    },
+    {
+      "paper_anchor": "a choice is a channel",
+      "tests": [
+        "tests/test_covert_channels.py::test_an_uncontrolled_release_path_leaks_the_whole_secret",
+        "tests/test_covert_channels.py::test_bits_per_release_sums_the_dimensions_left_open"
+      ]
+    },
+    {
+      "paper_anchor": "the dimension carries nothing because the model never chose it",
+      "tests": [
+        "tests/test_covert_channels.py::test_a_contract_supplied_destination_removes_that_dimension",
+        "tests/test_covert_channels.py::test_canonicalisation_overrides_what_the_workload_asked_for"
+      ]
+    },
+    {
+      "paper_anchor": "the next release requires a named human rather than failing silently",
+      "tests": [
+        "tests/test_covert_channels.py::test_an_exhausted_budget_escalates_rather_than_silently_denying"
+      ]
+    },
+    {
+      "paper_anchor": "the secret crosses intact at 16.0 bits",
+      "tests": [
+        "tests/test_covert_channels.py::test_an_uncontrolled_release_path_leaks_the_whole_secret"
+      ]
+    },
+    {
+      "paper_anchor": "reduces it to 1.0 bit, which is the residual",
+      "tests": [
+        "tests/test_covert_channels.py::test_canonicalisation_collapses_the_channel_to_the_count",
+        "tests/test_covert_channels.py::test_the_count_channel_is_stated_when_it_is_open_and_zero_when_sealed"
+      ]
+    },
+    {
+      "paper_anchor": "reduces it to 0.0 bits, a single observable trace for every secret",
+      "tests": [
+        "tests/test_covert_channels.py::test_sealing_the_count_closes_the_channel",
+        "tests/test_covert_channels.py::test_cover_releases_are_indistinguishable_from_real_ones"
+      ]
+    },
+    {
+      "paper_anchor": "An ordinary two-release workflow completes under all three",
+      "tests": [
+        "tests/test_covert_channels.py::test_an_ordinary_workflow_completes_under_every_policy"
+      ]
+    },
+    {
+      "paper_anchor": "98.4 per cent of adversarial tasks escalating to a named human",
+      "tests": [
+        "tests/test_covert_channels.py::test_the_cost_of_the_control_is_reported_not_hidden"
+      ]
+    },
+    {
+      "paper_anchor": "assumes a perfect observer and an optimal decoder",
+      "tests": [
+        "tests/test_covert_channels.py::test_the_report_states_what_the_measurement_does_not_cover",
+        "tests/test_covert_channels.py::test_the_measured_leak_never_exceeds_the_declared_capacity"
+      ]
     }
   ],
   "limitations": [
@@ -280,7 +339,9 @@
     "Transport is qualified against a controlled loopback peer; the evidence is marked as such and the promotion gate refuses it as production evidence.",
     "Tool-supply controls enforce identity, definition and naming; the behaviour of a remote server when called is not attested.",
     "Monitor rates measured offline describe scripted monitors and are not detector accuracy; an attacker operating inside its granted envelope evades a metadata-only monitor by construction.",
-    "The institutional utility and fairness study is not run; the instrument refuses conclusions from synthetic fixtures."
+    "The institutional utility and fairness study is not run; the instrument refuses conclusions from synthetic fixtures.",
+    "The residual-channel measurement is an upper bound from distinct observable traces under one encoder; it is not a proof that no encoder conveys more, and it bounds only the mediated release interface.",
+    "Closing the residual channel costs availability: most adversarial tasks escalate to a named human, and the sealed policy pays for cover traffic, maximum padding and a coarse release schedule."
   ],
-  "regression_source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
+  "regression_source_sha256": "d768563618484cf6f3715cacf38e3a440bb454efae6811802aad8051749ac367"
 }

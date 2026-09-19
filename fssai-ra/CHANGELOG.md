@@ -1,5 +1,40 @@
 # Changelog
 
+## Unreleased — the channel that survives exact-byte release
+
+Release escrow fixes the bytes that leave. It does not fix the destination,
+path, timing, size or count an agent chooses for an authorised release, and
+those choices carry information. Eight approved destinations are three bits per
+release; an enrolment status is one bit. No forbidden operation is required.
+
+- Added `fssaira.covert_channels`. Canonicalisation removes the choice wherever
+  the task contract can supply the value, which takes that dimension to zero
+  bits because the model never decided it. What remains is counted in bits,
+  charged against a declared per-task budget, and escalated to a named human
+  when spent rather than refused silently. A sealed policy additionally fixes
+  the release count and pads with cover emissions an observer cannot separate
+  from real ones, which closes the count channel.
+- Added `scripts/measure_covert_channels.py`, `make covert-channels`, and
+  `audit/covert-channels.json`. An adversarial encoder that performs no
+  unauthorised operation attempts a sixteen-bit secret over all 65,536 values;
+  the measurement counts distinct traces an external observer could
+  distinguish. Measured: **16.0 bits with no control, 1.0 canonicalised, 0.0
+  sealed**, with an ordinary two-release workflow completing under every policy
+  and 98.4% of adversarial tasks escalating to a named human. `make all` checks
+  the record reproduces.
+- **Fixed:** a policy leaving artifact sizes unpadded built an invalid
+  accounting entry instead of reporting the dimension unbounded. It now reports
+  unbounded and refuses to enforce a budget it cannot state.
+- **Fixed:** a sealed policy did not stop a workload exceeding its own fixed
+  release count, which would have let the trace length vary and reopened the
+  count channel. The fixed count is now enforced at emission.
+- Four capability contracts bind these claims to executed tests (37 total).
+  1,445 regression cases pass with none skipped; 49 manuscript anchors bound.
+- The v14 manuscript gains two paragraphs and an evidence-table row.
+  `paper/tbc-v14/RELEASE_REVIEW.md` records the word-count delta, states that no
+  page count could be measured here, and lists what the organizers have and have
+  not published about submission.
+
 ## Unreleased — measuring the assumptions the controls rest on
 
 Every control in this repository depended on one premise: that the model runtime

@@ -263,3 +263,35 @@ capabilities:
     failure_test: tests/test_remote_effects.py::test_nonfinal_or_malformed_lookup_never_unblocks_work
     evidence_artifact: audit/architecture/executed-tests.xml
     failure_response: Retain uncertainty and block dependent work
+  authorised_choice_is_a_channel:
+    protected_asset: Information carried by release decisions that release escrow does not fix
+    permitted_operation: Spend only the declared residual bits of choice per task
+    enforcement_point: EgressChannel canonicalisation and per-task bit budget
+    accountable_owner: Release reviewer
+    failure_test: tests/test_covert_channels.py::test_the_control_is_load_bearing_across_the_ladder
+    evidence_artifact: audit/covert-channels.json
+    failure_response: Escalate to a named human rather than silently denying the release
+  measured_channel_within_declared_capacity:
+    protected_asset: The credibility of a declared channel bound
+    permitted_operation: Declare a capacity only if a real adversary cannot exceed it
+    enforcement_point: Trace-counting measurement against an adversarial encoder
+    accountable_owner: Institution security architect
+    failure_test: tests/test_covert_channels.py::test_the_measured_leak_never_exceeds_the_declared_capacity
+    evidence_artifact: audit/covert-channels.json
+    failure_response: Fail the release when a measured leak exceeds the declared capacity
+  sealed_release_count:
+    protected_asset: Information carried by how many releases a task makes
+    permitted_operation: Emit exactly the declared number of releases, padded with cover
+    enforcement_point: Fixed release count with indistinguishable cover emissions
+    accountable_owner: Release reviewer
+    failure_test: tests/test_covert_channels.py::test_a_sealed_policy_refuses_to_exceed_its_fixed_count
+    evidence_artifact: audit/covert-channels.json
+    failure_response: Refuse releases beyond the fixed count so the trace length cannot vary
+  channel_control_preserves_ordinary_work:
+    protected_asset: The usefulness of a workload under channel control
+    permitted_operation: Complete an ordinary two-release workflow under every policy
+    enforcement_point: Benign utility baseline measured beside the adversarial arm
+    accountable_owner: Institution evaluation lead
+    failure_test: tests/test_covert_channels.py::test_an_ordinary_workflow_completes_under_every_policy
+    evidence_artifact: audit/covert-channels.json
+    failure_response: Report the control as unusable if ordinary releases cannot complete

@@ -128,6 +128,23 @@ person, with the acceptance recorded. A call chain that has absorbed an untruste
 source is permanently tainted and cannot reach a privileged tool, so reading a
 web page never confers the authority to act on what it said.
 
+**Exact-byte release does not close the channel; choice does.** Release escrow
+fixes the bytes that leave, so a model cannot put a student record into an
+approved artifact. It does not fix which approved destination receives the
+report, which approved path it lands on, when it is sent, how large it is, or
+how many times. None of those is an unauthorised act, and all of them carry
+information: eight approved destinations are three bits per release, and an
+enrolment status is one bit.
+
+`fssaira.covert_channels` removes the choice wherever the task contract can
+supply the value, then counts what remains in bits and charges it against a
+per-task budget that escalates to a named human when spent. Measured against an
+adversarial encoder that performs no unauthorised operation, over all 65,536
+sixteen-bit secrets: **16.0 bits leak with no control, 1.0 canonicalised, 0.0
+sealed**, while an ordinary two-release workflow completes under every policy.
+The cost is that 98.4% of adversarial tasks escalate, which the record reports
+rather than omits. `make covert-channels` reproduces it.
+
 **A monitor is measured, and shown not to be load-bearing.**
 `fssaira.monitor_eval` runs labelled held-out trajectories against a denial
 oracle, a blind monitor and a hostile monitor that clears every attack and

@@ -327,3 +327,57 @@ refuses conclusions on synthetic fixtures, below the preregistered sample, or
 under a changed analysis plan. Nothing here measures student outcomes or
 equitable decisions, and the instrument is written so that it cannot be made to
 appear to.
+
+## 12. The channel that survives exact-byte release
+
+Release escrow answers the exfiltration question that is easy to state: the
+bytes that leave are the bytes a reviewer approved, so a model cannot put a
+student record into an approved artifact. Everything above rests on that, and it
+holds.
+
+It is not the whole question, and the 2026 implicit-injection results are what
+make the remainder concrete. An agent with entirely legitimate, repeated release
+authority still decides which approved destination receives a report, which
+approved path it lands on, when it is sent, how large it is, and whether it is
+sent at all. None of those is an unauthorised act. Each is a choice the system
+handed the model, and a choice is a channel. Eight approved destinations are
+three bits per release. An enrolment status is one bit. An agent that has read a
+poisoned document and been told to signal a student's status needs no forbidden
+operation at all.
+
+`fssaira.covert_channels` treats this as an engineering quantity in two steps,
+and the order is the argument. First, remove the choice wherever the task
+contract can supply the value: a destination the contract fixes is not a decision
+the model makes, so it carries nothing, and the same applies to a path template,
+a fixed emission schedule and padded artifact sizes. A channel that does not
+exist cannot be monitored wrong. Second, count what genuinely remains in bits,
+charge it against a declared per-task budget, and when the budget is spent
+require a named human rather than failing silently.
+
+The bound is then measured rather than asserted. An adversarial encoder that
+performs no unauthorised operation attempts to move a sixteen-bit secret through
+these choices, once for each of the 65,536 possible secrets, and the measurement
+counts how many distinct traces an external observer could distinguish:
+
+| Policy | Leaked | Adversarial tasks escalated | Benign workflow |
+| --- | --- | --- | --- |
+| No control | 16.0 bits | 0% | 2/2 released |
+| Canonicalised | 1.0 bit | 98.4% | 2/2 released |
+| Sealed | 0.0 bits | 98.4% | 2/2 released |
+
+The residual bit under canonicalisation is the count channel: the workload still
+chooses how many times to release. Fixing the count and padding with cover
+emissions an observer cannot separate from real ones closes it, at the price of
+cover traffic, maximum padding and a coarse schedule.
+
+Three limits belong with these numbers. The figure is an upper bound that assumes
+a perfect observer and an optimal decoder, so it is conservative in the right
+direction but it is not a proof that no other encoder conveys more. It bounds the
+mediated release interface and says nothing about a channel outside it --
+section 6 is where that assumption is measured. And the 98.4% escalation rate is
+a real availability cost paid by real reviewers, reported here rather than
+omitted because a control that stops an adversary by stopping everything has not
+been shown to work. The benign column is in the table for that reason.
+
+`make covert-channels` regenerates the measurement and `make all` checks it
+against the committed record.

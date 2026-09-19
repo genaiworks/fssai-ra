@@ -69,6 +69,14 @@ from .conformance import Bundle, ConformanceReport, run_conformance
 from .contract import ControlContract, Requirement
 from .control_plane import ControlPlane, MemoryObjectStore
 from .coverage import CoverageReport, measure_coverage
+from .covert_channels import (
+    EgressBudgetExhausted,
+    EgressChannel,
+    EgressPolicy,
+    canonical_policy,
+    run_channel_experiment,
+    sealed_policy,
+)
 from .delegation import (
     AuthorityScope,
     Delegation,
@@ -199,6 +207,9 @@ __all__ = [
     "Event", "EventLog", "KafkaLike", "Snapshot", "SnapshotStore", "Transformer",
     # evidence
     "EvidenceError", "EvidenceLedger", "EvidenceRecord",
+    # authorised choice is a channel: canonicalise, charge, measure
+    "EgressBudgetExhausted", "EgressChannel", "EgressPolicy", "canonical_policy",
+    "run_channel_experiment", "sealed_policy",
     # deployment qualification: measured, never assumed
     "HostProbe", "IsolationGate", "IsolationNotQualified", "IsolationReport", "probe_host",
     "FederatedGrant", "FederationDenied", "FederationPeer", "PromotionEvidence",

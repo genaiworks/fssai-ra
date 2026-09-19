@@ -231,3 +231,45 @@ supplied by the local release command; the resulting missing-conformance message
 is a missing deployment declaration, not a failure of the 1,400 local tests.
 No live model, production provider, institutional study or conference submission
 was performed during this revision.
+
+## Third review: the channel that survives exact-byte release
+
+The previous two reviews closed gaps that had been named. This one names a gap
+that had not been.
+
+Every earlier review treated release escrow as settling exfiltration, because
+the bytes that leave are the bytes a reviewer approved. That is true and it is
+not sufficient. A workload with legitimate, repeated release authority selects
+the destination, the path, the timing, the size and the number of its releases.
+Each selection is authorised. Each carries information. With eight approved
+destinations and four approved paths, an agent that has read a poisoned document
+moves an enrolment status without performing a single forbidden operation.
+
+The repair has two parts, in order. Canonicalisation removes the choice wherever
+the task contract can supply the value, which takes that dimension to zero bits
+because the model never made a decision. What remains is counted, charged
+against a declared per-task budget, and escalated to a named human when spent
+rather than refused silently.
+
+The bound is measured, not asserted. An adversarial encoder performing no
+unauthorised operation attempts a sixteen-bit secret across all 65,536 values,
+and the measurement counts distinct traces an external observer could
+distinguish: 16.0 bits with no control, 1.0 canonicalised, 0.0 sealed. An
+ordinary two-release workflow completes under all three policies. 98.4% of
+adversarial tasks escalate to a named human, which is a genuine availability
+cost and is reported for that reason.
+
+Two defects were found and fixed while building this. A policy that left
+artifact sizes unpadded constructed an invalid accounting entry rather than
+reporting the dimension as unbounded; it now reports unbounded and refuses to
+enforce a budget it cannot state. A sealed policy did not stop a workload from
+exceeding its fixed release count, which would have let the trace length vary
+again and reopened the count channel; the fixed count is now enforced at
+emission.
+
+The measurement is an upper bound assuming a perfect observer and an optimal
+decoder, it covers one encoder, and it bounds the mediated release interface
+only. `make covert-channels` regenerates it and `make all` checks it.
+
+Current state: 1,445 regression cases pass with none skipped, 37 capability
+contracts execute, and 49 manuscript anchors are bound to test locators.

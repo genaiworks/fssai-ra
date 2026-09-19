@@ -191,6 +191,7 @@ all:  ## Offline engineering release check after development dependencies are in
 	$(PYTHON) scripts/verify_architecture.py
 	$(PYTHON) scripts/check_paper_revision.py
 	$(PYTHON) scripts/generate_results.py --check
+	$(PYTHON) scripts/measure_covert_channels.py --check
 	$(PYTHON) scripts/qualify_deployment.py --operator release-check
 
 .PHONY: security-review
@@ -209,8 +210,12 @@ deployment-gaps:  ## The six previously open gaps, each exercised against real b
 	$(PYTHON) -m pytest tests/test_isolation.py tests/test_qualified_transport.py \
 	  tests/test_monitor_evaluation.py tests/test_remote_effects.py \
 	  tests/test_federation.py tests/test_institutional_evaluation.py \
-	  tests/test_tool_supply_chain.py
+	  tests/test_tool_supply_chain.py tests/test_covert_channels.py
 
 .PHONY: developer-demo
 developer-demo:  ## Offline v14 artifact integrity and remote recovery example
 	$(PYTHON) scripts/developer_security_demo.py
+
+.PHONY: covert-channels
+covert-channels:  ## What an authorised release path leaks, and what closes it
+	$(PYTHON) scripts/measure_covert_channels.py

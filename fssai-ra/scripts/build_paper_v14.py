@@ -26,9 +26,9 @@ def build(source=SOURCE, target=TARGET):
         set_text(find(body, prefix)[1], value)
     for node in body.iter(W + 'p'):
         value = text_of(node)
-        changed = value.replace('1,375 tests passed', '1,400 tests passed')
-        changed = changed.replace('31 source-bound capability contracts', '33 source-bound capability contracts')
-        changed = changed.replace('Thirty-one contracts are verified', 'Thirty-three contracts are verified')
+        changed = value.replace('1,375 tests passed', '1,445 tests passed')
+        changed = changed.replace('31 source-bound capability contracts', '37 source-bound capability contracts')
+        changed = changed.replace('Thirty-one contracts are verified', 'Thirty-seven contracts are verified')
         changed = changed.replace('The code path is qualified; the network is not.',
                                   'Controlled tests exercise this code path; the deployment network remains unqualified.')
         if changed != value:
@@ -37,6 +37,20 @@ def build(source=SOURCE, target=TARGET):
     body.insert(list(body).index(transport) + 1, clone(transport, review['developer_transport']))
     _, settlement = find(body, 'Three further boundaries')
     body.insert(list(body).index(settlement) + 1, clone(settlement, review['developer_recovery']))
+    # The residual-choice channel belongs with delivery, which is what it leaks around.
+    _, quality = find(body, 'The monitor can now be measured')
+    position = list(body).index(quality) + 1
+    for offset, key in enumerate(('residual_channel', 'residual_channel_measurement')):
+        body.insert(position + offset, clone(quality, review[key]))
+    table = next(node for node in body if node.tag == W + 'tbl')
+    row = copy.deepcopy(table.findall(W + 'tr')[-1])
+    for cell, value in zip(row.findall(W + 'tc'), (
+            'Residual choice channel',
+            '16.0 bits leaked with no control, 1.0 canonicalised, 0.0 sealed, over 65,536 trials per arm',
+            'Upper bound from distinct observable traces under one encoder; the mediated release path '
+            'only, at a cost of 98.4% of adversarial tasks escalating to a named human'), strict=True):
+        set_text(cell.find(W + 'p'), value)
+    table.append(row)
     _, artifact = find(body, 'Code, machine-readable authority profiles')
     set_text(artifact, text_of(artifact) + ' The current v14 developer path is DEVELOPER_GUIDE.md; '
              'make developer-demo runs the offline artifact-integrity and settlement example, and make all '

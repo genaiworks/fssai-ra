@@ -113,3 +113,29 @@ provider settlement and operation binding. The active build/check paths now use
 `paper/tbc-v14/`. The developer example demonstrates useful completion and
 failure handling without a model key or real records. Recorded current evidence
 is bound through its implementation manifest; earlier counts remain historical.
+
+## v14 addition: residual choice as a measured channel
+
+Exact-byte release escrow was treated in every earlier revision as settling
+exfiltration. It settles content and nothing else. The destination, path,
+timing, size and count of an authorised release are choices the system hands the
+model, and they carry information that no content check sees.
+
+`fssaira.covert_channels` canonicalises the dimensions a task contract can
+supply, charges the residual against a per-task bit budget, and escalates to a
+named human when it is spent. `audit/covert-channels.json` records the measured
+ablation over 65,536 sixteen-bit secrets against an adversarial encoder that
+performs no unauthorised operation: 16.0 bits conveyed with no control, 1.0
+canonicalised, 0.0 sealed, with an ordinary two-release workflow completing under
+every policy and 98.4% of adversarial tasks escalating.
+
+Four capability contracts bind these claims to executed tests. Two defects found
+during construction were fixed: an unpadded size dimension built an invalid
+accounting entry instead of reporting itself unbounded, and a sealed policy did
+not enforce its own fixed release count, which would have reopened the count
+channel.
+
+The current run passes 1,445 regression cases with none skipped, executes 37
+source-bound capability contracts, and checks 49 manuscript anchors. The measured
+figure is an upper bound assuming a perfect observer and an optimal decoder,
+covers one encoder, and bounds the mediated release path only.
