@@ -1,8 +1,12 @@
-from pathlib import Path
 
 import pytest
 
-from fssaira.kernel.contracts import CapabilityContract, execute_contracts, load_contracts, resolve_test
+from fssaira.kernel.contracts import (
+    CapabilityContract,
+    execute_contracts,
+    load_contracts,
+    resolve_test,
+)
 from fssaira.kernel.state import EffectState, transition
 
 
