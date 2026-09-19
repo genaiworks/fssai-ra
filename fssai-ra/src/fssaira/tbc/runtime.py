@@ -75,11 +75,14 @@ class TrustRuntime:
         self.authorities = {}
         for token, (name, role) in authorities.items():
             identifier(name)
-            require(role in {"operator", "reviewer", "source", "recipient"}, "UNKNOWN_ROLE")
+            require(role in {"operator", "reviewer", "source", "recipient", "monitor"}, "UNKNOWN_ROLE")
             self.authorities[_token_hash(token)] = (name, role)
         self.world = Workflow(path, pack=pack, mediator="tbc")
         self.db = self.world.db
         self.db.executescript('''
+        CREATE TABLE IF NOT EXISTS tbc_supervision(id INTEGER PRIMARY KEY CHECK(id=1), stopped INTEGER);
+        INSERT OR IGNORE INTO tbc_supervision VALUES(1,0);
+        CREATE TABLE IF NOT EXISTS tbc_delivery(id TEXT PRIMARY KEY, binding TEXT, position INTEGER, mode TEXT);
         CREATE TABLE IF NOT EXISTS tbc_invalid_sources(binding TEXT PRIMARY KEY, reason TEXT, operator TEXT);
         CREATE TABLE IF NOT EXISTS tbc_usage(id INTEGER PRIMARY KEY CHECK(id=1), remaining TEXT);
         CREATE TABLE IF NOT EXISTS tbc_config(id INTEGER PRIMARY KEY CHECK(id=1), body TEXT);
@@ -147,7 +150,12 @@ class TrustRuntime:
         require(hmac.compare_digest(mac, row["mac"]), "INTEGRITY_FAILURE")
         return json.loads(row["body"])
 
+    def _running(self):
+        require(self.db.execute("SELECT stopped FROM tbc_supervision WHERE id=1").fetchone()[0] == 0,
+                "WORKLOAD_STOPPED")
+
     def _task(self, task_id):
+        self._running()
         row = self.db.execute("SELECT * FROM tbc_tasks WHERE id=?", (task_id,)).fetchone()
         require(row is not None, "UNKNOWN_TASK")
         task = dict(row)
@@ -206,6 +214,7 @@ class TrustRuntime:
         root_scope = contract.scope.intersect(identity_scope)
         require(model in root_scope.models and zone in root_scope.zones, "MODEL_OR_ZONE_DENIED")
         with self.transaction():
+            self._running()
             require(self._now() < contract.expires, "TASK_EXPIRED")
             self.db.execute("INSERT INTO tbc_tasks VALUES(?,?,?,'NORMAL',1,?)",
                             (contract.task, canonical(contract.to_dict()), canonical(contract.budget.to_dict()),
@@ -479,7 +488,12 @@ class TrustRuntime:
             self._charge(task, traffic_bytes=len(a["text"].encode()))
             sid = secrets.token_hex(16)
             self.db.execute("INSERT INTO tbc_sinks VALUES(?,?,?)", (sid, q["destination"], a["text"].encode()))
-            # Model gets a receipt; sink contents require separate recipient authentication.
+            binding = self._put("delivery", {"artifact": q["artifact"], "agent": agent["id"],
+                        "task": task["id"], "epoch": task["epoch"], "destination": q["destination"],
+                        "expires": min(escrow["expires"], self._get(q["capability"], "capability")["expires"]),
+                        "digest": a["digest"]})
+            self.db.execute("INSERT INTO tbc_delivery VALUES(?,?,0,'pending')", (sid, binding))
+            # Model gets a receipt; recipient delivery revalidates current authority.
             return {"receipt": sid, "digest": a["digest"]}
         raise AuthorityDenied("UNIMPLEMENTED_PRIMITIVE")
 
@@ -522,11 +536,120 @@ class TrustRuntime:
                                                        "declassify": declassify, "digest": a["digest"]})
             return escrow
 
+    def _delivery(self, name, receipt):
+        row = self.db.execute("SELECT * FROM tbc_delivery WHERE id=?", (receipt,)).fetchone()
+        require(row is not None, "DELIVERY_BINDING_REQUIRED")
+        binding = self._get(row["binding"], "delivery")
+        require(binding["destination"] == name and self._now() < binding["expires"], "DELIVERY_DENIED")
+        agent, task, scope = self._agent(binding["agent"])
+        require(binding["task"] == task["id"] and binding["epoch"] == task["epoch"]
+                and name in scope.destinations and "release_artifact" in scope.operations, "DELIVERY_REVOKED")
+        artifact = self._artifact(binding["artifact"], agent, task, scope)
+        sink = self.db.execute("SELECT destination,bytes FROM tbc_sinks WHERE id=?", (receipt,)).fetchone()
+        require(sink is not None and sink["destination"] == name, "DELIVERY_DENIED")
+        data = bytes(sink["bytes"])
+        require(hashlib.sha256(data).hexdigest() == binding["digest"] == artifact["digest"], "DELIVERY_INTEGRITY")
+        return row, data
+
     def collect_release(self, token, receipt):
+        """One-shot delivery; queued bytes are reauthorized before leaving the service."""
         name = self._admin(token, "recipient")
-        row = self.db.execute("SELECT destination,bytes FROM tbc_sinks WHERE id=?", (receipt,)).fetchone()
-        require(row is not None and row["destination"] == name, "RECIPIENT_REQUIRED")
-        return bytes(row["bytes"])
+        with self.transaction():
+            row, data = self._delivery(name, receipt)
+            require(row["mode"] == "pending", "DELIVERY_ALREADY_STARTED")
+            self.db.execute("UPDATE tbc_delivery SET position=?,mode='done' WHERE id=?", (len(data), receipt))
+            self.world.event("tbc_delivery", {"receipt": receipt, "bytes": len(data), "recipient": name})
+            return data
+
+    def collect_chunk(self, token, receipt, *, max_bytes=1024):
+        """Pull exact approved bytes, rechecking revocation at each chunk boundary.
+
+        This is staged artifact delivery, not live token generation or a network
+        transport. A committed chunk cannot be recalled. Lost responses require
+        application reconciliation: this method never silently retries bytes.
+        """
+        name = self._admin(token, "recipient")
+        integer(max_bytes, 1)
+        require(max_bytes <= 4096, "CHUNK_TOO_LARGE")
+        with self.transaction():
+            row, data = self._delivery(name, receipt)
+            require(row["mode"] in {"pending", "stream"}, "DELIVERY_COMPLETE")
+            start = row["position"]
+            chunk = data[start:start + max_bytes]
+            end = start + len(chunk)
+            done = end == len(data)
+            self.db.execute("UPDATE tbc_delivery SET position=?,mode=? WHERE id=?",
+                            (end, "done" if done else "stream", receipt))
+            self.world.event("tbc_delivery_chunk", {"receipt": receipt, "offset": start,
+                                                   "bytes": len(chunk), "recipient": name})
+            return {"bytes": chunk, "offset": start, "done": done}
+
+    def emergency_stop(self, token, *, reason):
+        """Durably disable local workload authority even when evidence storage fails.
+
+        This does not kill OS processes. The control service and database must be
+        outside the model's write authority. Recovery never revives old identities.
+        """
+        name = self._admin(token, "operator")
+        require(isinstance(reason, str) and 0 < len(reason.strip()) <= 512, "REASON_REQUIRED")
+        with self.transaction():
+            self.db.execute("UPDATE tbc_supervision SET stopped=1 WHERE id=1")
+            self.db.execute("UPDATE tbc_agents SET revoked=1")
+            self.db.execute("UPDATE tbc_tasks SET state='QUARANTINED',epoch=epoch+1")
+        try:
+            with self.transaction():
+                self.world.event("tbc_emergency_stop", {"operator": name, "reason_digest": digest(reason)})
+        except (OSError, ValueError, sqlite3.Error):
+            return {"stopped": True, "evidence_recorded": False}
+        return {"stopped": True, "evidence_recorded": True}
+
+    def resume_workload(self, token):
+        name = self._admin(token, "operator")
+        with self.transaction():
+            require(self.db.execute("SELECT stopped FROM tbc_supervision WHERE id=1").fetchone()[0] == 1,
+                    "NOT_STOPPED")
+            self.world.event("tbc_workload_resumed", {"operator": name, "old_identities_revoked": True})
+            self.db.execute("UPDATE tbc_supervision SET stopped=0 WHERE id=1")
+
+    def monitor_snapshot(self, token, task_id):
+        """Minimal metadata for a separately deployed AI monitor; no protected text."""
+        name = self._admin(token, "monitor")
+        with self.transaction():
+            task = self._task(task_id)
+            self.world.event("tbc_monitor_snapshot", {"task": task_id, "monitor": name})
+            head = self.db.execute("SELECT head FROM evidence ORDER BY seq DESC LIMIT 1").fetchone()[0]
+            body = {"task": task_id, "epoch": task["epoch"], "state": task["state"], "head": head,
+                    "monitor": name, "expires": min(self._now() + self.passport.lease_seconds,
+                                                     task["contract"].expires)}
+            snapshot = self._put("monitor_snapshot", body)
+            return {"snapshot": snapshot, **body}
+
+    def apply_monitor_finding(self, token, raw):
+        """AI advice can reduce authority, never grant it. Clear is only an observation."""
+        name = self._admin(token, "monitor")
+        q = parse_sdk_request(raw)
+        require(set(q) == {"snapshot", "verdict", "reason"}, "INVALID_MONITOR_SCHEMA")
+        require(q["verdict"] in {"clear", "uncertain", "suspicious"}
+                and q["reason"] in {"behavioral_anomaly", "possible_injection", "insufficient_evidence"},
+                "INVALID_MONITOR_FINDING")
+        with self.transaction():
+            snapshot = self._get(q["snapshot"], "monitor_snapshot")
+            task = self._task(snapshot["task"])
+            head = self.db.execute("SELECT head FROM evidence ORDER BY seq DESC LIMIT 1").fetchone()[0]
+            require(snapshot["monitor"] == name and snapshot["epoch"] == task["epoch"]
+                    and snapshot["head"] == head and self._now() < snapshot["expires"], "STALE_MONITOR_EVIDENCE")
+            require(self.db.execute("SELECT 1 FROM tbc_used WHERE id=?", (q["snapshot"],)).fetchone() is None,
+                    "MONITOR_REPLAY")
+            self.db.execute("INSERT INTO tbc_used VALUES(?)", (q["snapshot"],))
+            state = task["state"]
+            if q["verdict"] != "clear":
+                target = "QUARANTINED" if q["verdict"] == "suspicious" else "READ_ONLY"
+                if MODES[target] <= MODES[state]:
+                    state = target
+                self.db.execute("UPDATE tbc_tasks SET state=?,epoch=epoch+1 WHERE id=?", (state, task["id"]))
+            self.world.event("tbc_monitor_finding", {"task": task["id"], "monitor": name,
+                            "verdict": q["verdict"], "reason": q["reason"], "state": state})
+            return {"state": state, "authority_granted": False}
 
     def restore(self, token, task_id):
         """Named human authority restores within the original hard ceiling; old leases stay invalid."""
