@@ -165,7 +165,7 @@ joined-demo:  ## Durable joined workflow, synthetic data, no model API
 joined-test:  ## Execute joined-path adversarial regressions
 	$(PYTHON) -m pytest tests/test_joined_workflow.py tests/test_joined_legacy_regressions.py
 
-adaptive:  ## Offline search and trained tabular-Q evaluation (not LLM RL)
+adaptive-search:  ## Offline search and trained tabular-Q evaluation (not LLM RL)
 	PYTHONPATH=src $(PYTHON) scripts/adaptive_attacks.py
 
 .PHONY: tbc-test tbc-demo tbc-check
@@ -191,7 +191,22 @@ all:  ## Offline engineering release check after development dependencies are in
 	$(PYTHON) scripts/verify_architecture.py
 	$(PYTHON) scripts/check_paper_revision.py
 	$(PYTHON) scripts/generate_results.py --check
+	$(PYTHON) scripts/qualify_deployment.py --operator release-check
 
 .PHONY: security-review
-security-review:  ## Reproduce current monitor and outbound-destination regressions
-	$(PYTHON) -m pytest tests/test_frontier_controls.py tests/test_integration_contract.py
+security-review:  ## Reproduce current monitor, destination and blocked-attempt regressions
+	$(PYTHON) -m pytest tests/test_frontier_controls.py tests/test_integration_contract.py \
+	  tests/test_qualified_transport.py tests/test_tool_supply_chain.py
+
+.PHONY: qualify deployment-gaps
+qualify:  ## Measure this host and decide from evidence what it is allowed to be
+	$(PYTHON) scripts/qualify_deployment.py --operator "$${OPERATOR:-local-operator}" \
+	  $${CONTROL_STORE:+--control-store $$CONTROL_STORE} \
+	  $${AGENT_UID:+--agent-uid $$AGENT_UID} \
+	  $${EGRESS_CANARY:+--egress-canary $$EGRESS_CANARY}
+
+deployment-gaps:  ## The six previously open gaps, each exercised against real behaviour
+	$(PYTHON) -m pytest tests/test_isolation.py tests/test_qualified_transport.py \
+	  tests/test_monitor_evaluation.py tests/test_remote_effects.py \
+	  tests/test_federation.py tests/test_institutional_evaluation.py \
+	  tests/test_tool_supply_chain.py

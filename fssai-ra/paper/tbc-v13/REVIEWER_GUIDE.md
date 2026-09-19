@@ -22,10 +22,35 @@ For a focused review, run from `fssai-ra/`:
 .venv/bin/python scripts/generate_results.py --check
 ```
 
+To review the deployment gaps this revision addresses, and to see the repository
+refuse to promote itself:
+
+```sh
+make deployment-gaps PYTHON=.venv/bin/python
+make qualify PYTHON=.venv/bin/python
+```
+
+`make qualify` prints `reference`, names each blocking reason, and writes
+`audit/qualification/`. That is the expected and correct output on any machine a
+reviewer is likely to use. A run that printed `production` on a laptop would be
+the bug.
+
 Inspect the effect register, returned byte sequences, delivery cursor, revoked
 identities and evidence chain in the tests. A model's claim of success is not the
-outcome oracle. The 35 frontier-control cases are deterministic local scenarios;
-they are part of the full regression suite and must not be added to its count.
+outcome oracle. The 38 frontier-control cases are deterministic local scenarios;
+they are part of the full regression suite and must not be added to its count. The
+same applies to the 228 cases added by this revision across isolation, transport,
+monitor evaluation, remote effects, federation, tool supply and institutional
+evaluation: they are included in the 1,375 total, not additional to it, and they are
+regression cases rather than attack episodes.
+
+Two claims are worth checking adversarially, because they are the ones that would
+matter if false. First, that no monitor changes a protected outcome: see
+`tests/test_monitor_evaluation.py::test_no_monitor_changes_a_protected_outcome`,
+which reads the world of record directly rather than trusting any status the runtime
+reported. Second, that the transport properties are exercised rather than asserted:
+every test in `tests/test_qualified_transport.py` completes a real TLS handshake
+against a controlled peer, and none of them mocks a socket.
 
 ## Research and scope
 

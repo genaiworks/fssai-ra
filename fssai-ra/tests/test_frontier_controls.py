@@ -223,3 +223,50 @@ def test_global_source_invalidation_stales_monitor_evidence(rig):
     r.invalidate_source('operator-key', source, reason='poisoned source')
     with pytest.raises(AuthorityDenied, match='STALE_MONITOR_EVIDENCE'):
         r.apply_monitor_finding('monitor-key', request)
+
+
+def test_attempts_after_a_stop_are_recorded_rather_than_silently_refused(rig):
+    """A stopped workload that keeps trying is the signal an operator needs.
+
+    Refusals raised before the request savepoint -- a revoked agent, a stopped
+    workload, an assurance failure -- previously returned DENIED and wrote
+    nothing at all, so persistence after a stop left no trace in the chain.
+    """
+    r, c, root, _, _ = rig
+    assert r.emergency_stop('operator-key', reason='shutdown request')['stopped']
+    before = r.db.execute('SELECT count(*) FROM evidence').fetchone()[0]
+    for _ in range(3):
+        assert not r.dispatch(root['token'], '{"op":"request_capability"}')['ok']
+    rows = r.db.execute("""SELECT body FROM evidence
+        WHERE json_extract(body, '$.kind')='tbc_blocked_attempt' ORDER BY seq""").fetchall()
+    assert len(rows) == 3
+    recorded = json.loads(rows[0][0])['data']
+    assert recorded['task'] == 'correction-1'
+    assert recorded['code'] == 'AGENT_REVOKED_OR_EXPIRED'
+    assert r.db.execute('SELECT count(*) FROM evidence').fetchone()[0] == before + 3
+    # Recording an attempt grants nothing back.
+    assert not r.dispatch(root['token'], '{"op":"request_context","resource":"campus/s1",'
+                          '"capability":"x"}')['ok']
+
+
+def test_an_unknown_token_cannot_grow_the_evidence_chain(rig):
+    """Anonymous traffic must not be a write primitive against the audit log."""
+    r, _, _, _, _ = rig
+    before = r.db.execute('SELECT count(*) FROM evidence').fetchone()[0]
+    for _ in range(25):
+        assert not r.dispatch('not-a-real-token', '{"op":"request_capability"}')['ok']
+    assert r.db.execute('SELECT count(*) FROM evidence').fetchone()[0] == before
+
+
+def test_a_blocked_attempt_is_visible_to_the_monitor_snapshot(rig):
+    """The monitor can see that a revoked agent is still being driven.
+
+    A contracted-but-live task already produced a ``tbc_denied`` event inside
+    the request savepoint. The gap was the revoked agent, which never reaches
+    that savepoint at all.
+    """
+    r, c, root, _, _ = rig
+    Guardian(r).revoke(root['agent'])
+    assert not r.dispatch(root['token'], '{"op":"request_capability"}')['ok']
+    snapshot = r.monitor_snapshot('monitor-key', 'correction-1')
+    assert 'tbc_blocked_attempt' in [event['kind'] for event in snapshot['events']]

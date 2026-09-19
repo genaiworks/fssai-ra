@@ -1,5 +1,101 @@
 # Changelog
 
+## Unreleased — measuring the assumptions the controls rest on
+
+Every control in this repository depended on one premise: that the model runtime
+reaches the control plane only through mediation. That premise was prose. This
+change does not implement the deployment isolation it describes — that belongs to
+the deployment — but it stops assuming it, measures what can be measured, and
+refuses to call an unmeasured host isolated.
+
+### Deployment qualification
+
+- Added `fssaira.isolation`: eight declared host properties probed against the
+  live host — control-store writability, runtime identity separation, enforcement
+  package immutability, cloud metadata reachability, service-account token
+  readability, egress default-deny against a declared canary, standing credential
+  material in the agent environment, and kernel sandbox mode. Three outcomes, and
+  `not_measurable` is never one of the good ones. Production qualification
+  requires every required property measured satisfied, evidence under a day old,
+  and a named operator and host.
+- Added `scripts/qualify_deployment.py` and `make qualify`. On any development
+  machine it prints `reference` and names every blocking reason, which is the
+  correct answer. `tests/test_isolation.py` fails if this repository ever reports
+  `production`.
+- Added `fssaira.federation`: audience-bound, single-use, depth-limited
+  cross-service grants whose scope is intersected with the receiving service's
+  ceiling and never merged; k-of-n witness attestation with explicit fork
+  detection; and a promotion gate requiring conformance, isolation, transport,
+  attestation, effect settlement and bundle identity — fresh, attributable and
+  together — that names each missing item instead of returning a verdict.
+
+### A transport that opens the socket
+
+- Added `fssaira.integration.transport`: connects to the pinned literal address
+  with no name-service lookup of any kind, verifies the hostname, enforces a TLS
+  floor, pins the peer's SubjectPublicKeyInfo, returns redirects to the
+  authorisation layer instead of following them, refuses chunked and duplicated
+  framing, enforces the byte ceiling during the read, and produces transport
+  evidence recording what actually happened on the wire.
+- Added `fssaira.integration.transport_harness`: a controlled TLS peer that can
+  misbehave on demand, so all of the above is exercised against a real handshake
+  offline. Its evidence is marked `qualification_only` and the promotion gate
+  refuses it as production evidence.
+- `DestinationPolicy` gained `port` and `qualification_only`. A non-standard port
+  requires the qualification flag, and a qualification policy permits loopback
+  only — never arbitrary private addresses.
+
+### Tool servers as a supply chain
+
+- Added `fssaira.integration.tool_servers` for the threat classes that matured
+  through 2025-2026: description poisoning, rug pulls, cross-server shadowing and
+  confused-deputy chains. Tools exist only as `server/name` and a bare name does
+  not resolve; every byte a model reads about a tool is hashed at approval and
+  compared at every offer; a server that rotates identity loses every approval;
+  descriptions are scanned before a named human approves them, and a flagged
+  description can only be approved knowingly; and a call chain that has absorbed
+  an untrusted source is permanently tainted and cannot reach a privileged tool.
+
+### Measuring a monitor, and a defect it found
+
+- Added `fssaira.monitor_eval`: labelled held-out trajectories run through the
+  real runtime against a denial oracle, a blind monitor, a hostile monitor or a
+  live model backend, reporting false restriction, missed attacks, latency,
+  retained utility and adaptive evasion with denominators and Wilson intervals.
+  The load-bearing result is that no monitor changes a protected outcome.
+- **Fixed:** refusals raised before the request savepoint — a revoked agent, a
+  stopped workload, an assurance failure — returned `DENIED` and wrote no
+  evidence at all, so requests issued after an emergency stop left the evidence
+  chain unchanged. Blocked attempts are now recorded outside the failed
+  transaction, bound to the known identity and task; a failure to record one
+  never restores authority; the Guardian's contraction is not rolled back by the
+  recording; and an unknown token records nothing, so anonymous traffic cannot
+  grow the evidence chain. Found by the harness above, not by code review.
+
+### Effects and studies
+
+- Added `fssaira.remote_effects`: idempotency keys derived from the approved
+  decision, durable write-ahead intent, `UNCERTAIN` as a first-class state,
+  reconciliation by key, and refusal to retry blindly. At-most-once with
+  attributable reconciliation; exactly-once-observable only where a provider
+  supports lookup by key.
+- Added `fssaira.institutional_eval`: a published preregistration and an analysis
+  that computes every preregistered quantity and then refuses conclusions on
+  synthetic data, below the preregistered sample, on subgroups under the cell
+  minimum, or under a changed analysis plan.
+
+### Repository
+
+- **Fixed:** the Makefile defined `adaptive` twice, silently discarding one
+  recipe. The second is now `adaptive-search`.
+- **Fixed:** the README carried a CI badge for a workflow that did not exist.
+  `.github/workflows/tests.yml` now runs `make all` across Python 3.11-3.13 and
+  fails if the runner ever qualifies as a production deployment.
+- Added `make deployment-gaps`; `make all` now ends with the qualification
+  decision; `make security-review` covers the transport and tool-supply suites.
+- 20 new capability contracts bound to executed tests (31 total). 1,375
+  regression cases pass with none skipped.
+
 ## Unreleased — composition: delegated authority, assisted review, and a contract that measures itself
 
 ### Governed disclosure: the second constitutional rule

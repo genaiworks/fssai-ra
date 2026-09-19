@@ -14,7 +14,7 @@ import json
 import secrets
 import sqlite3
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 
 from ..integration.messages import parse_sdk_request
 from ..joined_workflow import Denied, Workflow, canonical, digest
@@ -262,6 +262,14 @@ class TrustRuntime:
                 agent, task, scope = self._agent(row[0])
                 verdict = Guardian(self)._evaluate_locked(task["id"])
                 if verdict["counterexamples"]:
+                    # The guardian has already contracted this task inside this
+                    # transaction. Raising here would roll that contraction back,
+                    # so the refusal is recorded and returned instead, and a
+                    # failure to record it never restores the contracted state.
+                    with suppress(OSError, ValueError, sqlite3.Error):
+                        self.world.event("tbc_blocked_attempt",
+                                         {"agent": agent["id"], "task": task["id"],
+                                          "code": "ASSURANCE_LOSS"})
                     return {"ok": False, "code": "DENIED"}
                 self._charge(task, calls=1)
                 self.db.execute("SAVEPOINT tbc_request")
@@ -288,8 +296,37 @@ class TrustRuntime:
                     return {"ok": False, "code": "DENIED"}
                 self.db.execute("RELEASE tbc_request")
                 return {"ok": True, **result}
-        except failures:
+        except failures as error:
+            # A revoked agent, a stopped workload or an assurance failure is
+            # denied before the request savepoint exists, so the inner handler
+            # never runs and no evidence would otherwise be written. Silent
+            # refusal hides exactly the signal an operator needs after a stop:
+            # that something is still trying. The attempt is recorded outside
+            # the failed transaction, and a failure to record it never restores
+            # authority.
+            self._record_blocked_attempt(token, error)
             return {"ok": False, "code": "DENIED"}
+
+    def _record_blocked_attempt(self, token, error):
+        """Best-effort evidence that a known identity was refused entry.
+
+        The stored code is the control service's own stable reason, never
+        untrusted input, and an unknown token records nothing at all so that
+        anonymous traffic cannot be used to grow the evidence chain.
+        """
+        code = error.args[0] if isinstance(error, AuthorityDenied) and error.args else type(error).__name__
+        if not isinstance(code, str) or not code.isidentifier() or len(code) > 64:
+            code = "DENIED"
+        try:
+            row = self.db.execute("SELECT id,task FROM tbc_agents WHERE token=?",
+                                  (_token_hash(token),)).fetchone()
+            if row is None:
+                return
+            with self.transaction():
+                self.world.event("tbc_blocked_attempt",
+                                 {"agent": row["id"], "task": row["task"], "code": code})
+        except (AuthorityDenied, OSError, ValueError, KeyError, TypeError, sqlite3.Error):
+            return
 
     def _taint(self, agent, labels, sources):
         row = self.db.execute("SELECT labels,sources FROM tbc_agents WHERE id=?", (agent["id"],)).fetchone()
@@ -633,7 +670,8 @@ class TrustRuntime:
         with self.transaction():
             task = self._task(task_id)
             allowed = sorted({"tbc_" + op for op in SCHEMAS} |
-                             {"tbc_denied", "tbc_contract", "tbc_monitor_finding"})
+                             {"tbc_denied", "tbc_contract", "tbc_monitor_finding",
+                              "tbc_blocked_attempt"})
             placeholders = ','.join('?' for _ in allowed)
             rows = self.db.execute(f"""SELECT seq,body FROM evidence
                 WHERE json_extract(body, '$.data.task')=?

@@ -90,6 +90,76 @@ profiles—not compliance claims or production deployments.
 
 ## Current-source enhancements after v1.0.0
 
+**The assumptions are measured now, not assumed.** Every control below rests on
+one unstated premise: that the model runtime reaches the control plane only
+through mediation. Until this revision that premise was prose, and a reader
+could run the whole suite green on a machine where the agent shared a uid with
+the control database, could open the cloud metadata service, and held standing
+credentials in its environment — exactly the conditions that turn a conventional
+flaw into institutional reach.
+
+`fssaira.isolation` probes eight declared host properties and refuses to call an
+unmeasured host isolated. There are three outcomes, and `not_measurable` is never
+one of the good ones: a host with no declared egress canary has an *open*
+default-deny requirement, not a satisfied one. `make qualify` runs it, prints
+`reference` on any development machine, and names every blocking reason. A test
+exists whose only job is to fail if this repository ever reports `production`.
+
+**The outbound socket exists.** `DestinationPolicy` decided what could be
+contacted and then opened nothing, leaving pinning and TLS verification as prose
+obligations. `fssaira.integration.transport` performs the transfer: it connects
+to the pinned literal address with no name-service lookup at all, verifies the
+hostname, pins the peer's public key, hands redirects back to the authorisation
+layer instead of following them, refuses chunked and duplicated framing, and
+enforces the byte ceiling during the read so a peer that understates its length
+cannot overrun the budget. Every property is exercised against a real TLS
+handshake with a controlled peer — and because that peer is a loopback server,
+the evidence is marked as such and the promotion gate refuses it as production
+evidence.
+
+**Tool servers are treated as a supply chain.** Tools exist only as
+`server/name`; a bare name does not resolve, because the ambiguity *is* the
+shadowing attack. Every byte a model reads about a tool is hashed at approval and
+compared at every offer, so a rug pull is drift and drift quarantines the tool
+until a named human re-approves it. A server that rotates its identity loses
+every approval it held. Descriptions are scanned for instruction-shaped content
+before approval, and a flagged one can still be approved — knowingly, by a named
+person, with the acceptance recorded. A call chain that has absorbed an untrusted
+source is permanently tainted and cannot reach a privileged tool, so reading a
+web page never confers the authority to act on what it said.
+
+**A monitor is measured, and shown not to be load-bearing.**
+`fssaira.monitor_eval` runs labelled held-out trajectories against a denial
+oracle, a blind monitor and a hostile monitor that clears every attack and
+restricts every ordinary task. Across all three, no protected outcome changes:
+the hostile monitor costs all of the availability and none of the authority. The
+adaptive family — an attacker that probes once and thereafter stays inside its
+envelope — evades every monitor reading a metadata-only snapshot, which the
+report states plainly rather than minimising. Building this harness is what found
+the defect that post-stop intrusion attempts were leaving no evidence at all.
+
+**Effects that leave the transaction are at-most-once, and say so.** Outbound
+effects carry a key derived from the approved decision, record intent before the
+call, and treat an unacknowledged call as `UNCERTAIN` — a state, not an error to
+swallow. Uncertain effects are never retried blindly, block dependent work, and
+are reconciled by key; a provider without lookup leaves a permanent uncertain
+remainder that the report states rather than resolving by assumption.
+
+**Authority crosses services without being re-declared,** through signed,
+audience-bound, single-use, depth-limited grants intersected with the receiving
+service's own ceiling. Evidence is attested by k-of-n independent witnesses with
+explicit fork detection, because a chain held by one custodian is exactly as
+trustworthy as that custodian.
+
+**The institutional study is published as an instrument, not as a result.**
+`fssaira.institutional_eval` carries a full preregistration and computes every
+preregistered quantity, then refuses conclusions on synthetic data, below the
+preregistered sample, on subgroups under the cell minimum, or under a changed
+analysis plan.
+
+Run `make deployment-gaps` for the seven suites covering all of this.
+
+
 **Oversight is a finite resource, and now it is a measured one.** Every control
 in `v1.0.0` routes a consequential action to a named human and then treats that
 human as unlimited. Push a queue past a reviewer's attention and every mechanism
@@ -426,4 +496,6 @@ assurance boundaries are welcome; see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 The current Word revision is `paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx`, built from the preserved `paper/tbc-v12/` source by [`scripts/build_paper_revision.py`](scripts/build_paper_revision.py) and bound to executed tests by `paper/tbc-v13/implementation.json`. Earlier revisions (`paper/tbc-v11/`, `paper/tbc-v12/`) are kept unchanged for provenance. [The 2026 threat model](docs/THREAT_MODEL_2026.md) reads the public agent-intrusion disclosure and the covert-objective and monitorability literature against these controls, with a machine-checked disposition for every stage in `audit/incident-map.json`. [Architecture review](docs/ARCHITECTURE_REVIEW.md) explains the 109-control register and remaining qualification gaps. Run `make all` after installing development dependencies to execute regression, capability-contract, paper-drift and result-reproduction checks. This remains a local reference implementation, not a qualified production deployment.
 
-The [current security review](SECURITY_REVIEW.md) documents reproduced monitor and destination-policy defects, their fixes, and remaining deployment acceptance criteria. Run `make security-review` for the focused regression suite.
+The [current security review](SECURITY_REVIEW.md) documents reproduced monitor and destination-policy defects, their fixes, and remaining deployment acceptance criteria. Run `make security-review` for the focused regression suite, `make deployment-gaps` for the suites covering isolation, transport, monitor quality, remote effects, federation, tool supply and institutional evaluation, and `make qualify` to measure this host and see what it is actually allowed to be.
+
+Three limits survive this revision and are stated as acceptance criteria rather than future work. Host isolation must be exercised adversarially in the target deployment, because a cooperative probe run inside the process establishes the absence of a path from that process and nothing more. Transport must be qualified against the institution's real peer, with its certificates and its firewall. And the institutional utility and fairness study is not run; synthetic fixtures do not measure student outcomes or equitable decisions, and the analysis refuses to imply that they do.

@@ -10,7 +10,7 @@
   "dispositions": {
     "mediated": "A declared-interface control denies the analogous request in this repository, with an executed test.",
     "deployment": "The architecture requires the property, the kernel expresses it as a contract, and only a qualified deployment can establish it.",
-    "out_of_scope": "The architecture assumes this property from the host platform and does not claim to supply it."
+    "out_of_scope": "The architecture assumes this property from the host platform and does not claim to supply it. Where the assumption is now measurable, the stage names the precondition and the probe that measures it."
   },
   "stages": [
     {
@@ -18,7 +18,10 @@
       "reported": "An evaluation agent escaped its sandbox through a zero-day in a package registry cache proxy.",
       "disposition": "out_of_scope",
       "control": "Host and container isolation",
-      "note": "Trust by Construction assumes the model process can be compromised; it does not prevent conventional vulnerabilities. An in-process Python call is not a boundary against hostile native code."
+      "note": "Trust by Construction assumes the model process can be compromised; it does not prevent conventional vulnerabilities. An in-process Python call is not a boundary against hostile native code.",
+      "measured_precondition": "kernel_sandbox_active",
+      "precondition_test": "tests/test_isolation.py::test_the_advisory_sandbox_requirement_does_not_block_promotion",
+      "precondition_note": "Sandbox mode is now probed and reported as an advisory requirement. A confined process still does not make an in-process call a boundary against hostile native code."
     },
     {
       "id": "S2-exposed-credentials",
@@ -50,14 +53,20 @@
       "disposition": "deployment",
       "control": "Key custody outside the model process",
       "test": "tests/test_composition_and_key_secrecy.py::test_default_asymmetric_authority_key_is_not_derivable_from_key_id",
-      "note": "The kernel never hands a credential to a model, but hardware-backed custody and process isolation require a chosen deployment."
+      "note": "The kernel never hands a credential to a model, but hardware-backed custody and process isolation require a chosen deployment.",
+      "measured_precondition": "no_standing_credentials, no_service_account_token",
+      "precondition_test": "tests/test_isolation.py::test_standing_credentials_in_the_agent_environment_are_a_violation",
+      "precondition_note": "The two paths by which a worker obtains authority nobody granted -- credential variables in the agent environment and a readable projected service-account token -- are measured, and either one denies production qualification. Custody of the keys themselves remains deployment work."
     },
     {
       "id": "S6-cluster-and-metadata-access",
       "reported": "Kubernetes service-account tokens and cloud metadata credentials were read from the compromised pods.",
       "disposition": "out_of_scope",
       "control": "Admission policy, metadata restriction and workload identity",
-      "note": "These are platform controls. The reference kernel neither installs nor attests them."
+      "note": "These are platform controls. The reference kernel neither installs nor attests them.",
+      "measured_precondition": "no_ambient_cloud_metadata",
+      "precondition_test": "tests/test_isolation.py::test_reachable_cloud_metadata_is_a_violation",
+      "precondition_note": "Reachability of the instance metadata service from the agent process is now probed directly against three known endpoints. The architecture still supplies neither admission policy nor workload identity."
     },
     {
       "id": "S7-mesh-vpn-lateral-movement",
@@ -65,7 +74,10 @@
       "disposition": "deployment",
       "control": "Declared destination inventory and network confinement",
       "test": "tests/test_integration_contract.py::test_destination_bound_egress_rejects_ssrf_and_hidden_channels",
-      "note": "DestinationPolicy authorises a destination contract; it does not open, confine or secure a transport."
+      "note": "DestinationPolicy authorises a destination contract; it does not open, confine or secure a transport.",
+      "measured_precondition": "egress_default_deny",
+      "precondition_test": "tests/test_isolation.py::test_an_undeclared_egress_destination_that_answers_is_a_violation",
+      "precondition_note": "A declared canary address that answers is recorded as a violation, and an undeclared canary leaves the requirement open rather than assumed. Outbound transfers that do occur are now made by a pinned, TLS-verified transport with wire-level byte ceilings and no redirect following. Host-level network confinement remains deployment work."
     },
     {
       "id": "S8-shared-connector-credential",
@@ -123,5 +135,6 @@
       "test": "tests/test_frontier_controls.py::test_monitor_advice_cannot_forge_authority_or_replay_evidence",
       "note": "Authorisation never depends on the judgment of the acting model or of the monitoring model. A clear verdict is an observation, not a permission."
     }
-  ]
+  ],
+  "preconditions": "A precondition is a host property this architecture depends on and can now measure, but does not itself provide. Measuring it does not mediate the stage; an unmeasured or violated precondition denies production qualification in fssaira.isolation, which is the only claim made here."
 }

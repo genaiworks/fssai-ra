@@ -187,3 +187,143 @@ engineering implication is to verify actual authority and network isolation,
 rather than accept a prompt's claim that the environment is simulated. This
 repository does not implement the missing OS/network isolation layer and does
 not claim to have prevented those incidents.
+
+## 6. The assumptions themselves, measured
+
+The last paragraph above states the honest position of every previous revision:
+the missing operating-system and network isolation layer was described but not
+implemented, and a reader had to take the assumption on trust. An assumption
+that nobody checks is the most dangerous component in an architecture, because
+it has no owner and no failure mode.
+
+This revision does not implement host isolation -- that belongs to the
+deployment -- but it stops assuming it. `fssaira.isolation` probes seven
+required properties and one advisory one against the live host: whether the
+agent identity can write the control database, whether it shares a uid with the
+control service, whether it can modify the enforcement package, whether the
+instance metadata service answers, whether a projected service-account token is
+readable, whether a declared canary address is reachable, whether standing
+credential material sits in the agent's environment, and whether a kernel
+sandbox confines the process.
+
+Three outcomes are possible, and only one of them is success. `not_measurable`
+is never counted as satisfied: a host with no declared egress canary has an
+*open* default-deny requirement, not a satisfied one. A host qualifies as
+`production` only when every required property is measured satisfied, the
+evidence is under a day old, and it names an operator and a host. This
+repository's own development machine and CI runner both report `reference`, and
+`tests/test_isolation.py` contains a test whose only purpose is to fail if they
+ever stop doing so.
+
+The four stages of the public disclosure that this repository could previously
+only mark as out of scope or deployment work -- sandbox escape, pod metadata
+access, worker credential harvesting and mesh lateral movement -- now name the
+precondition that is measured and the test that measures it, in
+`audit/incident-map.json`. The disposition of each is unchanged. Measuring an
+assumption is not supplying it, and `tests/test_incident_map.py` fails if the
+map ever blurs the two.
+
+## 7. Outbound transport that exists
+
+`DestinationPolicy` decided what could be contacted and then opened no socket,
+so pinning, TLS verification, redirect handling and byte ceilings were adapter
+obligations written in prose. `fssaira.integration.transport` performs the
+transfer under those terms: it connects to the pinned literal address with no
+name-service lookup at all, so a DNS answer obtained after authorisation cannot
+move the connection; it verifies the hostname, enforces a TLS floor and compares
+the peer's SubjectPublicKeyInfo against declared pins; it refuses redirects back
+to the authorisation layer rather than following them; it refuses chunked and
+duplicated framing, which is where intermediaries disagree about message
+boundaries; and it enforces the byte ceiling during the read rather than after
+it, so a peer that understates its length cannot overrun the budget.
+
+Every one of those properties is exercised against a real TLS handshake with a
+controlled peer in `tests/test_qualified_transport.py`. The peer is a loopback
+server, and the evidence produced says so: `qualification_only` propagates from
+the destination policy through the transport evidence into the promotion gate,
+which refuses to treat harness evidence as production transport evidence. The
+code path is qualified; the network is not, and nothing pretends otherwise.
+
+## 8. Tool servers as a supply chain
+
+The threat classes that matured during 2025 and 2026 target the tool surface
+rather than the model. A tool description is prose the model reads as part of
+its instructions, so a server that writes instructions into a description has
+issued them without being called. A server can present a benign tool for review
+and redefine it afterwards. A second server can claim a name the first server
+already uses and win resolution. And a chain that has read untrusted content can
+reach a privileged tool without anything being forged at all.
+
+`fssaira.integration.tool_servers` answers each of these in the same idiom as
+the rest of the architecture. Tools exist only as `server/name`, and a bare name
+does not resolve -- the ambiguity *is* the shadowing attack, so refusing to
+guess is the fix. Every byte a model will read about a tool is hashed at
+approval and compared at every offer, so a rug pull is drift and drift
+quarantines the tool until a named human approves the new definition. A server
+that rotates its identity loses every approval it held. Descriptions are scanned
+for instruction-shaped content before approval, and a flagged description can
+still be approved -- knowingly, by a named person, with the acceptance recorded.
+A call chain that has absorbed an untrusted source is permanently tainted and
+cannot reach a privileged tool, so reading a web page never confers the
+authority to act on what it said.
+
+The scan is a review aid with a deliberately low bar, and a clean scan is not
+evidence that a description is safe. What is enforced is identity, definition
+and naming. The behaviour of a remote server when it is actually called is not
+attested here, and bounding the damage of a server that lies is what section 6
+measures.
+
+## 9. Effects that leave the transaction
+
+A local transaction cannot make a remote effect exactly-once. The call that
+times out may have succeeded, so a retry is a double effect and a silent failure
+report is a false record. `fssaira.remote_effects` gives every outbound effect a
+key derived from the approved decision, writes the intent durably before the
+call, and treats an unacknowledged call as `UNCERTAIN` -- a state, not an error
+to swallow. An uncertain effect is never retried blindly; it is reconciled
+against the provider by key, and until it settles it blocks the work that
+depends on it. A provider that offers no lookup leaves a permanent uncertain
+remainder, which the reconciliation report states rather than resolving by
+assumption. The guarantee is at-most-once with attributable reconciliation, and
+exactly-once-observable only where the provider supports lookup by key.
+
+## 10. What a monitor is worth
+
+`fssaira.monitor_eval` runs labelled held-out trajectories through the real
+runtime against any monitor and reports false restriction, missed attacks,
+latency, retained utility and adaptive evasion with denominators and intervals.
+The reported result that matters is not any of those rates. It is that across a
+denial oracle, a blind monitor and a deliberately hostile monitor that clears
+every attack and restricts every ordinary task, **no protected outcome changes**.
+The hostile monitor costs all of the availability and none of the authority.
+
+The evasion figure is reported without flattery. An attacker who probes once,
+observes the refusal and thereafter works strictly inside its granted envelope
+produces a history indistinguishable from ordinary work, and evades every
+monitor reading a metadata-only snapshot. That is expected, it is stated in the
+report's own claims block, and it is affordable precisely because the envelope
+rather than the monitor is what bounds the attacker.
+
+Offline rates describe scripted monitors and are not detector accuracy. A live
+backend can be supplied, in which case the report is labelled `live` and says
+that its numbers describe one model, one prompt and these trajectories, and were
+not compared against any published benchmark.
+
+## 11. What is still not closed
+
+Promotion to production requires conformance against the deployment's own
+backends, measured host isolation, transport qualified against a real peer,
+an evidence head attested by independent witnesses, no unresolved outbound
+effect, and the promoted bundle matching the evaluated one. `make qualify` runs
+what can be run here and prints `reference`, naming each missing item.
+
+Beyond that gate, three things remain genuinely open and no code in this
+repository changes them. Host isolation must be exercised adversarially in the
+target deployment, not probed from inside a cooperative process. Transport must
+be qualified against the institution's real peer, with its certificates and its
+firewall. And the institutional study is not run: `fssaira.institutional_eval`
+publishes the preregistration and computes every preregistered quantity, but
+refuses conclusions on synthetic fixtures, below the preregistered sample, or
+under a changed analysis plan. Nothing here measures student outcomes or
+equitable decisions, and the instrument is written so that it cannot be made to
+appear to.

@@ -154,6 +154,91 @@ SDK_SUFFIX = (
     "separately deployed AI monitor that may contract authority and can never grant it."
 )
 
+ISOLATION = (
+    "A reviewer of the previous revision made the decisive objection: every control above rests on the "
+    "assumption that the model runtime reaches the control plane only through mediation, and that assumption "
+    "was prose. An assumption nobody checks is the most dangerous component in an architecture, because it "
+    "has no owner and no failure mode. This revision does not implement host isolation, which belongs to the "
+    "deployment, but it stops assuming it. Seven required properties and one advisory property are probed "
+    "against the live host: whether the agent identity can write the control database, whether it shares an "
+    "operating-system identity with the control service, whether it can modify the enforcement package, "
+    "whether the instance metadata service answers, whether a projected service-account token is readable, "
+    "whether a declared canary address is reachable, whether standing credential material sits in the agent "
+    "environment, and whether a kernel sandbox confines the process. Each measurement returns satisfied, "
+    "violated, or not measurable, and not measurable is never counted as success: a host that declares no "
+    "egress canary has an open default-deny requirement, not a satisfied one. A host qualifies as production "
+    "only when every required property is measured satisfied, the evidence is less than a day old, and it "
+    "names an operator and a host. The development machine and the continuous-integration runner used for "
+    "this work both report reference, and a test exists whose only purpose is to fail if they ever stop "
+    "doing so."
+)
+
+TRANSPORT = (
+    "The destination contract decided what could be contacted and then opened no socket, so address pinning, "
+    "certificate verification, redirect handling and byte ceilings were adapter obligations written in prose. "
+    "They are now performed. The transport connects to the pinned literal address with no name-service lookup "
+    "of any kind, so a resolver answer obtained after authorisation cannot move the connection; it verifies "
+    "the hostname, enforces a protocol-version floor and compares the peer's public key against declared "
+    "pins; it returns a redirect to the authorisation layer instead of following it; it refuses chunked and "
+    "duplicated framing, where intermediaries disagree about message boundaries; and it enforces the byte "
+    "ceiling during the read, so a peer that understates its length cannot overrun the budget. Every one of "
+    "those properties is exercised against a real handshake with a controlled peer. That peer is a loopback "
+    "server, and the evidence says so: a qualification marker propagates from the destination policy through "
+    "the transport record into the promotion gate, which refuses to accept harness evidence as production "
+    "transport evidence. The code path is qualified; the network is not."
+)
+
+SUPPLY = (
+    "The threat classes that matured through 2025 and 2026 target the tool surface rather than the model "
+    "[10,11]. A tool description is prose the model reads as instruction, so a server that writes "
+    "instructions into a description has issued them without being called; a server can present a benign "
+    "tool for review and redefine it afterwards; a second server can claim a name the first already uses and "
+    "win resolution; and a chain that has read untrusted content can reach a privileged tool with nothing "
+    "forged at all. The same rule answers all four. Tools exist only as server-qualified names and a bare "
+    "name does not resolve, because the ambiguity is the attack and refusing to guess is the fix. Every byte "
+    "a model will read about a tool is hashed at approval and compared at every offer, so a later "
+    "redefinition is drift and drift quarantines the tool until a named human approves the new definition. A "
+    "server that rotates its identity loses every approval it held. Descriptions are scanned for "
+    "instruction-shaped content before approval, and a flagged description may still be approved knowingly, "
+    "by a named person, with the acceptance recorded. A call chain that has absorbed an untrusted source is "
+    "permanently tainted and cannot reach a privileged tool, which is the control-flow and data-flow "
+    "separation argued for in [2] applied to the tool catalogue rather than to the prompt."
+)
+
+SETTLEMENT = (
+    "Three further boundaries are now enforced rather than deferred. A local transaction cannot make a remote "
+    "effect exactly-once, because the call that times out may have succeeded; outbound effects therefore "
+    "carry a key derived from the approved decision, record their intent durably before the call, and treat "
+    "an unacknowledged call as uncertain, which is a state rather than an error to swallow. An uncertain "
+    "effect is never retried blindly, is reconciled against the provider by key, and blocks the work that "
+    "depends on it until it settles; a provider offering no lookup leaves a permanent uncertain remainder "
+    "that the report states rather than resolving by assumption. Authority crossing a service boundary is "
+    "carried by a signed, audience-bound, single-use, depth-limited grant whose scope is intersected with the "
+    "receiving service's own ceiling, never merged, so a grant can permit part of what a service already "
+    "holds and can never teach it something new. An evidence chain kept by one custodian is exactly as "
+    "trustworthy as that custodian, so a head counts as attested only on independent co-signatures above a "
+    "threshold, and two witnesses attesting different heads at one sequence is reported as a fork rather "
+    "than averaged away. Promotion to production requires all of it, fresh and together, and names every "
+    "missing item rather than returning a verdict."
+)
+
+MONITOR_QUALITY = (
+    "The monitor can now be measured rather than described. Labelled held-out trajectories are run through "
+    "the runtime against a denial oracle, a blind monitor that clears everything, and a hostile monitor that "
+    "clears every attack and restricts every ordinary task, with false restriction, missed attacks, latency, "
+    "retained utility and adaptive evasion reported with denominators and intervals. The result that matters "
+    "is not any of those rates. Across all three monitors, including the one an adversary would install, no "
+    "protected outcome changes: the hostile monitor costs all of the availability and none of the authority. "
+    "The evasion figure is reported without flattery. An attacker who probes once, observes the refusal, and "
+    "thereafter works strictly inside its granted envelope produces a history indistinguishable from ordinary "
+    "work and evades every monitor reading a metadata-only snapshot [4,7]. That is expected, and it is "
+    "affordable precisely because the envelope rather than the monitor is what bounds the attacker. Offline "
+    "rates describe scripted monitors and are not detector accuracy; a live backend yields a report labelled "
+    "as such, describing one model, one prompt and these trajectories, compared against no published "
+    "benchmark."
+)
+
+
 REFERENCES = [
     "[21] B. Schoen et al., “Stress Testing Deliberative Alignment for Anti-Scheming Training,” 2025. "
     "https://arxiv.org/abs/2509.15541",
@@ -167,11 +252,28 @@ REFERENCES = [
     "https://darioamodei.com/essay/the-adolescence-of-technology",
 ]
 
-TABLE_ROW = (
-    "Frontier-threat controls",
-    "35 executed cases: durable stop, per-chunk reauthorisation, restrict-only monitoring",
-    "Deterministic local scenarios over the declared interface; they do not replay frontier-model experiments "
-    "or estimate real-world frequency",
+TABLE_ROWS = (
+    (
+        "Frontier-threat controls",
+        "38 executed cases: durable stop, per-chunk reauthorisation, restrict-only monitoring, "
+        "recorded blocked attempts",
+        "Deterministic local scenarios over the declared interface; they do not replay frontier-model "
+        "experiments or estimate real-world frequency",
+    ),
+    (
+        "Deployment qualification",
+        "Measured host isolation, transport qualified against a controlled TLS peer, tool-supply integrity, "
+        "settlement of outbound effects, witnessed evidence and an evidence-gated promotion decision",
+        "Measuring an assumption is not supplying it; loopback transport evidence and a reference isolation "
+        "verdict both refuse promotion, and no production deployment was qualified",
+    ),
+    (
+        "Monitor quality",
+        "Held-out benign and adversarial trajectories against oracle, blind and hostile monitors; no monitor "
+        "changes a protected outcome",
+        "Offline rates describe scripted monitors and are not detector accuracy; an attacker that stays "
+        "inside its envelope evades a metadata-only monitor by construction",
+    ),
 )
 
 
@@ -230,30 +332,43 @@ def build(source: Path = SOURCE, target: Path = TARGET) -> dict:
     set_text(artifact, text_of(artifact) + ARTIFACT_SUFFIX)
 
     regression = find(body, 'Engineering verification distinguishes mechanism tests')[1]
-    set_text(regression, text_of(regression).replace('Six contracts are verified', 'Ten contracts are verified'))
+    set_text(regression, text_of(regression).replace('Six contracts are verified',
+                                                     'Thirty-one contracts are verified'))
 
-    # New section, inserted before the education section, which is renumbered.
+    # Two new sections, inserted before the education section, which is renumbered.
     education_index, education = find(body, '6. Relevance to AI')
-    set_text(education, text_of(education).replace('6. Relevance', '7. Relevance'))
+    set_text(education, text_of(education).replace('6. Relevance', '8. Relevance'))
     conclusion = find(body, '7. Conclusion')[1]
-    set_text(conclusion, '8. Conclusion')
-    heading = clone(education, '6. Stopping, Delivery and Monitoring When a Model May Be Covert')
+    set_text(conclusion, '9. Conclusion')
     body_template = find(body, 'The executable SDK now implements Passports')[1]
-    for offset, paragraph in enumerate([heading, clone(body_template, STOP), clone(body_template, DELIVERY),
-                                        clone(body_template, MONITOR)]):
+    inserted = [
+        clone(education, '6. Stopping, Delivery and Monitoring When a Model May Be Covert'),
+        clone(body_template, STOP),
+        clone(body_template, DELIVERY),
+        clone(body_template, MONITOR),
+        clone(body_template, MONITOR_QUALITY),
+        clone(education, '7. Measuring the Assumptions a Deployment Inherits'),
+        clone(body_template, ISOLATION),
+        clone(body_template, TRANSPORT),
+        clone(body_template, SUPPLY),
+        clone(body_template, SETTLEMENT),
+    ]
+    for offset, paragraph in enumerate(inserted):
         body.insert(education_index + offset, paragraph)
 
     table = next(node for node in body if node.tag == W + 'tbl')
     rows = table.findall(W + 'tr')
     last = rows[-1]
     cells = last.findall(W + 'tc')
-    set_text(cells[1].find(W + 'p'), '1,147 tests passed; ten source-bound capability contracts executed')
+    set_text(cells[1].find(W + 'p'), '1,375 tests passed; 31 source-bound capability contracts executed')
     set_text(cells[2].find(W + 'p'), 'Local functional evidence, including schema rejection, durable source '
-             'quarantine and the added frontier controls; not operational certification')
-    added = copy.deepcopy(last)
-    for cell, value in zip(added.findall(W + 'tc'), TABLE_ROW, strict=True):
-        set_text(cell.find(W + 'p'), value)
-    table.append(added)
+             'quarantine, the added frontier controls and the deployment measurements; not operational '
+             'certification')
+    for values in TABLE_ROWS:
+        added = copy.deepcopy(last)
+        for cell, value in zip(added.findall(W + 'tc'), values, strict=True):
+            set_text(cell.find(W + 'p'), value)
+        table.append(added)
 
     reference_template = [node for node in body if text_of(node).startswith('[20] R. Srivastava')][0]
     position = list(body).index(reference_template) + 1

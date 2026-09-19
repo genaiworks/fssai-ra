@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "source": "paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx",
-  "source_sha256": "6223d08f943b92d2b8c28d9a72d3e03c4d731e1f9d8a20e73df6ba4fbf940538",
+  "source_sha256": "de12700b441756cb22aefa3e224a7bee705d919a21b61639c0c45a002d0fc5df",
   "derived_from": "paper/tbc-v12/TBC_v12_Engineering_Revision.docx",
   "build": "scripts/build_paper_revision.py",
-  "regression_tests": 1147,
-  "executed_contracts": 10,
+  "regression_tests": 1375,
+  "executed_contracts": 31,
   "claims": [
     {
       "paper_anchor": "Versioned JSON ingress rejects ambiguous keys",
@@ -41,12 +41,6 @@
       "paper_anchor": "DestinationPolicy checks public HTTPS destinations",
       "tests": [
         "tests/test_integration_contract.py::test_destination_bound_egress_rejects_ssrf_and_hidden_channels"
-      ]
-    },
-    {
-      "paper_anchor": "Ten contracts are verified by executing their named tests",
-      "tests": [
-        "tests/test_kernel_contracts.py::test_actual_execution_distinguishes_pass_failure_and_skip"
       ]
     },
     {
@@ -108,6 +102,140 @@
         "tests/test_integration_contract.py::test_destination_rejects_parser_differential_paths",
         "tests/test_integration_contract.py::test_destination_preserves_safe_unreserved_encoding_and_mixed_dns_denial"
       ]
+    },
+    {
+      "paper_anchor": "Thirty-one contracts are verified by executing their named tests",
+      "tests": [
+        "tests/test_kernel_contracts.py::test_actual_execution_distinguishes_pass_failure_and_skip"
+      ]
+    },
+    {
+      "paper_anchor": "not measurable is never counted as success",
+      "tests": [
+        "tests/test_isolation.py::test_an_unmeasurable_requirement_is_not_treated_as_satisfied",
+        "tests/test_isolation.py::test_a_never_measured_requirement_blocks_and_is_named"
+      ]
+    },
+    {
+      "paper_anchor": "the evidence is less than a day old, and it names an operator and a host",
+      "tests": [
+        "tests/test_isolation.py::test_stale_evidence_does_not_qualify_however_good_it_was",
+        "tests/test_isolation.py::test_evidence_without_an_operator_is_not_evidence"
+      ]
+    },
+    {
+      "paper_anchor": "a test exists whose only purpose is to fail if they ever stop doing so",
+      "tests": [
+        "tests/test_isolation.py::test_this_repository_host_is_honestly_reported_as_reference"
+      ]
+    },
+    {
+      "paper_anchor": "no name-service lookup of any kind",
+      "tests": [
+        "tests/test_qualified_transport.py::test_the_connection_uses_the_pinned_address_not_a_resolver"
+      ]
+    },
+    {
+      "paper_anchor": "compares the peer's public key against declared pins",
+      "tests": [
+        "tests/test_qualified_transport.py::test_a_peer_presenting_a_different_key_is_refused",
+        "tests/test_qualified_transport.py::test_a_certificate_for_another_name_fails_hostname_verification"
+      ]
+    },
+    {
+      "paper_anchor": "a peer that understates its length cannot overrun the budget",
+      "tests": [
+        "tests/test_qualified_transport.py::test_a_peer_that_understates_its_length_cannot_overrun_the_ceiling",
+        "tests/test_qualified_transport.py::test_a_declared_body_over_the_ceiling_is_refused_before_it_is_read"
+      ]
+    },
+    {
+      "paper_anchor": "refuses to accept harness evidence as production transport evidence",
+      "tests": [
+        "tests/test_federation.py::test_loopback_transport_evidence_never_promotes_a_deployment"
+      ]
+    },
+    {
+      "paper_anchor": "a bare name does not resolve",
+      "tests": [
+        "tests/test_tool_supply_chain.py::test_a_bare_name_never_resolves",
+        "tests/test_tool_supply_chain.py::test_shadowing_is_surfaced_to_the_human_who_approves"
+      ]
+    },
+    {
+      "paper_anchor": "drift quarantines the tool until a named human approves the new definition",
+      "tests": [
+        "tests/test_tool_supply_chain.py::test_any_change_after_approval_quarantines_the_tool",
+        "tests/test_tool_supply_chain.py::test_a_silently_rewritten_description_is_a_rug_pull"
+      ]
+    },
+    {
+      "paper_anchor": "permanently tainted and cannot reach a privileged tool",
+      "tests": [
+        "tests/test_tool_supply_chain.py::test_a_chain_that_touched_untrusted_content_cannot_reach_a_privileged_tool",
+        "tests/test_tool_supply_chain.py::test_taint_is_permanent_for_the_life_of_the_chain"
+      ]
+    },
+    {
+      "paper_anchor": "An uncertain effect is never retried blindly",
+      "tests": [
+        "tests/test_remote_effects.py::test_an_uncertain_effect_is_never_retried_blindly",
+        "tests/test_remote_effects.py::test_reconciliation_resolves_a_lost_acknowledgement_without_reapplying"
+      ]
+    },
+    {
+      "paper_anchor": "intersected with the receiving service's own ceiling, never merged",
+      "tests": [
+        "tests/test_federation.py::test_a_grant_cannot_teach_a_service_a_capability_it_does_not_have",
+        "tests/test_federation.py::test_a_grant_naming_an_axis_the_service_lacks_is_refused"
+      ]
+    },
+    {
+      "paper_anchor": "two witnesses attesting different heads at one sequence is reported as a fork",
+      "tests": [
+        "tests/test_federation.py::test_a_fork_is_detected_and_blocks_attestation",
+        "tests/test_federation.py::test_a_head_needs_the_threshold_before_it_counts_as_attested"
+      ]
+    },
+    {
+      "paper_anchor": "names every missing item rather than returning a verdict",
+      "tests": [
+        "tests/test_federation.py::test_each_missing_item_alone_refuses_promotion_and_is_named",
+        "tests/test_federation.py::test_this_repository_cannot_promote_itself"
+      ]
+    },
+    {
+      "paper_anchor": "no protected outcome changes",
+      "tests": [
+        "tests/test_monitor_evaluation.py::test_no_monitor_changes_a_protected_outcome",
+        "tests/test_monitor_evaluation.py::test_a_hostile_monitor_costs_availability_not_authority"
+      ]
+    },
+    {
+      "paper_anchor": "evades every monitor reading a metadata-only snapshot",
+      "tests": [
+        "tests/test_monitor_evaluation.py::test_an_attacker_that_stays_inside_its_envelope_evades_every_monitor"
+      ]
+    },
+    {
+      "paper_anchor": "recorded outside the failed transaction as blocked attempts",
+      "tests": [
+        "tests/test_frontier_controls.py::test_attempts_after_a_stop_are_recorded_rather_than_silently_refused",
+        "tests/test_frontier_controls.py::test_an_unknown_token_cannot_grow_the_evidence_chain"
+      ]
+    },
+    {
+      "paper_anchor": "refuses conclusions on synthetic fixtures",
+      "tests": [
+        "tests/test_institutional_evaluation.py::test_synthetic_data_yields_measurements_but_never_conclusions",
+        "tests/test_institutional_evaluation.py::test_an_underpowered_sample_is_refused_by_name"
+      ]
+    },
+    {
+      "paper_anchor": "subgroups under the cell minimum",
+      "tests": [
+        "tests/test_institutional_evaluation.py::test_a_group_below_the_cell_minimum_is_withheld_not_estimated"
+      ]
     }
   ],
   "limitations": [
@@ -115,7 +243,12 @@
     "Local regression counts must not be pooled with adversarial episodes or interpreted as production security.",
     "Network and supply modules are adapter contracts; deployment enforcement is not established.",
     "The incident map is an architectural reading of a public disclosure, not a reconstruction, and claims no prevention.",
-    "The frontier-control tests are deterministic local scenarios; they do not reproduce frontier-model propensities."
+    "The frontier-control tests are deterministic local scenarios; they do not reproduce frontier-model propensities.",
+    "Host isolation is measured from inside a cooperative process; it establishes the absence of a path from this process, not the absence of every path, and is no substitute for an adversarial exercise in the target deployment.",
+    "Transport is qualified against a controlled loopback peer; the evidence is marked as such and the promotion gate refuses it as production evidence.",
+    "Tool-supply controls enforce identity, definition and naming; the behaviour of a remote server when called is not attested.",
+    "Monitor rates measured offline describe scripted monitors and are not detector accuracy; an attacker operating inside its granted envelope evades a metadata-only monitor by construction.",
+    "The institutional utility and fairness study is not run; the instrument refuses conclusions from synthetic fixtures."
   ],
-  "regression_source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
+  "regression_source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
 }

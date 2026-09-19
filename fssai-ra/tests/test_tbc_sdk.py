@@ -274,7 +274,14 @@ def test_guardian_finds_multihop_counterexample_and_contracts_before_use(rig):
     with pytest.raises(AuthorityDenied):
         c.derive_artifact('must never be exposed')
     assert r.census('operator-key', 'correction-1')['state'] == 'QUARANTINED'
-    event = json.loads(r.db.execute("SELECT body FROM evidence ORDER BY seq DESC LIMIT 1").fetchone()[0])
+    kinds = [json.loads(row[0])['kind']
+             for row in r.db.execute('SELECT body FROM evidence ORDER BY seq DESC LIMIT 2')]
+    # The refused attempt is recorded as well as the contraction, so an operator
+    # reviewing the chain can see that the workload kept trying.
+    assert kinds[0] == 'tbc_blocked_attempt'
+    event = json.loads(r.db.execute(
+        """SELECT body FROM evidence WHERE json_extract(body,'$.kind')='tbc_invariants'
+           ORDER BY seq DESC LIMIT 1""").fetchone()[0])
     paths = [v['path'] for v in event['data']['violations']]
     assert [root['agent'], middle['agent'], target['agent']] in paths
 

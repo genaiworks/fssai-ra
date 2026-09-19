@@ -41,3 +41,30 @@ def test_no_stage_overclaims(stage):
 def test_map_keeps_the_unmediated_stages_visible():
     unmediated = [s['id'] for s in STAGES if s['disposition'] != 'mediated']
     assert unmediated, 'a map with no residual risk is a marketing document'
+
+
+NON_MEDIATED = [s for s in STAGES if s['disposition'] != 'mediated']
+
+
+@pytest.mark.parametrize('stage', NON_MEDIATED, ids=lambda s: s['id'])
+def test_a_named_precondition_resolves_to_a_real_probe_test(stage):
+    """A stage may claim a measurable precondition only with an executed test."""
+    if 'measured_precondition' not in stage:
+        assert 'precondition_test' not in stage
+        return
+    resolve_test(stage['precondition_test'], ROOT)
+    assert stage['precondition_note']
+
+
+@pytest.mark.parametrize('stage', NON_MEDIATED, ids=lambda s: s['id'])
+def test_measuring_a_precondition_is_never_described_as_mediating_it(stage):
+    """Measuring an assumption is not supplying it, and the map must not blur that."""
+    assert stage['disposition'] != 'mediated'
+    text = (stage.get('precondition_note', '') + ' ' + stage['note']).lower()
+    for phrase in ('mediates this stage', 'supplies this property', 'closes this gap'):
+        assert phrase not in text
+
+
+def test_the_map_explains_what_a_precondition_is_and_is_not():
+    assert 'does not mediate the' in MAP['preconditions']
+    assert any('measured_precondition' in stage for stage in NON_MEDIATED)

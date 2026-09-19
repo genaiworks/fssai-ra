@@ -60,3 +60,47 @@ The new focused suite reproduces fourteen failures against the preceding code
 and passes all 58 cases after repair. This supersedes the earlier v13 checkpoint.
 The architecture register continues to expose deployment and implementation
 gaps; this review does not turn a local reference into production isolation.
+
+## Second v13 review: deployment assumptions made measurable
+
+The preceding review listed six open items with acceptance criteria. Five are now
+implemented and bound to executed capability contracts; the sixth is published as
+an instrument for a study that has not been run.
+
+Closed as implemented and tested: process and network isolation is measured
+against eight declared host properties, with `not_measurable` treated as an open
+requirement rather than a pass; outbound transport is performed by a client that
+pins the literal address without any name-service lookup, verifies the hostname,
+pins the peer public key, refuses redirects and ambiguous framing, and enforces
+the byte ceiling on the wire; monitor quality is measured over labelled held-out
+trajectories with rates, intervals and an adaptive family; remote effects are
+at-most-once with reconciliation by idempotency key and a first-class uncertain
+state; cross-service authority, k-of-n witness attestation with fork detection
+and an evidence-gated promotion decision are implemented; and the 2025-2026
+tool-server threat classes -- description poisoning, rug pulls, cross-server
+shadowing and confused-deputy chains -- are refused by definition pinning,
+server-qualified naming, pre-approval scanning and permanent chain taint.
+
+Not closed, and stated as acceptance criteria rather than future work: host
+isolation must be exercised adversarially in the target deployment, because a
+cooperative probe establishes the absence of a path from this process only;
+transport must be qualified against the institution's real peer, because the
+controlled peer here is a loopback server whose evidence the promotion gate
+refuses; and the institutional utility and fairness study is not run, with the
+analysis refusing conclusions from synthetic fixtures by construction.
+
+One defect was found by the new monitor harness rather than by code review:
+refusals raised before the request savepoint -- a revoked agent, a stopped
+workload, an assurance failure -- wrote no evidence at all, so persistence after
+an emergency stop was invisible in the chain. Blocked attempts are now recorded
+outside the failed transaction without restoring any authority, and an unknown
+token records nothing. A duplicate `adaptive` Makefile target, which silently
+discarded one of two recipes, was renamed to `adaptive-search`.
+
+The current run passes 1,375 regression cases with none skipped, executes 31
+source-bound capability contracts, and checks 35 manuscript anchors against test
+locators and recorded evidence. The 228 cases added by this revision are included
+in that total and are not additional attack episodes. The architecture register
+is unchanged at 109 controls with its conservative statuses intact. Measuring an
+assumption is not supplying it, and `make qualify` prints `reference` for this
+repository with every blocking reason named.
