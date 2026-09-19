@@ -1,5 +1,7 @@
 # Documentation map: Trust by Construction, and where to go next
 
+[Architecture implementation review](ARCHITECTURE_REVIEW.md) — 109-control traceability, executed contracts and qualification gaps.
+
 [TBC v11 SDK and Guardian engineering guide](TBC_SDK.md) — executable Passport, memory, population and release controls mapped to the supplied Word specification.
 
 > **Start here if you opened this repository for the first time.** Choose a

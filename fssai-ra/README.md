@@ -421,3 +421,7 @@ Machine-readable metadata in [`CITATION.cff`](CITATION.cff).
 
 Apache-2.0 — see [`LICENSE`](../LICENSE). Contributions that preserve explicit
 assurance boundaries are welcome; see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Revised architecture evidence
+
+The revised Word paper is preserved in `paper/tbc-v12/`, alongside claim bindings. [Architecture review](docs/ARCHITECTURE_REVIEW.md) explains the 109-control register and remaining qualification gaps. Run `make all` after installing development dependencies to execute regression, capability-contract, paper-drift and result-reproduction checks. This remains a local reference implementation, not a qualified production deployment.

@@ -513,3 +513,54 @@ def test_denied_authenticated_attempts_consume_budget_and_leave_safe_receipts(ri
     assert json.loads(event)['kind'] == 'tbc_denied'
     assert 'SECRET' not in event and 'do not log' not in event
     assert r.world.record('campus', 's1')['value'] == 'C'
+
+
+def test_source_quarantine_blocks_derived_memory_effects_and_survives_restart(rig):
+    r, c, _, _ = rig
+    context = c.request_context('campus/s1')['context']
+    source = r._get(context, 'artifact')['sources'][0]
+    summary = c.invoke_tool('summarize', context)['artifact']
+    memory = c.persist_memory(summary, 'task-notes', retention=100)['memory']
+    proposal = c.propose_effect(context, 'correct_transcript', 'B', 'recipient')['proposal']
+    confirmation = r.confirm_effect('source-key', proposal)
+    approval = r.approve_effect('reviewer-key', proposal, confirmation)
+    escrow = r.authorize_release('reviewer-key', summary, 'recipient', declassify=True)
+    with pytest.raises(AuthorityDenied):
+        r.invalidate_source('reviewer-key', source, reason='compromised source')
+    r.invalidate_source('operator-key', source, reason='compromised source')
+    for operation in (lambda: c.read_memory(memory), lambda: c.derive_artifact('washed'),
+                      lambda: c.execute_effect(proposal, approval),
+                      lambda: c.release_artifact(summary, 'recipient', escrow),
+                      lambda: c.request_context('campus/s1')):
+        with pytest.raises(AuthorityDenied):
+            operation()
+    assert r.world.record('campus', 's1')['value'] != 'B'
+    assert r.db.execute('SELECT count(*) FROM tbc_invalid_sources').fetchone()[0] == 1
+
+
+def test_sdk_schema_version_is_enforced_at_real_boundary(rig):
+    r, _, root, _ = rig
+    assert r.dispatch(root['token'], '{"op":"request_capability","schema_version":1}')['ok']
+    for version in (2, True, '1'):
+        assert not r.dispatch(root['token'], json.dumps({'op':'request_capability', 'schema_version':version}))['ok']
+
+
+def test_quarantine_is_persistent_and_blocks_clean_agent_retrieval(rig):
+    r, c, root, now = rig
+    context = c.request_context('campus/s1')['context']
+    source = r._get(context, 'artifact')['sources'][0]
+    r.invalidate_source('operator-key', source, reason='source integrity failure')
+    filename = r.db.execute('PRAGMA database_list').fetchone()[2]
+    reopened = TrustRuntime(filename, r.passport, authorities=AUTHORITIES, clock=lambda: now[0])
+    try:
+        assert not reopened.dispatch(root['token'], '{"op":"request_capability"}')['ok']
+        from dataclasses import replace
+        _, contract, identity = declarations()
+        fresh = reopened.create_task('operator-key', replace(contract, task='clean-task'),
+                                     identity_scope=identity, model='offline-scripted', zone='local')
+        client = SDKClient(reopened.dispatch, fresh['token'])
+        client.request_capability()
+        with pytest.raises(AuthorityDenied):
+            client.request_context('campus/s1')
+    finally:
+        reopened.close()

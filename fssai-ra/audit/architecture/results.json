@@ -1,0 +1,112 @@
+{
+  "traceability": {
+    "passed": true,
+    "controls": 109,
+    "statuses": {
+      "implemented-local": 2,
+      "partial-reference": 88,
+      "deployment-required": 8,
+      "not-implemented": 11
+    },
+    "meaning": "Traceability structure validated; behavioral verification runs separately."
+  },
+  "executed_contracts": {
+    "schema_version": 1,
+    "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d",
+    "source_stable": true,
+    "exit_code": 0,
+    "claims": [
+      {
+        "capability": "source_quarantine",
+        "protected_asset": "Derived institutional artifacts and pending effects",
+        "permitted_operation": "Read or act only on nonquarantined source bindings",
+        "enforcement_point": "TrustRuntime source checks before context and derivative use",
+        "accountable_owner": "Institution security operator",
+        "failure_test": "tests/test_tbc_sdk.py::test_source_quarantine_blocks_derived_memory_effects_and_survives_restart",
+        "evidence_artifact": "audit/architecture/executed-tests.xml",
+        "failure_response": "Deny and retain a source quarantine event",
+        "status": "machine_verified",
+        "executed_cases": 1,
+        "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+        "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      },
+      {
+        "capability": "durable_quarantine",
+        "protected_asset": "Quarantined source versions across sessions",
+        "permitted_operation": "Retrieve only a nonquarantined binding",
+        "enforcement_point": "Persistent SQLite source invalidation table",
+        "accountable_owner": "Institution security operator",
+        "failure_test": "tests/test_tbc_sdk.py::test_quarantine_is_persistent_and_blocks_clean_agent_retrieval",
+        "evidence_artifact": "audit/architecture/executed-tests.xml",
+        "failure_response": "Deny fresh-agent retrieval after service reopening",
+        "status": "machine_verified",
+        "executed_cases": 1,
+        "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+        "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      },
+      {
+        "capability": "versioned_ingress",
+        "protected_asset": "Model-facing request authority",
+        "permitted_operation": "Submit a supported versioned proposal",
+        "enforcement_point": "TrustRuntime dispatch parser",
+        "accountable_owner": "Mediation service maintainer",
+        "failure_test": "tests/test_tbc_sdk.py::test_sdk_schema_version_is_enforced_at_real_boundary",
+        "evidence_artifact": "audit/architecture/executed-tests.xml",
+        "failure_response": "Reject unsupported or ambiguous schema versions",
+        "status": "machine_verified",
+        "executed_cases": 1,
+        "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+        "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      },
+      {
+        "capability": "model_bundle",
+        "protected_asset": "Complete model configuration identity",
+        "permitted_operation": "Declare eight SHA256 component digests",
+        "enforcement_point": "ModelBundle contract validation",
+        "accountable_owner": "Model release engineer",
+        "failure_test": "tests/test_integration_contract.py::test_full_model_bundle_changes_when_any_component_changes",
+        "evidence_artifact": "audit/architecture/executed-tests.xml",
+        "failure_response": "Reject incomplete or malformed bundle declarations",
+        "status": "machine_verified",
+        "executed_cases": 1,
+        "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+        "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      },
+      {
+        "capability": "frozen_tools",
+        "protected_asset": "Approved tool catalogue",
+        "permitted_operation": "Use exactly the frozen tool manifest",
+        "enforcement_point": "FrozenCatalog contract check",
+        "accountable_owner": "Tool integration engineer",
+        "failure_test": "tests/test_integration_contract.py::test_tool_catalog_frozen_and_risk_derived_from_manifest",
+        "evidence_artifact": "audit/architecture/executed-tests.xml",
+        "failure_response": "Reject manifest drift and high-risk direct model exposure",
+        "status": "machine_verified",
+        "executed_cases": 1,
+        "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+        "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      },
+      {
+        "capability": "destination_contract",
+        "protected_asset": "Public egress destination contract",
+        "permitted_operation": "Authorize a public HTTPS destination with an explicit path prefix",
+        "enforcement_point": "DestinationPolicy authorization component",
+        "accountable_owner": "Network integration engineer",
+        "failure_test": "tests/test_integration_contract.py::test_destination_bound_egress_rejects_ssrf_and_hidden_channels",
+        "evidence_artifact": "audit/architecture/executed-tests.xml",
+        "failure_response": "Reject private addresses and undeclared URL channels before transport",
+        "status": "machine_verified",
+        "executed_cases": 9,
+        "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+        "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      }
+    ],
+    "passed": true,
+    "counts": {
+      "machine_verified": 6,
+      "attested": 0,
+      "unverified": 0
+    }
+  },
+  "qualification": "local-reference; independent operational attestation not established"
+}

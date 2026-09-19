@@ -95,6 +95,12 @@ jobs:
         working-directory: fssai-ra
         run: python scripts/check_tbc_alignment.py
 
+      - name: Architecture traceability and executed capability contracts
+        working-directory: fssai-ra
+        run: |
+          python scripts/verify_architecture.py
+          python scripts/check_paper_revision.py
+
       - name: TBC SDK joined demonstration
         working-directory: fssai-ra
         run: python scripts/tbc_demo.py --output /tmp/tbc-ci-demo

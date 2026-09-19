@@ -16,7 +16,8 @@ import sqlite3
 import time
 from contextlib import contextmanager
 
-from ..joined_workflow import Denied, Workflow, canonical, digest, strict_json
+from ..integration.messages import parse_sdk_request
+from ..joined_workflow import Denied, Workflow, canonical, digest
 from .contracts import (
     BUDGETS,
     PRIMITIVES,
@@ -79,6 +80,7 @@ class TrustRuntime:
         self.world = Workflow(path, pack=pack, mediator="tbc")
         self.db = self.world.db
         self.db.executescript('''
+        CREATE TABLE IF NOT EXISTS tbc_invalid_sources(binding TEXT PRIMARY KEY, reason TEXT, operator TEXT);
         CREATE TABLE IF NOT EXISTS tbc_usage(id INTEGER PRIMARY KEY CHECK(id=1), remaining TEXT);
         CREATE TABLE IF NOT EXISTS tbc_config(id INTEGER PRIMARY KEY CHECK(id=1), body TEXT);
         CREATE TABLE IF NOT EXISTS tbc_tasks(id TEXT PRIMARY KEY, body TEXT, remaining TEXT,
@@ -176,6 +178,7 @@ class TrustRuntime:
         effective = Scope(**{**effective.to_dict(), "operations": effective.operations & MODES[task["state"]]})
         require(result["model"] in effective.models and result["zone"] in effective.zones,
                 "MODEL_OR_ZONE_DENIED")
+        self._not_invalidated(json.loads(result["sources"]))
         return result, task, effective
 
     def _charge(self, task, **charges):
@@ -252,7 +255,7 @@ class TrustRuntime:
                 self._charge(task, calls=1)
                 self.db.execute("SAVEPOINT tbc_request")
                 try:
-                    q = strict_json(raw)
+                    q = parse_sdk_request(raw)
                     require(isinstance(q, dict) and isinstance(q.get("op"), str), "OBJECT_REQUIRED")
                     op = q["op"]
                     require(op in SCHEMAS and not set(q) - SCHEMAS[op], "UNDECLARED_INTERFACE")
@@ -285,7 +288,29 @@ class TrustRuntime:
                         (canonical(labels), canonical(sources), agent["id"]))
         return labels, sources
 
+    def _not_invalidated(self, sources):
+        for source in sources:
+            binding = digest(self.world.get(source, "context"))
+            require(self.db.execute("SELECT 1 FROM tbc_invalid_sources WHERE binding=?",
+                                    (binding,)).fetchone() is None, "SOURCE_QUARANTINED")
+
+    def invalidate_source(self, token, source, *, reason):
+        """Irreversibly quarantine this exact source binding and all tracked derivatives.
+
+        The operator repairs the source under a new version; restore cannot clear
+        quarantine. Previously released bytes cannot be recalled.
+        """
+        name = self._admin(token, "operator")
+        require(isinstance(reason, str) and 0 < len(reason.strip()) <= 512, "REASON_REQUIRED")
+        with self.transaction():
+            binding = digest(self.world.get(source, "context"))
+            self.db.execute("INSERT OR IGNORE INTO tbc_invalid_sources VALUES(?,?,?)",
+                            (binding, reason, name))
+            self.world.event("tbc_source_invalidated", {"binding": binding, "operator": name,
+                                                        "reason_digest": digest(reason)})
+
     def _source_valid(self, sources, scope=None):
+        self._not_invalidated(sources)
         for source in sources:
             context = self.world.get(source, "context")
             if scope is not None:
@@ -301,6 +326,7 @@ class TrustRuntime:
 
     def _make_artifact(self, agent, task, text, *, labels=(), sources=(), kind="generated", reference=None):
         require(isinstance(text, str) and len(text.encode()) <= 12000, "ARTIFACT_SIZE")
+        self._not_invalidated(sources)
         labels, sources = self._taint(agent, labels, sources)
         return self._put("artifact", {"task": task["id"], "audience": [agent["id"]], "text": text,
                                       "labels": labels, "sources": sources, "kind": kind,

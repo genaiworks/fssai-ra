@@ -1,6 +1,6 @@
 # Code build plan
 
-The supplied build brief guides this implementation. The user's current direction is code first: preserve both `paper/trust-by-construction.md` and `.pdf`, and the supplied TBC v11 Word paper. Record discrepancies for later editorial work instead of modifying those specifications.
+The supplied build brief guides this implementation. The latest user request authorizes code enhancements and a revised TBC paper. Preserve the original v11 source and publish a revised Word copy with tested claims and explicit deployment gaps.
 
 ## Baseline and gaps
 
@@ -18,7 +18,7 @@ Missing or incomplete relative to the brief: canonical seven-field contracts wit
 6. M5: consolidate real generated experiments and executed contract tests into audit/results.json; generate SVG and PNG figures outside paper/.
 7. M6: retain and rerun joined durable and adaptive/tabular-Q evidence with independent state/byte oracle and matched positive controls.
 8. M7: test-first seven lifecycle commands, promotion/conformance gates, docs, offline make all and CI.
-9. M8: run the full build and regenerate tables; classify discrepancies in RECONCILIATION.md. Paper edits are deferred by user instruction.
+9. M8: run the full build and regenerate tables; classify discrepancies in RECONCILIATION.md. Revise the Word paper after evidence is regenerated; preserve the original.
 
 Each implementation milestone ends with relevant passing tests and a local commit. No push or deployment. Broad existing suites run at integration gates; unsupported production paths stay explicitly unqualified.
 

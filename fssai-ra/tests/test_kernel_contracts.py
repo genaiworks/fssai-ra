@@ -11,9 +11,9 @@ from fssaira.kernel.state import EffectState, transition
 
 
 def contract(test='tests/test_guard.py::test_refusal'):
-    return dict(protected_asset='record', permitted_operation='correct', enforcement_point='executor',
-                accountable_owner='registrar', failure_test=test, evidence_artifact='audit/refusal.json',
-                failure_response='deny and route to registrar')
+    return {'protected_asset': 'record', 'permitted_operation': 'correct', 'enforcement_point': 'executor',
+                'accountable_owner': 'registrar', 'failure_test': test, 'evidence_artifact': 'audit/refusal.json',
+                'failure_response': 'deny and route to registrar'}
 
 
 def test_seven_fields_reject_empty_unknown_and_missing_test(tmp_path):

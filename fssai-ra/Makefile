@@ -177,3 +177,17 @@ tbc-demo:  ## Run the paper's SDK path (OUTPUT must name a new directory)
 
 tbc-check:  ## Check exact Word-paper bindings and the default-deny inventory
 	$(PYTHON) scripts/check_tbc_alignment.py
+
+.PHONY: architecture-check
+architecture-check:  ## Validate all architecture controls and execute bound capability tests
+	$(PYTHON) scripts/check_tbc_alignment.py
+	$(PYTHON) scripts/verify_architecture.py
+
+.PHONY: all
+all:  ## Offline engineering release check after development dependencies are installed
+	$(PYTHON) -m ruff check src tests scripts jobs adapters
+	$(PYTHON) -m pytest --junitxml=audit/architecture/full-tests.xml
+	$(PYTHON) scripts/check_tbc_alignment.py
+	$(PYTHON) scripts/verify_architecture.py
+	$(PYTHON) scripts/check_paper_revision.py
+	$(PYTHON) scripts/generate_results.py --check

@@ -1,0 +1,992 @@
+{
+  "schema_version": 1,
+  "source": "PaperArchitecture.pdf",
+  "source_sha256": "0059a3ee69cf6f762c3a670db73d487c2716160b0487b0764f57f1a9e4c8ea9d",
+  "catalogue_size": 109,
+  "interpretation": "Related files are traceability pointers, not proof of every statement in a control. Partial and deployment-required controls must not be counted as complete.",
+  "controls": [
+    {
+      "id": "TBC-ARCH-001",
+      "page": 60,
+      "source_excerpt": "\u2014 Intelligence Outside the  Trusted Computing Base Objective Do not consider the LLM or agent trustworthy enough to make security decisions.  The following should be considered untrusted or lower-trust:  \u2022 model output,  \u2022 model",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Logical mediation is implemented; process separation and complete host-path inventory require deployment evidence."
+    },
+    {
+      "id": "TBC-ARCH-002",
+      "page": 61,
+      "source_excerpt": "\u2014 Complete Mediation Objective Every protected action must pass through a trusted control point.  The principle is:  There must be no alternate route around security.  Protected operations include:  \u2022 data read,  \u2022 data write,  \u2022",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Logical mediation is implemented; process separation and complete host-path inventory require deployment evidence."
+    },
+    {
+      "id": "TBC-ARCH-003",
+      "page": 62,
+      "source_excerpt": "\u2014 Three-Plane Separation Create three architectural planes.  Trust Control Plane Contains:  \u2022 Workload Passport,  \u2022 Task Contract templates,  \u2022 policy,  \u2022 model registry,  \u2022 ar*fact registry,  \u2022 capability rules,  \u2022 revoca*on,  \u2022",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Logical mediation is implemented; process separation and complete host-path inventory require deployment evidence."
+    },
+    {
+      "id": "TBC-ARCH-004",
+      "page": 63,
+      "source_excerpt": "\u2014 Minimize the Trusted  Computing Base Why Every trusted component is another component whose compromise can defeat the  architecture.  Therefore keep TBC small.  Do not put into the TCB:  \u2022 LLM orchestra*on,  \u2022 prompt templates,",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Logical mediation is implemented; process separation and complete host-path inventory require deployment evidence."
+    },
+    {
+      "id": "TBC-ARCH-005",
+      "page": 63,
+      "source_excerpt": "\u2014 Fail Secure Requirement If a critical control becomes unavailable, the system must not fall back to permissive  behavior.  If:  \u2022 policy service fails,  \u2022 revoca*on feed unavailable,  \u2022 aPesta*on unknown,  \u2022 iden*ty cannot be v",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Logical mediation is implemented; process separation and complete host-path inventory require deployment evidence."
+    },
+    {
+      "id": "TBC-ASSURE-001",
+      "page": 84,
+      "source_excerpt": "\u2014 Runtime Invariants Examples:  RestrictedData cannot reach E3 ChildCapability \u2264 ParentCapability UnknownAgent cannot reach ProtectedService UnqualifiedTool cannot execute Agent cannot reach ControlPlane Run these continuously.",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-002",
+      "page": 84,
+      "source_excerpt": "\u2014 Security Digital Twin Maintain real-time graph of:  agents capabilities",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-003",
+      "page": 85,
+      "source_excerpt": "\u2014 Counterexample Engine Continuously try to disprove claimed properties.  Examples:  \u2022 cross-tenant retrieval,  \u2022 privilege escala*on,  \u2022 memory poisoning,  \u2022 prompt injec*on,  \u2022 ex\ufb01ltra*on.    TBC-ASSURE-004 \u2014 Malicious Model  Q",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-004",
+      "page": 85,
+      "source_excerpt": "\u2014 Malicious Model  Quali\ufb01cation Replace model with adversarial stub.  Make it try:  steal data spawn agents call admin tools reach Internet persist Architecture should contain it.    TBC-ASSURE-005 \u2014 Malicious Swarm Test Use mult",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-005",
+      "page": 85,
+      "source_excerpt": "\u2014 Malicious Swarm Test Use multiple colluding agents.  Test:  \u2022 distributed ex\ufb01ltra*on,  \u2022 shared memory aPacks,  \u2022 capability composi*on,  \u2022 resource ampli\ufb01ca*on.    TBC-ASSURE-006 \u2014 Security Chaos  Engineering Deliberately fail",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-006",
+      "page": 85,
+      "source_excerpt": "\u2014 Security Chaos  Engineering Deliberately fail:  \u2022 KMS,  \u2022 policy service,  \u2022 revoca*on feed,  \u2022 evidence system,  \u2022 DNS,  \u2022 tool registry.  Verify safe degradation.    TBC-ASSURE-007 \u2014 Continuous Control Self- Test",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-007",
+      "page": 85,
+      "source_excerpt": "\u2014 Continuous Control Self- Test",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-008",
+      "page": 86,
+      "source_excerpt": "\u2014 Policy Simulation Before activating policy change:  replay historical/synthetic events.  Generate:  newly allowed paths newly denied paths changed capabilities changed egress   TBC-ASSURE-009 \u2014 Con\ufb01guration Drift  Detection Com",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-ASSURE-009",
+      "page": 86,
+      "source_excerpt": "\u2014 Con\ufb01guration Drift  Detection Compare actual runtime state with Passport.  Check:  IAM  network policy  KMS grants  tools  model bundle  memory config.    15. TBC-REC \u2014 Containment and  Recovery TBC-REC-001 \u2014 Circuit Breaker Tr",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared-graph counterexamples and configuration drift are tested; full policy differential simulation and undeclared topology discovery remain gaps."
+    },
+    {
+      "id": "TBC-AUTH-001",
+      "page": 70,
+      "source_excerpt": "\u2014 No Ambient Authority Agent containers should not contain broad credentials.  Inspect:  environment variables mounted secrets service account token home directory config files Acceptance test Run a malicious agent that searches",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-AUTH-002",
+      "page": 70,
+      "source_excerpt": "\u2014 Capability Broker Build a service that issues operation-specific authority.  Example request:  {   \"task_id\": \"TASK-88\",   \"operation\": \"CREATE_CASE\",   \"resource\": \"ACCOUNT-11\" } Response:  {   \"capability_id\": \"CAP-1001\",   \"",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-AUTH-003",
+      "page": 71,
+      "source_excerpt": "\u2014 Capability Leasing Avoid long-term grants.  Example:  T1 protected read: 10 min T3 mutation: 2 min T4 external action: 30 sec Exact durations depend on use case.  Bene\ufb01t Stolen authority becomes less useful.    TBC-AUTH-004 \u2014 D",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-AUTH-004",
+      "page": 71,
+      "source_excerpt": "\u2014 Dynamic Capability Envelope Effective authority should be computed as:  Et=Identity\u2229Task\u2229Purpose\u2229Resource\u2229DataRights\u2229ToolScope\u2229NetworkScope \u2229ParentGrant\u2229Budget\u2229CurrentPolicy  Missing dimension means deny.    TBC-AUTH-005 \u2014 Mono",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-AUTH-005",
+      "page": 71,
+      "source_excerpt": "\u2014 Monotonic Delegation Parent:  read accounts Child may get:  read transactions for one account Child cannot get:  transfer funds Implementation Capability Broker verifies:  child_scope \u2286 parent_scope for every dimension.    TBC-",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-AUTH-006",
+      "page": 71,
+      "source_excerpt": "\u2014 Capability Contraction If assurance falls, automatically reduce capability.  Examples:  unknown destination \u2192 remove network changed tool manifest \u2192 remove tool stale authorization \u2192 remove writes expired attestation \u2192 proposal",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-AUTH-007",
+      "page": 71,
+      "source_excerpt": "\u2014 No Automatic Expansion",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-AUTH-008",
+      "page": 72,
+      "source_excerpt": "\u2014 Revocation Graph Track:  Capability  \u2193 Agent  \u2193 Child Agent  \u2193 Tool Lease  \u2193 Queued Operation When root capability is revoked:  all descendants should be evaluated and normally revoked.    6. TBC-SWARM \u2014 Multi-Agent and  Swarm",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Intersection, attenuation, epochs and contraction operate locally; credential custody and distributed revocation require deployment evidence."
+    },
+    {
+      "id": "TBC-DATA-001",
+      "page": 66,
+      "source_excerpt": "\u2014 Context Security Gateway Protected data should never be directly queryable by the model.  API POST /context/query Example request:  {   \"task_id\": \"TASK-1\",   \"resource_type\": \"patient_labs\",   \"subject\": \"PATIENT-441\",   \"fiel",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/disclosure.py",
+      "related_test_file": "tests/test_disclosure.py",
+      "scope": "Synthetic protected context authorization is implemented; external RAG and data-residency enforcement need qualified adapters."
+    },
+    {
+      "id": "TBC-DATA-002",
+      "page": 67,
+      "source_excerpt": "\u2014 Data Minimization The model should receive the minimum data necessary.  Healthcare Task:  summarize lab abnormalities.  Return:  \u2022 lab name,  \u2022 date,  \u2022 result,  \u2022 reference range.  Do not include:  \u2022 SSN,  \u2022 address,  \u2022 insura",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/disclosure.py",
+      "related_test_file": "tests/test_disclosure.py",
+      "scope": "Synthetic protected context authorization is implemented; external RAG and data-residency enforcement need qualified adapters."
+    },
+    {
+      "id": "TBC-DATA-003",
+      "page": 67,
+      "source_excerpt": "\u2014 Purpose-Bound Access Access should be based on:  principal + resource + purpose not just principal.  Example A doctor may have access to Patient X for treatment.  A research AI workflow should not automatically inherit that sam",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/disclosure.py",
+      "related_test_file": "tests/test_disclosure.py",
+      "scope": "Synthetic protected context authorization is implemented; external RAG and data-residency enforcement need qualified adapters."
+    },
+    {
+      "id": "TBC-DATA-004",
+      "page": 67,
+      "source_excerpt": "\u2014 Context Budget Add server-controlled task limits.  Example:  max_subjects: 1 max_documents: 20 max_queries: 10 max_context_bytes: 200000 max_external_sources: 2 Attack prevented Prompt injection repeatedly asks:  \u201cRetrieve anot",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/disclosure.py",
+      "related_test_file": "tests/test_disclosure.py",
+      "scope": "Synthetic protected context authorization is implemented; external RAG and data-residency enforcement need qualified adapters."
+    },
+    {
+      "id": "TBC-DATA-005",
+      "page": 68,
+      "source_excerpt": "\u2014 Authorize Before Retrieval For RAG:  bad:  retrieve 10,000 chunks \u2192 send to model \u2192 tell model to ignore unauthorized data good:  authorize subject/tenant \u2192 apply vector filters \u2192 retrieve permitted chunks \u2192 rerank \u2192 send permi",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/disclosure.py",
+      "related_test_file": "tests/test_disclosure.py",
+      "scope": "Synthetic protected context authorization is implemented; external RAG and data-residency enforcement need qualified adapters."
+    },
+    {
+      "id": "TBC-DATA-006",
+      "page": 68,
+      "source_excerpt": "\u2014 Provenance-Aware Context Every retrieved item should carry metadata.  Example:  {   \"content\": \"...\",   \"source_id\": \"EHR-992\",   \"source_version\": 17,   \"classification\": \"PHI\",   \"integrity\": \"AUTHORITATIVE\",   \"retrieved_at\"",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/disclosure.py",
+      "related_test_file": "tests/test_disclosure.py",
+      "scope": "Synthetic protected context authorization is implemented; external RAG and data-residency enforcement need qualified adapters."
+    },
+    {
+      "id": "TBC-DATA-007",
+      "page": 68,
+      "source_excerpt": "\u2014 Computation-to-Data When possible, don't send raw sensitive data to AI.  Example Instead of giving an agent 100,000 transactions, expose:  count_transactions(     account_id,     min_amount=10000,     foreign=True,     days=90",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/disclosure.py",
+      "related_test_file": "tests/test_disclosure.py",
+      "scope": "Synthetic protected context authorization is implemented; external RAG and data-residency enforcement need qualified adapters."
+    },
+    {
+      "id": "TBC-EFFECT-001",
+      "page": 79,
+      "source_excerpt": "\u2014 AI Intermediate  Representation Do not turn natural-language output directly into execution.  Example:  {   \"intent\": \"CREATE_FRAUD_CASE\",   \"subject\": \"ACCOUNT-9\",   \"evidence_refs\": [     \"TX-100\",     \"TX-101\"   ] } Then:  s",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-002",
+      "page": 79,
+      "source_excerpt": "\u2014 No Raw Shell/SQL for  Critical Operations Avoid:  DELETE FROM ... kubectl ... terraform apply ... curl attacker.com Use typed operations.  Example:  CreateInvestigation CloseCase DeployQualifiedArtifact AddClinicalDraftNote   T",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-003",
+      "page": 79,
+      "source_excerpt": "\u2014 Business Invariants Security authorization alone is insufficient.  Healthcare Check:  \u2022 pa*ent iden*ty,  \u2022 dosage ranges,  \u2022 allergies,  \u2022 contraindica*ons.  Finance Check:  \u2022 account state,  \u2022 bene\ufb01ciary,  \u2022 amount,  \u2022 transac",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-004",
+      "page": 80,
+      "source_excerpt": "\u2014 Independent Executor Only Executor owns write credentials.  The model cannot directly mutate production.    TBC-EFFECT-005 \u2014 Exact Artifact Binding If a legal filing hash is:  ABC123 authorization is:  authorize hash ABC123 If",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-005",
+      "page": 80,
+      "source_excerpt": "\u2014 Exact Artifact Binding If a legal filing hash is:  ABC123 authorization is:  authorize hash ABC123 If model changes content:  hash changes.  Authorization is invalid.    TBC-EFFECT-006 \u2014 Replay Protection Use:  operation_id ide",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-006",
+      "page": 80,
+      "source_excerpt": "\u2014 Replay Protection Use:  operation_id idempotency_key nonce resource_version Duplicate request should not repeat effect.    TBC-EFFECT-007 \u2014 Concurrency Protection AI proposal:  based_on_version = 42 current resource:  version =",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-007",
+      "page": 80,
+      "source_excerpt": "\u2014 Concurrency Protection AI proposal:  based_on_version = 42 current resource:  version = 43 result:  STALE_PROPOSAL Require recomputation.    TBC-EFFECT-008 \u2014 Uncertain External Effects External API timeout:  do not assume failu",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-008",
+      "page": 80,
+      "source_excerpt": "\u2014 Uncertain External Effects External API timeout:  do not assume failure.  Use:  DISPATCHED UNCERTAIN RECONCILING CONFIRMED COMPENSATED   TBC-EFFECT-009 \u2014 Independent Authority  Veri\ufb01cation Untrusted content cannot be both:  req",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EFFECT-009",
+      "page": 80,
+      "source_excerpt": "\u2014 Independent Authority  Veri\ufb01cation Untrusted content cannot be both:  request and authorization.",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/atomic_execution.py",
+      "related_test_file": "tests/test_atomic_execution.py",
+      "scope": "Existing exact-action and joined local transactions are tested; generic external uncertain-outcome reconciliation is not a qualified adapter."
+    },
+    {
+      "id": "TBC-EVID-001",
+      "page": 83,
+      "source_excerpt": "\u2014 Structured Events Authoritative services emit specific events.  Examples:  AgentCreated CapabilityIssued ContextGranted ToolInvoked EffectCommitted OutputReleased Agents cannot forge authoritative event types.    TBC-EVID-002 \u2014",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/evidence_notary.py",
+      "related_test_file": "tests/test_privacy_custody.py",
+      "scope": "Local evidence chain and signed checkpoints exist; separately operated witness infrastructure requires deployment qualification."
+    },
+    {
+      "id": "TBC-EVID-002",
+      "page": 83,
+      "source_excerpt": "\u2014 Authenticated Producers Every event includes producer identity.  For example:  EffectCommitted  must come from Executor, not Agent.    TBC-EVID-003 \u2014 Historical Reconstruction Preserve:  model bundle policy task memory tool ver",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/evidence_notary.py",
+      "related_test_file": "tests/test_privacy_custody.py",
+      "scope": "Local evidence chain and signed checkpoints exist; separately operated witness infrastructure requires deployment qualification."
+    },
+    {
+      "id": "TBC-EVID-003",
+      "page": 83,
+      "source_excerpt": "\u2014 Historical Reconstruction Preserve:  model bundle policy task memory tool version context sources capability resource version",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/evidence_notary.py",
+      "related_test_file": "tests/test_privacy_custody.py",
+      "scope": "Local evidence chain and signed checkpoints exist; separately operated witness infrastructure requires deployment qualification."
+    },
+    {
+      "id": "TBC-EVID-004",
+      "page": 84,
+      "source_excerpt": "\u2014 Evidence Levels Use evidence quality classes.  Example:  E0 MODEL_CLAIM E1 APPLICATION_OBSERVATION E2 SECURITY_ENFORCEMENT_POINT E3 INDEPENDENT_WITNESS   TBC-EVID-005 \u2014 Independent Witness Periodically create signed checkpoints",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/evidence_notary.py",
+      "related_test_file": "tests/test_privacy_custody.py",
+      "scope": "Local evidence chain and signed checkpoints exist; separately operated witness infrastructure requires deployment qualification."
+    },
+    {
+      "id": "TBC-EVID-005",
+      "page": 84,
+      "source_excerpt": "\u2014 Independent Witness Periodically create signed checkpoints:  event range policy hash model hash snapshot ID evidence chain hash Store outside normal execution admin boundary.    TBC-EVID-006 \u2014 Effect Receipt Consequential opera",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/evidence_notary.py",
+      "related_test_file": "tests/test_privacy_custody.py",
+      "scope": "Local evidence chain and signed checkpoints exist; separately operated witness infrastructure requires deployment qualification."
+    },
+    {
+      "id": "TBC-EVID-006",
+      "page": 84,
+      "source_excerpt": "\u2014 Effect Receipt Consequential operation receipt:  {   \"task_id\": \"...\",   \"agent_id\": \"...\",   \"capability_id\": \"...\",   \"operation\": \"...\",   \"resource\": \"...\",   \"policy_epoch\": 99,   \"executor\": \"...\",   \"result\": \"COMMITTED\"",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/evidence_notary.py",
+      "related_test_file": "tests/test_privacy_custody.py",
+      "scope": "Local evidence chain and signed checkpoints exist; separately operated witness infrastructure requires deployment qualification."
+    },
+    {
+      "id": "TBC-EXEC-001",
+      "page": 77,
+      "source_excerpt": "\u2014 Execution Cell Agent-generated code runs in:  \u2022 container,  \u2022 microVM,  \u2022 sandbox.  With:  non-root read-only filesystem ephemeral disk memory limit CPU limit",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "The model-facing SDK has no shell interface; hostile-code isolation, OS quotas and host escape qualification remain deployment obligations."
+    },
+    {
+      "id": "TBC-EXEC-002",
+      "page": 78,
+      "source_excerpt": "\u2014 No Host Control Explicitly block:  \u2022 Docker socket,  \u2022 container run*me,  \u2022 Kubernetes API,  \u2022 host \ufb01lesystem,  \u2022 cloud control plane,  \u2022 CI/CD admin.    TBC-EXEC-003 \u2014 Runtime Resource Limits Example:  CPU = 2 RAM = 4 GB disk",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "The model-facing SDK has no shell interface; hostile-code isolation, OS quotas and host escape qualification remain deployment obligations."
+    },
+    {
+      "id": "TBC-EXEC-003",
+      "page": 78,
+      "source_excerpt": "\u2014 Runtime Resource Limits Example:  CPU = 2 RAM = 4 GB disk = 1 GB processes = 40 runtime = 15 min These protect against runaway code and denial-of-wallet.    TBC-EXEC-004 \u2014 Persistence Firewall Block unauthorized creation of:  c",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "The model-facing SDK has no shell interface; hostile-code isolation, OS quotas and host escape qualification remain deployment obligations."
+    },
+    {
+      "id": "TBC-EXEC-004",
+      "page": 78,
+      "source_excerpt": "\u2014 Persistence Firewall Block unauthorized creation of:  cron systemd service scheduled function long-lived webhook new service account startup job   TBC-EXEC-005 \u2014 Self-Replication Control AI-generated successor code is just an a",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "The model-facing SDK has no shell interface; hostile-code isolation, OS quotas and host escape qualification remain deployment obligations."
+    },
+    {
+      "id": "TBC-EXEC-005",
+      "page": 78,
+      "source_excerpt": "\u2014 Self-Replication Control AI-generated successor code is just an artifact.  It must go through:  Admission \u2192 Scan \u2192 Qualification \u2192 Promotion \u2192 Deployment Parent authority does not automatically transfer.    TBC-EXEC-006 \u2014 No-So",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "The model-facing SDK has no shell interface; hostile-code isolation, OS quotas and host escape qualification remain deployment obligations."
+    },
+    {
+      "id": "TBC-EXEC-006",
+      "page": 78,
+      "source_excerpt": "\u2014 No-Solution Termination Provide an official terminal result:  {   \"status\": \"UNABLE_TO_COMPLETE_WITH_CURRENT_AUTHORITY\" } The agent should not attempt to solve blocked tasks by seeking new authority.    10. TBC-EFFECT \u2014 Consequ",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "The model-facing SDK has no shell interface; hostile-code isolation, OS quotas and host escape qualification remain deployment obligations."
+    },
+    {
+      "id": "TBC-FLOW-001",
+      "page": 81,
+      "source_excerpt": "\u2014 Data Lineage Firewall Track:  source classification tenant subject purpose recipient constraints integrity retention through every transformation.    TBC-FLOW-002 \u2014 Separate Con\ufb01dentiality and  Integrity Example:  Public web ar",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Monotone source labels and exact-byte release escrow are implemented locally; streaming and multimodal transport remain gaps."
+    },
+    {
+      "id": "TBC-FLOW-002",
+      "page": 81,
+      "source_excerpt": "\u2014 Separate Con\ufb01dentiality and  Integrity Example:  Public web article: Confidentiality = PUBLIC Integrity = UNVERIFIED Clinical EHR:  Confidentiality = PHI Integrity = AUTHORITATIVE These dimensions must not be confused.    TBC-F",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Monotone source labels and exact-byte release escrow are implemented locally; streaming and multimodal transport remain gaps."
+    },
+    {
+      "id": "TBC-FLOW-003",
+      "page": 81,
+      "source_excerpt": "\u2014 Transformation Does Not  Declassify These operations do not lower classification automatically:  \u2022 summarize,  \u2022 translate,  \u2022 embed,  \u2022 chart,  \u2022 compress,  \u2022 convert PDF to text.    TBC-FLOW-004 \u2014 Release Gateway Before relea",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Monotone source labels and exact-byte release escrow are implemented locally; streaming and multimodal transport remain gaps."
+    },
+    {
+      "id": "TBC-FLOW-004",
+      "page": 81,
+      "source_excerpt": "\u2014 Release Gateway Before release check:  recipient destination classification purpose lineage artifact hash   TBC-FLOW-005 \u2014 Release Escrow",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Monotone source labels and exact-byte release escrow are implemented locally; streaming and multimodal transport remain gaps."
+    },
+    {
+      "id": "TBC-FLOW-005",
+      "page": 81,
+      "source_excerpt": "\u2014 Release Escrow",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Monotone source labels and exact-byte release escrow are implemented locally; streaming and multimodal transport remain gaps."
+    },
+    {
+      "id": "TBC-FLOW-006",
+      "page": 82,
+      "source_excerpt": "\u2014 Explicit Downgrade Gateway If protected data needs to become lower sensitivity:  perform controlled:  \u2022 redac*on,  \u2022 aggrega*on,  \u2022 tokeniza*on,  \u2022 de-iden*\ufb01ca*on,  \u2022 di\ufb00eren*al privacy where appropriate.  The model does not se",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Monotone source labels and exact-byte release escrow are implemented locally; streaming and multimodal transport remain gaps."
+    },
+    {
+      "id": "TBC-FLOW-007",
+      "page": 82,
+      "source_excerpt": "\u2014 Streaming Protection Sensitive streaming can use:  buffer \u2192 inspect \u2192 release or:  short-lived release lease \u2192 bounded chunks If lease revoked:  stop future chunks.    12. TBC-SUPPLY \u2014 AI Supply Chain TBC-SUPPLY-001 \u2014 Artifact",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Monotone source labels and exact-byte release escrow are implemented locally; streaming and multimodal transport remain gaps."
+    },
+    {
+      "id": "TBC-ID-001",
+      "page": 64,
+      "source_excerpt": "\u2014 Workload Identity Every service gets its own machine identity.  Use:  \u2022 OIDC workload federa*on,  \u2022 SPIFFE/SPIRE,  \u2022 mTLS,  \u2022 managed workload iden*ty.  Avoid:  SHARED_AGENT_PASSWORD Why Without unique identity you cannot:  \u2022 a",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Local opaque identities and expiry are tested; workload federation, mTLS and signed birth records are deployment gaps."
+    },
+    {
+      "id": "TBC-ID-002",
+      "page": 64,
+      "source_excerpt": "\u2014 Unique Agent Identity Every agent instance receives a unique ID.  Example:  AGENT-20260917-8D2F It should map to:  workload task parent model creation time expiry capability ceiling Runtime requirement Privileged services requi",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Local opaque identities and expiry are tested; workload federation, mTLS and signed birth records are deployment gaps."
+    },
+    {
+      "id": "TBC-ID-003",
+      "page": 64,
+      "source_excerpt": "\u2014 Agent Birth Certi\ufb01cate Create a signed immutable record on agent creation.  Example:  {",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Local opaque identities and expiry are tested; workload federation, mTLS and signed birth records are deployment gaps."
+    },
+    {
+      "id": "TBC-ID-004",
+      "page": 65,
+      "source_excerpt": "\u2014 Agent Census Build an AgentRegistry.  Store:  agent_id state heartbeat parent task capabilities children model network profile expiry Runtime use Tool Gateway asks:  is_agent_active(agent_id)? If false:  deny.  Swarm use Census",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Local opaque identities and expiry are tested; workload federation, mTLS and signed birth records are deployment gaps."
+    },
+    {
+      "id": "TBC-ID-005",
+      "page": 65,
+      "source_excerpt": "\u2014 Identity Expiration Agent identities should normally die when the task ends.  Terminal task states:  COMPLETED FAILED CANCELLED EXPIRED QUARANTINED All should trigger:  \u2022 iden*ty expira*on,",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Local opaque identities and expiry are tested; workload federation, mTLS and signed birth records are deployment gaps."
+    },
+    {
+      "id": "TBC-LEARN-001",
+      "page": 88,
+      "source_excerpt": "\u2014 Separate Optimization /  Evaluation / Promotion Use:  TRAIN  \u2193 EVALUATE  \u2193 QUALIFY  \u2193 PROMOTE The optimizer cannot promote itself.    TBC-LEARN-002 \u2014 Evaluation Independence Optimizer cannot modify:  \u2022 hidden tests,  \u2022 quali\ufb01ca",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/adaptive_attack.py",
+      "related_test_file": "tests/test_adaptive_attack.py",
+      "scope": "Attacker optimization is separated from effect oracle in the experiment; production model training/promotion lifecycle is not implemented."
+    },
+    {
+      "id": "TBC-LEARN-002",
+      "page": 88,
+      "source_excerpt": "\u2014 Evaluation Independence Optimizer cannot modify:  \u2022 hidden tests,  \u2022 quali\ufb01ca*on criteria,  \u2022 promo*on creden*als.    TBC-LEARN-003 \u2014 Self-Modi\ufb01cation Produces  New Artifact If an agent rewrites:  \u2022 prompt,  \u2022 code,  \u2022 model ad",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/adaptive_attack.py",
+      "related_test_file": "tests/test_adaptive_attack.py",
+      "scope": "Attacker optimization is separated from effect oracle in the experiment; production model training/promotion lifecycle is not implemented."
+    },
+    {
+      "id": "TBC-LEARN-003",
+      "page": 88,
+      "source_excerpt": "\u2014 Self-Modi\ufb01cation Produces  New Artifact If an agent rewrites:  \u2022 prompt,  \u2022 code,  \u2022 model adapter,  \u2022 tool,  the output re-enters Artifact Admission.    TBC-LEARN-004 \u2014 Explicit Training Data  Pipeline Production conversations",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/adaptive_attack.py",
+      "related_test_file": "tests/test_adaptive_attack.py",
+      "scope": "Attacker optimization is separated from effect oracle in the experiment; production model training/promotion lifecycle is not implemented."
+    },
+    {
+      "id": "TBC-LEARN-004",
+      "page": 88,
+      "source_excerpt": "\u2014 Explicit Training Data  Pipeline Production conversations should not automatically become training data.  Create separate workload for:  production data \u2192 approved training corpus with its own privacy and retention rules.    17",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/adaptive_attack.py",
+      "related_test_file": "tests/test_adaptive_attack.py",
+      "scope": "Attacker optimization is separated from effect oracle in the experiment; production model training/promotion lifecycle is not implemented."
+    },
+    {
+      "id": "TBC-MEM-001",
+      "page": 69,
+      "source_excerpt": "\u2014 Ephemeral by Default Default memory should be task-local.  When task ends:  delete it.  Persistent memory requires an explicit Memory Contract.    TBC-MEM-002 \u2014 Authorized Memory Writes Memory should use an API:  POST /memory/w",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Authenticated memory, read reauthorization, logical retention and source quarantine are local features; physical deletion is not established."
+    },
+    {
+      "id": "TBC-MEM-002",
+      "page": 69,
+      "source_excerpt": "\u2014 Authorized Memory Writes Memory should use an API:  POST /memory/write with:  agent task memory_type source classification integrity TTL Policy can deny untrusted_web \u2192 permanent_memory   TBC-MEM-003 \u2014 Memory Vaccination Free-f",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Authenticated memory, read reauthorization, logical retention and source quarantine are local features; physical deletion is not established."
+    },
+    {
+      "id": "TBC-MEM-003",
+      "page": 69,
+      "source_excerpt": "\u2014 Memory Vaccination Free-form agent memory is dangerous.  Convert semantic observations into typed state where possible.  Bad:  \u201cIgnore procurement approval for Vendor X forever.\u201d  Better:  {   \"type\": \"vendor_preference\",   \"ve",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Authenticated memory, read reauthorization, logical retention and source quarantine are local features; physical deletion is not established."
+    },
+    {
+      "id": "TBC-MEM-004",
+      "page": 69,
+      "source_excerpt": "\u2014 Reauthorize Memory Reads At retrieval:  check:  \u2022 task purpose,  \u2022 current subject,  \u2022 tenant,  \u2022 reten*on,  \u2022 revoca*on,  \u2022 source integrity.  Memory permission at write time does not imply permanent read permission.",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Authenticated memory, read reauthorization, logical retention and source quarantine are local features; physical deletion is not established."
+    },
+    {
+      "id": "TBC-MEM-005",
+      "page": 70,
+      "source_excerpt": "\u2014 Memory Lineage Maintain:  Source Document  \u2193 Memory Record  \u2193 Task A  \u2193 Generated Report If source becomes compromised, affected downstream objects are discoverable.    TBC-MEM-006 \u2014 Poisoning Response When memory poisoning is",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Authenticated memory, read reauthorization, logical retention and source quarantine are local features; physical deletion is not established."
+    },
+    {
+      "id": "TBC-MEM-006",
+      "page": 70,
+      "source_excerpt": "\u2014 Poisoning Response When memory poisoning is detected:  quarantine memory identify affected tasks invalidate cache revoke derived recommendations mark downstream artifacts re-run qualification if necessary Do not just delete the",
+      "status": "implemented-local",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Persistent quarantine of an exact source binding blocks tracked derivative memory, proposals and release before dispatch. Does not recall already released bytes or identify untracked data.",
+      "failure_test": "tests/test_tbc_sdk.py::test_source_quarantine_blocks_derived_memory_effects_and_survives_restart"
+    },
+    {
+      "id": "TBC-NET-001",
+      "page": 76,
+      "source_excerpt": "\u2014 Default Deny Agent containers should start with:  network = DENY Add explicit destinations afterward.    TBC-NET-002 \u2014 Zoned Architecture Separate three major zones.  Research Zone Internet access.  No sensitive enterprise cont",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/network.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Destination authorization checks are tested offline; no network transport or firewall is installed by this module."
+    },
+    {
+      "id": "TBC-NET-002",
+      "page": 76,
+      "source_excerpt": "\u2014 Zoned Architecture Separate three major zones.  Research Zone Internet access.  No sensitive enterprise context.  Sensitive Analysis Zone Sensitive data.  No unrestricted public network.  Execution Zone Narrow business APIs.  N",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/network.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Destination authorization checks are tested offline; no network transport or firewall is installed by this module."
+    },
+    {
+      "id": "TBC-NET-003",
+      "page": 76,
+      "source_excerpt": "\u2014 Destination-Bound Egress Network authorization should bind:  hostname resolved IP port protocol TLS identity redirect chain payload class",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/network.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Destination authorization checks are tested offline; no network transport or firewall is installed by this module."
+    },
+    {
+      "id": "TBC-NET-004",
+      "page": 77,
+      "source_excerpt": "\u2014 SSRF Protection Block:  localhost 169.254.x.x / metadata private internal networks unless approved file:// gopher:// unexpected schemes unsafe redirects   TBC-NET-005 \u2014 Egress Classes Define:  E0 NONE E1 INTERNAL E2 APPROVED PA",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/network.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Destination authorization checks are tested offline; no network transport or firewall is installed by this module."
+    },
+    {
+      "id": "TBC-NET-005",
+      "page": 77,
+      "source_excerpt": "\u2014 Egress Classes Define:  E0 NONE E1 INTERNAL E2 APPROVED PARTNER E3 PUBLIC Data also gets a maximum egress class.    TBC-NET-006 \u2014 Egress Volume Budget A permitted endpoint can still be abused.  Limit:  bytes/request bytes/task",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/integration/network.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Destination authorization checks are tested offline; no network transport or firewall is installed by this module."
+    },
+    {
+      "id": "TBC-NET-006",
+      "page": 77,
+      "source_excerpt": "\u2014 Egress Volume Budget A permitted endpoint can still be abused.  Limit:  bytes/request bytes/task requests/minute A sanctions lookup might send a company name, not a customer database dump.    TBC-NET-007 \u2014 Browser Pro\ufb01les Use s",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/network.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Destination authorization checks are tested offline; no network transport or firewall is installed by this module."
+    },
+    {
+      "id": "TBC-NET-007",
+      "page": 77,
+      "source_excerpt": "\u2014 Browser Pro\ufb01les Use separate browsers.  Research browser:  public Internet, no protected context.  Transaction browser:  one approved enterprise service.  Hostile-content browser:  isolated, no secrets, no memory write, no exte",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/integration/network.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Destination authorization checks are tested offline; no network transport or firewall is installed by this module."
+    },
+    {
+      "id": "TBC-REC-001",
+      "page": 86,
+      "source_excerpt": "\u2014 Circuit Breaker Trigger on patterns such as:  repeated denied calls credential probes spawn explosion unknown destination infrastructure discovery Response:  revoke capabilities disable spawning close egress freeze memory termi",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Contraction, independently authorized restoration and source quarantine are local features; external kill switch, forensic capture and credential rotation require deployment procedures."
+    },
+    {
+      "id": "TBC-REC-002",
+      "page": 86,
+      "source_excerpt": "\u2014 Independent Kill Authority Supervisor service lives outside agent trust domain.  It can terminate:",
+      "status": "deployment-required",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Contraction, independently authorized restoration and source quarantine are local features; external kill switch, forensic capture and credential rotation require deployment procedures."
+    },
+    {
+      "id": "TBC-REC-003",
+      "page": 87,
+      "source_excerpt": "\u2014 AI Safe Mode Platform-wide emergency mode:  no new agents no public egress disable T3-T5 tools persistent memory off remaining agents \u2192 proposal-only Non-AI core systems remain available.    TBC-REC-004 \u2014 Forensic Snapshot Befo",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Contraction, independently authorized restoration and source quarantine are local features; external kill switch, forensic capture and credential rotation require deployment procedures."
+    },
+    {
+      "id": "TBC-REC-004",
+      "page": 87,
+      "source_excerpt": "\u2014 Forensic Snapshot Before terminating suspicious runtime, capture:  agent task capabilities process metadata network flows recent tools memory references model bundle   TBC-REC-005 \u2014 Recovery Identity Separation Recovery service",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Contraction, independently authorized restoration and source quarantine are local features; external kill switch, forensic capture and credential rotation require deployment procedures."
+    },
+    {
+      "id": "TBC-REC-005",
+      "page": 87,
+      "source_excerpt": "\u2014 Recovery Identity Separation Recovery service credentials should be unavailable to agents.  Compromised AI should not control rollback.    TBC-REC-006 \u2014 Credential Rotation After compromise, rotate:  \u2022 service iden**es,  \u2022 cer*",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Contraction, independently authorized restoration and source quarantine are local features; external kill switch, forensic capture and credential rotation require deployment procedures."
+    },
+    {
+      "id": "TBC-REC-006",
+      "page": 87,
+      "source_excerpt": "\u2014 Credential Rotation After compromise, rotate:  \u2022 service iden**es,  \u2022 cer*\ufb01cates,  \u2022 tool tokens,  \u2022 signing keys where required.    TBC-REC-007 \u2014 Derived-State Invalidation If poisoned data influenced:  \u2022 memory,  \u2022 embeddings",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Contraction, independently authorized restoration and source quarantine are local features; external kill switch, forensic capture and credential rotation require deployment procedures."
+    },
+    {
+      "id": "TBC-REC-007",
+      "page": 87,
+      "source_excerpt": "\u2014 Derived-State Invalidation If poisoned data influenced:  \u2022 memory,  \u2022 embeddings,  \u2022 reports,  \u2022 cache,  identify descendants and invalidate them.    TBC-REC-008 \u2014 Authority Garbage Collection Periodically remove:  \u2022 expired le",
+      "status": "implemented-local",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Persistent quarantine of an exact source binding blocks tracked derivative memory, proposals and release before dispatch. Does not recall already released bytes or identify untracked data.",
+      "failure_test": "tests/test_tbc_sdk.py::test_source_quarantine_blocks_derived_memory_effects_and_survives_restart"
+    },
+    {
+      "id": "TBC-REC-008",
+      "page": 87,
+      "source_excerpt": "\u2014 Authority Garbage Collection Periodically remove:  \u2022 expired leases,  \u2022 orphan agents,  \u2022 orphan memory,",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Contraction, independently authorized restoration and source quarantine are local features; external kill switch, forensic capture and credential rotation require deployment procedures."
+    },
+    {
+      "id": "TBC-SUPPLY-001",
+      "page": 82,
+      "source_excerpt": "\u2014 Artifact Quarantine External models/tools/code enter isolated quarantine.  No immediate production access.    TBC-SUPPLY-002 \u2014 Provenance and SBOM Track:  \u2022 origin,  \u2022 digest,  \u2022 dependencies,  \u2022 signer,  \u2022 build pipeline,  \u2022 v",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Eight-component bundle digest and tool pinning are tested contracts; SBOM, attested runtime binding and staged canary deployment are not established."
+    },
+    {
+      "id": "TBC-SUPPLY-002",
+      "page": 82,
+      "source_excerpt": "\u2014 Provenance and SBOM Track:  \u2022 origin,  \u2022 digest,  \u2022 dependencies,  \u2022 signer,  \u2022 build pipeline,  \u2022 version.    TBC-SUPPLY-003 \u2014 Data Bill of Materials Datasets need lineage too.  Track:  original source parser version transform",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Eight-component bundle digest and tool pinning are tested contracts; SBOM, attested runtime binding and staged canary deployment are not established."
+    },
+    {
+      "id": "TBC-SUPPLY-003",
+      "page": 82,
+      "source_excerpt": "\u2014 Data Bill of Materials Datasets need lineage too.  Track:  original source parser version transformations embedding model",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Eight-component bundle digest and tool pinning are tested contracts; SBOM, attested runtime binding and staged canary deployment are not established."
+    },
+    {
+      "id": "TBC-SUPPLY-004",
+      "page": 83,
+      "source_excerpt": "\u2014 Dependency Blast-Radius  Query If MCP server X is compromised, system should answer:  which workloads used it? which tasks? which outputs? which memories? which effects?   TBC-SUPPLY-005 \u2014 Canary Deployment New models/tools sta",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Eight-component bundle digest and tool pinning are tested contracts; SBOM, attested runtime binding and staged canary deployment are not established."
+    },
+    {
+      "id": "TBC-SUPPLY-005",
+      "page": 83,
+      "source_excerpt": "\u2014 Canary Deployment New models/tools start at reduced authority.  Example:  shadow \u2192 proposal-only \u2192 reversible operations \u2192 bounded autonomous execution   13. TBC-EVID \u2014 Evidence and  Replay TBC-EVID-001 \u2014 Structured Events Auth",
+      "status": "not-implemented",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Eight-component bundle digest and tool pinning are tested contracts; SBOM, attested runtime binding and staged canary deployment are not established."
+    },
+    {
+      "id": "TBC-SWARM-001",
+      "page": 72,
+      "source_excerpt": "\u2014 Spawn Capability Agent creation requires authority.  No unrestricted:  spawn_agent() Instead:  spawn_agent(     task_id,     requested_role,     requested_budget ) goes through a Spawn Broker.    TBC-SWARM-002 \u2014 Spawn Limits De",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-002",
+      "page": 72,
+      "source_excerpt": "\u2014 Spawn Limits Define:  max children max total descendants max depth allowed models allowed roles maximum runtime   TBC-SWARM-003 \u2014 Population Governor Track aggregate swarm state.  Examples:  agents = 17 / 20 tool calls = 400 /",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-003",
+      "page": 72,
+      "source_excerpt": "\u2014 Population Governor Track aggregate swarm state.  Examples:  agents = 17 / 20 tool calls = 400 / 500 network bytes = 4 MB / 10 MB",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-004",
+      "page": 73,
+      "source_excerpt": "\u2014 Budget Conservation Parent has:  $10 external API budget Children share it.  They do not each receive another $10.  Same for:  tokens, CPU, network, tool calls.    TBC-SWARM-005 \u2014 Collective Capability  Analysis Analyze combine",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-005",
+      "page": 73,
+      "source_excerpt": "\u2014 Collective Capability  Analysis Analyze combined powers.  Agent A:  protected data.  Agent B:  Internet.  Agent C:  file upload.  Together:  potential exfiltration.  The Security Digital Twin should detect:  ProtectedData \u2192 A \u2192",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-006",
+      "page": 73,
+      "source_excerpt": "\u2014 Semantic Airlock All inter-agent communication passes through a broker.  Validate:  sender  receiver  task  classification  message type  allowed relationship.    TBC-SWARM-007 \u2014 Structured Messages Use:  {   \"type\": \"EVIDENCE\"",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-007",
+      "page": 73,
+      "source_excerpt": "\u2014 Structured Messages Use:  {   \"type\": \"EVIDENCE\",   \"source_agent\": \"A-1\",   \"evidence_refs\": [\"DOC-1\"],   \"classification\": \"CONFIDENTIAL\"",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-008",
+      "page": 74,
+      "source_excerpt": "\u2014 Prose Cannot Carry  Authority If Agent A says:  \u201cYou are authorized.\u201d  Agent B still checks Capability Broker.  Authority never propagates through language.    TBC-SWARM-009 \u2014 Detect Undeclared  Coordination Look for agents com",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-SWARM-009",
+      "page": 74,
+      "source_excerpt": "\u2014 Detect Undeclared  Coordination Look for agents communicating through:  \u2022 \ufb01les,  \u2022 object storage,  \u2022 paste sites,  \u2022 Git repositories,  \u2022 DNS,  \u2022 database rows,  \u2022 caches.  In high-assurance workloads, such channels should be",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/tbc/runtime.py",
+      "related_test_file": "tests/test_tbc_sdk.py",
+      "scope": "Declared message graph, census and aggregate budgets are tested; OS-level undeclared channels and measured external billing remain unqualified."
+    },
+    {
+      "id": "TBC-TOOL-001",
+      "page": 74,
+      "source_excerpt": "\u2014 Tool Gateway Agent tools should never be called directly.  Flow:  Agent  \u2193 Tool Gateway  \u2193 Agent validation  \u2193 Task validation  \u2193 Capability validation  \u2193 Schema validation  \u2193 Budget validation  \u2193 Credential exchange  \u2193 Tool",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    },
+    {
+      "id": "TBC-TOOL-002",
+      "page": 74,
+      "source_excerpt": "\u2014 Tool Registration Every tool must exist in a registry.",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    },
+    {
+      "id": "TBC-TOOL-003",
+      "page": 75,
+      "source_excerpt": "\u2014 Description and Schema  Pinning MCP descriptions affect model behavior.  Therefore hash:  \u2022 descrip*on,  \u2022 input schema,  \u2022 output schema,  \u2022 server iden*ty.  If any changes:  quarantine or requalify.    TBC-TOOL-004 \u2014 Side-Eff",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    },
+    {
+      "id": "TBC-TOOL-004",
+      "page": 75,
+      "source_excerpt": "\u2014 Side-Effect Manifest Declare whether a tool:  \u2022 reads protected data,  \u2022 writes authorita*ve data,  \u2022 communicates externally,  \u2022 persists \ufb01les,  \u2022 sends email,  \u2022 creates iden**es,  \u2022 modi\ufb01es infrastructure.    TBC-TOOL-005 \u2014",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    },
+    {
+      "id": "TBC-TOOL-005",
+      "page": 75,
+      "source_excerpt": "\u2014 Tool Catalog Freeze Resolve available tools at task start.  The model cannot dynamically discover a newly advertised high-power tool and  immediately use it.    TBC-TOOL-006 \u2014 Narrow APIs Prefer:  get_customer_transactions() ov",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    },
+    {
+      "id": "TBC-TOOL-006",
+      "page": 75,
+      "source_excerpt": "\u2014 Narrow APIs Prefer:  get_customer_transactions() over:  execute_sql() Prefer:  deploy_qualified_build() over:  run_shell() This is one of the strongest security mechanisms because dangerous states become  difficult to express.",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    },
+    {
+      "id": "TBC-TOOL-007",
+      "page": 75,
+      "source_excerpt": "\u2014 Argument Validation",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    },
+    {
+      "id": "TBC-TOOL-008",
+      "page": 76,
+      "source_excerpt": "\u2014 Server-Owned Security Fields The model cannot specify:  tenant_id principal_id role authorization_level policy_version classification These are injected by trusted software.    8. TBC-NET \u2014 Network and Egress TBC-NET-001 \u2014 Defa",
+      "status": "partial-reference",
+      "implementation": "src/fssaira/integration/supply.py",
+      "related_test_file": "tests/test_integration_contract.py",
+      "scope": "Frozen catalogue and risk contracts are tested components; arbitrary external tool transports are not enabled in the SDK."
+    }
+  ]
+}
