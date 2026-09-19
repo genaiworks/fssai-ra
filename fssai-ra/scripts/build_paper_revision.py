@@ -169,7 +169,7 @@ REFERENCES = [
 
 TABLE_ROW = (
     "Frontier-threat controls",
-    "16 executed cases: durable stop, per-chunk reauthorisation, restrict-only monitoring",
+    "18 executed cases: durable stop, per-chunk reauthorisation, restrict-only monitoring",
     "Deterministic local scenarios over the declared interface; they do not replay frontier-model experiments "
     "or estimate real-world frequency",
 )
@@ -247,7 +247,7 @@ def build(source: Path = SOURCE, target: Path = TARGET) -> dict:
     rows = table.findall(W + 'tr')
     last = rows[-1]
     cells = last.findall(W + 'tc')
-    set_text(cells[1].find(W + 'p'), '1,117 tests passed; ten source-bound capability contracts executed')
+    set_text(cells[1].find(W + 'p'), '1,120 tests passed; ten source-bound capability contracts executed')
     set_text(cells[2].find(W + 'p'), 'Local functional evidence, including schema rejection, durable source '
              'quarantine and the added frontier controls; not operational certification')
     added = copy.deepcopy(last)
@@ -260,6 +260,30 @@ def build(source: Path = SOURCE, target: Path = TARGET) -> dict:
     for offset, reference in enumerate(REFERENCES):
         body.insert(position + offset, clone(reference_template, reference))
 
+    review = json.loads((ROOT / 'paper/tbc-v13/revision-content.json').read_text())
+    set_text(find(body, 'Generative AI is moving')[1], review['abstract'])
+    set_text(find(body, 'Learning institutions are a demanding setting')[1], review['intro'])
+    set_text(find(body, 'The underlying mechanisms are established')[1], review['foundations'])
+    set_text(find(body, 'A second body of evidence')[1], review['covert'])
+    set_text(find(body, 'Threats to validity and deployment limits')[1], review['validity'])
+    set_text(find(body, 'The alignment is therefore concrete')[1], review['education_example'])
+    p = find(body, 'Education sharpens the general problem')[1]
+    set_text(p, text_of(p).replace('making institutional deployment safer', 'making institutional authority inspectable'))
+    for prefix in ('The architecture is implemented as', 'Code, machine-readable authority profiles'):
+        p = find(body, prefix)[1]
+        set_text(p, text_of(p).replace(' [20]', ''))
+    p = find(body, 'The third control follows')[1]
+    set_text(p, text_of(p).replace('task metadata and the current evidence head, never protected text',
+             'task metadata, the current evidence head and at most 32 recent allowlisted event types, never protected text'))
+    # Old foundational and non-paper citations are replaced, not merely relabelled.
+    template = copy.deepcopy(reference_template)
+    for node in list(body):
+        if node.tag == W + 'p' and text_of(node).startswith('['):
+            body.remove(node)
+    ref_index, _ = find(body, 'References')
+    for offset, ref in enumerate(review['references']):
+        value = f"[{ref['id']}] {ref['authors']}, {ref['title']}. Research preprint, {ref['year']}. {ref['url']}"
+        body.insert(ref_index + 1 + offset, clone(template, value))
     updated = ET.tostring(root, encoding='UTF-8', xml_declaration=True)
     target.parent.mkdir(parents=True, exist_ok=True)
     # Reuse each source entry's metadata so rebuilding the revision is byte-reproducible.

@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "source": "paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx",
-  "source_sha256": "e3e0048851eabd5b9d008e3139ce17d8f28af43e32b04babd0dadba14978869f",
+  "source_sha256": "2ae23c51c4f89d4c22ef7e3b25f223ed41ba35d8ef8bcf49384a1b32083ba5d8",
   "derived_from": "paper/tbc-v12/TBC_v12_Engineering_Revision.docx",
   "build": "scripts/build_paper_revision.py",
-  "regression_tests": 1117,
+  "regression_tests": 1120,
   "executed_contracts": 10,
   "claims": [
     {
@@ -82,6 +82,12 @@
         "tests/test_incident_map.py::test_map_keeps_the_unmediated_stages_visible",
         "tests/test_incident_map.py::test_every_stage_is_dispositioned_and_evidence_backed"
       ]
+    },
+    {
+      "paper_anchor": "at most 32 recent allowlisted event types",
+      "tests": [
+        "tests/test_frontier_controls.py::test_monitor_gets_bounded_event_types_without_protected_text"
+      ]
     }
   ],
   "limitations": [
@@ -91,5 +97,5 @@
     "The incident map is an architectural reading of a public disclosure, not a reconstruction, and claims no prevention.",
     "The frontier-control tests are deterministic local scenarios; they do not reproduce frontier-model propensities."
   ],
-  "regression_source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
+  "regression_source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
 }

@@ -616,10 +616,19 @@ class TrustRuntime:
         name = self._admin(token, "monitor")
         with self.transaction():
             task = self._task(task_id)
+            events = []
+            allowed = {"tbc_" + op for op in SCHEMAS} | {"tbc_denied", "tbc_contract", "tbc_monitor_finding"}
+            for row in self.db.execute("SELECT seq,body FROM evidence ORDER BY seq DESC LIMIT 128"):
+                event = json.loads(row["body"])
+                if event.get("kind") in allowed and event.get("data", {}).get("task") == task_id:
+                    events.append({"sequence": row["seq"], "kind": event["kind"]})
+                    if len(events) == 32:
+                        break
+            events.reverse()
             self.world.event("tbc_monitor_snapshot", {"task": task_id, "monitor": name})
             head = self.db.execute("SELECT head FROM evidence ORDER BY seq DESC LIMIT 1").fetchone()[0]
             body = {"task": task_id, "epoch": task["epoch"], "state": task["state"], "head": head,
-                    "monitor": name, "expires": min(self._now() + self.passport.lease_seconds,
+                    "monitor": name, "events": events, "expires": min(self._now() + self.passport.lease_seconds,
                                                      task["contract"].expires)}
             snapshot = self._put("monitor_snapshot", body)
             return {"snapshot": snapshot, **body}

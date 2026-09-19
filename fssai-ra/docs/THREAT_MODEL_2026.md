@@ -112,3 +112,39 @@ or execute every capability contract with `python scripts/verify_architecture.py
 These are deterministic local scenarios over the declared interface. They do not
 replay frontier-model experiments, and they do not estimate how often any of
 this happens in the field.
+
+## Submission review and recent research
+
+The active v13 bibliography now cites research papers only, within the trailing
+three-year window ending 2026-09-19. Primary metadata and the exact selected
+papers are in `paper/tbc-v13/revision-content.json`; a regression test checks the
+dates and resolves every manuscript citation. Preprints are labelled as such.
+The incident-source map remains supplementary engineering context, not an
+experiment or a claim to prevent the disclosed intrusion.
+
+Dario Amodei's [September 2026 essay](https://darioamodei.com/post/we-must-pace-the-frontier)
+raises concerns about accelerated development, agent swarms and attacks on
+assessment infrastructure. It motivates our threat selection, but is an essay,
+not empirical evidence, and is therefore outside the paper-only bibliography.
+The controls address declared authority and evidence integrity; they do not
+resolve economic displacement, geopolitical competition or biological misuse.
+
+The manuscript connects those concerns to recent research from Anthropic,
+OpenAI/Apollo, Google DeepMind and Bengio's collaborators. It explicitly preserves
+the distinction in [Kirk et al. (2026)](https://arxiv.org/abs/2604.24618): no
+unprompted sabotage was observed in the tested settings, while some seeded
+continuations did exhibit sabotage. A seeded capability result cannot establish
+spontaneous real-world frequency.
+
+The AI monitor now receives at most 32 allowlisted event types and sequence
+numbers drawn from a bounded 128-event window, alongside task metadata and the
+evidence head. It can inspect activity patterns without receiving artifact text,
+source records, credentials or free-form rationales. This is an interface for a
+separately deployed monitor, not a measured live-model detector. The offline
+suite uses scripted monitor findings and checks that a misleading clear verdict
+cannot authorize or restore activity. Detection accuracy remains unmeasured.
+
+A new delivery failure test verifies that evidence-writer failure returns no
+chunk and does not advance the delivery cursor. This intentionally differs from
+emergency stop: a stop must remain effective if subsequent audit recording
+fails, whereas a failed release transaction must expose no bytes.

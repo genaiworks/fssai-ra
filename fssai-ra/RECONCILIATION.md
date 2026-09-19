@@ -37,3 +37,17 @@ Three controls were added and bound to executed contracts.
 `audit/incident-map.json` assigns each reported stage of the public July 2026 agent-intrusion disclosure to a mediated control, a deployment requirement, or a platform property outside this architecture. `tests/test_incident_map.py` requires every mediated stage to name a test that exists, forbids an out-of-scope stage from implying local evidence, rejects prevention wording, and fails if no residual risk remains in the map. Five of the fourteen stages are not mediated locally: sandbox escape and pod metadata access are out of scope; key custody, network confinement and transport security are deployment work.
 
 The paper claims no prevention of any real incident, and the frontier-control tests are deterministic local scenarios rather than reproductions of frontier-model propensities.
+
+## Current v13 verification — 19 September 2026
+
+The current manuscript is `paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx`.
+Its bibliography now contains nine research preprints from 2025–2026. Leader
+commentary and incident disclosures remain supplementary context. Earlier counts
+in this reconciliation document describe historical checkpoints.
+
+The current run passes 1,120 regression cases, including 18 frontier-control cases.
+Ten capability contracts execute successfully, and thirteen current manuscript
+anchors are checked against test locators and recorded evidence. Monitor snapshots
+now include bounded event metadata; delivery evidence failure is tested to return
+no bytes and preserve the cursor. The paper builder and bibliography checks are
+reproducible. No live detector performance or real-incident prevention is claimed.

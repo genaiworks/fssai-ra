@@ -156,3 +156,31 @@ def test_monitor_advice_cannot_forge_authority_or_replay_evidence(rig, attack):
         r.apply_monitor_finding(token, raw)
     assert r.census('operator-key', 'correction-1')['state'] == 'NORMAL'
     assert c.derive_artifact('benign remains possible')['ok']
+
+
+def test_monitor_gets_bounded_event_types_without_protected_text(rig):
+    r, c, _, _, _ = rig
+    for _ in range(40):
+        c.derive_artifact('PRIVATE STUDENT DETAIL')
+    snapshot = r.monitor_snapshot('monitor-key', 'correction-1')
+    assert 0 < len(snapshot['events']) <= 32
+    assert 'tbc_derive_artifact' in {e['kind'] for e in snapshot['events']}
+    assert all(set(e) == {'sequence', 'kind'} for e in snapshot['events'])
+    assert 'PRIVATE STUDENT DETAIL' not in json.dumps(snapshot)
+    result = r.apply_monitor_finding('monitor-key', json.dumps({
+        'snapshot': snapshot['snapshot'], 'verdict': 'suspicious', 'reason': 'behavioral_anomaly'}))
+    assert result == {'state': 'QUARANTINED', 'authority_granted': False}
+
+
+def test_failed_delivery_evidence_returns_no_bytes_and_preserves_cursor(rig, monkeypatch):
+    r, c, _, _, _ = rig
+    receipt = queued(r, c)
+    original = r.world.event
+    def broken(*args, **kwargs):
+        raise OSError('evidence unavailable')
+    monkeypatch.setattr(r.world, 'event', broken)
+    with pytest.raises(OSError):
+        r.collect_chunk('recipient-key', receipt, max_bytes=3)
+    assert r.db.execute('SELECT position FROM tbc_delivery WHERE id=?', (receipt,)).fetchone()[0] == 0
+    monkeypatch.setattr(r.world, 'event', original)
+    assert r.collect_chunk('recipient-key', receipt, max_bytes=3)['bytes'] == b'abc'
