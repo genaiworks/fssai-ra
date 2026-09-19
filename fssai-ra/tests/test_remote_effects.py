@@ -247,3 +247,38 @@ def test_reconcile_all_separates_resolved_remaining_and_violations(ledger):
 def test_reconciling_an_unknown_key_is_refused(ledger):
     with pytest.raises(UnresolvedEffect):
         ledger.reconcile(Provider(), 'a' * 64)
+
+
+@pytest.mark.parametrize('answer', [None, [], {}, {'status': 'pending'}, {'status': 'error'},
+                                    {'status': 'applied'}, {'status': 'applied', 'result': None}])
+def test_nonfinal_or_malformed_lookup_never_unblocks_work(ledger, answer):
+    class Ambiguous(Provider):
+        def lookup(self, idempotency_key):
+            return answer
+    provider = Ambiguous(behaviour='lost')
+    submit(ledger, provider)
+    assert ledger.reconcile(provider, key()).state == UNCERTAIN
+    with pytest.raises(UnresolvedEffect):
+        ledger.require_settled()
+    assert len(provider.submissions) == 1
+
+
+@pytest.mark.parametrize('answer', [None, [], {}, {'status': 'pending'}, {'status': 'accepted'}])
+def test_nonfinal_acknowledgement_is_uncertain(ledger, answer):
+    class Ambiguous(Provider):
+        def submit(self, idempotency_key, operation, payload):
+            self.submissions.append(idempotency_key)
+            return answer
+    provider = Ambiguous()
+    assert submit(ledger, provider).state == UNCERTAIN
+    with pytest.raises(UnresolvedEffect):
+        submit(ledger, provider)
+    assert len(provider.submissions) == 1
+
+
+def test_idempotency_key_cannot_be_rebound_to_another_operation(ledger):
+    provider = Provider()
+    submit(ledger, provider)
+    with pytest.raises(IntegrityViolation):
+        ledger.submit(provider, key=key(), operation='delete_transcript', payload=PAYLOAD)
+    assert len(provider.submissions) == 1

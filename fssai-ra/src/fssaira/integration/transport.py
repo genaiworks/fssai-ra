@@ -27,6 +27,7 @@ import base64
 import contextlib
 import hashlib
 import os
+import re
 import socket
 import ssl
 import time
@@ -165,6 +166,14 @@ class TransportEvidence:
         }
 
 
+@dataclass(frozen=True)
+class VerifiedArtifact:
+    """Bytes matched against a digest supplied by the trusted caller, plus evidence."""
+
+    body: bytes
+    evidence: TransportEvidence
+
+
 class QualifiedTransport:
     """Fetch approved bytes from an approved destination under declared terms."""
 
@@ -182,7 +191,6 @@ class QualifiedTransport:
         self.qualification = qualification
         self._environ = os.environ if environ is None else environ
         self._clock = clock
-        self._pending = b""
 
     # -- public ------------------------------------------------------------
 
@@ -193,6 +201,23 @@ class QualifiedTransport:
         *,
         classifications: frozenset[str] | set[str] = frozenset(),
     ) -> TransportEvidence:
+        return self._transfer(url, addresses, classifications=classifications).evidence
+
+    def fetch_artifact(self, url: str, addresses: tuple[str, ...], *, expected_sha256: str,
+                       classifications: frozenset[str] | set[str] = frozenset()) -> VerifiedArtifact:
+        """Return bytes only after matching a trusted, out-of-band approval digest.
+
+        A hash supplied by the same untrusted model/peer is not an approval.
+        This GET-only adapter does not send credentials, cookies or payloads.
+        """
+        if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+            raise ValueError("expected_sha256 must be a lowercase SHA-256 digest")
+        artifact = self._transfer(url, addresses, classifications=classifications)
+        if artifact.evidence.body_sha256 != expected_sha256:
+            raise TransportDenied("ARTIFACT_DIGEST_MISMATCH")
+        return artifact
+
+    def _transfer(self, url, addresses, *, classifications) -> VerifiedArtifact:
         self._refuse_proxies()
         destination = self.policy.authorize(
             url, addresses, classifications=classifications)
@@ -202,11 +227,11 @@ class QualifiedTransport:
         try:
             peer_pin = self._verify_peer(connection)
             self._send_request(connection, destination, deadline)
-            status, headers = self._read_headers(connection, deadline)
+            status, headers, pending = self._read_headers(connection, deadline)
             self._refuse_redirect(status, headers)
             if status != 200:
                 raise TransportDenied("UNEXPECTED_STATUS", str(status))
-            body = self._read_body(connection, destination, headers, deadline)
+            body = self._read_body(connection, destination, headers, deadline, pending)
             # Read the negotiated parameters while the socket is still open;
             # a closed SSLSocket reports neither version nor cipher.
             tls_version = connection.version() or "unknown"
@@ -214,7 +239,7 @@ class QualifiedTransport:
         finally:
             with contextlib.suppress(OSError):
                 connection.close()
-        return TransportEvidence(
+        evidence = TransportEvidence(
             url=destination.url,
             pinned_address=address,
             port=destination.port,
@@ -227,6 +252,8 @@ class QualifiedTransport:
             qualification_only=destination.qualification_only,
             body_sha256=hashlib.sha256(body).hexdigest(),
         )
+
+        return VerifiedArtifact(body, evidence)
 
     # -- steps -------------------------------------------------------------
 
@@ -304,7 +331,7 @@ class QualifiedTransport:
 
     def _read_headers(
         self, connection: ssl.SSLSocket, deadline: float
-    ) -> tuple[int, dict[str, str]]:
+    ) -> tuple[int, dict[str, str], bytes]:
         buffer = bytearray()
         while b"\r\n\r\n" not in buffer:
             connection.settimeout(min(self.qualification.read_timeout,
@@ -323,12 +350,13 @@ class QualifiedTransport:
         if not lines or len(lines[0]) > MAX_STATUS_LINE:
             raise TransportDenied("MALFORMED_STATUS")
         parts = lines[0].decode("latin-1").split(" ", 2)
-        if len(parts) < 2 or not parts[0].startswith("HTTP/1.") or not parts[1].isdigit():
+        if len(parts) < 2 or parts[0] not in ("HTTP/1.0", "HTTP/1.1") or not re.fullmatch(r"[1-5][0-9]{2}", parts[1]):
             raise TransportDenied("MALFORMED_STATUS", lines[0].decode("latin-1")[:80])
         headers: dict[str, str] = {}
         for line in lines[1:]:
             name, separator, value = line.decode("latin-1").partition(":")
-            if not separator:
+            if (not separator or not re.fullmatch(r"[!#$%&'*+.^_`|~0-9A-Za-z-]+", name)
+                    or any(ord(c) < 32 and c != "\t" or ord(c) == 127 for c in value)):
                 raise TransportDenied("MALFORMED_HEADER")
             key = name.strip().lower()
             if key in headers:
@@ -338,8 +366,7 @@ class QualifiedTransport:
             headers[key] = value.strip()
         if "transfer-encoding" in headers:
             raise TransportDenied("CHUNKED_FRAMING_REFUSED", headers["transfer-encoding"])
-        self._pending = rest
-        return int(parts[1]), headers
+        return int(parts[1]), headers, rest
 
     def _refuse_redirect(self, status: int, headers: dict[str, str]) -> None:
         if 300 <= status < 400:
@@ -351,16 +378,16 @@ class QualifiedTransport:
         destination: AuthorizedDestination,
         headers: dict[str, str],
         deadline: float,
+        pending: bytes,
     ) -> bytes:
         declared = headers.get("content-length")
-        if declared is None or not declared.isdigit():
+        if declared is None or not re.fullmatch(r"[0-9]{1,20}", declared):
             raise TransportDenied("LENGTH_REQUIRED", str(declared))
         expected = int(declared)
         if expected > destination.max_bytes:
             raise TransportDenied("BYTE_CEILING_EXCEEDED",
                                   f"declared {expected} > {destination.max_bytes}")
-        body = bytearray(self._pending)
-        self._pending = b""
+        body = bytearray(pending)
         if len(body) > destination.max_bytes:
             raise TransportDenied("BYTE_CEILING_EXCEEDED", str(len(body)))
         while len(body) < expected:
@@ -411,5 +438,5 @@ def _version_rank(version: str | None) -> int:
 __all__ = [
     "MAX_HEADER_BYTES", "PROXY_VARIABLES", "QualifiedTransport",
     "RedirectRequiresReauthorization", "TransportDenied", "TransportEvidence",
-    "TransportQualification", "spki_pin",
+    "TransportQualification", "VerifiedArtifact", "spki_pin",
 ]

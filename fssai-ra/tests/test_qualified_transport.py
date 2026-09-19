@@ -257,3 +257,65 @@ def test_classified_content_is_never_sent_to_a_public_destination(server):
     with pytest.raises(ValueError):
         server.transport().fetch(server.url(), LOOPBACK,
                                  classifications=frozenset({'restricted-personal'}))
+
+
+def test_verified_artifact_returns_exact_bytes_after_trusted_digest_check(server):
+    import hashlib
+    expected = ServerBehaviour().body
+    result = server.transport().fetch_artifact(
+        server.url(), LOOPBACK, expected_sha256=hashlib.sha256(expected).hexdigest())
+    assert result.body == expected
+    assert result.evidence.bytes_received == len(expected)
+    assert result.evidence.qualification_only
+
+
+def test_changed_artifact_is_not_returned_despite_valid_peer_identity(server):
+    with pytest.raises(TransportDenied, match='ARTIFACT_DIGEST_MISMATCH'):
+        server.transport().fetch_artifact(server.url(), LOOPBACK, expected_sha256='0' * 64)
+
+
+@pytest.mark.parametrize('digest', ['', 'x' * 64, 'A' * 64, None])
+def test_artifact_requires_an_explicit_well_formed_digest(server, digest):
+    with pytest.raises(ValueError):
+        server.transport().fetch_artifact(server.url(), LOOPBACK, expected_sha256=digest)
+
+
+def test_concurrent_transfers_do_not_share_response_buffers(tmp_path, monkeypatch):
+    import hashlib
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    class DistinctResponses(LoopbackTLSServer):
+        sequence = 0
+        def _response(self):
+            self.sequence += 1
+            body = str(self.sequence).encode()
+            return b'HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\n' + body
+
+    with DistinctResponses(tmp_path) as running:
+        transport = running.transport()
+        original = transport._read_headers
+        barrier = threading.Barrier(2)
+        def synchronize(*args):
+            result = original(*args)
+            barrier.wait(timeout=5)
+            return result
+        monkeypatch.setattr(transport, '_read_headers', synchronize)
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(transport.fetch, running.url(), LOOPBACK) for _ in range(2)]
+            hashes = {f.result(timeout=10).body_sha256 for f in futures}
+    assert hashes == {hashlib.sha256(b'1').hexdigest(), hashlib.sha256(b'2').hexdigest()}
+
+
+@pytest.mark.parametrize('raw', [
+    b'HTTP/1.9 200 OK\r\nContent-Length: 0\r\n\r\n',
+    b'HTTP/1.1 200 OK\r\nContent-Length : 0\r\n\r\n',
+    b'HTTP/1.1 200 OK\r\nX-Test: bad\x00value\r\nContent-Length: 0\r\n\r\n',
+    b'HTTP/1.1 200 OK\r\nContent-Length: \xb2\r\n\r\n',
+])
+def test_malformed_http_framing_is_refused_over_real_tls(tmp_path, raw):
+    class MalformedPeer(LoopbackTLSServer):
+        def _response(self):
+            return raw
+    with MalformedPeer(tmp_path) as running, pytest.raises(TransportDenied):
+        running.transport().fetch(running.url(), LOOPBACK)

@@ -210,3 +210,7 @@ deployment-gaps:  ## The six previously open gaps, each exercised against real b
 	  tests/test_monitor_evaluation.py tests/test_remote_effects.py \
 	  tests/test_federation.py tests/test_institutional_evaluation.py \
 	  tests/test_tool_supply_chain.py
+
+.PHONY: developer-demo
+developer-demo:  ## Offline v14 artifact integrity and remote recovery example
+	$(PYTHON) scripts/developer_security_demo.py

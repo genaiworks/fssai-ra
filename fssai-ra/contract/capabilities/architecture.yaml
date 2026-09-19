@@ -247,3 +247,19 @@ capabilities:
     failure_test: tests/test_institutional_evaluation.py::test_a_group_below_the_cell_minimum_is_withheld_not_estimated
     evidence_artifact: audit/architecture/executed-tests.xml
     failure_response: Withhold the subgroup and exclude it from every reported gap
+  approved_artifact_content:
+    protected_asset: Exact bytes approved independently of the network peer
+    permitted_operation: Return fetched bytes only when the trusted digest matches
+    enforcement_point: QualifiedTransport.fetch_artifact digest verification
+    accountable_owner: Integration engineer
+    failure_test: tests/test_qualified_transport.py::test_changed_artifact_is_not_returned_despite_valid_peer_identity
+    evidence_artifact: audit/architecture/executed-tests.xml
+    failure_response: Deny delivery even when peer identity and key are valid
+  explicit_remote_settlement:
+    protected_asset: Work depending on an acknowledged remote effect
+    permitted_operation: Settle only on explicit applied or authoritative absent evidence
+    enforcement_point: EffectLedger.reconcile provider response validation
+    accountable_owner: Provider integration engineer
+    failure_test: tests/test_remote_effects.py::test_nonfinal_or_malformed_lookup_never_unblocks_work
+    evidence_artifact: audit/architecture/executed-tests.xml
+    failure_response: Retain uncertainty and block dependent work

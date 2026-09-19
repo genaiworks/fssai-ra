@@ -196,9 +196,9 @@ class EffectLedger:
         payload_digest = _digest(payload)
         existing = self.get(key)
         if existing is not None:
-            if existing.payload_digest != payload_digest:
+            if existing.payload_digest != payload_digest or existing.operation != operation:
                 raise IntegrityViolation(
-                    "one idempotency key was reused for a different payload")
+                    "one idempotency key was reused for a different operation or payload")
             if existing.state == CONFIRMED:
                 return existing            # already done; the provider is not called
             if existing.state == FAILED:
@@ -230,6 +230,9 @@ class EffectLedger:
             # A transport failure is not evidence of non-effect.
             self._write(key, state=UNCERTAIN, detail=f"{type(error).__name__}: {error}"[:300])
             return self.get(key)
+        if not isinstance(result, dict) or result.get("status") != "applied":
+            self._write(key, state=UNCERTAIN, detail="provider acknowledgement is not an applied result")
+            return self.get(key)
         self._write(key, state=CONFIRMED, result_digest=_digest(result), detail="")
         return self.get(key)
 
@@ -254,10 +257,16 @@ class EffectLedger:
                 key, detail="provider reports no record for this key; it may not "
                             "offer lookup, so the effect stays uncertain")
             return self.get(key)
+        if not isinstance(found, dict):
+            self._write(key, state=UNCERTAIN, detail="malformed provider lookup; outcome unknown")
+            return self.get(key)
         if found.get("status") == "absent":
             self._write(key, state=FAILED, detail="provider confirms no such effect")
             return self.get(key)
-        result_digest = _digest(found.get("result"))
+        if found.get("status") != "applied" or not isinstance(found.get("result"), dict):
+            self._write(key, state=UNCERTAIN, detail="provider lookup is not an applied result")
+            return self.get(key)
+        result_digest = _digest(found["result"])
         if record.result_digest is not None and record.result_digest != result_digest:
             self._write(key, state=UNCERTAIN,
                         detail="provider returned a different result for one key")
