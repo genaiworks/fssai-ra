@@ -1,0 +1,18 @@
+[
+  {
+    "file": "Trust_by_Construction_V17.docx",
+    "sha256": "6ce0947e71df6245322b8497c944bce76df4bfa7d6b1039be300cd1942b1f201",
+    "body_words_including_title_author_headings_captions_tables": 3864,
+    "total_words_including_references": 4407,
+    "references": 28,
+    "synthetic_mentions": 1
+  },
+  {
+    "file": "Trust_by_Construction_V17_Extended_Abstract.docx",
+    "sha256": "7a86a4e3c294b3fa0ca25dff84f617535493707da32f70d72d34356d5e8190ac",
+    "body_words_including_title_author_headings_captions_tables": 1370,
+    "total_words_including_references": 1493,
+    "references": 7,
+    "synthetic_mentions": 1
+  }
+]
