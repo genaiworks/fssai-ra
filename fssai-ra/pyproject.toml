@@ -72,6 +72,7 @@ dev = [
   "httpx>=0.27",
   "pyjwt[crypto]>=2.9",
   "ruff>=0.6",
+  "mypy>=1.13",
 ]
 
 [tool.setuptools.packages.find]
@@ -79,6 +80,33 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 fssaira = ["py.typed"]
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "src"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+
+# The kernel, mediators, planes, GenAI integration contract and lifecycle are
+# this build's own code and are held to a real bar: mypy clean, checked in CI.
+# The pre-existing modules that already carried the paper's enforcement code
+# (exact_action.py, disclosure.py, delegation.py, ...) predate this pass and
+# are NOT mypy-clean today (134 findings across 28 files at the time this
+# config was added -- see RECONCILIATION.md). Fixing that legacy surface is a
+# separate, larger effort that risks conflicting with other sessions' work on
+# those exact files; `ignore_errors` here is an honest scope boundary, not a
+# blanket suppression of this build's own code.
+[[tool.mypy.overrides]]
+module = ["fssaira.kernel.*", "fssaira.mediators.*", "fssaira.planes.*",
+          "fssaira.integration.*", "fssaira.lifecycle.*"]
+disallow_untyped_defs = true
+ignore_errors = false
+
+[[tool.mypy.overrides]]
+module = "fssaira.*"
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

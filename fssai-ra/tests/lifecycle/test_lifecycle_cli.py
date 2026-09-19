@@ -82,6 +82,28 @@ def test_operate_needs_a_passing_falsification_of_the_current_configuration(tmp_
     assert "[NOT RUN] reconciliation_clear" in out
 
 
+def test_promote_is_reachable_from_the_cli_and_runs_the_teaching_profiles_gates(tmp_path, capsys):
+    """Regression: register_promote() was defined but never called in register()."""
+    artifact = tmp_path / "falsify.json"
+    assert main(["falsify", "--root", str(ROOT), "--out", str(artifact)]) == 0
+    capsys.readouterr()
+
+    code = main(["promote", "--root", str(ROOT), "--profile", str(ROOT / "deploy/profiles/teaching.yaml"),
+                 "--falsify-artifact", str(artifact), "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0, payload
+    assert {g["gate"] for g in payload["gates"]} == {
+        "deploy_profile_valid", "contract_complete", "failure_tests_exist",
+        "falsifiers_zero_counterexamples"}
+
+
+def test_promote_without_profile_is_a_usage_error():
+    import pytest
+
+    with pytest.raises(SystemExit):
+        main(["promote", "--root", str(ROOT)])
+
+
 def test_falsify_reports_attempts_and_a_positive_control(capsys):
     first = falsification.FALSIFIERS[0].id
     assert main(["falsify", "--root", str(ROOT), "--only", first, "--no-ablation", "--json"]) == 0

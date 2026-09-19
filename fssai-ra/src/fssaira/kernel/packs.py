@@ -793,7 +793,7 @@ def evaluate_pack(pack: PackManifest) -> PackEvaluation:
     action = tuple(_evaluate_action(profile) for profile in pack.profiles)
     disclosure = tuple(_evaluate_disclosure(profile) for profile in pack.profiles
                        if profile.disclosure is not None)
-    not_evaluated = ()
+    not_evaluated: tuple[str, ...] = ()
     if pack.governed_pack is not None:
         not_evaluated = (f"{pack.governed_pack.profile.profile_id}: floor-checked at load; evaluated by its "
                          "named tests, not by the domain-pack matrix",)

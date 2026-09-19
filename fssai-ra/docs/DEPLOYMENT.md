@@ -41,7 +41,7 @@ gate.
 | `pack_floor_passes` | Pack manifests load, agree with enforced configuration, and pass the kernel floor |
 | `no_model_holds_a_key` | The bind stage: no untrusted component takes a credential, and no credential is reachable at any depth from the model object (attributes, containers, closures, bound methods). The agent wrapper's reference to the enforcement point is reported as an in-process limit |
 | `falsifiers_zero_counterexamples`, `ablations_restore_harm` | Thesis and education falsifiers with a positive control, plus control ablation. **A consequential profile re-runs them during promotion and never trusts an artifact.** The teaching profile accepts an artifact only if it records a complete scope (every falsifier, ablation on) and matches the current governed digest. The digest covers all enforcement source, tests, scripts, deploy profiles, the threat catalogue and every pack source |
-| `backend_conformance_current` | A passing conformance record exists for each configured backend's current implementation digest |
+| `backend_conformance_current` | A passing conformance record exists for each configured backend's current implementation digest. Produce one per backend with `fssaira conformance --backend memory --record-out memory.json` (or `--backend sql --database-url ...` for sqlite/postgres), then `fssaira promote --records memory.json --records sqlite.json ...` (repeatable, one file per backend) |
 | `evidence_matches_fresh_run` | `generate_results.py --check`, `conference_evidence.py --check`, `collect_results.py --check` |
 | `table4_obligations_signed`, `interface_inventory_owned` | **Institutional evidence.** Code confirms a signed record exists and names an owner; it cannot confirm the obligation was met |
 

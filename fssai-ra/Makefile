@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: help install test lint results results-check figures check-submission lifecycle all \
+.PHONY: help install test lint typecheck results results-check figures check-submission lifecycle all \
         adaptive adaptive-oracle adaptive-q \
         demo check api gateway console dev-env \
         stack-up stack-down verify evaluate conformance doctor openapi clean \
@@ -18,6 +18,9 @@ test:  ## Run the deterministic test suite
 
 lint:  ## Lint the Python sources
 	$(PYTHON) -m ruff check src tests scripts jobs adapters
+
+typecheck:  ## mypy: strict on the kernel/mediators/planes/integration/lifecycle this build owns
+	$(PYTHON) -m mypy src/fssaira
 
 verify:  ## Bounded model check of the reference profile
 	$(PYTHON) -m fssaira.cli verify profiles/student_support.yaml
@@ -152,7 +155,7 @@ lifecycle:  ## Run the lifecycle gates on this repository: contract, bind, falsi
 	$(PYTHON) -m fssaira.cli bind
 	$(PYTHON) -m fssaira.cli falsify
 
-all: lint test results-check lifecycle check-submission  ## Everything, offline: the definition of done
+all: lint typecheck test results-check lifecycle check-submission  ## Everything, offline: the definition of done
 
 check: lint reviewer  ## Run the complete local release-readiness suite
 	$(PYTHON) scripts/demo.py --fast > /dev/null

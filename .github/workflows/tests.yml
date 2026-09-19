@@ -162,6 +162,16 @@ jobs:
         working-directory: fssai-ra
         run: ruff check src tests scripts jobs adapters
 
+      # mypy is strict on the kernel, mediators, planes, GenAI integration contract
+      # and lifecycle this build owns (pyproject.toml [[tool.mypy.overrides]]); the
+      # pre-existing enforcement modules predate this pass and are out of its scope
+      # (see RECONCILIATION.md and DECISIONS.md D25).
+      - run: python -m pip install -e ".[dev]"
+        working-directory: fssai-ra
+      - name: mypy
+        working-directory: fssai-ra
+        run: mypy src/fssaira
+
   package:
     name: Build and install package
     runs-on: ubuntu-latest

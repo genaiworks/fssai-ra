@@ -213,13 +213,13 @@ def cmd_conformance(args) -> int:
     from .profiles import ApplicationProfile
 
     profile = ApplicationProfile.load(args.profile) if args.profile else None
+    assurance_backend = "memory"
     if args.backend == "sql":
         from .postgres_backend import database_from_env
 
-        database = database_from_env(
-            args.database_url or os.getenv("FSSAI_DATABASE_URL") or "sqlite://",
-            evidence_token="conformance-evidence-writer",
-        )
+        database_url = args.database_url or os.getenv("FSSAI_DATABASE_URL") or "sqlite://"
+        assurance_backend = "sqlite" if database_url.lower().startswith("sqlite") else "postgres"
+        database = database_from_env(database_url, evidence_token="conformance-evidence-writer")
         bundle = sql_bundle(database, profile)
     else:
         bundle = memory_bundle(profile)
@@ -229,6 +229,21 @@ def cmd_conformance(args) -> int:
     print(report.render())
     print(dim("\n  Behavioural conformance for these fixtures. Not an audit or certification."))
     emit(report.to_dict(), args.output)
+
+    if args.record_out is not None:
+        # A backend inherits no assurance until a record binds it to a passing
+        # run on its exact code (kernel.assurance). This is that record, keyed
+        # by the module digest so an edit invalidates it. Written as a
+        # single-element list so `fssaira.kernel.assurance.load_records` and a
+        # `--record-out` from another backend can be concatenated by hand into
+        # one file for `fssaira promote --records`.
+        from .kernel.assurance import record_from_report
+
+        record = record_from_report(assurance_backend, report)
+        Path(args.record_out).write_text(
+            json.dumps([record.to_dict()], indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(dim(f"\n  Assurance record for backend {assurance_backend!r} written to {args.record_out}"))
+
     return 0 if report.passed else 1
 
 
@@ -1206,6 +1221,9 @@ def build_parser() -> argparse.ArgumentParser:
     conformance.add_argument("--backend", choices=("memory", "sql"), default="memory")
     conformance.add_argument("--profile", type=Path, default=None)
     conformance.add_argument("--database-url", default=None)
+    conformance.add_argument("--record-out", type=Path, default=None,
+                             help="also write a fssaira.kernel.assurance conformance record here, "
+                                  "for `fssaira promote --records` / FSSAI_CONFORMANCE_RECORDS")
     conformance.set_defaults(func=cmd_conformance)
 
     race = add_output(sub.add_parser(

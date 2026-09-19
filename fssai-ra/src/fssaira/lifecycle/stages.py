@@ -20,10 +20,14 @@ from collections import deque
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
 from fssaira.kernel.contract import ContractError, load_capability_contracts, verify_bindings
+
+if TYPE_CHECKING:
+    from fssaira.kernel.assurance import ConformanceRecord
 
 ROOT = Path(__file__).resolve().parents[3]
 CREDENTIAL_WORDS: tuple[str, ...] = ("token", "key", "credential", "secret", "signing", "custody")
@@ -501,9 +505,15 @@ DEFAULT_EVIDENCE_COMMANDS: tuple[tuple[str, ...], ...] = (
 _RERUNNABLE = ("memory", "sqlite")
 
 
-def check_backend_conformance(backends: Iterable[str], records_path: Path | None, *,
+def check_backend_conformance(backends: Iterable[str], records_path: Path | Iterable[Path] | None, *,
                               allowed: Iterable[str] = (), rerun: bool = True) -> GateOutcome:
-    """Every configured backend has a current passing record; cheap ones are re-run fresh."""
+    """Every configured backend has a current passing record; cheap ones are re-run fresh.
+
+    ``records_path`` is one file, or one per backend (a deployment using several
+    backends need not merge them into a single JSON list by hand). Each file
+    holds one record or a list; when a backend appears in more than one file,
+    the last file wins, and that ambiguity is itself reported as a problem.
+    """
     from fssaira.conformance import memory_bundle, sql_bundle
     from fssaira.kernel.assurance import (
         AssuranceRefused,
@@ -519,12 +529,22 @@ def check_backend_conformance(backends: Iterable[str], records_path: Path | None
     if not chosen:
         return GateOutcome("backend_conformance_current", False,
                            "no backend declared; name every backend the deployment uses")
-    records = {}
-    if records_path is not None and Path(records_path).is_file():
+    paths = ([records_path] if isinstance(records_path, (str, Path))
+             else list(records_path) if records_path is not None else [])
+    records: dict[str, ConformanceRecord] = {}
+    for path in paths:
+        if not Path(path).is_file():
+            continue
         try:
-            records = load_records(records_path)
+            loaded = load_records(path)
         except (OSError, ValueError, KeyError, TypeError, AssuranceRefused) as exc:
-            problems.append(f"conformance records unreadable ({type(exc).__name__})")
+            problems.append(f"{path}: conformance records unreadable ({type(exc).__name__})")
+            continue
+        collisions = sorted(set(loaded) & set(records))
+        if collisions:
+            problems.append(f"{path}: duplicate record(s) for {collisions}; each backend "
+                            "needs exactly one current record")
+        records.update(loaded)
     for backend in chosen:
         if allowed_set and backend not in allowed_set:
             problems.append(f"{backend}: not allowed by the deployment profile")
@@ -612,7 +632,7 @@ def check_interface_inventory(path: Path | None) -> GateOutcome:
 
 
 def promote(root: Path = ROOT, *, profile_path: Path, backends: Iterable[str] = (),
-            records_path: Path | None = None, obligations_path: Path | None = None,
+            records_path: Path | Iterable[Path] | None = None, obligations_path: Path | None = None,
             interfaces_path: Path | None = None, falsify_artifact: Path | None = None,
             evidence_commands: Iterable[Iterable[str]] | None = None,
             rerun_conformance: bool = True, falsify_only: Iterable[str] | None = None) -> StageResult:

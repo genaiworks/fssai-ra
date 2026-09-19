@@ -58,6 +58,22 @@ def test_institutional_is_refused_for_every_missing_institutional_record(falsify
     assert result.gate("pack_floor_passes").passed
 
 
+def test_the_conformance_cli_writes_a_record_check_backend_conformance_accepts(tmp_path):
+    """The only way to produce an assurance record was Python (`run_and_record`), never the CLI.
+
+    `fssaira promote --records` and `FSSAI_CONFORMANCE_RECORDS` both need a file
+    on disk; without `--record-out` on `fssaira conformance` there was no
+    command-line path to create one.
+    """
+    from fssaira.cli import main
+
+    out = tmp_path / "record.json"
+    code = main(["conformance", "--backend", "memory", "--record-out", str(out)])
+    assert code == 0
+    outcome = stages.check_backend_conformance(["memory"], out, rerun=False)
+    assert outcome.passed, outcome.detail
+
+
 def test_a_real_conformance_record_passes_with_a_fresh_rerun(memory_record):
     outcome = stages.check_backend_conformance(["memory"], memory_record, allowed=["memory", "sqlite"])
     assert outcome.passed, outcome.detail
@@ -72,6 +88,30 @@ def test_a_record_for_another_backend_or_a_disallowed_backend_is_refused(tmp_pat
     assert not stages.check_backend_conformance(["memory"], wrong).passed
     assert not stages.check_backend_conformance(["memory"], memory_record, allowed=["postgres"]).passed
     assert not stages.check_backend_conformance([], memory_record).passed
+
+
+def test_records_path_accepts_a_single_file_or_several_one_per_backend(tmp_path, memory_record):
+    body = json.loads(memory_record.read_text())
+    fake_kafka = json.loads(memory_record.read_text())
+    fake_kafka[0]["backend"] = "kafka"
+    kafka_record = tmp_path / "kafka.json"
+    kafka_record.write_text(json.dumps(fake_kafka))
+
+    # A single path still works (backward compatible).
+    single = stages.check_backend_conformance(["memory"], memory_record, rerun=False)
+    assert single.passed, single.detail
+
+    # Two files, one backend each, merge cleanly.
+    merged = stages.check_backend_conformance(["memory"], [memory_record, kafka_record], rerun=False)
+    assert merged.passed, merged.detail
+    assert set(merged.observed["backends"]) == {"memory"}
+
+    # The same backend recorded in two files is an ambiguity, not a silent overwrite.
+    duplicate_memory = tmp_path / "duplicate.json"
+    duplicate_memory.write_text(json.dumps(body))
+    collided = stages.check_backend_conformance(["memory"], [memory_record, duplicate_memory], rerun=False)
+    assert not collided.passed
+    assert "duplicate record" in collided.detail
 
 
 def test_a_tampered_implementation_digest_is_refused(tmp_path, memory_record):
