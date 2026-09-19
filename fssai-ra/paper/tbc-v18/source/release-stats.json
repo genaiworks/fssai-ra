@@ -1,0 +1,24 @@
+[
+  {
+    "document": "Trust_by_Construction_V18",
+    "docx_sha256": "087443c8c5cb401300dce8ecba7efb1d35a8590b4066f243d27f01c2428a766f",
+    "pdf_rendered": true,
+    "body_words_including_title_headings_captions_tables": 6256,
+    "total_words_including_references": 7146,
+    "references": 46,
+    "figures": 6,
+    "tables": 5,
+    "occurrences_of_synthetic": 1
+  },
+  {
+    "document": "Trust_by_Construction_V18_Extended_Abstract",
+    "docx_sha256": "a8a8163b5ae43e67feaaa8deedd955a0a8c5ee480244623cef13da79014ebd76",
+    "pdf_rendered": true,
+    "body_words_including_title_headings_captions_tables": 1306,
+    "total_words_including_references": 1497,
+    "references": 9,
+    "figures": 2,
+    "tables": 0,
+    "occurrences_of_synthetic": 0
+  }
+]
