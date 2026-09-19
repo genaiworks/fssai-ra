@@ -169,7 +169,7 @@ REFERENCES = [
 
 TABLE_ROW = (
     "Frontier-threat controls",
-    "18 executed cases: durable stop, per-chunk reauthorisation, restrict-only monitoring",
+    "35 executed cases: durable stop, per-chunk reauthorisation, restrict-only monitoring",
     "Deterministic local scenarios over the declared interface; they do not replay frontier-model experiments "
     "or estimate real-world frequency",
 )
@@ -247,7 +247,7 @@ def build(source: Path = SOURCE, target: Path = TARGET) -> dict:
     rows = table.findall(W + 'tr')
     last = rows[-1]
     cells = last.findall(W + 'tc')
-    set_text(cells[1].find(W + 'p'), '1,120 tests passed; ten source-bound capability contracts executed')
+    set_text(cells[1].find(W + 'p'), '1,147 tests passed; ten source-bound capability contracts executed')
     set_text(cells[2].find(W + 'p'), 'Local functional evidence, including schema rejection, durable source '
              'quarantine and the added frontier controls; not operational certification')
     added = copy.deepcopy(last)
@@ -275,6 +275,9 @@ def build(source: Path = SOURCE, target: Path = TARGET) -> dict:
     p = find(body, 'The third control follows')[1]
     set_text(p, text_of(p).replace('task metadata and the current evidence head, never protected text',
              'task metadata, the current evidence head and at most 32 recent allowlisted event types, never protected text'))
+    set_text(p, text_of(p).replace('the current evidence head', 'task and global-control evidence heads'))
+    index = list(body).index(p)
+    body.insert(index + 1, clone(p, review['security_review']))
     # Old foundational and non-paper citations are replaced, not merely relabelled.
     template = copy.deepcopy(reference_template)
     for node in list(body):

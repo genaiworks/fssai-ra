@@ -191,3 +191,7 @@ all:  ## Offline engineering release check after development dependencies are in
 	$(PYTHON) scripts/verify_architecture.py
 	$(PYTHON) scripts/check_paper_revision.py
 	$(PYTHON) scripts/generate_results.py --check
+
+.PHONY: security-review
+security-review:  ## Reproduce current monitor and outbound-destination regressions
+	$(PYTHON) -m pytest tests/test_frontier_controls.py tests/test_integration_contract.py

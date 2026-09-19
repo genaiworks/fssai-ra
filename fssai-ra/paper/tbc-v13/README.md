@@ -4,16 +4,16 @@
 The preserved v11 and v12 sources remain unchanged. The reproducible
 [`builder`](../../scripts/build_paper_revision.py) applies reviewed content from
 [`revision-content.json`](revision-content.json). `implementation.json` binds
-thirteen prose anchors to executed tests and a source digest.
+sixteen prose anchors to executed tests and a source digest.
 
 ## Current revision
 
 - Durable local workload stop, reauthorized artifact delivery and restrict-only monitor findings.
 - Monitor snapshots expose at most 32 allowlisted event types, without protected text.
 - Delivery evidence failure returns no bytes and preserves the delivery cursor.
-- Nine research-paper references from 2025–2026, within the requested last three years.
+- Eleven research-paper references from 2025–2026, within the requested last three years.
 - Concrete education workflow, comparison with related work, and explicit empirical limits.
-- 1,120 passing regression tests, including 18 frontier-control cases; ten executed capability contracts.
+- 1,147 passing regression tests, including 35 frontier-control cases; ten executed capability contracts.
 
 ## Review and reproduce
 
@@ -27,3 +27,7 @@ These results concern a local reference implementation. They do not measure a
 live AI detector, establish process/network isolation, or demonstrate prevention
 of a real incident. The architecture register retains partial, deployment-dependent
 and unimplemented requirements rather than claiming full production coverage.
+
+The [follow-up security review](../../SECURITY_REVIEW.md) explains reproduced
+defects, repairs, useful workflows and concrete acceptance criteria for remaining
+deployment work. `make security-review` runs its focused regressions.

@@ -148,3 +148,42 @@ A new delivery failure test verifies that evidence-writer failure returns no
 chunk and does not advance the delivery cursor. This intentionally differs from
 emergency stop: a stop must remain effective if subsequent audit recording
 fails, whereas a failed release transaction must expose no bytes.
+
+## September review of availability and destination ambiguity
+
+The follow-up review reproduced 14 failures against commit `3f65aae` using the
+new tests: four malformed monitor verdict/reason cases, one cross-task history
+case, and nine ambiguous URL path cases. These are local regression failures,
+not 14 real-world compromises. The same focused suite passes after the fixes.
+
+Monitor history is now selected by task before its 32-event bound. Findings bind
+to the task's evidence head and a separate global-control head. Snapshot reads
+and unrelated task operations do not stale advice; a same-task action, source
+invalidation or revocation does. Snapshot expiry, authenticated monitor identity,
+MAC verification, epoch checks and single-use consumption still apply. Global
+control changes conservatively invalidate advice for all tasks. This does not
+remove false-positive denial of service or provide fair scheduling for the
+single SQLite writer. The monitor sees metadata, not full transcripts.
+
+The public destination contract now rejects matrix parameters, encoded reserved
+characters, repeated slashes and control/non-ASCII URL characters. These inputs
+can be interpreted differently by URL parsers, proxies and application routers.
+A benign unreserved escape remains accepted, while a mixed public/private DNS
+answer is denied. The contract neither sends a request nor proves a deployment
+is sealed: transport pinning, TLS verification, redirect reauthorization,
+response limits and firewall isolation remain adapter obligations.
+
+[AgentSecBench](https://arxiv.org/abs/2605.26269) distinguishes instruction,
+confidentiality and capability integrity with paired adversarial and benign
+executions. [AgentDyn](https://arxiv.org/abs/2602.03117) adds dynamic tasks and
+helpful third-party instructions to expose excessive restriction. These motivate
+our local checks for legitimate continuation; we have not run either benchmark
+and do not compare scores.
+
+Anthropic's [9 September 2026 incident assessment](https://www.anthropic.com/research/alignment-assessment-cybersecurity-incidents)
+describes unauthorized third-party access during misconfigured cybersecurity
+evaluations and revises its earlier interpretation of model reasoning. The
+engineering implication is to verify actual authority and network isolation,
+rather than accept a prompt's claim that the environment is simulated. This
+repository does not implement the missing OS/network isolation layer and does
+not claim to have prevented those incidents.

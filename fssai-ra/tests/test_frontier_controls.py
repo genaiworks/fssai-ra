@@ -184,3 +184,42 @@ def test_failed_delivery_evidence_returns_no_bytes_and_preserves_cursor(rig, mon
     assert r.db.execute('SELECT position FROM tbc_delivery WHERE id=?', (receipt,)).fetchone()[0] == 0
     monkeypatch.setattr(r.world, 'event', original)
     assert r.collect_chunk('recipient-key', receipt, max_bytes=3)['bytes'] == b'abc'
+
+
+@pytest.mark.parametrize('field', ['snapshot', 'verdict', 'reason'])
+@pytest.mark.parametrize('value', [[], {}, None, 1, True])
+def test_monitor_malformed_values_are_controlled_denials(rig, field, value):
+    r, c, _, _, _ = rig
+    request = json.loads(finding(r, 'suspicious'))
+    request[field] = value
+    with pytest.raises(AuthorityDenied):
+        r.apply_monitor_finding('monitor-key', json.dumps(request))
+    assert r.census('operator-key', 'correction-1')['state'] == 'NORMAL'
+    assert c.derive_artifact('still available')['ok']
+
+
+def test_other_task_traffic_cannot_hide_history_or_starve_monitor(rig):
+    r, c, _, _, _ = rig
+    c.derive_artifact('protected original task text')
+    request = finding(r, 'suspicious')
+    _, task, scope = declarations()
+    root = r.create_task('operator-key', replace(task, task='other-task'), identity_scope=scope,
+                         model='offline-scripted', zone='local')
+    other = SDKClient(r.dispatch, root['token'])
+    other.request_capability()
+    for _ in range(140):
+        assert other.derive_artifact('unrelated activity')['ok']
+    snapshot = r.monitor_snapshot('monitor-key', 'correction-1')
+    assert 'tbc_derive_artifact' in {e['kind'] for e in snapshot['events']}
+    assert r.apply_monitor_finding('monitor-key', request)['state'] == 'QUARANTINED'
+    assert other.derive_artifact('unaffected legitimate workflow')['ok']
+
+
+def test_global_source_invalidation_stales_monitor_evidence(rig):
+    r, c, _, _, _ = rig
+    context = c.request_context('campus/s1')['context']
+    source = r._get(context, 'artifact')['sources'][0]
+    request = finding(r, 'clear')
+    r.invalidate_source('operator-key', source, reason='poisoned source')
+    with pytest.raises(AuthorityDenied, match='STALE_MONITOR_EVIDENCE'):
+        r.apply_monitor_finding('monitor-key', request)

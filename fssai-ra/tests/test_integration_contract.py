@@ -68,3 +68,21 @@ def test_public_network_requires_public_data_and_pins_resolved_addresses():
     assert approved.addresses == ('8.8.8.8',) and approved.tls_identity == 'example.org'
     with pytest.raises(ValueError):
         policy.authorize('https://example.org/docs/a', ['8.8.8.8'], classifications=frozenset({'health'}))
+
+
+@pytest.mark.parametrize('path', [
+    '/docs/..;/admin', '/docs/%2fadmin', '/docs/%3fsecret', '/docs/%23secret',
+    '/docs/%3badmin', '/docs//admin', '/docs/%7f', '/docs/%ff', '/docs/a\x7f',
+])
+def test_destination_rejects_parser_differential_paths(path):
+    policy = DestinationPolicy('example.org', ('/docs/',), max_bytes=1000)
+    with pytest.raises(ValueError):
+        policy.authorize('https://example.org' + path, ['8.8.8.8'], classifications=frozenset())
+
+
+def test_destination_preserves_safe_unreserved_encoding_and_mixed_dns_denial():
+    policy = DestinationPolicy('example.org', ('/docs/',), max_bytes=1000)
+    target = policy.authorize('https://example.org/docs/%61rticle', ['8.8.8.8'], classifications=frozenset())
+    assert target.tls_identity == 'example.org'
+    with pytest.raises(ValueError):
+        policy.authorize(target.url, ['8.8.8.8', '127.0.0.1'], classifications=frozenset())

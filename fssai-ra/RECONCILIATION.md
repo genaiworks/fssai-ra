@@ -51,3 +51,12 @@ anchors are checked against test locators and recorded evidence. Monitor snapsho
 now include bounded event metadata; delivery evidence failure is tested to return
 no bytes and preserve the cursor. The paper builder and bibliography checks are
 reproducible. No live detector performance or real-incident prevention is claimed.
+
+## Follow-up v13 security review
+
+The revised release passes 1,147 full regression cases, including 35 frontier
+cases, with sixteen checked paper anchors and eleven recent research references.
+The new focused suite reproduces fourteen failures against the preceding code
+and passes all 58 cases after repair. This supersedes the earlier v13 checkpoint.
+The architecture register continues to expose deployment and implementation
+gaps; this review does not turn a local reference into production isolation.

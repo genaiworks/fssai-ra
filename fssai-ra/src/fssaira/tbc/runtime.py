@@ -80,6 +80,8 @@ class TrustRuntime:
         self.world = Workflow(path, pack=pack, mediator="tbc")
         self.db = self.world.db
         self.db.executescript('''
+        CREATE INDEX IF NOT EXISTS tbc_evidence_task_seq
+          ON evidence(json_extract(body, '$.data.task'), seq);
         CREATE TABLE IF NOT EXISTS tbc_supervision(id INTEGER PRIMARY KEY CHECK(id=1), stopped INTEGER);
         INSERT OR IGNORE INTO tbc_supervision VALUES(1,0);
         CREATE TABLE IF NOT EXISTS tbc_delivery(id TEXT PRIMARY KEY, binding TEXT, position INTEGER, mode TEXT);
@@ -611,25 +613,39 @@ class TrustRuntime:
             self.world.event("tbc_workload_resumed", {"operator": name, "old_identities_revoked": True})
             self.db.execute("UPDATE tbc_supervision SET stopped=0 WHERE id=1")
 
+    def _monitor_heads(self, task_id):
+        # Snapshot reads are not task changes. Global revocation and source
+        # invalidation still invalidate advice, regardless of task activity.
+        task = self.db.execute("""SELECT head FROM evidence
+            WHERE json_extract(body, '$.data.task')=?
+            AND json_extract(body, '$.kind') != 'tbc_monitor_snapshot'
+            ORDER BY seq DESC LIMIT 1""", (task_id,)).fetchone()
+        control = self.db.execute("""SELECT head FROM evidence
+            WHERE json_extract(body, '$.kind') IN
+            ('tbc_source_invalidated', 'tbc_revoke', 'tbc_passport',
+             'tbc_emergency_stop', 'tbc_workload_resumed')
+            ORDER BY seq DESC LIMIT 1""").fetchone()
+        return (task[0] if task else None, control[0] if control else None)
+
     def monitor_snapshot(self, token, task_id):
-        """Minimal metadata for a separately deployed AI monitor; no protected text."""
+        """Bounded task metadata; other tasks cannot crowd out this history."""
         name = self._admin(token, "monitor")
         with self.transaction():
             task = self._task(task_id)
-            events = []
-            allowed = {"tbc_" + op for op in SCHEMAS} | {"tbc_denied", "tbc_contract", "tbc_monitor_finding"}
-            for row in self.db.execute("SELECT seq,body FROM evidence ORDER BY seq DESC LIMIT 128"):
-                event = json.loads(row["body"])
-                if event.get("kind") in allowed and event.get("data", {}).get("task") == task_id:
-                    events.append({"sequence": row["seq"], "kind": event["kind"]})
-                    if len(events) == 32:
-                        break
-            events.reverse()
+            allowed = sorted({"tbc_" + op for op in SCHEMAS} |
+                             {"tbc_denied", "tbc_contract", "tbc_monitor_finding"})
+            placeholders = ','.join('?' for _ in allowed)
+            rows = self.db.execute(f"""SELECT seq,body FROM evidence
+                WHERE json_extract(body, '$.data.task')=?
+                AND json_extract(body, '$.kind') IN ({placeholders})
+                ORDER BY seq DESC LIMIT 32""", (task_id, *allowed)).fetchall()
+            events = [{"sequence": row["seq"], "kind": json.loads(row["body"])["kind"]}
+                      for row in reversed(rows)]
             self.world.event("tbc_monitor_snapshot", {"task": task_id, "monitor": name})
-            head = self.db.execute("SELECT head FROM evidence ORDER BY seq DESC LIMIT 1").fetchone()[0]
+            head, control_head = self._monitor_heads(task_id)
             body = {"task": task_id, "epoch": task["epoch"], "state": task["state"], "head": head,
-                    "monitor": name, "events": events, "expires": min(self._now() + self.passport.lease_seconds,
-                                                     task["contract"].expires)}
+                    "control_head": control_head, "monitor": name, "events": events,
+                    "expires": min(self._now() + self.passport.lease_seconds, task["contract"].expires)}
             snapshot = self._put("monitor_snapshot", body)
             return {"snapshot": snapshot, **body}
 
@@ -638,15 +654,17 @@ class TrustRuntime:
         name = self._admin(token, "monitor")
         q = parse_sdk_request(raw)
         require(set(q) == {"snapshot", "verdict", "reason"}, "INVALID_MONITOR_SCHEMA")
+        require(all(isinstance(q[key], str) for key in q), "INVALID_MONITOR_SCHEMA")
         require(q["verdict"] in {"clear", "uncertain", "suspicious"}
                 and q["reason"] in {"behavioral_anomaly", "possible_injection", "insufficient_evidence"},
                 "INVALID_MONITOR_FINDING")
         with self.transaction():
             snapshot = self._get(q["snapshot"], "monitor_snapshot")
             task = self._task(snapshot["task"])
-            head = self.db.execute("SELECT head FROM evidence ORDER BY seq DESC LIMIT 1").fetchone()[0]
+            head, control_head = self._monitor_heads(task["id"])
             require(snapshot["monitor"] == name and snapshot["epoch"] == task["epoch"]
-                    and snapshot["head"] == head and self._now() < snapshot["expires"], "STALE_MONITOR_EVIDENCE")
+                    and snapshot["head"] == head and snapshot.get("control_head") == control_head
+                    and self._now() < snapshot["expires"], "STALE_MONITOR_EVIDENCE")
             require(self.db.execute("SELECT 1 FROM tbc_used WHERE id=?", (q["snapshot"],)).fetchone() is None,
                     "MONITOR_REPLAY")
             self.db.execute("INSERT INTO tbc_used VALUES(?)", (q["snapshot"],))

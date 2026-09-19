@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370",
+  "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b",
   "source_stable": true,
   "exit_code": 0,
   "claims": [
@@ -16,7 +16,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "durable_quarantine",
@@ -30,7 +30,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "versioned_ingress",
@@ -44,7 +44,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "model_bundle",
@@ -58,7 +58,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "frozen_tools",
@@ -72,7 +72,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "destination_contract",
@@ -86,7 +86,7 @@
       "status": "machine_verified",
       "executed_cases": 9,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "workload_stop",
@@ -100,7 +100,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "stop_without_evidence",
@@ -114,7 +114,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "revocable_delivery",
@@ -128,7 +128,7 @@
       "status": "machine_verified",
       "executed_cases": 5,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     },
     {
       "capability": "restricted_monitor",
@@ -142,7 +142,7 @@
       "status": "machine_verified",
       "executed_cases": 7,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+      "source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
     }
   ],
   "passed": true,

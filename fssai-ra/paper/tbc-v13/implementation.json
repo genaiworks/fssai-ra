@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "source": "paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx",
-  "source_sha256": "2ae23c51c4f89d4c22ef7e3b25f223ed41ba35d8ef8bcf49384a1b32083ba5d8",
+  "source_sha256": "6223d08f943b92d2b8c28d9a72d3e03c4d731e1f9d8a20e73df6ba4fbf940538",
   "derived_from": "paper/tbc-v12/TBC_v12_Engineering_Revision.docx",
   "build": "scripts/build_paper_revision.py",
-  "regression_tests": 1120,
+  "regression_tests": 1147,
   "executed_contracts": 10,
   "claims": [
     {
@@ -88,6 +88,26 @@
       "tests": [
         "tests/test_frontier_controls.py::test_monitor_gets_bounded_event_types_without_protected_text"
       ]
+    },
+    {
+      "paper_anchor": "queries task-indexed evidence before applying the 32-event limit",
+      "tests": [
+        "tests/test_frontier_controls.py::test_other_task_traffic_cannot_hide_history_or_starve_monitor",
+        "tests/test_frontier_controls.py::test_global_source_invalidation_stales_monitor_evidence"
+      ]
+    },
+    {
+      "paper_anchor": "validates field types before interpretation",
+      "tests": [
+        "tests/test_frontier_controls.py::test_monitor_malformed_values_are_controlled_denials"
+      ]
+    },
+    {
+      "paper_anchor": "rejects matrix parameters, encoded delimiters and repeated separators",
+      "tests": [
+        "tests/test_integration_contract.py::test_destination_rejects_parser_differential_paths",
+        "tests/test_integration_contract.py::test_destination_preserves_safe_unreserved_encoding_and_mixed_dns_denial"
+      ]
     }
   ],
   "limitations": [
@@ -97,5 +117,5 @@
     "The incident map is an architectural reading of a public disclosure, not a reconstruction, and claims no prevention.",
     "The frontier-control tests are deterministic local scenarios; they do not reproduce frontier-model propensities."
   ],
-  "regression_source_sha256": "feda4c36583266b0ef131163660091598d72c7c5c2693a4a6951aa0120c9f370"
+  "regression_source_sha256": "1039fe12beebdbfadf8ee115735ae266b6fe24582d0c5bb3e5ad0779312f004b"
 }
