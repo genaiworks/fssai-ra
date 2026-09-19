@@ -104,3 +104,12 @@ in that total and are not additional attack episodes. The architecture register
 is unchanged at 109 controls with its conservative statuses intact. Measuring an
 assumption is not supplying it, and `make qualify` prints `reference` for this
 repository with every blocking reason named.
+
+## V14 developer security revision
+
+V14 derives from the preserved v13 artifact at commit 6d8f9e3. It adds verified
+artifact bytes, per-transfer response buffers, strict framing, conservative
+provider settlement and operation binding. The active build/check paths now use
+`paper/tbc-v14/`. The developer example demonstrates useful completion and
+failure handling without a model key or real records. Recorded current evidence
+is bound through its implementation manifest; earlier counts remain historical.

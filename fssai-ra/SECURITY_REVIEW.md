@@ -1,11 +1,43 @@
-# Security review of the v13 reference implementation
+# Security review of the v14 reference implementation
 
 This review fixes three local security-boundary defects and keeps the paper's
 claims tied to observable behavior. It does not certify that all defects or all
-architecture gaps have been eliminated. The manuscript remains v13; its current
-source is `paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx`.
+architecture gaps have been eliminated. The current manuscript is v14 at
+`paper/tbc-v14/TBC_v14_Developer_Security_Revision.docx`; v13 is preserved.
 
-## Reproduced defects and repairs
+
+## V14 findings and developer deliverables
+
+Reviewing the newly added transport and recovery paths found four repair areas:
+
+- Provider lookup accepted pending or malformed responses as confirmation. It now
+  leaves them uncertain and blocks dependent work. Nonfinal submission acknowledgements
+  are handled identically. A provider adapter must treat `absent` as authoritative
+  terminal non-execution, not an eventually consistent missing record.
+- An existing idempotency key was checked against payload but not operation.
+  Rebinding a key to another operation is now an integrity violation.
+- Concurrent transport calls shared pending response bytes. Buffers are now local
+  to each transfer; a synchronized two-thread regression checks distinct results.
+- HTTP framing admitted unsupported protocol versions and malformed fields. These
+  now produce controlled transport denials over real loopback TLS connections.
+
+`fetch_artifact` also makes the client useful to callers: it returns bytes and
+transport evidence only after an independently approved digest matches. A valid
+peer certificate does not authorize arbitrary new content. The trusted caller
+must own digest approval and path confidentiality; a model-supplied path can
+encode a secret even on an allowed host. No generalized exfiltration-detection
+claim is made.
+
+`DEVELOPER_GUIDE.md` documents installation, integration boundaries, failure
+handling and provider response semantics. `make developer-demo` demonstrates
+exact-byte acceptance, changed-content refusal and lost-acknowledgement recovery
+with one submission. The current paper is reproducible, includes twelve research
+papers from 2025–2026, and distinguishes controls from deployment evidence.
+
+The sections below retain the prior review findings and their historical counts.
+The current evidence and counts are recorded in `paper/tbc-v14/implementation.json`.
+
+## Earlier v13 defects and repairs
 
 | Defect | Consequence | Repair and evidence |
 | --- | --- | --- |
@@ -57,7 +89,7 @@ cannot establish properties of infrastructure that has not been deployed.
 | Remaining work | Evidence needed before claiming it |
 | --- | --- |
 | Process and network isolation | Run an adversarial process in the intended deployment; demonstrate denied direct filesystem, credential, metadata-service and socket access outside declared mediation. |
-| Qualified outbound transport | Validate actual peer IP pinning, TLS hostname verification, redirect reauthorization, timeouts and byte limits using a controlled transport harness. The current destination module opens no sockets. |
+| Qualified outbound transport | Validate actual peer IP pinning, TLS hostname verification, redirect reauthorization, timeouts and byte limits using a controlled transport harness. The transport implementation and loopback harness now exist; institutional peer and firewall qualification remain outstanding. |
 | Live-model monitor quality | Run held-out benign and adversarial trajectories, report false restrictions, missed attacks, latency and utility, and measure adaptive evasion. Scripted findings are not detector accuracy. |
 | Remote effect recovery | Integrate provider idempotency and reconciliation; test lost acknowledgements and uncertain outcomes. A local transaction cannot guarantee exactly-once remote effects. |
 | Federation, witnesses and lifecycle controls | Implement cross-service authority, independent evidence custody and training/promotion controls; retain explicit partial/unimplemented status until tested. |
@@ -172,7 +204,7 @@ under a changed analysis plan. Selection rate, equal-opportunity gap and reviewe
 overturn are reported together, so a single favourable measure is not a result.
 No study has been run and none is claimed.
 
-### Current state
+### Historical checkpoint at commit 6d8f9e3
 
 1,375 regression cases pass with none skipped. Thirty-one capability contracts
 execute against named tests. Thirty-five manuscript anchors are bound to test
@@ -181,3 +213,21 @@ controls with its partial, deployment-dependent and unimplemented statuses
 intact. This review closed the gaps it could close and made the remaining ones
 measurable; it did not turn a local reference into a production deployment, and
 the promotion gate in this repository refuses to say otherwise.
+
+## V14 executed verification
+
+The release run passes 1,400 tests with no skips, 33 executed capability contracts,
+40 manuscript claim bindings and reproduction of 126 numeric results. The
+transport/recovery subset passes 75 cases. Running those tests against the
+preceding implementation at `6d8f9e3` yields 23 failures: 17 expose incorrect
+existing behavior and six require the newly introduced artifact-return API.
+Those six API-absence failures are not counted as pre-existing vulnerabilities.
+V14 adds 25 regression cases overall, including the runnable developer example.
+All ten rendered manuscript pages were inspected. V13 is unchanged.
+
+The host qualification command returns `reference`, as expected: production
+isolation, peer and witness evidence are missing. Its conformance flag is not
+supplied by the local release command; the resulting missing-conformance message
+is a missing deployment declaration, not a failure of the 1,400 local tests.
+No live model, production provider, institutional study or conference submission
+was performed during this revision.

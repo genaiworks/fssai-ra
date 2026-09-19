@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf",
+  "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743",
   "source_stable": true,
   "exit_code": 0,
   "claims": [
@@ -16,7 +16,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "durable_quarantine",
@@ -30,7 +30,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "versioned_ingress",
@@ -44,7 +44,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "model_bundle",
@@ -58,7 +58,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "frozen_tools",
@@ -72,7 +72,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "destination_contract",
@@ -86,7 +86,7 @@
       "status": "machine_verified",
       "executed_cases": 9,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "workload_stop",
@@ -100,7 +100,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "stop_without_evidence",
@@ -114,7 +114,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "revocable_delivery",
@@ -128,7 +128,7 @@
       "status": "machine_verified",
       "executed_cases": 5,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "restricted_monitor",
@@ -142,7 +142,7 @@
       "status": "machine_verified",
       "executed_cases": 7,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "measured_isolation",
@@ -156,7 +156,7 @@
       "status": "machine_verified",
       "executed_cases": 7,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "unmeasurable_isolation_is_open",
@@ -170,7 +170,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "pinned_transport",
@@ -184,7 +184,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "transport_never_resolves",
@@ -198,7 +198,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "redirect_reauthorization",
@@ -212,7 +212,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "wire_byte_ceiling",
@@ -226,7 +226,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "containment_without_detection",
@@ -240,7 +240,7 @@
       "status": "machine_verified",
       "executed_cases": 3,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "hostile_monitor_costs_availability_only",
@@ -254,7 +254,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "blocked_attempt_evidence",
@@ -268,7 +268,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "at_most_once_remote_effect",
@@ -282,7 +282,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "uncertain_effect_blocks_dependents",
@@ -296,7 +296,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "federated_attenuation",
@@ -310,7 +310,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "independent_evidence_custody",
@@ -324,7 +324,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "evidence_gated_promotion",
@@ -338,7 +338,7 @@
       "status": "machine_verified",
       "executed_cases": 7,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "harness_evidence_is_not_production",
@@ -352,7 +352,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "tool_definition_pinning",
@@ -366,7 +366,7 @@
       "status": "machine_verified",
       "executed_cases": 6,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "tool_name_disambiguation",
@@ -380,7 +380,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "poisoned_description_review",
@@ -394,7 +394,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "untrusted_chain_confinement",
@@ -408,7 +408,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "synthetic_results_permit_no_conclusion",
@@ -422,7 +422,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     },
     {
       "capability": "small_subgroups_are_withheld",
@@ -436,12 +436,40 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "e58d8d3fd67834cb560ef56774034cdba059050a2c889988c9a3115c5b553bbf"
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
+    },
+    {
+      "capability": "approved_artifact_content",
+      "protected_asset": "Exact bytes approved independently of the network peer",
+      "permitted_operation": "Return fetched bytes only when the trusted digest matches",
+      "enforcement_point": "QualifiedTransport.fetch_artifact digest verification",
+      "accountable_owner": "Integration engineer",
+      "failure_test": "tests/test_qualified_transport.py::test_changed_artifact_is_not_returned_despite_valid_peer_identity",
+      "evidence_artifact": "audit/architecture/executed-tests.xml",
+      "failure_response": "Deny delivery even when peer identity and key are valid",
+      "status": "machine_verified",
+      "executed_cases": 1,
+      "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
+    },
+    {
+      "capability": "explicit_remote_settlement",
+      "protected_asset": "Work depending on an acknowledged remote effect",
+      "permitted_operation": "Settle only on explicit applied or authoritative absent evidence",
+      "enforcement_point": "EffectLedger.reconcile provider response validation",
+      "accountable_owner": "Provider integration engineer",
+      "failure_test": "tests/test_remote_effects.py::test_nonfinal_or_malformed_lookup_never_unblocks_work",
+      "evidence_artifact": "audit/architecture/executed-tests.xml",
+      "failure_response": "Retain uncertainty and block dependent work",
+      "status": "machine_verified",
+      "executed_cases": 7,
+      "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+      "source_sha256": "de3c3f88c818550a395a095d7964ee8841949fdc227a2f93e3d3a6bd0c039743"
     }
   ],
   "passed": true,
   "counts": {
-    "machine_verified": 31,
+    "machine_verified": 33,
     "attested": 0,
     "unverified": 0
   }
