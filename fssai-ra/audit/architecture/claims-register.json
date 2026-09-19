@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d",
+  "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47",
   "source_stable": true,
   "exit_code": 0,
   "claims": [
@@ -16,7 +16,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
     },
     {
       "capability": "durable_quarantine",
@@ -30,7 +30,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
     },
     {
       "capability": "versioned_ingress",
@@ -44,7 +44,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
     },
     {
       "capability": "model_bundle",
@@ -58,7 +58,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
     },
     {
       "capability": "frozen_tools",
@@ -72,7 +72,7 @@
       "status": "machine_verified",
       "executed_cases": 1,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
     },
     {
       "capability": "destination_contract",
@@ -86,12 +86,68 @@
       "status": "machine_verified",
       "executed_cases": 9,
       "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
-      "source_sha256": "029161d2ca00f8672a085b6afcc016c76389987f5b4959c16c51357e2b4e734d"
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
+    },
+    {
+      "capability": "workload_stop",
+      "protected_asset": "All standing authority held by a running workload",
+      "permitted_operation": "Act only while a named operator has not stopped the workload",
+      "enforcement_point": "Durable tbc_supervision stop flag checked on every authority resolution",
+      "accountable_owner": "Institution security operator",
+      "failure_test": "tests/test_frontier_controls.py::test_stop_survives_reopen_denies_all_agents_and_requires_new_identity",
+      "evidence_artifact": "audit/architecture/executed-tests.xml",
+      "failure_response": "Revoke every agent, quarantine every task and require a fresh identity to resume",
+      "status": "machine_verified",
+      "executed_cases": 1,
+      "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
+    },
+    {
+      "capability": "stop_without_evidence",
+      "protected_asset": "Operator stop authority during evidence-plane failure",
+      "permitted_operation": "Stop the workload even when the evidence writer is unavailable",
+      "enforcement_point": "Authority transaction committed before the evidence event is attempted",
+      "accountable_owner": "Institution security operator",
+      "failure_test": "tests/test_frontier_controls.py::test_stop_stays_effective_when_evidence_writer_fails",
+      "evidence_artifact": "audit/architecture/executed-tests.xml",
+      "failure_response": "Report evidence_recorded false while keeping the stop durable",
+      "status": "machine_verified",
+      "executed_cases": 1,
+      "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
+    },
+    {
+      "capability": "revocable_delivery",
+      "protected_asset": "Approved artifact bytes queued for a recipient",
+      "permitted_operation": "Collect exact approved bytes while authority is still current",
+      "enforcement_point": "Delivery binding reauthorized at every chunk boundary before bytes leave",
+      "accountable_owner": "Release reviewer",
+      "failure_test": "tests/test_frontier_controls.py::test_stream_reauthorizes_every_chunk_and_bulk_cannot_bypass",
+      "evidence_artifact": "audit/architecture/executed-tests.xml",
+      "failure_response": "Deny remaining bytes after revocation, contraction, expiry, stop or source quarantine",
+      "status": "machine_verified",
+      "executed_cases": 5,
+      "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
+    },
+    {
+      "capability": "restricted_monitor",
+      "protected_asset": "Task authority state exposed to an AI monitor",
+      "permitted_operation": "Submit a bounded finding that can only contract authority",
+      "enforcement_point": "apply_monitor_finding schema, snapshot freshness and replay checks",
+      "accountable_owner": "Assurance operator",
+      "failure_test": "tests/test_frontier_controls.py::test_monitor_advice_cannot_forge_authority_or_replay_evidence",
+      "evidence_artifact": "audit/architecture/executed-tests.xml",
+      "failure_response": "Reject forged, stale, replayed or authority-granting monitor findings",
+      "status": "machine_verified",
+      "executed_cases": 7,
+      "evidence": "/Users/genai/Desktop/OMS/UNITED_NATIONS/fssai-ra/audit/architecture/executed-tests.xml",
+      "source_sha256": "f5c349469a22335245bc513fd1bac1d01f9f59daab7e0249a5202565c5ddcd47"
     }
   ],
   "passed": true,
   "counts": {
-    "machine_verified": 6,
+    "machine_verified": 10,
     "attested": 0,
     "unverified": 0
   }

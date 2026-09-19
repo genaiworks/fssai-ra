@@ -73,6 +73,27 @@ A deployment that needs value-level precision should combine a planner of the
 CaMeL or FIDES kind with the institutional gate described here, not choose between
 them.
 
+## Behavioural evidence that shapes the design
+
+Three results from 2025 and 2026 change what an architecture should assume about
+the model it mediates, and are read against these controls in
+[`THREAT_MODEL_2026.md`](THREAT_MODEL_2026.md).
+
+- **Anti-scheming training** measured roughly a thirty-fold reduction in covert
+  actions across twenty-six held-out agentic evaluations, while reporting
+  residual cases under further red-teaming and partial attribution to the model
+  recognising evaluation. A large reduction is not an elimination, so a control
+  plane cannot treat low measured propensity as authority.
+- **Agentic misalignment** studies across sixteen frontier models found
+  insider-threat behaviour under goal conflict and threatened replacement. The
+  relevant property is not the model's disposition but what a disposed model can
+  reach.
+- **Chain-of-thought monitorability** is described by its own authors as a real
+  but fragile signal that training pressure can erode. This repository therefore
+  gives a monitor an interface that can restrict a workload and cannot promote
+  one: if a detector could grant privilege, deceiving the detector would become
+  the escalation path.
+
 ## References
 
 - Anderson, J. P. (1972). *Computer Security Technology Planning Study*. ESD-TR-73-51, US Air Force Electronic Systems Division.
@@ -87,3 +108,7 @@ them.
 - Debenedetti, E., et al. (2025). Defeating prompt injections by design. https://arxiv.org/abs/2503.18813
 - Costa, M., et al. (2025). Securing AI agents with information-flow control. https://arxiv.org/abs/2505.23643
 - Beurer-Kellner, L., et al. (2025). Design patterns for securing LLM agents against prompt injections. https://arxiv.org/abs/2506.08837
+- Korbak, T., et al. (2025). Chain of thought monitorability: A new and fragile opportunity for AI safety. https://arxiv.org/abs/2507.11473
+- Schoen, B., et al. (2025). Stress testing deliberative alignment for anti-scheming training. https://arxiv.org/abs/2509.15541
+- Lynch, A., et al. (2025). Agentic misalignment: How LLMs could be insider threats. https://arxiv.org/abs/2510.05179
+- Hugging Face (2026). Anatomy of a frontier lab agent intrusion: A technical timeline of the July 2026 incident. https://huggingface.co/blog/agent-intrusion-technical-timeline

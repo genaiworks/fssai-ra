@@ -14,7 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def check(root=ROOT):
-    manifest = json.loads((root / 'paper/tbc-v12/implementation.json').read_text())
+    manifest = json.loads((root / 'paper/tbc-v13/implementation.json').read_text())
+    preserved = root / manifest['derived_from']
+    if not preserved.is_file():
+        raise ValueError('the preserved earlier revision must remain in the repository')
     document = root / manifest['source']
     if hashlib.sha256(document.read_bytes()).hexdigest() != manifest['source_sha256']:
         raise ValueError('revised paper changed; review claim bindings')

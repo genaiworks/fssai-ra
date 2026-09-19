@@ -9,6 +9,8 @@
 | [`composition-supplement.md`](composition-supplement.md) | Delegated authority and assisted review in full — the two contributions the abstract states in compressed form. |
 | [`empirical-supplement.md`](empirical-supplement.md) | Recovery and replay identity: process races and abrupt-exit recovery after the `v1.0.0` baseline. |
 | [`SUBMISSION.md`](SUBMISSION.md) | Checklist, deadline, what to paste where, and the order to cut in if a hard word cap applies. |
+| [`tbc-v13/`](tbc-v13/) | **The current Word revision.** Frontier-threat revision: incident reading, covert-objective and monitorability framing, and the three added controls, with claim bindings in `implementation.json` and a reproducible build in `../scripts/build_paper_revision.py`. |
+| [`tbc-v12/`](tbc-v12/) · [`tbc-v11/`](tbc-v11/) | Preserved earlier revisions with their own claim manifests. Kept unchanged. |
 | [`archive/`](archive/) | Superseded versions, kept for provenance. Do not cite these. |
 
 Both supplements are held to the same standard as the abstract: their figures are
