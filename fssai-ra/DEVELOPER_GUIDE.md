@@ -105,3 +105,23 @@ Report them separately. The current manuscript and evidence bindings are in
 `paper/tbc-v14/`; v13 is preserved. See `SECURITY_REVIEW.md` for remaining
 acceptance requirements, and do not infer that all 109 architecture controls are
 fully implemented from the number of passing tests.
+
+## Reproduce the release figures
+
+Figures 4 and 6 in v14 are committed as PNG and SVG in `paper/tbc-v14/figures/`.
+Figure 6 reads the architecture-comparison and domain-pack result JSON directly;
+its manifest records the input hashes, counts and rendered asset hashes. The
+paper builder and release checker reject stale or altered figure assets.
+Verification uses the standard library:
+
+```sh
+python scripts/build_release_figures.py --check
+```
+
+To deliberately regenerate them, install Matplotlib in a separate environment
+and run `python scripts/build_release_figures.py`. Then rebuild the paper with
+`python scripts/build_paper_v14.py`, review the rendered pages, and update the
+reviewed paper hash in `paper/tbc-v14/implementation.json`. Rendering can vary
+between Matplotlib versions; the Word build embeds the exact committed PNGs.
+The two experiments have different fixtures and denominators and must not be
+pooled or described as field security or live-model detector accuracy.

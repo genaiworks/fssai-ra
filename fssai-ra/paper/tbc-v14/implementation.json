@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "paper/tbc-v14/TBC_v14_Developer_Security_Revision.docx",
-  "source_sha256": "92894b6817bba1d19ed67a47f28abc4dcb87dfa82a5f9e24c43aaefccbaee14d",
+  "source_sha256": "dd5f507c2b35ad23f0d15dfeed694fc30540155f98a3d9cf561119edc1ecc93d",
   "derived_from": "paper/tbc-v13/TBC_v13_Frontier_Threat_Revision.docx",
   "build": "scripts/build_paper_v14.py",
   "regression_tests": 1400,
