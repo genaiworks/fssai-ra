@@ -10,28 +10,57 @@ explicit prose claims to named tests and source-bound execution evidence.
 
 ## What this version changed
 
-Presentation only. No claim, quantity, control or limitation was added, removed
-or weakened; `implementation.json` carries the same 49 claim-to-test bindings.
+Presentation and scholarship. No claim, quantity, control or limitation was
+added, removed or weakened; `implementation.json` carries the same 49
+claim-to-test bindings, and every reported number is unchanged.
 
-- The abstract leads with the problem and the contribution. Fixture counts and
-  evidence inventories moved to the sections that carry them.
-- Revision-diary voice is gone: no "this revision adds", no "can now be", no
-  version numbers in captions or prose.
-- An explicit four-point contributions statement closes section 1.
-- Section 4 opens with the headline results before the table that qualifies them.
-- The residual-choice channel is its own section (7) rather than a passage in
-  the middle of section 6, because it is the newest result in the paper.
-- Limitations are their own section (10) rather than a sentence prefix inside
-  the education discussion.
-- A stray markdown emphasis marker that had leaked into the Word text is fixed.
+**Reads as a paper, not a changelog.** The abstract leads with the problem and
+the contribution. Revision-diary voice is gone: no "this revision adds", no "can
+now be", no version numbers in captions or prose. An explicit four-point
+contributions statement closes section 1. Section 4 opens with the headline
+results before the table that qualifies them. The residual-choice channel is its
+own section (7) and limitations are their own section (10), because both are
+things a reviewer looks for by heading.
+
+**States its claim as a claim.** Section 2 now carries an explicit threat model
+— what the adversary is assumed to hold, and what it is assumed not to hold —
+followed by Property 1 (Authorisation independence), the central claim stated so
+that refuting it is a procedure rather than an argument. Both were previously
+scattered across five sections and had to be reconstructed by the reader.
+
+**Credits the work it restates.** The manuscript had been using complete
+mediation, least privilege, capability attenuation, lattice-ordered information
+flow, separation of duty, the confinement problem, channel capacity in bits and
+at-most-once remote semantics without citing any of them. The bibliography is
+now grouped into recent research (12 arXiv preprints, unchanged), foundations
+(11 venue-of-record papers) and standards and policy (5 issuing-body documents,
+including NIST AI RMF, the EU AI Act, UNESCO's education guidance and SDG 4).
+All 28 are cited in the body; `tests/test_paper_revision_build.py` fails on an
+uncited entry or a dangling citation.
+
+**Easier to follow and to extend.** A reading guide and a seven-term
+terminology table (Table 2) close section 1; a placement table against related
+work (Table 1) closes the related-work discussion; a four-step extension recipe
+closes section 5. The evidence table is now Table 3.
+
+**Finished.** British spelling throughout (the manuscript previously mixed
+`authorisation`/`authorization` and `behaviour`/`behavior`), one house form for
+`artifact`, and no ASCII double hyphens left in the Word text.
+
+**Evidence scope stated once.** The word "synthetic" appeared twelve times,
+including in three table rows and a figure caption. It now appears six times, in
+the places that carry the disclosure: the scope statement in section 4, the
+Table 3 caption, and the limitations section. Nothing was softened — the
+limitations section is unchanged, and the claim register still binds "refuses
+conclusions on synthetic fixtures" to its test.
 
 ## Structure
 
-1. From Model Risk to Authority Risk
-2. Proof Before Power: The Reference Architecture
+1. From Model Risk to Authority Risk *(contributions, reading guide, Tables 1–2)*
+2. Proof Before Power: The Reference Architecture *(threat model, Property 1)*
 3. Swarms and Future Attack Paths
-4. Executable Reference Kernel and Evidence
-5. Engineering Implementation and Qualification
+4. Executable Reference Kernel and Evidence *(Table 3)*
+5. Engineering Implementation and Qualification *(extension recipe)*
 6. Stopping, Delivery and Monitoring When a Model May Be Covert
 7. What Exact-Byte Release Does Not Close
 8. Measuring the Assumptions a Deployment Inherits
@@ -52,12 +81,18 @@ contracts execute. Regression counts are test cases, not attack success rates.
 
 ## Before you upload
 
-**Check the page count in Word.** The body is 6,101 words. No renderer is
-available in the build environment, so no page count is asserted anywhere in
-this repository; see [`RELEASE_REVIEW.md`](../tbc-v14/RELEASE_REVIEW.md) for the
-length accounting and for what the organizers have and have not published about
-submission. If the manuscript runs long, section 7 and the section 4 results
-summary are the newest and most separable material.
+**Check the length against the call.** The numbered sections run 6,156 words.
+The organisers' call asks for an extended abstract of approximately 1,500 words,
+and this manuscript is written for the UNU–Springer proceedings chapter rather
+than for that form. Submit [`../form-ready-abstract.md`](../form-ready-abstract.md)
+where a word cap applies and offer this as the full contribution; see
+[`RELEASE_REVIEW.md`](../tbc-v14/RELEASE_REVIEW.md) for the length accounting.
+If this manuscript itself must be cut, section 7 and the section 4 results
+summary are the newest and most separable material, and the limitations section
+is never what gets cut.
+
+**Check the page count in Word.** No renderer is available in the build
+environment, so no page count is asserted anywhere in this repository.
 
 The manuscript names its author. A blind-review track would require removing
 that, which is an edit to `revision-content.json` and a rebuild, not a hand edit

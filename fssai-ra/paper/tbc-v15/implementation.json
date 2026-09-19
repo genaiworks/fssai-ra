@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "paper/tbc-v15/Trust_by_Construction.docx",
-  "source_sha256": "89545929bae938ba7e6ef04c6f7be6e5159c9996ce8426f57ae905b7c207ee5a",
+  "source_sha256": "e9ac911d12e02f048ce111103eb69d3fc95505f90fc3763eca6dd34dbcc434db",
   "derived_from": "paper/tbc-v14/TBC_v14_Developer_Security_Revision.docx",
   "build": "scripts/build_paper_v15.py",
   "regression_tests": 1445,
