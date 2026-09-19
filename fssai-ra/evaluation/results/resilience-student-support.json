@@ -1,11 +1,7 @@
 {
   "profile_id": "student-support",
   "profile_sha256": "4bef474ed1e40b6dc3a4e643438b1be06d16846eefe3bad82f29b164208dc02b",
-<<<<<<< HEAD
   "implementation_sha256": "ac5e1195538a3f9287ec4a237a33fb6d68cc165b5279ce8278a2576920f88d60",
-=======
-  "implementation_sha256": "99ec7a44197f716d2d488f67f92840820fd607278b7af70f9dd6f4c2add6e0f7",
->>>>>>> b7a6182 (Add offline adaptive attacker with an independent success oracle)
   "transition": {
     "operation": "prepare_case_for_review",
     "from_status": "draft",

@@ -269,6 +269,63 @@ records `png: "NOT RUN: <reason>"` rather than a placeholder file.
 to teaching behaviour. It skipped both the teaching-defaults refusal and the
 backend-assurance refusal: a fail-open found while reviewing the M4 wiring.
 
+## D23 — Fixes from the independent code review of the kernel and lifecycle
+
+A read-only reviewer found one critical, six high and seven medium defects,
+each confirmed by a probe. All are fixed with regression tests:
+
+- `tests/lifecycle/test_lifecycle_review_fixes.py`
+- `tests/kernel/test_kernel_contract_strict.py`
+- `tests/kernel/test_kernel_state_machine_review.py`
+- `tests/lifecycle/test_lifecycle_deploy_strict.py`
+- `tests/packs/test_pack_review_fixes.py`
+
+| Finding | Defect | Fix |
+|---|---|---|
+| C1 | `governed_digest` hashed only facades; deleting a check in `exact_action.py` did not return the capability to stage 5 | Digest all of `src/fssaira`, the tests, scripts, deploy profiles, the threat catalogue, the specification, and every resolved pack source (including sources outside the repository) |
+| H1 | `operate` accepted a forgeable or partial (`--only`, `--no-ablation`) artifact | Artifacts record their scope; only a complete scope with the current digest is accepted. Consequential `promote` re-runs falsification and never trusts a file. Docstring states that an artifact is trusted-host evidence |
+| H2 | A YAML null in `frame` became the string `"None"` and counted as filled | Fields must be non-empty strings; malformed frames are failed gates |
+| H3 | Profile loader accepted nulls and string booleans | Strict string and boolean types, validated stages, duplicate names refused (D-strict tests) |
+| H4 | Test locators accepted uncollected files, skipped or xfail tests, `__test__ = False`, and the `./tests` prefix | Pytest file pattern required; skip, skipif, xfail, module `pytestmark` and `__test__ = False` refused; path normalised before judging |
+| H5 | A restored effect record forgot used authorizations, so compensation could reuse the approval | A restore without history refuses compensation. `from_ledger` rebuilds history from verified evidence, and with a notary checkpoint it refuses an insider re-chain |
+| H6 | The bind gate checked one level deep | Credential reachability is walked at any depth from the model object: attributes, containers, closures, bound methods. Positive controls plant the credential in each. The wrapper's mediator reference is reported as an in-process limit |
+| M2 | `operate` passed when live gates never ran | Fails with `live_gates_run` unless `allow_not_run` is explicit |
+| M4 | Floor exemptions were granted by key absence alone | A source carrying any governed-pack key gets no exemption |
+| M5 | A `CF-*` id counted as defined if it appeared in a `_skip` | Only ids registered by `self._check(...)` count |
+| M6 | 0 of 0 counted as complete; empty ablation and attempt sets passed | Denominators must be positive |
+| M7 | A dispatched effect could be closed as denied without evidence | Dispatched → denied requires a downstream receipt |
+| M3 | Docs described a `promote` that did not exist | `promote` implemented; it runs exactly the profile's gates |
+
+Two review items remain as stated limits rather than code changes:
+
+- **In-process reachability.** The agent wrapper holds a reference to the
+  enforcement point. Logical planes are not process isolation.
+- **Artifact trust.** Teaching-profile artifacts are trusted-host evidence.
+  Consequential promotion does not rely on them.
+
+## D24 — Retrieval reads exclusively through the gate's `assemble_context`, never `authorize_only`
+
+**Decision.** `integration.retrieval.GovernedRetriever` no longer holds text of
+its own (`SourceDocument` is gone). `RetrievalIndex` holds only provenance
+(source id, tenant, subject, field, version). The retriever restricts that
+index to the caller's authenticated tenant, then calls
+`DisclosureGate.assemble_context` for the actual read. The returned
+`RetrievedContext.label` is `GovernedContext.label` and `value_ids` names the
+gate-issued values, so a downstream output is labelled with
+`gate.derive_from_values(sources=context.value_ids.values())`.
+
+**Why.** a2's review of the first version: `authorize_only` is a recheck of
+authority already exercised — it opens no gate session, issues no values, and
+writes no read evidence. The first version therefore required the orchestrator
+to attach `RetrievedContext.label` to any output built from retrieved chunks,
+which reintroduces self-labelling: exactly what Rule 2 forbids. A retrieved
+passage is a disclosure, and only the gate may label a disclosure.
+
+**Consequence.** A cache hit is now served only after a fresh `assemble_context`
+call confirms the same values are still byte-identical, so revocation and
+consent withdrawal are rechecked on every retrieval, cached or not — more
+expensive than the old authorize-only recheck, and required by the same reason.
+
 ## D7 — Backend assurance is a signed-off record, checked at construction
 
 **Decision.** `kernel/assurance.py` refuses to hand out a backend unless a

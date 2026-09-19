@@ -1,33 +1,44 @@
 """Retrieval as a protected read (paper Section 6.1).
 
-:class:`GovernedRetriever` answers a parsed :class:`~fssaira.integration.typed.ContextRequest`
-in this order, and in no other:
+A retrieved passage is a disclosure. :class:`GovernedRetriever` therefore never
+reads text of its own: every passage comes from
+:meth:`fssaira.disclosure.DisclosureGate.assemble_context`, which authorizes the
+read, touches the record source only after every check passes, writes read
+evidence, labels the session, and returns each value with the label the gate
+computed for it.
 
-1. **Authorize** through the real :class:`fssaira.disclosure.DisclosureGate`
-   (``authorize_only``): grant signature, holder, currency, purpose, subject
-   scope, minimum-necessary fields, consent, class clearance and residency.
-2. **Restrict** the candidate set to the caller's authenticated tenant and the
-   exact subjects and fields just authorized.
-3. Only then **chunk and score**. A document outside the restriction is never
-   chunked, embedded, scored, reranked or served from cache.
-4. Preserve **provenance** (source id, record version, tenant, subject, field,
-   offsets and label) on every chunk through ranking, and label the returned
-   context with the **join** of the returned chunks' labels.
+Order of operations, and no other:
 
-Cached answers are keyed by the full authorization scope and the corpus
-generation, and a cache hit is served only after step 1 passes again, so a
-revoked grant or withdrawn consent also refuses a cached answer.
+1. **Restrict to the caller's authenticated tenant.** The index holds provenance
+   only (source id, tenant, subject, field, version), so the scope handed to the
+   gate never covers another tenant's records.
+2. **Read through the gate.** ``assemble_context`` applies grant signature,
+   holder, currency, purpose, subject scope, minimum-necessary fields, consent,
+   class clearance and residency, then reads.
+3. **Chunk and score only the values the gate issued.** Nothing else is ever
+   chunked, embedded, scored, reranked or served from a cache.
+4. **Preserve provenance** (source id, record version, tenant, subject, field,
+   offsets, value id and the gate's label) through chunking and ranking.
+
+Labels come from the gate. :attr:`RetrievedContext.label` is the gate's
+``GovernedContext.label``, and :attr:`RetrievedContext.value_ids` names the
+issued values so an output is labelled with
+``gate.derive_from_values(..., sources=context.value_ids.values())``.
 
 Must NOT / residual risk
 ------------------------
 * Must NOT filter final prose instead of candidates: that is too late.
-* Must NOT be given a scorer or index that reads outside the candidate set it
-  is handed; a scorer with its own global index defeats step 3.
-* Residual: ``authorize_only`` writes an ``authorization_recheck`` evidence
-  record but opens no gate session, so a model output built from the returned
-  chunks must be labelled with :attr:`RetrievedContext.label` by the trusted
-  orchestrator (or re-read through ``assemble_context``). Scores and ranks can
-  still leak aggregate information inside the authorized scope.
+* Must NOT label an output from anything this module returns by itself. An
+  orchestrator that computes its own label reintroduces self-labelling, which is
+  what Rule 2 forbids; the gate labels, always.
+* Must NOT be given an index or scorer that can reach text the gate did not
+  issue; a scorer with its own global corpus defeats step 3.
+* A cache hit re-authorizes through the gate before anything is returned, so a
+  revoked grant or withdrawn consent also refuses a cached answer. Cached
+  rankings are reused only while the gate's values are byte-identical.
+* Residual: scores and ranks can still leak aggregate information inside the
+  authorized scope, and the index's own metadata (which subjects and fields
+  exist for a tenant) is not itself a governed read.
 """
 from __future__ import annotations
 
@@ -41,7 +52,7 @@ from ..disclosure import DataLabel, DisclosureGate, DisclosureGrant
 from ..encrypted_records import hashed_embedding
 from .typed import ContextRequest
 
-#: ``scorer(query, chunk_text) -> float``. Called only for authorized chunks.
+#: ``scorer(query, chunk_text) -> float``. Called only for gate-issued chunks.
 Scorer = Callable[[str, str], float]
 
 
@@ -52,15 +63,19 @@ def embedding_scorer(query: str, text: str) -> float:
 
 
 @dataclass(frozen=True)
-class SourceDocument:
-    """One field of one record, as indexed. ``record_version`` is the source's version."""
+class IndexedSource:
+    """Provenance for one field of one record. It holds no text: the gate does."""
 
     source_id: str
     tenant: str
     subject: str
     field: str
     record_version: int
-    text: str
+
+    @property
+    def key(self) -> str:
+        """The gate's value key for this source (``subject.field``)."""
+        return f"{self.subject}.{self.field}"
 
 
 @dataclass(frozen=True)
@@ -76,12 +91,13 @@ class Provenance:
     start: int
     end: int
     label: DataLabel
+    value_id: str
 
     def to_dict(self) -> dict:
         return {"source_id": self.source_id, "record_version": self.record_version,
                 "tenant": self.tenant, "subject": self.subject, "field": self.field,
                 "chunk_index": self.chunk_index, "start": self.start, "end": self.end,
-                "label": self.label.to_dict()}
+                "label": self.label.to_dict(), "value_id": self.value_id}
 
 
 @dataclass(frozen=True)
@@ -93,134 +109,135 @@ class RetrievedChunk:
 
 @dataclass(frozen=True)
 class RetrievedContext:
-    """Ranked chunks and the join of their labels."""
+    """Ranked chunks, the gate's session label, and the gate-issued value ids."""
 
     request_id: str
+    session_id: str
+    receipt_id: str
     chunks: tuple[RetrievedChunk, ...]
     label: DataLabel
+    value_ids: dict[str, str]
     cache_hit: bool = False
     candidates_scored: int = 0
 
 
-class RetrievalCorpus:
-    """An in-memory source index. Its generation changes on every write."""
+class RetrievalIndex:
+    """Provenance for indexed record fields. Its generation changes on every write."""
 
-    def __init__(self, documents: Iterable[SourceDocument] = ()) -> None:
+    def __init__(self, sources: Iterable[IndexedSource] = ()) -> None:
         self._lock = threading.RLock()
-        self._docs: dict[str, SourceDocument] = {}
+        self._sources: dict[str, IndexedSource] = {}
         self.generation = 0
-        for doc in documents:
-            self.add(doc)
+        for source in sources:
+            self.add(source)
 
-    def add(self, doc: SourceDocument) -> None:
+    def add(self, source: IndexedSource) -> None:
         with self._lock:
-            self._docs[doc.source_id] = doc
+            self._sources[source.source_id] = source
             self.generation += 1
 
     def remove(self, source_id: str) -> None:
         with self._lock:
-            self._docs.pop(source_id, None)
+            self._sources.pop(source_id, None)
             self.generation += 1
 
     def restricted(self, *, tenant: str, subjects: frozenset[str],
-                   fields: frozenset[str]) -> tuple[SourceDocument, ...]:
-        """The only way documents leave the corpus: already restricted to a scope."""
+                   fields: frozenset[str]) -> tuple[IndexedSource, ...]:
+        """The only way sources leave the index: already restricted to one tenant and scope."""
         with self._lock:
-            return tuple(doc for _id, doc in sorted(self._docs.items())
-                         if doc.tenant == tenant and doc.subject in subjects
-                         and doc.field in fields)
+            return tuple(source for _id, source in sorted(self._sources.items())
+                         if source.tenant == tenant and source.subject in subjects
+                         and source.field in fields)
 
 
 class GovernedRetriever:
-    """Authorize, restrict, then chunk and score. See the module docstring."""
+    """Restrict to the tenant, read through the gate, then chunk and score. See the module docstring."""
 
-    def __init__(self, gate: DisclosureGate, corpus: RetrievalCorpus, *,
+    def __init__(self, gate: DisclosureGate, index: RetrievalIndex, *,
                  scorer: Scorer = embedding_scorer, chunk_size: int = 200,
                  cache: bool = True) -> None:
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
         self._gate = gate
-        self._corpus = corpus
+        self._index = index
         self._scorer = scorer
         self._chunk_size = chunk_size
         self._cache_enabled = cache
-        self._cache: dict[str, tuple[RetrievedChunk, ...]] = {}
+        self._cache: dict[str, tuple[str, tuple[RetrievedChunk, ...]]] = {}
 
-    def _chunk_label(self, doc: SourceDocument, purpose: str) -> DataLabel:
-        # Built exactly as DisclosureGate labels a value it assembles.
-        policy = self._gate.policy
-        cls = policy.field_classes[doc.field]
-        return DataLabel(classes=frozenset({cls}), subjects=frozenset({doc.subject}),
-                         purposes=frozenset({purpose}),
-                         zones=frozenset(policy.class_zones.get(cls, frozenset())))
-
-    def _chunks(self, doc: SourceDocument, purpose: str) -> list[tuple[str, Provenance]]:
-        label = self._chunk_label(doc, purpose)
+    def _chunks(self, source: IndexedSource, text: str, label: DataLabel,
+                value_id: str) -> list[tuple[str, Provenance]]:
         out = []
-        text = doc.text or ""
+        text = text or ""
         for index, start in enumerate(range(0, max(len(text), 1), self._chunk_size)):
             end = min(start + self._chunk_size, len(text))
             out.append((text[start:end], Provenance(
-                doc.source_id, doc.record_version, doc.tenant, doc.subject, doc.field,
-                index, start, end, label)))
+                source.source_id, source.record_version, source.tenant, source.subject,
+                source.field, index, start, end, label, value_id)))
         return out
 
-    def _cache_key(self, request: ContextRequest, grant: DisclosureGrant, limit: int) -> str:
+    def _cache_key(self, request: ContextRequest, grant: DisclosureGrant, limit: int,
+                   scope: tuple[IndexedSource, ...]) -> str:
         return hashlib.sha256(json.dumps({
             "tenant": request.tenant, "principal": request.principal,
             "grant": grant.grant_id, "grant_signature": grant.signature,
-            "purpose": request.purpose, "subjects": sorted(request.subjects),
-            "fields": sorted(request.fields), "endpoint": request.model_endpoint,
+            "purpose": request.purpose, "endpoint": request.model_endpoint,
             "policy_version": request.policy_version, "query": request.query,
-            "limit": limit, "generation": self._corpus.generation,
+            "limit": limit, "generation": self._index.generation,
+            "scope": [s.source_id for s in scope],
         }, sort_keys=True).encode()).hexdigest()
 
     def retrieve(self, request: ContextRequest, *, grant: DisclosureGrant | None, now: float,
-                 limit: int = 5) -> RetrievedContext:
+                 session_id: str | None = None, limit: int = 5) -> RetrievedContext:
         """Answer ``request``; raises :class:`fssaira.disclosure.DisclosureDenied` on refusal."""
-        # 1. Authorize before anything is read, generated, scored, or served from cache.
-        self._gate.authorize_only(
-            requester=request.principal, grant=grant, purpose=request.purpose,
-            subjects=request.subjects, fields=request.fields,
-            model_endpoint=request.model_endpoint, now=now,
-            reason=f"retrieval:{request.request_id}",
-        )
-        assert grant is not None  # authorize_only refuses a missing grant
-        key = self._cache_key(request, grant, limit)
-        policy = self._gate.policy
-        if self._cache_enabled and key in self._cache:
-            chunks = self._cache[key]
-            return RetrievedContext(request.request_id, chunks, _join(policy, chunks),
-                                    cache_hit=True)
-
-        # 2. Restrict candidates to the authenticated tenant and authorized scope.
-        candidates = self._corpus.restricted(
+        # 1. Restrict the scope to the authenticated caller's tenant, before any read.
+        scope = self._index.restricted(
             tenant=request.tenant, subjects=frozenset(request.subjects),
             fields=frozenset(request.fields))
+        subjects = sorted({source.subject for source in scope})
+        fields = sorted({source.field for source in scope})
+        session = session_id or f"retrieval:{request.request_id}"
 
-        # 3. Chunk and score only what survived.
+        # 2. The gate authorizes, reads, evidences and labels. Out-of-scope subjects
+        #    and fields are still sent when the caller asked for them, so the gate,
+        #    not this module, decides and records the refusal.
+        context = self._gate.assemble_context(
+            requester=request.principal, session_id=session, grant=grant,
+            purpose=request.purpose,
+            subjects=subjects or sorted(request.subjects),
+            fields=fields or sorted(request.fields),
+            model_endpoint=request.model_endpoint, now=now)
+        assert grant is not None  # the gate refuses a missing grant
+
+        issued = {source.key: source for source in scope if source.key in context.labelled}
+        fingerprint = hashlib.sha256(json.dumps(
+            {key: context.labelled[key].text for key in sorted(issued)}, sort_keys=True
+        ).encode()).hexdigest()
+        key = self._cache_key(request, grant, limit, scope)
+        if self._cache_enabled and key in self._cache:
+            cached_fingerprint, chunks = self._cache[key]
+            if cached_fingerprint == fingerprint:
+                return RetrievedContext(request.request_id, context.session_id, context.receipt_id,
+                                        chunks, context.label, context.value_ids, cache_hit=True)
+
+        # 3. Chunk and score only what the gate issued.
         scored: list[RetrievedChunk] = []
-        for doc in candidates:
-            for text, provenance in self._chunks(doc, request.purpose):
+        for value_key, source in sorted(issued.items()):
+            value = context.labelled[value_key]
+            for text, provenance in self._chunks(source, value.text, value.label, value.value_id):
                 scored.append(RetrievedChunk(text, float(self._scorer(request.query, text)),
                                              provenance))
         ranked = tuple(sorted(scored, key=lambda c: (-c.score, c.provenance.source_id,
                                                      c.provenance.chunk_index))[:limit])
         if self._cache_enabled:
-            self._cache[key] = ranked
-        # 4. The context label is the join of what is returned.
-        return RetrievedContext(request.request_id, ranked, _join(policy, ranked),
+            self._cache[key] = (fingerprint, ranked)
+        # 4. The label is the gate's, never one computed here.
+        return RetrievedContext(request.request_id, context.session_id, context.receipt_id,
+                                ranked, context.label, context.value_ids,
                                 candidates_scored=len(scored))
 
 
-def _join(policy, chunks: Iterable[RetrievedChunk]) -> DataLabel:
-    label = DataLabel.bottom(policy)
-    for chunk in chunks:
-        label = label.join(chunk.provenance.label)
-    return label
-
-
 __all__ = [
-    "GovernedRetriever", "Provenance", "RetrievalCorpus", "RetrievedChunk", "RetrievedContext",
-    "Scorer", "SourceDocument", "embedding_scorer",
+    "GovernedRetriever", "IndexedSource", "Provenance", "RetrievalIndex", "RetrievedChunk",
+    "RetrievedContext", "Scorer", "embedding_scorer",
 ]

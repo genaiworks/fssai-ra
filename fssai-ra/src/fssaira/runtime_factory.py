@@ -79,19 +79,15 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
                 f"refusing to start a {declared} deployment with teaching defaults active: "
                 + "; ".join(item.code for item in blocking)
             )
-<<<<<<< HEAD
     # The kernel floor is enforced where the deployment starts, not only in tests:
     # a pack that weakens a guarantee (a model approver, a fail-open review, a
     # missing control contract) raises PackRejected and the server does not start.
     from .pack_floor import load_governed_pack
 
-    pack = load_governed_pack(
-=======
     # A backend inherits no assurance until the conformance suite has passed on
     # exactly its code. Enforced for pilot/production; recorded for teaching.
     assurance = _backend_assurance(declared)
-    profile = ApplicationProfile.load(
->>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
+    pack = load_governed_pack(
         Path(profile_path or os.getenv("FSSAI_PROFILE", "profiles/student_support.yaml"))
     )
     profile = pack.profile
@@ -162,13 +158,9 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         from .postgres_backend import database_from_env
 
         database = database_from_env(database_url, evidence_token=evidence_token)
-<<<<<<< HEAD
         # Events are written to the SQL outbox first and relayed to Kafka when it
         # is configured, so a broker outage never loses or fails a committed change.
-        return ControlPlane(
-=======
         plane = ControlPlane(
->>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
             profile,
             register=sql_register(database),
             evidence=sql_evidence(database),
@@ -208,12 +200,8 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
 
         client = connect_redis(redis_url)
         prefix = os.getenv("FSSAI_REDIS_PREFIX", "fssaira")
-<<<<<<< HEAD
         outbox = RedisOutboxStore(client, prefix)
-        return ControlPlane(
-=======
         plane = ControlPlane(
->>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
             profile,
             register=RedisCaseRegister(client, prefix, outbox=outbox),
             evidence=RedisEvidenceLedger(client, evidence_token, prefix),
@@ -233,16 +221,12 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         return _attach_assurance(plane, assurance)
 
     # 3. Teaching profile: everything in memory, nothing survives a restart.
-<<<<<<< HEAD
     if events is not None:
         from .event_outbox import EventOutbox, MemoryOutboxStore
 
         # A broker outage must not fail a change that has already happened.
         events = EventOutbox(MemoryOutboxStore(), publisher=events)
-    return ControlPlane(
-=======
     plane = ControlPlane(
->>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
         profile,
         evidence_token=evidence_token,
         authority=authority,

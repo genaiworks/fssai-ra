@@ -61,10 +61,7 @@ platform = [
 ]
 # Everything, for a developer who wants every path available locally.
 all = [
-<<<<<<< HEAD
   "cryptography>=43.0",
-=======
->>>>>>> 388bc97 (Harden Rule 1 key secrecy, enforce action/read composition, fix clean-env repro)
   "fastapi>=0.115", "uvicorn[standard]>=0.30", "httpx>=0.27", "httpx2>=2.0",
   "redis>=5.0", "psycopg[binary]>=3.2", "confluent-kafka>=2.6",
   "pyiceberg>=0.9", "pyarrow>=17.0", "pyspark>=3.5.1,<3.6", "pyjwt[crypto]>=2.9",

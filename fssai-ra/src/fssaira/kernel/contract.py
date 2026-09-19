@@ -7,15 +7,18 @@ response. Two rules make it a build gate instead of a document:
 
 * An empty or missing field is an *open governance decision*. It is returned to
   its owner, not engineered around, so loading fails.
-* ``failure_test`` is a pytest node (``tests/path.py::test_name`` or
-  ``tests/path.py::TestClass::test_name``). The node must be defined in the parsed
-  source. A name that appears only as a substring, in a comment, or in a string
-  does not exist.
+* ``failure_test`` is a pytest node (``tests/test_x.py::test_name`` or
+  ``tests/test_x.py::TestClass::test_name``) that pytest would actually run. The
+  node must be defined in the parsed source of a file pytest collects
+  (``test_*.py`` or ``*_test.py``). It must not be marked skip, skipif or xfail,
+  or sit under ``__test__ = False``. A name that appears only as a substring, in a
+  comment, or in a string does not exist.
 
 The legacy requirement files (``contract/*.yaml``, keys ``owner`` and ``test``)
 keep their prose tests and bind to executable checks through
 ``contract/bindings``. :func:`verify_bindings` holds those bindings to the same
-existence standard.
+existence standard. A ``CF-*`` conformance id exists only if a
+``self._check(...)`` call registers it; a ``_skip`` does not count.
 """
 from __future__ import annotations
 
@@ -39,6 +42,8 @@ FIELDS: tuple[str, ...] = (
 _OPTIONAL = ("note", "rule")
 _ALLOWED = frozenset(("id", *FIELDS, *_OPTIONAL))
 _CONFORMANCE_ID = re.compile(r"^CF-[A-Z]+-\d+$")
+_PYTEST_FILE = re.compile(r"^(test_.*|.*_test)\.py$")
+_NOT_RUN_MARKS = ("skip", "xfail")
 
 
 class ContractError(ValueError):
@@ -71,32 +76,57 @@ def _inside(root: Path, relative: str) -> Path:
     return path
 
 
-def _defined_nodes(source: str) -> set[tuple[str, ...]]:
-    """Return the collectable definition paths of a module.
+def _node_index(source: str) -> dict[tuple[str, ...], ast.AST]:
+    """Map each collectable definition path of a module to its AST node.
 
     Top-level functions and classes, and methods of (possibly nested) classes.
     Functions nested inside functions are not collectable nodes and are omitted.
     """
     tree = ast.parse(source)
-    found: set[tuple[str, ...]] = set()
+    found: dict[tuple[str, ...], ast.AST] = {}
 
     def visit(body: list[ast.stmt], prefix: tuple[str, ...]) -> None:
         for node in body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                found.add((*prefix, node.name))
+                found[(*prefix, node.name)] = node
             elif isinstance(node, ast.ClassDef):
-                found.add((*prefix, node.name))
+                found[(*prefix, node.name)] = node
                 visit(node.body, (*prefix, node.name))
 
     visit(tree.body, ())
+    found[()] = tree
     return found
+
+
+def _defined_nodes(source: str) -> set[tuple[str, ...]]:
+    return {path for path in _node_index(source) if path}
+
+
+def _not_run_reason(node: ast.AST) -> str | None:
+    """Why pytest would not run this node: a skip/xfail mark or ``__test__ = False``."""
+    for decorator in getattr(node, "decorator_list", ()):
+        text = ast.unparse(decorator)
+        if any(mark in text for mark in _NOT_RUN_MARKS):
+            return f"marked {text}"
+    for statement in getattr(node, "body", ()):
+        if (isinstance(statement, ast.Assign) and isinstance(statement.value, ast.Constant)
+                and statement.value.value is False
+                and any(isinstance(t, ast.Name) and t.id == "__test__" for t in statement.targets)):
+            return "__test__ = False"
+        if (isinstance(statement, ast.Assign)
+                and any(isinstance(t, ast.Name) and t.id == "pytestmark" for t in statement.targets)
+                and any(mark in ast.unparse(statement.value) for mark in _NOT_RUN_MARKS)):
+            return f"pytestmark = {ast.unparse(statement.value)}"
+    return None
 
 
 def resolve_test_locator(locator: str, *, root: Path, require_test: bool = True) -> Path:
     """Resolve ``path::name[::name]`` to its file, or raise :class:`ContractError`.
 
-    With ``require_test`` the final name must be a pytest test (``test_*``) and
-    any enclosing class a pytest class (``Test*``).
+    With ``require_test`` the file must be one pytest collects, the final name a
+    pytest test (``test_*``), any enclosing class a pytest class (``Test*``), and
+    neither the node, its classes nor the module may be marked to skip or xfail.
+    A parametrization suffix (``test_x[case]``) is accepted and ignored.
     """
     parts = [part.strip() for part in str(locator).split("::")]
     if len(parts) < 2 or not all(parts):
@@ -105,7 +135,10 @@ def resolve_test_locator(locator: str, *, root: Path, require_test: bool = True)
         )
     path = _inside(root, parts[0])
     names = tuple(parts[1:])
+    names = (*names[:-1], names[-1].split("[", 1)[0])
     if require_test:
+        if not _PYTEST_FILE.match(path.name):
+            raise ContractError(f"{locator!r} is not a test: pytest does not collect {path.name!r}")
         if not names[-1].startswith("test"):
             raise ContractError(f"{locator!r} is not a test: {names[-1]!r} does not start with 'test'")
         for enclosing in names[:-1]:
@@ -114,16 +147,21 @@ def resolve_test_locator(locator: str, *, root: Path, require_test: bool = True)
     if not path.is_file():
         raise ContractError(f"failure test {locator!r} does not exist: no file {parts[0]!r}")
     try:
-        nodes = _defined_nodes(path.read_text(encoding="utf-8"))
+        index = _node_index(path.read_text(encoding="utf-8"))
     except SyntaxError as exc:
         raise ContractError(f"failure test {locator!r} does not exist: {parts[0]} does not parse ({exc})") from exc
-    if names in nodes:
+    if names in index:
+        if require_test:
+            for depth in range(len(names) + 1):
+                reason = _not_run_reason(index[names[:depth]])
+                if reason:
+                    raise ContractError(f"failure test {locator!r} would not run: {reason}")
         return path
     if not require_test and len(names) == 1:
         # Source locators may name a method without its class (``file::method``),
         # the convention the legacy bindings use. It resolves only when exactly
         # one definition carries that name; an ambiguous name resolves to nothing.
-        matches = sorted(node for node in nodes if node[-1] == names[0])
+        matches = sorted(node for node in index if node and node[-1] == names[0])
         if len(matches) == 1:
             return path
         if len(matches) > 1:
@@ -146,7 +184,7 @@ def load_capability_contracts(directory: Path, *, root: Path) -> list[Capability
     """Load every ``*.yaml`` capability contract under ``directory``.
 
     Raises :class:`ContractError` on an empty or missing field, an unknown field,
-    a duplicate id, or a failure test that does not exist.
+    a duplicate id, or a failure test that does not exist or would not run.
     """
     directory = Path(directory)
     root = Path(root)
@@ -156,7 +194,12 @@ def load_capability_contracts(directory: Path, *, root: Path) -> list[Capability
     if not files:
         raise ContractError(f"no capability contracts found in {directory}")
     for path in files:
-        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError as exc:
+            raise ContractError(f"{path.name}: not valid YAML ({exc})") from exc
+        if not isinstance(doc, dict):
+            raise ContractError(f"{path.name}: a contract file must be a mapping")
         domain = str(doc.get("domain") or path.stem).strip()
         entries = doc.get("capabilities")
         if not isinstance(entries, list) or not entries:
@@ -186,14 +229,18 @@ def load_capability_contracts(directory: Path, *, root: Path) -> list[Capability
 
 
 def _conformance_ids(root: Path) -> set[str]:
+    """Ids registered by ``self._check("CF-...", ...)`` calls. A ``_skip`` is not a check."""
     path = root / "src" / "fssaira" / "conformance.py"
     if not path.is_file():
         return set()
     tree = ast.parse(path.read_text(encoding="utf-8"))
-    return {
-        node.value for node in ast.walk(tree)
-        if isinstance(node, ast.Constant) and isinstance(node.value, str) and _CONFORMANCE_ID.match(node.value)
-    }
+    ids: set[str] = set()
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "_check"
+                and node.args and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str) and _CONFORMANCE_ID.match(node.args[0].value)):
+            ids.add(node.args[0].value)
+    return ids
 
 
 def _expand_conformance(locator: str) -> list[str]:
@@ -221,21 +268,29 @@ def _check_locator(locator: str, root: Path, conformance: set[str]) -> str | Non
             return str(exc)
         missing = [cid for cid in ids if cid not in conformance]
         return f"conformance check(s) {', '.join(missing)} not defined" if missing else None
+    path_part = locator.split("::", 1)[0]
+    try:
+        # Normalise first, so "./tests/x.py" is judged a test exactly as "tests/x.py" is.
+        relative = _inside(root, path_part).relative_to(root.resolve()).as_posix()
+    except ContractError as exc:
+        return str(exc)
+    is_test = relative.startswith("tests/")
     if "::" in locator:
-        is_test = locator.startswith("tests/")
         try:
-            resolve_test_locator(locator, root=root, require_test=is_test)
+            resolve_test_locator(relative + locator[len(path_part):], root=root, require_test=is_test)
         except ContractError as exc:
             return str(exc)
         return None
-    try:
-        path = _inside(root, locator)
-    except ContractError as exc:
-        return str(exc)
+    path = root.resolve() / relative
     if not path.is_file():
         return f"file {locator!r} does not exist"
-    if locator.startswith("tests/"):
-        tests = {n for n in _defined_nodes(path.read_text(encoding="utf-8")) if n[-1].startswith("test")}
+    if is_test:
+        if not _PYTEST_FILE.match(path.name):
+            return f"pytest does not collect {locator!r}"
+        try:
+            tests = {n for n in _defined_nodes(path.read_text(encoding="utf-8")) if n[-1].startswith("test")}
+        except SyntaxError as exc:
+            return f"test file {locator!r} does not parse ({exc})"
         if not tests:
             return f"test file {locator!r} defines no test"
     return None
@@ -245,7 +300,7 @@ def verify_bindings(contract_dir: Path, *, root: Path) -> list[str]:
     """Hold every legacy binding locator to the strict existence standard.
 
     Returns one finding per unresolved locator; an empty list means every
-    executable binding names something that exists.
+    executable binding names something that exists and would run.
     """
     from fssaira.coverage import load_bindings
 

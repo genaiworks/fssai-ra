@@ -208,13 +208,18 @@ def test_the_falsify_stage_holds_with_a_live_positive_control():
 
 @pytest.fixture(scope="module")
 def falsify_artifact(tmp_path_factory):
-    from fssaira import falsification
 
-    result = stages.falsify(ROOT, include_ablation=False,
-                            conference_only=[falsification.FALSIFIERS[0].id])
+    result = stages.falsify(ROOT)
     path = tmp_path_factory.mktemp("falsify") / "falsify.json"
     path.write_text(json.dumps(result.to_dict()))
     return path
+
+
+def test_operate_fails_when_live_gates_did_not_run_unless_explicitly_allowed(falsify_artifact):
+    result = stages.operate(ROOT, falsify_artifact=falsify_artifact)
+    assert not result.passed
+    assert result.gate("live_gates_run").observed["not_run"] == [
+        "reconciliation_clear", "review_capacity_not_breached"]
 
 
 def test_operate_without_a_falsification_artifact_fails():
@@ -224,7 +229,7 @@ def test_operate_without_a_falsification_artifact_fails():
 
 
 def test_operate_passes_when_nothing_changed_and_names_what_it_did_not_run(falsify_artifact):
-    result = stages.operate(ROOT, falsify_artifact=falsify_artifact)
+    result = stages.operate(ROOT, allow_not_run=True, falsify_artifact=falsify_artifact)
     assert result.passed, result.to_dict()
     assert {item["gate"] for item in result.artifact["not_run"]} == {
         "reconciliation_clear", "review_capacity_not_breached"}
@@ -256,8 +261,8 @@ def test_pending_reconciliation_blocks_operation(falsify_artifact):
         def pending_outcome_count(self) -> int:
             return self._pending
 
-    assert stages.operate(ROOT, falsify_artifact=falsify_artifact, executor=Executor(0)).passed
-    blocked = stages.operate(ROOT, falsify_artifact=falsify_artifact, executor=Executor(2))
+    assert stages.operate(ROOT, allow_not_run=True, falsify_artifact=falsify_artifact, executor=Executor(0)).passed
+    blocked = stages.operate(ROOT, allow_not_run=True, falsify_artifact=falsify_artifact, executor=Executor(2))
     assert not blocked.passed
     assert blocked.gate("reconciliation_clear").observed["pending_outcomes"] == 2
 
@@ -266,18 +271,18 @@ def test_a_real_fresh_executor_has_nothing_to_reconcile(falsify_artifact):
     from fssaira import AccountableExecutor, CaseRegister, EvidenceLedger
 
     executor = AccountableExecutor(CaseRegister({}), EvidenceLedger("t"), "t")
-    assert stages.operate(ROOT, falsify_artifact=falsify_artifact, executor=executor).passed
+    assert stages.operate(ROOT, allow_not_run=True, falsify_artifact=falsify_artifact, executor=executor).passed
 
 
 def test_a_saturated_reviewer_blocks_operation(falsify_artifact):
     from fssaira.oversight import OversightMonitor, ReviewLoadPolicy
 
     idle = OversightMonitor(ReviewLoadPolicy(max_approvals_per_window=2, second_reviewer_after=None))
-    assert stages.operate(ROOT, falsify_artifact=falsify_artifact, monitor=idle).passed
+    assert stages.operate(ROOT, allow_not_run=True, falsify_artifact=falsify_artifact, monitor=idle).passed
 
     busy = OversightMonitor(ReviewLoadPolicy(max_approvals_per_window=2, second_reviewer_after=None))
     for n in range(2):
         busy.admit(reviewer="officer-1", request_id=f"r-{n}", now=1_000.0 + n, presented_at=0.0)
-    result = stages.operate(ROOT, falsify_artifact=falsify_artifact, monitor=busy)
+    result = stages.operate(ROOT, allow_not_run=True, falsify_artifact=falsify_artifact, monitor=busy)
     assert not result.passed
     assert result.gate("review_capacity_not_breached").observed["headroom"] == 0.0

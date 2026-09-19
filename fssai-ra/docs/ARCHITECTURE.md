@@ -69,7 +69,7 @@ A future model, orchestrator or tool plugs into typed interfaces in
 | Module | Contract |
 |---|---|
 | `integration/typed.py` | Proposals and context requests admit bounded structures, enumerated operations and canonical IDs. The server derives principal, policy version, classification and authority |
-| `integration/retrieval.py` | Retrieval is a protected read: restrictions apply before candidates are scored, and provenance survives chunking and ranking |
+| `integration/retrieval.py` | Retrieval is a protected read: every chunk comes from `DisclosureGate.assemble_context`, so the label on a retrieved context is always the gate's, never one the orchestrator computed. Provenance and the gate-issued value id survive chunking and ranking |
 | `integration/memory.py` | Memory, caches, summaries, vector entries and handoffs carry their originating label and retention |
 | `integration/bundle.py` | A model change is a versioned bundle that must be re-attested; a self-reported digest is not evidence |
 | `integration/streaming.py` | A streamed response is a sequence of disclosures that stops on revocation |

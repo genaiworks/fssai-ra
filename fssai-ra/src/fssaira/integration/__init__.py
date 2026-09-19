@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-"""Strict integration contracts. Adapters must enforce these before transport."""
-=======
 """The GenAI integration contract (paper Section 6.1) as enforced interfaces.
 
 A future model, orchestrator, or tool protocol plugs into this package, never
@@ -20,4 +17,3 @@ around it:
 
 Submodules are imported explicitly; importing this package loads nothing else.
 """
->>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)

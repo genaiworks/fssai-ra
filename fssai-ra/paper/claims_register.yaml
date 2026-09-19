@@ -1,0 +1,415 @@
+classes:
+- machine_verified
+- attested
+- unverified
+counts:
+  machine_verified: 56
+  attested: 3
+  unverified: 0
+counts_by_source:
+  capability:
+    machine_verified: 15
+    attested: 0
+    unverified: 0
+  contract:
+    machine_verified: 41
+    attested: 3
+    unverified: 0
+rows:
+- id: IB-1
+  source: contract
+  domain: import_boundary
+  status: machine_verified
+  evidence:
+  - src/fssaira/evaluation.py::import_boundary_scenarios
+  - tests/test_import_api.py::test_import_gateway_quarantines_bad_signature_without_publishing
+  - tests/test_import_api.py::test_import_gateway_records_an_unclosed_intent_when_delivery_fails
+- id: IB-2
+  source: contract
+  domain: import_boundary
+  status: machine_verified
+  evidence:
+  - tests/test_diode_transport.py::test_neither_end_exposes_a_return_path
+  - tests/test_import_api.py::test_import_gateway_has_no_readback_route
+- id: IB-3
+  source: contract
+  domain: import_boundary
+  status: machine_verified
+  evidence:
+  - tests/test_diode_transport.py::test_an_interface_without_an_owner_is_flagged
+- id: IB-4
+  source: contract
+  domain: import_boundary
+  status: machine_verified
+  evidence:
+  - tests/test_attacks.py
+  - tests/test_import_api.py::test_import_gateway_records_an_unclosed_intent_when_delivery_fails
+- id: ET-1
+  source: contract
+  domain: event_transport
+  status: machine_verified
+  evidence:
+  - CF-ET-01, CF-ET-02
+- id: ET-2
+  source: contract
+  domain: event_transport
+  status: machine_verified
+  evidence:
+  - CF-ET-03
+  - tests/test_kafka_backend.py
+- id: ET-3
+  source: contract
+  domain: event_transport
+  status: attested
+  evidence:
+  - 'attested_by: Audit and Assurance'
+- id: RD-1
+  source: contract
+  domain: reproducible_data
+  status: machine_verified
+  evidence:
+  - CF-RD-01, CF-RD-02
+  - src/fssaira/evaluation.py::platform_scenarios
+- id: RD-2
+  source: contract
+  domain: reproducible_data
+  status: attested
+  evidence:
+  - 'attested_by: Audit and Assurance'
+- id: BI-1
+  source: contract
+  domain: bounded_intelligence
+  status: machine_verified
+  evidence:
+  - CF-BI-01
+  - src/fssaira/evaluation.py::bounded_intelligence_scenarios
+- id: BI-2
+  source: contract
+  domain: bounded_intelligence
+  status: machine_verified
+  evidence:
+  - CF-BI-02
+  - tests/test_ablations.py::test_removing_egress_control_enables_exfiltration
+- id: BI-3
+  source: contract
+  domain: bounded_intelligence
+  status: machine_verified
+  evidence:
+  - tests/test_privilege_invariance.py::test_a_call_that_understates_its_class_is_reclassified
+  - tests/test_privilege_invariance.py::test_an_unknown_capability_fails_closed
+  - tests/test_privilege_invariance.py::test_without_a_catalogue_the_caller_sets_its_own_review_level
+- id: BI-4
+  source: contract
+  domain: bounded_intelligence
+  status: machine_verified
+  evidence:
+  - tests/test_properties.py
+- id: BI-5
+  source: contract
+  domain: bounded_intelligence
+  status: machine_verified
+  evidence:
+  - tests/test_models_and_plugins.py
+  - tests/test_security_and_telemetry.py::test_a_non_local_model_endpoint_is_flagged
+- id: AA-1
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - tests/test_ablations.py::test_removing_human_approval_enables_unilateral_high_impact
+- id: AA-2
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - tests/test_ablations.py::test_removing_least_privilege_lets_agent_approve_awards
+- id: AA-3
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - src/fssaira/evaluation.py::ablations
+- id: AA-4
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - CF-AA-10 .. CF-AA-14
+  - src/fssaira/verification.py::verify_profile
+- id: AA-5
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - tests/test_exact_action.py
+  - tests/test_resilience.py::test_abrupt_exit_recovers_all_or_nothing_and_retry_is_safe
+- id: AA-6
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - CF-AA-15
+  - tests/test_oversight.py::test_separation_of_duties_is_still_checked_before_capacity
+- id: AA-7
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - src/fssaira/conformance.py::run_conformance
+  - tests/test_generalization.py::test_the_unchanged_conformance_suite_holds_on_a_second_domain_and_two_backends
+- id: AA-8
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - src/fssaira/oversight.py::sweep_oversight
+  - tests/test_oversight.py::test_an_exhausted_reviewer_cannot_produce_a_signed_approval_at_all
+  - tests/test_oversight.py::test_the_ceiling_refuses_the_next_approval_rather_than_flagging_it
+- id: AA-10
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - tests/test_exact_action.py::test_an_escalation_naming_the_primary_as_the_second_reviewer_is_refused
+  - tests/test_exact_action.py::test_escalating_to_a_role_that_could_not_have_approved_it_alone_is_refused
+- id: AA-9
+  source: contract
+  domain: accountable_action
+  status: machine_verified
+  evidence:
+  - tests/test_oversight.py::test_sustained_load_escalates_to_a_second_distinct_reviewer
+- id: XC-1
+  source: contract
+  domain: cross_cutting
+  status: machine_verified
+  evidence:
+  - tests/test_api.py::test_api_requires_authentication_and_the_operator_role
+  - tests/test_security_and_telemetry.py::test_header_identity_is_refused_unless_a_proxy_is_declared
+- id: XC-2
+  source: contract
+  domain: cross_cutting
+  status: machine_verified
+  evidence:
+  - tests/test_security_and_telemetry.py::test_teaching_defaults_are_reported_as_blocking
+- id: XC-3
+  source: contract
+  domain: cross_cutting
+  status: machine_verified
+  evidence:
+  - tests/test_decision_packet.py::test_consistent_rewrite_still_fails_an_independent_fingerprint
+- id: XC-4
+  source: contract
+  domain: cross_cutting
+  status: attested
+  evidence:
+  - 'attested_by: Student Support Service Owner'
+- id: XC-5
+  source: contract
+  domain: cross_cutting
+  status: machine_verified
+  evidence:
+  - tests/test_challenge.py::test_a_submission_is_data_and_never_contributor_code
+  - tests/test_challenge.py::test_an_attack_that_lands_on_no_arm_is_reported_inert_not_contained
+- id: DL-1
+  source: contract
+  domain: delegated_authority
+  status: machine_verified
+  evidence:
+  - src/fssaira/delegation.py::verify_delegation_space
+  - src/fssaira/delegation_eval.py::ablate_delegation
+  - src/fssaira/delegation_eval.py::run_delegation_suite
+- id: DL-2
+  source: contract
+  domain: delegated_authority
+  status: machine_verified
+  evidence:
+  - src/fssaira/delegation.py::verify_delegation_space
+  - src/fssaira/delegation_eval.py::ablate_delegation
+- id: DL-3
+  source: contract
+  domain: delegated_authority
+  status: machine_verified
+  evidence:
+  - src/fssaira/delegation_eval.py::ablate_delegation
+- id: DL-4
+  source: contract
+  domain: delegated_authority
+  status: machine_verified
+  evidence:
+  - src/fssaira/delegation_eval.py::ablate_delegation
+- id: DL-5
+  source: contract
+  domain: delegated_authority
+  status: machine_verified
+  evidence:
+  - src/fssaira/delegation.py::verify_delegation_space
+  - src/fssaira/delegation_eval.py::ablate_delegation
+- id: AR-1
+  source: contract
+  domain: assisted_review
+  status: machine_verified
+  evidence:
+  - tests/test_assisted_review.py::test_a_lowered_floor_without_declared_independence_is_refused
+- id: AR-2
+  source: contract
+  domain: assisted_review
+  status: machine_verified
+  evidence:
+  - src/fssaira/assisted_review.py::run_assisted_review_trial
+  - tests/test_assisted_review.py::test_a_dependent_assistant_reintroduces_merit_failures
+- id: AR-3
+  source: contract
+  domain: assisted_review
+  status: machine_verified
+  evidence:
+  - tests/test_assisted_review.py::test_independence_moves_the_ceiling_rather_than_removing_it
+- id: GD-1
+  source: contract
+  domain: governed_disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains
+  - tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+  - tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing
+- id: GD-2
+  source: contract
+  domain: governed_disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read
+  - tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+  - tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing
+  - tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model
+  - tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read
+- id: GD-3
+  source: contract
+  domain: governed_disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains
+  - tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+  - tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing
+- id: GD-4
+  source: contract
+  domain: governed_disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_conventional_access_control_leaves_harms_this_architecture_contains
+  - tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+  - tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing
+  - tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary
+  - tests/test_disclosure.py::test_random_operation_sequences_agree_with_the_reference_model
+- id: GD-5
+  source: contract
+  domain: governed_disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_declassification_requires_exact_independent_approval
+  - tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+  - tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing
+- id: GD-6
+  source: contract
+  domain: governed_disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_break_glass_opens_review_obligation_and_blocks_repeat
+  - tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+  - tests/test_disclosure.py::test_every_disclosure_check_is_load_bearing
+- id: GD-7
+  source: contract
+  domain: governed_disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_disclosure_bounded_model_check_holds
+  - tests/test_disclosure.py::test_evidence_never_contains_protected_values
+  - tests/test_disclosure.py::test_intent_evidence_failure_releases_nothing
+- id: CAP-ACT-1
+  source: capability
+  domain: action
+  status: machine_verified
+  evidence:
+  - tests/test_exact_action.py::test_target_or_arguments_changed_after_approval_are_denied
+- id: CAP-ACT-2
+  source: capability
+  domain: action
+  status: machine_verified
+  evidence:
+  - tests/test_exact_action.py::test_requester_cannot_approve_own_proposal
+- id: CAP-ACT-3
+  source: capability
+  domain: action
+  status: machine_verified
+  evidence:
+  - tests/test_exact_action.py::test_retry_is_idempotent_and_cross_request_reuse_is_denied
+- id: CAP-ACT-4
+  source: capability
+  domain: action
+  status: machine_verified
+  evidence:
+  - tests/test_exact_action.py::test_completed_mutation_is_marked_uncertain_then_reconciled_once
+- id: CAP-ACT-5
+  source: capability
+  domain: action
+  status: machine_verified
+  evidence:
+  - tests/test_joined_workflow.py::test_false_rationale_cannot_confirm_wrong_grade
+- id: CAP-ACT-6
+  source: capability
+  domain: action
+  status: machine_verified
+  evidence:
+  - tests/kernel/test_kernel_state_machine.py::test_only_declared_transitions_are_legal
+- id: CAP-DEL-1
+  source: capability
+  domain: delegation
+  status: machine_verified
+  evidence:
+  - tests/test_delegation.py::test_a_hop_cannot_pass_on_authority_it_does_not_hold
+- id: CAP-DEL-2
+  source: capability
+  domain: delegation
+  status: machine_verified
+  evidence:
+  - tests/test_delegation.py::test_checking_each_hop_against_its_delegator_is_not_checking_the_chain
+- id: CAP-DIS-1
+  source: capability
+  domain: disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary
+- id: CAP-DIS-2
+  source: capability
+  domain: disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_declassification_requires_exact_independent_approval
+- id: CAP-DIS-3
+  source: capability
+  domain: disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read
+- id: CAP-DIS-4
+  source: capability
+  domain: disclosure
+  status: machine_verified
+  evidence:
+  - tests/test_disclosure.py::test_label_join_only_tightens
+- id: CAP-EVI-1
+  source: capability
+  domain: evidence
+  status: machine_verified
+  evidence:
+  - tests/test_attacks.py::test_insider_record_tampering_is_detected
+- id: CAP-EVI-2
+  source: capability
+  domain: evidence
+  status: machine_verified
+  evidence:
+  - tests/test_conference_falsification.py::test_notary_detects_rewrite_truncation_and_forged_checkpoints
+- id: CAP-EVI-3
+  source: capability
+  domain: evidence
+  status: machine_verified
+  evidence:
+  - tests/test_atomic_execution.py::test_mutation_and_both_evidence_records_commit_together

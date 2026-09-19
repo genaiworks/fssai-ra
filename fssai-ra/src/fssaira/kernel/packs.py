@@ -83,6 +83,10 @@ _PROFILE_EXEMPTIONS = {
 }
 
 
+#: Keys only the governed-learning pack format carries; see ``_load_profile_source``.
+_GOVERNED_ONLY_KEYS = frozenset({"controls", "review", "model_manifests", "delegation", "identity_fields"})
+
+
 class PackCode:
     """Finding codes added by the manifest layer (the floor's own codes are in ``FloorCode``)."""
 
@@ -510,9 +514,13 @@ def _load_profile_source(path: Path, root: Path, findings: list[FloorFinding],
     except _Schema as exc:
         findings.append(FloorFinding(PackCode.SOURCE_INVALID, str(path), exc.detail))
         return None
+    # Exemptions apply only to a genuine action profile. A source carrying any key
+    # of the governed-learning format is held to that format's full floor, so a
+    # governed pack cannot shed its controls by being listed under ``profiles``.
+    governed_shape = isinstance(raw, dict) and any(key in raw for key in _GOVERNED_ONLY_KEYS)
     for finding in check_pack(raw, repo_root=root):
         exempt = _PROFILE_EXEMPTIONS.get(finding.code)
-        if exempt and isinstance(raw, dict) and exempt[0] not in raw:
+        if exempt and isinstance(raw, dict) and exempt[0] not in raw and not governed_shape:
             note = f"{path.name}: {finding.code} not applicable ({exempt[1]})"
             if note not in exemptions:
                 exemptions.append(note)
@@ -535,7 +543,11 @@ def _load_governed_source(path: Path, root: Path, findings: list[FloorFinding]) 
     findings.extend(FloorFinding(f.code, f"{path.name}:{f.where}", f.detail) for f in floor)
     if floor:
         return None
-    return GovernedPack(raw, ApplicationProfile.from_dict(raw), str(path))
+    try:
+        return GovernedPack(raw, ApplicationProfile.from_dict(raw), str(path))
+    except ProfileError as exc:
+        findings.append(FloorFinding(PackCode.SOURCE_INVALID, path.name, str(exc)))
+        return None
 
 
 def load_pack(path: str | Path, *, root: str | Path, capability_dir: str | Path | None = None) -> PackManifest:
