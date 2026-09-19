@@ -83,6 +83,16 @@ code from the same OS user's files or network. The executed host-isolation
 probe in `audit/host-isolation-probe.json` stays the honest result. A container,
 VM or separate user is a deployment obligation.
 
+## D7 — Backend assurance is a signed-off record, checked at construction
+
+**Decision.** `kernel/assurance.py` refuses to hand out a backend unless a
+conformance record exists for that backend's implementation digest, with every
+check passing. A changed implementation digest invalidates the record.
+
+**Why.** It encodes "a backend inherits no assurance until the same conformance
+and falsifier suites pass on it" as a constructor precondition rather than a
+warning.
+
 ## D8 — The untrusted agent no longer receives the evidence write credential
 
 **Decision.** `BoundedAgent.__init__` drops its `evidence` and `append_token`
@@ -326,12 +336,57 @@ call confirms the same values are still byte-identical, so revocation and
 consent withdrawal are rechecked on every retrieval, cached or not — more
 expensive than the old authorize-only recheck, and required by the same reason.
 
-## D7 — Backend assurance is a signed-off record, checked at construction
+## D25 — mypy is strict on this build's own code, and honestly scoped elsewhere
 
-**Decision.** `kernel/assurance.py` refuses to hand out a backend unless a
-conformance record exists for that backend's implementation digest, with every
-check passing. A changed implementation digest invalidates the record.
+**Decision.** `pyproject.toml` adds `[tool.mypy]` plus a per-module override:
+`disallow_untyped_defs = true` (and everything else mypy checks by default) on
+`fssaira.kernel.*`, `fssaira.mediators.*`, `fssaira.planes.*`,
+`fssaira.integration.*` and `fssaira.lifecycle.*` — the packages this branch
+built — and `ignore_errors = true` on every other `fssaira.*` module. `make
+typecheck` and CI run `mypy src/fssaira` and must report zero issues.
 
-**Why.** It encodes "a backend inherits no assurance until the same conformance
-and falsifier suites pass on it" as a constructor precondition rather than a
-warning.
+**Why.** Running mypy against the full pre-existing tree found 134 real type
+errors (not missing-annotation nags: `arg-type`, `attr-defined`, `operator`,
+`union-attr`, mostly) across 28 files that predate this build and are owned by
+concurrent sessions on this same repository. Fixing that surface wholesale
+would be a separate, much larger effort with real risk of breaking behaviour
+those sessions depend on — out of scope for "review your work, fix your
+issues." The honest move is a real, checked bar on the code this build is
+responsible for, and an explicit, documented boundary — not silently claiming
+"mypy clean" for a tree that isn't, and not leaving mypy unconfigured either.
+
+Fixing mypy's five findings in the new code surfaced no logic defects, only
+missing annotations and one case (`_crypto()` in `bundle.py`, mirroring the
+same lazy-import pattern already used for the optional `cryptography`
+dependency elsewhere) where a precise return type produced worse downstream
+inference than `Any` — annotated as such, with the reason recorded inline.
+
+**Reopen when.** Someone takes on the legacy 134-error surface; at that point
+the two override blocks can merge into one strict `fssaira.*` rule.
+
+## D26 — `fssaira conformance --record-out` closes the assurance-record production gap
+
+**Decision.** `fssaira conformance` gained `--record-out PATH`. After the
+existing behavioural report runs, it also binds that run to
+`kernel.assurance.record_from_report` (backend name derived the same way
+`runtime_factory._backends_in_use()` derives it: `sqlite` vs `postgres` from
+the database URL, `memory` otherwise) and writes a `[ConformanceRecord]` JSON
+list — the exact shape `kernel.assurance.load_records`, `fssaira promote
+--records`, and `FSSAI_CONFORMANCE_RECORDS` all read.
+
+**Why.** `kernel.assurance.run_and_record` (M4) and `fssaira promote --records`
+(the review-fix round) were both built and tested, but nothing on the command
+line could produce the record file promotion needs — the only path was calling
+Python directly, as the tests do. An operator following the documented
+`fssaira promote` flow had no command to run first. Found during a
+self-review sweep for "implemented but not wired" gaps (the same class of
+defect as `register_promote`, RECONCILIATION.md S1); confirmed end-to-end: the
+record `fssaira conformance --backend memory --record-out r.json` writes
+satisfies `require_assurance("memory", ...)` without modification.
+
+`--records` on `fssaira promote` is now repeatable (one file per backend)
+rather than a single path, since a deployment using several backends
+previously had no way to combine their records short of hand-editing JSON.
+`check_backend_conformance` merges the files and reports a duplicate record for
+the same backend across two files as a problem, rather than silently letting
+the last file win.

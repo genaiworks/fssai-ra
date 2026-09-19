@@ -188,3 +188,33 @@ alignment. Each row records whether the delta has been sent and applied.
 
 Rows from the full-paper binder are added when `check_submission.py --full-paper`
 first runs.
+
+| R10 | §7.5, §7.8, §7.9, §9.2: "five contract bindings named functions that did not exist", "eighteen of twenty-eight were prose bound to nothing", "841 baseline tests", "Five synthetic rationale variants", "two defects" | Unbound: no machine-written result | Each is a past observation that no run regenerates. It is bound as `kind: historical` to the committed record that states it: `CHANGELOG.md` ("The first run refuted the repository's own contract: five"; "18 of 28 requirements"), `audit/baseline-tests.log` ("841 passed"), `tests/test_joined_workflow.py` (the five-entry rationale parametrization), and `audit/KEY_SECRECY_AND_COMPOSITION.md` (E1, E2). The binder fails if a record stops containing the text | `paper/metric_bindings.yaml`; `scripts/bind_paper_metrics.py` | None: backed by record, labelled as not regenerable | Agrees |
+| R11 | §7.5 "reading 41, 3, 0 in the baseline contract register" | 41 / 3 / 0 | Legacy contract rows are still 41 / 3 / 0. The full register, which adds 15 seven-field capability contracts, is 56 / 3 / 0 of 59 | `paper/claims_register.yaml` (`fssaira contract contract --gate`) | None; optional sentence on the capability contracts | Agrees |
+
+## Self-review findings (2026-09-18, second self-review pass)
+
+Two real gaps found and closed while reviewing this branch's own work, plus
+one honestly-scoped-open item:
+
+| # | Finding | Fix |
+|---|---|---|
+| S1 | `register_promote()` was fully written and unit-tested via `stages.promote()` directly, but never called from `register()` — `fssaira promote` was unreachable from the CLI despite being "done" | Wired into `register()`; added `test_promote_is_reachable_from_the_cli_...` (a regression test that would have caught this) |
+| S2 | The brief requires "ruff and mypy clean"; mypy was never installed, configured, or run | Installed mypy; added `[tool.mypy]` + per-module overrides to `pyproject.toml` (strict on `kernel/mediators/planes/integration/lifecycle`, the packages this build owns); fixed the 5 real findings that surfaced (missing annotations, one lazy-import typed as `Any`); wired `make typecheck` and a CI step. `mypy src/fssaira`: 0 issues |
+| S4 | `kernel.assurance.run_and_record` and `fssaira promote --records` were both built and tested, but no CLI command could produce the record file promotion needs — only calling Python directly, as tests do | `fssaira conformance --record-out PATH` now also writes a `ConformanceRecord` JSON list from the same run. Verified end-to-end: its output satisfies `require_assurance` unmodified (DECISIONS D26) |
+| S3 (open, scoped) | Running mypy against the full pre-existing 78-module tree (not built by this branch) found 134 real type errors across 28 files | Deliberately out of scope: those modules are owned by concurrent sessions on this repository, and fixing them risks conflicting with work already in flight. `ignore_errors = true` on that surface is a documented boundary (DECISIONS D25), not a suppressed claim of cleanliness |
+
+## Full-paper binding result
+
+`python scripts/check_submission.py --full-paper` (2026-09-15, branch `feat/kernel-packs`):
+
+- 360 numeric tokens in the paper body; References and URLs are excluded.
+- 214 bindings: 60 result bindings covering 114 bound values, plus parameter,
+  specification, citation and historical bindings.
+- **0 unbound, 0 mismatches.**
+
+Passing is not semantic review. It shows only that every number in the paper
+is traceable to a machine-written result or a named committed record.
+
+Paper wording deltas R1, R2, R7, R8 and R9 were sent to `united-nations-a2` on
+2026-09-15. No paper number needs changing.

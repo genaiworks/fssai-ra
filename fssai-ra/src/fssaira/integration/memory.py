@@ -39,7 +39,7 @@ from __future__ import annotations
 import hashlib
 import math
 import threading
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -319,7 +319,7 @@ class GovernedMemory:
         with self._lock:
             return self._invalidate_closure([artifact_id], reason)
 
-    def _roots(self, predicate) -> list[str]:
+    def _roots(self, predicate: Callable[[SourceRef], bool]) -> list[str]:
         return sorted(a.artifact_id for a in self._artifacts.values()
                       if any(predicate(ref) for ref in a.sources))
 

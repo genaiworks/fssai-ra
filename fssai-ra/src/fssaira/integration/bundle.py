@@ -47,6 +47,10 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import MappingProxyType
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ..model_registry import ManifestPublisher, ModelManifest
 
 #: The eight components whose change is a model change.
 COMPONENTS: tuple[str, ...] = (
@@ -92,7 +96,10 @@ def component_digest(content: bytes) -> str:
     return "sha256:" + hashlib.sha256(content).hexdigest()
 
 
-def _crypto():
+def _crypto() -> tuple[Any, Any, Any, Any, Any]:
+    # `cryptography` is an optional dependency (the `privacy`/`auth`/`platform`/`all`
+    # extras); imported lazily so importing this module never requires it, and typed
+    # as Any rather than pinned to its classes for the same reason.
     from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PrivateKey,
@@ -296,8 +303,8 @@ class BundleRegistry:
                     "suspended_components": list(self._suspended.get(endpoint, ())[1:])}
 
 
-def as_model_manifest(bundle: ModelBundle, publisher, *, zone: str, provider: str,
-                      model_id: str, **fields):
+def as_model_manifest(bundle: ModelBundle, publisher: ManifestPublisher, *, zone: str, provider: str,
+                      model_id: str, **fields: Any) -> ModelManifest:
     """A :class:`fssaira.model_registry.ModelManifest` whose artifact digest is the bundle digest."""
     from ..model_registry import ModelManifest
 

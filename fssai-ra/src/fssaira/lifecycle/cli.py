@@ -86,7 +86,9 @@ def register_promote(sub: argparse._SubParsersAction) -> None:
     _root(parser)
     parser.add_argument("--profile", type=Path, required=True, help="deploy/profiles/<name>.yaml")
     parser.add_argument("--backend", action="append", help="a backend this deployment uses (repeatable)")
-    parser.add_argument("--records", type=Path, help="conformance records JSON (fssaira.kernel.assurance)")
+    parser.add_argument("--records", type=Path, action="append",
+                        help="conformance records JSON (fssaira.kernel.assurance); repeatable, "
+                             "one file per backend")
     parser.add_argument("--obligations", type=Path, help="signed Table 4 obligations record YAML")
     parser.add_argument("--interfaces", type=Path, help="interface inventory YAML")
     parser.add_argument("--falsify-artifact", type=Path, help="JSON written by `fssaira falsify --out`")
@@ -146,6 +148,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     falsify.add_argument("--only", action="append", help="conference falsifier id (repeatable)")
     falsify.add_argument("--no-ablation", action="store_true", help="skip the ablation gate")
     falsify.set_defaults(func=cmd_falsify)
+
+    register_promote(sub)
 
     operate = _common(sub.add_parser(
         "operate", help="lifecycle 7: fail if the governed configuration changed since falsification"))
