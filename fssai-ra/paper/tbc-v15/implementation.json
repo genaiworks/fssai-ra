@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "paper/tbc-v15/Trust_by_Construction.docx",
-  "source_sha256": "0d8e5b63d48c8211bdcd8304d429ce888b7f6222fa96b0834e653f7597861c00",
+  "source_sha256": "89545929bae938ba7e6ef04c6f7be6e5159c9996ce8426f57ae905b7c207ee5a",
   "derived_from": "paper/tbc-v14/TBC_v14_Developer_Security_Revision.docx",
   "build": "scripts/build_paper_v15.py",
   "regression_tests": 1445,
@@ -343,5 +343,5 @@
     "The residual-channel measurement is an upper bound from distinct observable traces under one encoder; it is not a proof that no encoder conveys more, and it bounds only the mediated release interface.",
     "Closing the residual channel costs availability: most adversarial tasks escalate to a named human, and the sealed policy pays for cover traffic, maximum padding and a coarse release schedule."
   ],
-  "regression_source_sha256": "92b058fe53c902902329385e9a2f27930a434a23228f53c66adb45bcf5fe2518"
+  "regression_source_sha256": "6b4f5877e92cb72ebbdee53c180b3edb573160ab6c7580a90791288ebed08589"
 }

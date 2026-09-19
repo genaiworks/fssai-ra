@@ -28,25 +28,57 @@ def test_earlier_revisions_are_preserved_unedited():
         assert hashlib.sha256(source.read_bytes()).hexdigest() == manifest['source_sha256'], digest or version
 
 
-def test_current_references_are_recent_papers_with_resolved_citations():
+def test_current_references_are_grouped_resolved_and_each_kind_is_what_it_claims():
+    """Three kinds of source, three rules, one numbering.
+
+    Recent research must be current and reachable, because that is the claim
+    being made for it. Foundations must be published venue-of-record work and
+    must predate that window, because a settled result cited as a preprint is
+    a citation error. Standards must name their issuing body. Every reference
+    must be cited somewhere in the body, and every citation must resolve: an
+    uncited entry is padding and a dangling citation is a broken claim.
+    """
     import re
     import zipfile
     from datetime import date
     from xml.etree import ElementTree as ET
 
     content = json.loads((ROOT / 'paper/tbc-v15/revision-content.json').read_text())
-    refs = content['references']
-    assert {r['id'] for r in refs} == set(range(1, len(refs) + 1))
-    assert all(date.fromisoformat(content['earliest']) <= date.fromisoformat(r['published'])
-               <= date.fromisoformat(content['cutoff']) for r in refs)
-    assert all(r['url'].startswith('https://arxiv.org/abs/') for r in refs)
+    recent, foundations, standards = (content['references'], content['foundations'],
+                                      content['standards'])
+    groups = recent + foundations + standards
+    assert [r['id'] for r in groups] == list(range(1, len(groups) + 1)), 'numbering runs once, in document order'
+
+    earliest, cutoff = date.fromisoformat(content['earliest']), date.fromisoformat(content['cutoff'])
+    for reference in recent:
+        assert earliest <= date.fromisoformat(reference['published']) <= cutoff
+        assert reference['url'].startswith('https://arxiv.org/abs/')
+    for reference in foundations:
+        assert reference['year'] < earliest.year, 'a foundation is settled work, not recent work'
+        assert reference.get('venue'), 'a foundation carries its venue of record'
+        assert not reference.get('url'), 'foundations are cited by venue, not by link'
+    for reference in standards:
+        assert reference.get('venue') and reference.get('authors'), 'a standard names its issuing body'
+
     with zipfile.ZipFile(ROOT / MANIFEST['source']) as z:
         tree = ET.fromstring(z.read('word/document.xml'))
     ns = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
     paragraphs = [''.join(n.text or '' for n in p.iter(ns + 't')) for p in tree.iter(ns + 'p')]
     body = '\n'.join(p for p in paragraphs if not p.startswith('['))
-    cited = {int(n) for group in re.findall(r'\[([\d, -]+)\]', body) for n in re.findall(r'\d+', group)}
-    assert cited == {r['id'] for r in refs}
+
+    cited = set()
+    for group in re.findall(r'\[([\d, \-]+)\]', body):
+        for part in (piece.strip() for piece in group.split(',')):
+            bounds = part.split('-')
+            if len(bounds) == 2 and all(b.isdigit() for b in bounds):
+                cited.update(range(int(bounds[0]), int(bounds[1]) + 1))
+            elif part.isdigit():
+                cited.add(int(part))
+    declared = {r['id'] for r in groups}
+    assert cited == declared, f'uncited {sorted(declared - cited)}, dangling {sorted(cited - declared)}'
+
     bibliography = [p for p in paragraphs if p.startswith('[')]
-    assert len(bibliography) == len(refs)
-    assert all(r['title'] in bibliography[r['id'] - 1] for r in refs)
+    assert len(bibliography) == len(groups)
+    assert all(r['title'] in bibliography[r['id'] - 1] for r in groups)
+    assert {'Recent research', 'Foundations', 'Standards and policy'} <= set(paragraphs), \
+        'the bibliography is grouped so a reader can see which kind of source carries which weight'

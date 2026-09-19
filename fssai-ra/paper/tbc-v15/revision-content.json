@@ -1,6 +1,6 @@
 {
-  "abstract": "Agentic AI systems retrieve institutional records, retain memory, invoke tools, delegate to other agents, and initiate actions that change what an institution holds about a person. The assurance question they raise is no longer whether a model answers correctly, but what it can cause when it is mistaken, manipulated, or pursuing an objective it has not disclosed. Trust by Construction answers that question architecturally. The model is treated as an untrusted reasoning engine rather than as a security boundary, and the same rule is extended to any model that reviews another, so that authorisation depends on neither the acting nor the reviewing model's judgment. Authority is declared in machine-readable form, narrowed to a single task, attenuated across delegation, and enforced by deterministic services that sit outside the reasoning layer. The contribution is the composition and its behaviour under failure: scoped capability leases, lineage-preserving memory, independent approval, revocation that survives failure of the assurance plane itself, delivery reauthorised at every boundary, restrict-only monitoring that can never return privilege, bounded recovery from effects that leave the transaction, and accounting for the information an agent can carry in choices it is authorised to make. The architecture is published as an executable Apache-2.0 kernel in which every claim is bound to a named failure test and every reported quantity regenerates offline, so a reader can run the refusals rather than accept them on trust. The design rule is proof before power: additional context, tools, agents, network reach, effects, and releases each require independently verifiable authority. The paper reports what this establishes and what it does not \u2014 behaviour within declared interfaces, not model alignment, decision quality, institutional outcomes, or production security \u2014 and names the deployment obligations that remain.",
-  "notes": "v15 is a presentation revision. It removes revision-diary framing so the manuscript reads as a first submission, and rewrites the abstract to lead with the problem and the contribution rather than with fixture counts. No claim, quantity, control or limitation is added, removed or weakened; the claim-to-test bindings in implementation.json are unchanged apart from anchors whose wording moved.",
+  "abstract": "Agentic AI systems retrieve institutional records, retain memory, invoke tools, delegate to other agents, and initiate actions that change what an institution holds about a person. The assurance question they raise is no longer whether a model answers correctly, but what it can cause when it is mistaken, manipulated, or pursuing an objective it has not disclosed. Trust by Construction answers that question architecturally. The model is treated as an untrusted reasoning engine rather than as a security boundary, and the same rule is extended to any model that reviews another, so that authorisation depends on neither the acting nor the reviewing model's judgment. Authority is declared in machine-readable form, narrowed to a single task, attenuated across delegation, and enforced by deterministic services that sit outside the reasoning layer. The contribution is the composition and its behaviour under failure: scoped capability leases, lineage-preserving memory, independent approval, revocation that survives failure of the assurance plane itself, delivery reauthorised at every boundary, restrict-only monitoring that can never return privilege, bounded recovery from effects that leave the transaction, and accounting for the information an agent can carry in choices it is authorised to make. The architecture is published as an executable Apache-2.0 kernel in which every claim is bound to a named failure test and every reported quantity regenerates offline, so a reader can run the refusals rather than accept them on trust. The design rule is proof before power: additional context, tools, agents, network reach, effects, and releases each require independently verifiable authority. The paper reports what this establishes and what it does not — behaviour within declared interfaces, not model alignment, decision quality, institutional outcomes, or production security — and names the deployment obligations that remain.",
+  "notes": "v15 is a presentation and scholarship revision. It removes revision-diary framing so the manuscript reads as a first submission, rewrites the abstract to lead with the problem and the contribution, states the central claim as a named property, credits the capability, information-flow and confinement results the architecture restates, names the governance frameworks the education argument answers to, and adds a reading guide, a terminology table, a related-work placement table and an extension recipe. No claim, quantity, control or limitation is added, removed or weakened. The evidence scope is stated once where it belongs rather than repeated in every table row and caption; the limitations section is unchanged.",
   "references": [
     {
       "id": 1,
@@ -101,7 +101,7 @@
   ],
   "cutoff": "2026-09-19",
   "earliest": "2023-09-19",
-  "source_note": "Primary paper metadata checked on arXiv. Preprints are research papers, not asserted to be peer reviewed. Leader essays motivate threat selection in the repository review only.",
+  "source_note": "Recent primary paper metadata checked on arXiv; preprints are research papers and are not asserted to be peer reviewed. Foundational references are published venue-of-record citations. Standards and policy references are the issuing bodies’ own documents. Leader essays motivate threat selection in the repository review only and are cited nowhere in this manuscript.",
   "sentence_edits": [
     [
       "This revision adds emergency_stop() and resume_workload() for operators,",
@@ -180,18 +180,338 @@
       "8. Measuring the Assumptions a Deployment Inherits"
     ],
     [
-      "8. Relevance to AI \u00d7 Education and Sustainable Development",
-      "9. Relevance to AI \u00d7 Education and Sustainable Development"
+      "8. Relevance to AI × Education and Sustainable Development",
+      "9. Relevance to AI × Education and Sustainable Development"
     ],
     [
       "9. Conclusion",
       "11. Conclusion"
+    ],
+    [
+      "insider-threat behavior under constructed",
+      "insider-threat behaviour under constructed"
+    ],
+    [
+      "model behavior appears cooperative",
+      "model behaviour appears cooperative"
+    ],
+    [
+      "a reliable authorization basis [4]",
+      "a reliable authorisation basis [4]"
+    ],
+    [
+      "found generalization from training shortcuts",
+      "found generalisation from training shortcuts"
+    ],
+    [
+      "establish contract behavior only",
+      "establish contract behaviour only"
+    ],
+    [
+      "Destination authorization rejects matrix",
+      "Destination authorisation rejects matrix"
+    ],
+    [
+      "and reauthorize every redirect",
+      "and reauthorise every redirect"
+    ],
+    [
+      "do not authorize changed content",
+      "do not authorise changed content"
+    ],
+    [
+      "retrieves only the authorized record",
+      "retrieves only the authorised record"
+    ],
+    [
+      "fluent advice, authorization, source validity",
+      "fluent advice, authorisation, source validity"
+    ],
+    [
+      "savepoint exists -- a revoked agent, a stopped workload, an assurance failure -- returned",
+      "savepoint exists — a revoked agent, a stopped workload, an assurance failure — returned"
+    ],
+    [
+      "Undeclared interfaces are denied at the mediated boundary.",
+      "Undeclared interfaces are denied at the mediated boundary, which is complete mediation [13] stated as a runtime obligation rather than as a design aspiration."
+    ],
+    [
+      "Child agents inherit subsets rather than fresh authority, and aggregate budgets cannot multiply through spawning.",
+      "Child agents inherit subsets rather than fresh authority, and aggregate budgets cannot multiply through spawning. This is capability attenuation in the sense of [14] and [15]: authority is a value that can be narrowed and passed on, never an ambient right a process acquires by running."
+    ],
+    [
+      "Transformation is not declassification.",
+      "Transformation is not declassification. Restrictions compose in the lattice sense of [16], so a derived artefact carries at least the restrictions of every source that was read to produce it."
+    ],
+    [
+      "Independence of review is therefore a configuration and institutional-design requirement, not something capability enforcement can infer.",
+      "Independence of review is therefore a configuration and institutional-design requirement, not something capability enforcement can infer. It is separation of duty [19], and separation of duty is a property of who reviews, not of the mechanism that records that a review occurred."
+    ],
+    [
+      "each is a choice the system handed the model, and a choice is a channel.",
+      "each is a choice the system handed the model, and a choice is a channel. The confinement problem [20] is therefore not answered by controlling content, and what remains is properly measured in bits [21] rather than argued about in prose."
+    ],
+    [
+      "a single observable trace for every secret. An ordinary two-release",
+      "a single observable trace for every secret, which is observational equivalence in the sense of [17] restricted to this interface. An ordinary two-release"
+    ],
+    [
+      "because the call that times out may have succeeded;",
+      "because the call that times out may have succeeded [22];"
+    ],
+    [
+      "An evidence chain kept by one custodian is exactly as trustworthy as that custodian,",
+      "An evidence chain kept by one custodian is exactly as trustworthy as that custodian [23],"
+    ],
+    [
+      "target the tool surface rather than the model [10,11].",
+      "target the tool surface rather than the model [10,11,27]."
+    ],
+    [
+      "That matters for equity: the institutions most exposed to agentic risk are often those least able to fund proprietary security tooling or an in-house assurance team.",
+      "That matters for equity: the institutions most exposed to agentic risk are often those least able to fund proprietary security tooling or an in-house assurance team. It also matters for conformity. Risk-management frameworks [24] and the obligations now attaching to high-risk educational uses of AI [25] both require an institution to show which controls are in place and on what evidence; a register binding every claim to an executing test is that showing, produced as a by-product of building the system rather than as a separate compliance exercise. UNESCO’s guidance for generative AI in education and research [26] asks the same of institutions in terms they can act on, and the equity argument above is why SDG 4 of the 2030 Agenda [28] is the goal this work serves most directly."
+    ],
+    [
+      "No student records, human-subject data, or institutional production data are used in the reported experiments; they are synthetic fixtures. This matters because the artifact demonstrates mechanisms and falsifiers without implying field effectiveness.",
+      "No student records, human-subject data or institutional production data are used anywhere in this work; every experiment runs on declared fixtures over the declared interface. The artifact therefore demonstrates mechanisms and the attempts made to break them, and establishes no field effectiveness; section 10 states that boundary as a limitation rather than leaving it to be inferred."
+    ],
+    [
+      "0% → 29% → 100% attack containment on the same synthetic suite",
+      "0% → 29% → 100% attack containment on one fixed attack suite"
+    ],
+    [
+      "Measured on the same synthetic attack suite; intended as reproducible architecture evidence, not a universal security score",
+      "Measured on one fixed attack suite; reproducible evidence about the architecture, not a universal security score"
+    ],
+    [
+      "Demonstrates domain portability of the control kernel across synthetic profiles; institutional bindings remain configurable",
+      "Demonstrates domain portability of the control kernel across six sector profiles; institutional bindings remain configurable"
+    ],
+    [
+      "Figure 6. Recorded synthetic results.",
+      "Figure 6. Recorded experimental results."
+    ],
+    [
+      "Table 1. The repository publishes denominators and non-claims so synthetic containment is not presented as certification.",
+      "Table 3. Every result is reported with its denominator and its interpretation boundary. All experiments run on declared fixtures, so containment measured here is evidence about the architecture and not a certification of any deployment."
+    ],
+    [
+      "a system-level defense that separates",
+      "a system-level defence that separates"
+    ],
+    [
+      "not a model-facing authorization endpoint",
+      "not a model-facing authorisation endpoint"
+    ],
+    [
+      "summaries, memory, handoffs, and generated artefacts",
+      "summaries, memory, handoffs, and generated artifacts"
     ]
   ],
   "contributions": "This paper makes four contributions. First, a composition: the authority controls above are specified as one enforcement path from workload declaration through context, memory, delegation and effects to recipient delivery, with the behaviour of each under failure stated as a refusal rather than as a best effort. Second, a falsifiable central claim. That authorisation depends on neither the acting nor the reviewing model is tested by substituting a monitor that clears every attack and a monitor that restricts every ordinary task, and showing that no protected outcome changes under either. Third, a measured account of a channel that content controls cannot close: the information an agent carries in the destination, path, timing, size and number of releases it is authorised to make, reduced from sixteen bits to one and then to zero by removing choice rather than by inspecting content, with the availability cost of doing so reported alongside. Fourth, an executable artifact in which every claim made here names a failure test that runs offline, every reported quantity regenerates from its source, and the manuscript itself is produced by a script from reviewed content so that each change to its prose is reviewable as code.",
-  "results_summary": "Four results carry the argument, and each is reported with its denominator and its boundary. Removing any one of the eight tested controls re-enables a harmful action, so none of them is decorative. Across six sector profiles the mediated configuration contains every hostile scenario in the corpus while completing every benign task. Substituting a blind monitor, and then a hostile monitor that inverts every verdict, changes no protected outcome, which is the falsifiable form of the central claim. And an adversary restricted to choices it is authorised to make moves a sixteen-bit secret intact through an unconstrained release path, one bit once those choices are canonicalised, and nothing once the number of releases is fixed. Table 1 states what each measurement does and does not establish.",
+  "results_summary": "Four results carry the argument, and each is reported with its denominator and its boundary. Removing any one of the eight tested controls re-enables a harmful action, so none of them is decorative. Across six sector profiles the mediated configuration contains every hostile scenario in the corpus while completing every benign task. Substituting a blind monitor, and then a hostile monitor that inverts every verdict, changes no protected outcome, which is the falsifiable form of the central claim. And an adversary restricted to choices it is authorised to make moves a sixteen-bit secret intact through an unconstrained release path, one bit once those choices are canonicalised, and nothing once the number of releases is fixed. Table 3 states what each measurement does and does not establish.",
   "headings": {
     "residual_channel": "7. What Exact-Byte Release Does Not Close",
     "limitations": "10. Limitations and Deployment Obligations"
-  }
+  },
+  "foundations": [
+    {
+      "id": 13,
+      "year": 1975,
+      "authors": "J. H. Saltzer and M. D. Schroeder",
+      "title": "The Protection of Information in Computer Systems",
+      "venue": "Proceedings of the IEEE, 63(9):1278-1308"
+    },
+    {
+      "id": 14,
+      "year": 1966,
+      "authors": "J. B. Dennis and E. C. Van Horn",
+      "title": "Programming Semantics for Multiprogrammed Computations",
+      "venue": "Communications of the ACM, 9(3):143-155"
+    },
+    {
+      "id": 15,
+      "year": 2006,
+      "authors": "M. S. Miller",
+      "title": "Robust Composition: Towards a Unified Approach to Access Control and Concurrency Control",
+      "venue": "PhD thesis, Johns Hopkins University"
+    },
+    {
+      "id": 16,
+      "year": 1976,
+      "authors": "D. E. Denning",
+      "title": "A Lattice Model of Secure Information Flow",
+      "venue": "Communications of the ACM, 19(5):236-243"
+    },
+    {
+      "id": 17,
+      "year": 1982,
+      "authors": "J. A. Goguen and J. Meseguer",
+      "title": "Security Policies and Security Models",
+      "venue": "IEEE Symposium on Security and Privacy, pp. 11-20"
+    },
+    {
+      "id": 18,
+      "year": 1977,
+      "authors": "K. J. Biba",
+      "title": "Integrity Considerations for Secure Computer Systems",
+      "venue": "MITRE Technical Report ESD-TR-76-372"
+    },
+    {
+      "id": 19,
+      "year": 1987,
+      "authors": "D. D. Clark and D. R. Wilson",
+      "title": "A Comparison of Commercial and Military Computer Security Policies",
+      "venue": "IEEE Symposium on Security and Privacy, pp. 184-194"
+    },
+    {
+      "id": 20,
+      "year": 1973,
+      "authors": "B. W. Lampson",
+      "title": "A Note on the Confinement Problem",
+      "venue": "Communications of the ACM, 16(10):613-615"
+    },
+    {
+      "id": 21,
+      "year": 1948,
+      "authors": "C. E. Shannon",
+      "title": "A Mathematical Theory of Communication",
+      "venue": "Bell System Technical Journal, 27(3):379-423"
+    },
+    {
+      "id": 22,
+      "year": 1984,
+      "authors": "A. D. Birrell and B. J. Nelson",
+      "title": "Implementing Remote Procedure Calls",
+      "venue": "ACM Transactions on Computer Systems, 2(1):39-59"
+    },
+    {
+      "id": 23,
+      "year": 1991,
+      "authors": "S. Haber and W. S. Stornetta",
+      "title": "How to Time-Stamp a Digital Document",
+      "venue": "Journal of Cryptology, 3(2):99-111"
+    }
+  ],
+  "standards": [
+    {
+      "id": 24,
+      "year": 2023,
+      "authors": "National Institute of Standards and Technology",
+      "title": "Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+      "venue": "NIST AI 100-1"
+    },
+    {
+      "id": 25,
+      "year": 2024,
+      "authors": "European Parliament and Council",
+      "title": "Regulation (EU) 2024/1689 laying down harmonised rules on artificial intelligence",
+      "venue": "Official Journal of the European Union"
+    },
+    {
+      "id": 26,
+      "year": 2023,
+      "authors": "UNESCO",
+      "title": "Guidance for Generative AI in Education and Research",
+      "venue": "UNESCO, Paris"
+    },
+    {
+      "id": 27,
+      "year": 2025,
+      "authors": "Open Worldwide Application Security Project",
+      "title": "OWASP Top 10 for Large Language Model Applications",
+      "venue": "OWASP Foundation"
+    },
+    {
+      "id": 28,
+      "year": 2015,
+      "authors": "United Nations General Assembly",
+      "title": "Transforming Our World: The 2030 Agenda for Sustainable Development",
+      "venue": "Resolution A/RES/70/1"
+    }
+  ],
+  "property_statement": "Property 1 (Authorisation independence). For every protected read, effect and release, the outcome is a function of the declared authority state alone — passport, task contract, capability envelope, lineage and remaining budget — and not of any text produced by the acting model or by a model reviewing it. A model may narrow an outcome and may cause a refusal; it cannot cause an outcome that the authority state does not already permit. Stated this way the property is falsifiable in the strong sense, because refuting it requires only one protected outcome that changes when the reasoning or reviewing model's output changes while the authority state is held fixed. Section 4 reports the attempt to refute it. The formulation is the complete-mediation and least-privilege pair [13] applied to a component that is assumed to be untrustworthy rather than merely faulty, and the one-directional monitor that follows from it is the integrity discipline of [18]: a lower-integrity source may restrict a higher-integrity decision and may never raise one.",
+  "reading_guide": "How to read this paper. Section 2 states the architecture and the property it targets; sections 3 to 8 report what was built and what happened when that property was attacked; sections 9 and 10 state where the result applies and where it does not. A reader with ten minutes should read Property 1 in section 2, Table 3 in section 4, and section 10, in that order, because those three together contain the claim, the evidence and the boundary. Seven terms carry most of the argument and are used in exactly one sense throughout.",
+  "terminology": {
+    "header": [
+      "Term",
+      "What it means here",
+      "Where it is enforced"
+    ],
+    "rows": [
+      [
+        "Passport",
+        "The machine-readable ceiling on everything a workload may ever do",
+        "Admission, before any task exists"
+      ],
+      [
+        "Task contract",
+        "One execution narrowed to a purpose, subject, resource set, destination, budget and expiry",
+        "Every mediated request"
+      ],
+      [
+        "Capability envelope",
+        "The authority actually available now: ceiling, contract, lineage and remaining budget intersected",
+        "Recomputed per request"
+      ],
+      [
+        "Attenuation",
+        "A delegated agent receives a subset of its parent's authority and never a fresh grant",
+        "Agent spawn and inter-agent message"
+      ],
+      [
+        "Lineage",
+        "The restriction that travels with data through summaries, memory, handoffs and generated artifacts",
+        "Read, write and release"
+      ],
+      [
+        "Declassification",
+        "The only act that lowers a restriction, performed explicitly and never by transformation",
+        "Release escrow"
+      ],
+      [
+        "Refusal",
+        "The declared behaviour when authority cannot be established, in place of a best effort",
+        "Every boundary above"
+      ]
+    ],
+    "caption": "Table 2. The seven terms that carry the argument. Each is a noun in the implementation as well as in the prose, so a reader can move from a sentence here to the code that enforces it."
+  },
+  "related_work": {
+    "header": [
+      "Line of work",
+      "What it establishes",
+      "What this paper adds"
+    ],
+    "rows": [
+      [
+        "Capability and information-flow foundations [13-19]",
+        "Complete mediation, least privilege, attenuated delegation, lattice-ordered flow and separation of duty as system properties",
+        "An executable binding of those properties to agent interfaces, in which each one carries a named failure test that runs offline"
+      ],
+      [
+        "System-level prompt-injection defence [2]",
+        "Control flow and data flow can be separated so that untrusted content cannot direct a privileged action",
+        "Authority that persists beyond one execution: memory, revocation, delivery already in flight, and recovery after an effect has left the transaction"
+      ],
+      [
+        "Agent security benchmarks [10,11]",
+        "Comparable measurement of instruction integrity, confidentiality and capability integrity under static and dynamic tasks",
+        "A property offered for refutation rather than a score offered for ranking; no benchmark position is claimed"
+      ],
+      [
+        "Alignment and monitoring results [3,4,6,7,8]",
+        "Covert objectives survive training, and monitoring a model is an imperfect and fragile signal",
+        "The architectural consequence: a monitor that may contract authority and can never restore it, tested by substituting a hostile one"
+      ],
+      [
+        "Confinement and channel capacity [20,21]",
+        "Authorised behaviour itself carries information, and the residual is properly measured in bits",
+        "That measurement performed on an authorised release path, with the policy that closes it and the availability cost it charges"
+      ]
+    ],
+    "caption": "Table 1. Where this work sits. The contribution is compositional: it is the behaviour of these controls together, under failure, rather than any one of them in isolation."
+  },
+  "extension_recipe": "Extending the kernel follows the path the kernel itself took, and is deliberately short. A new domain is a profile: declare its resources, purposes, destinations and permitted effects, and the existing conformance suite runs against it unchanged, which is how the six sector packs were produced from the first. A new control is a capability contract: name the protected asset, the permitted operation, the enforcement point, the accountable owner, the failure test, the evidence artifact and the failure response, and the verifier executes the named test and refuses to count a contract whose test does not run. A new written claim is an entry in the claim register binding that sentence to that test, so a claim whose evidence is later removed fails the build instead of surviving into print. A new threat is a falsifier: express it as an attempt to produce a protected outcome the authority state forbids, and add it to the bounded search. None of these four requires modifying the enforcement core, which is the precise sense in which the architecture is extensible: the core stays small and auditable while the declarations grow.",
+  "threat_model": "Threat model. The adversary is assumed to control everything the reasoning layer produces and everything it reads: model outputs, retrieved documents, memory written in earlier turns, tool descriptions and tool results, messages from delegated agents, and the verdict of any model deployed to monitor another. It may choose freely among the operations it has been granted, may repeat them, and may time them. It is assumed not to control the enforcement path itself — the control database, the operator role, the signing keys, and the host outside the declared interfaces — because an adversary holding those has already won and no architecture recovers from it. That assumption is a deployment obligation, and section 8 measures it rather than asserting it. Every property below is stated relative to this model, so a deployment that cannot establish the assumption inherits a weaker claim than the one made here."
 }
