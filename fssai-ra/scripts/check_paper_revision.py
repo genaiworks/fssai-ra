@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def check(root=ROOT):
     verify_figures()
-    manifest = json.loads((root / 'paper/tbc-v14/implementation.json').read_text())
+    manifest = json.loads((root / 'paper/tbc-v15/implementation.json').read_text())
     preserved = root / manifest['derived_from']
     if not preserved.is_file():
         raise ValueError('the preserved earlier revision must remain in the repository')

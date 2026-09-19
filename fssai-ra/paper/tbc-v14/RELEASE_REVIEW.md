@@ -30,8 +30,10 @@ evidence-table row.
 
 ## Length
 
-The body text is now 5,793 words, 626 more than preserved v13; the
-residual-channel section accounts for 411 of those. **No page count was
+The body text of the submission manuscript in `paper/tbc-v15/` is 6,101 words:
+934 more than preserved v13, of which the residual-channel material accounts for
+411 and the v15 presentation additions (a contributions statement, a results
+summary, two section headings) for a further 309. **No page count was
 measured.** No Word or LibreOffice renderer is available in this environment, and
 the `docProps/app.xml` page field is inherited from the source rather than
 recomputed, so any statement that the manuscript is still ten pages would be a

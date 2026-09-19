@@ -7,9 +7,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
-from build_paper_v14 import build  # noqa: E402
+from build_paper_v15 import build  # noqa: E402
 
-MANIFEST = json.loads((ROOT / 'paper/tbc-v14/implementation.json').read_text())
+MANIFEST = json.loads((ROOT / 'paper/tbc-v15/implementation.json').read_text())
 
 
 def test_committed_revision_matches_a_fresh_build(tmp_path):
@@ -18,7 +18,10 @@ def test_committed_revision_matches_a_fresh_build(tmp_path):
 
 
 def test_earlier_revisions_are_preserved_unedited():
-    for version, digest in (('tbc-v11/TBC_v11.docx', None), ('tbc-v12/TBC_v12_Engineering_Revision.docx', None), ('tbc-v13/TBC_v13_Frontier_Threat_Revision.docx', None)):
+    for version, digest in (('tbc-v11/TBC_v11.docx', None),
+                            ('tbc-v12/TBC_v12_Engineering_Revision.docx', None),
+                            ('tbc-v13/TBC_v13_Frontier_Threat_Revision.docx', None),
+                            ('tbc-v14/TBC_v14_Developer_Security_Revision.docx', None)):
         source = ROOT / 'paper' / version
         assert source.is_file(), 'a superseded revision must stay in the repository for provenance'
         manifest = json.loads((source.parent / 'implementation.json').read_text())
@@ -31,7 +34,7 @@ def test_current_references_are_recent_papers_with_resolved_citations():
     from datetime import date
     from xml.etree import ElementTree as ET
 
-    content = json.loads((ROOT / 'paper/tbc-v14/revision-content.json').read_text())
+    content = json.loads((ROOT / 'paper/tbc-v15/revision-content.json').read_text())
     refs = content['references']
     assert {r['id'] for r in refs} == set(range(1, len(refs) + 1))
     assert all(date.fromisoformat(content['earliest']) <= date.fromisoformat(r['published'])

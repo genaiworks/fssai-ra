@@ -1,0 +1,197 @@
+{
+  "abstract": "Agentic AI systems retrieve institutional records, retain memory, invoke tools, delegate to other agents, and initiate actions that change what an institution holds about a person. The assurance question they raise is no longer whether a model answers correctly, but what it can cause when it is mistaken, manipulated, or pursuing an objective it has not disclosed. Trust by Construction answers that question architecturally. The model is treated as an untrusted reasoning engine rather than as a security boundary, and the same rule is extended to any model that reviews another, so that authorisation depends on neither the acting nor the reviewing model's judgment. Authority is declared in machine-readable form, narrowed to a single task, attenuated across delegation, and enforced by deterministic services that sit outside the reasoning layer. The contribution is the composition and its behaviour under failure: scoped capability leases, lineage-preserving memory, independent approval, revocation that survives failure of the assurance plane itself, delivery reauthorised at every boundary, restrict-only monitoring that can never return privilege, bounded recovery from effects that leave the transaction, and accounting for the information an agent can carry in choices it is authorised to make. The architecture is published as an executable Apache-2.0 kernel in which every claim is bound to a named failure test and every reported quantity regenerates offline, so a reader can run the refusals rather than accept them on trust. The design rule is proof before power: additional context, tools, agents, network reach, effects, and releases each require independently verifiable authority. The paper reports what this establishes and what it does not \u2014 behaviour within declared interfaces, not model alignment, decision quality, institutional outcomes, or production security \u2014 and names the deployment obligations that remain.",
+  "notes": "v15 is a presentation revision. It removes revision-diary framing so the manuscript reads as a first submission, and rewrites the abstract to lead with the problem and the contribution rather than with fixture counts. No claim, quantity, control or limitation is added, removed or weakened; the claim-to-test bindings in implementation.json are unchanged apart from anchors whose wording moved.",
+  "references": [
+    {
+      "id": 1,
+      "year": 2025,
+      "published": "2025-04-02",
+      "title": "An Approach to Technical AGI Safety and Security",
+      "authors": "R. Shah et al.",
+      "url": "https://arxiv.org/abs/2504.01849"
+    },
+    {
+      "id": 2,
+      "year": 2025,
+      "published": "2025-03-24",
+      "title": "Defeating Prompt Injections by Design",
+      "authors": "E. Debenedetti et al.",
+      "url": "https://arxiv.org/abs/2503.18813"
+    },
+    {
+      "id": 3,
+      "year": 2025,
+      "published": "2025-09-19",
+      "title": "Stress Testing Deliberative Alignment for Anti-Scheming Training",
+      "authors": "B. Schoen et al.",
+      "url": "https://arxiv.org/abs/2509.15541"
+    },
+    {
+      "id": 4,
+      "year": 2025,
+      "published": "2025-07-15",
+      "title": "Chain of Thought Monitorability: A New and Fragile Opportunity for AI Safety",
+      "authors": "T. Korbak et al.",
+      "url": "https://arxiv.org/abs/2507.11473"
+    },
+    {
+      "id": 5,
+      "year": 2025,
+      "published": "2025-10-05",
+      "title": "Agentic Misalignment: How LLMs Could Be Insider Threats",
+      "authors": "A. Lynch et al.",
+      "url": "https://arxiv.org/abs/2510.05179"
+    },
+    {
+      "id": 6,
+      "year": 2025,
+      "published": "2025-11-23",
+      "title": "Natural Emergent Misalignment from Reward Hacking in Production RL",
+      "authors": "M. MacDiarmid et al.",
+      "url": "https://arxiv.org/abs/2511.18397"
+    },
+    {
+      "id": 7,
+      "year": 2025,
+      "published": "2025-06-17",
+      "title": "SHADE-Arena: Evaluating Sabotage and Monitoring in LLM Agents",
+      "authors": "J. Kutasov et al.",
+      "url": "https://arxiv.org/abs/2506.15740"
+    },
+    {
+      "id": 8,
+      "year": 2026,
+      "published": "2026-04-27",
+      "title": "Evaluating whether AI models would sabotage AI safety research",
+      "authors": "R. Kirk et al.",
+      "url": "https://arxiv.org/abs/2604.24618"
+    },
+    {
+      "id": 9,
+      "year": 2025,
+      "published": "2025-02-21",
+      "title": "Superintelligent Agents Pose Catastrophic Risks: Can Scientist AI Offer a Safer Path?",
+      "authors": "Y. Bengio et al.",
+      "url": "https://arxiv.org/abs/2502.15657"
+    },
+    {
+      "id": 10,
+      "year": 2026,
+      "published": "2026-05-25",
+      "title": "AgentSecBench: Measuring Prompt Injection, Privacy Leakage, and Tool-Use Integrity in LLM Agents",
+      "authors": "F. Alpay and T. Alpay",
+      "url": "https://arxiv.org/abs/2605.26269"
+    },
+    {
+      "id": 11,
+      "year": 2026,
+      "published": "2026-02-03",
+      "title": "AgentDyn: Are Your Agent Security Defenses Deployable in Real-World Dynamic Environments?",
+      "authors": "H. Li et al.",
+      "url": "https://arxiv.org/abs/2602.03117"
+    },
+    {
+      "id": 12,
+      "year": 2026,
+      "published": "2026-02-25",
+      "title": "Silent Egress: When Implicit Prompt Injection Makes LLM Agents Leak Without a Trace",
+      "authors": "Q. Lan et al.",
+      "url": "https://arxiv.org/abs/2602.22450"
+    }
+  ],
+  "cutoff": "2026-09-19",
+  "earliest": "2023-09-19",
+  "source_note": "Primary paper metadata checked on arXiv. Preprints are research papers, not asserted to be peer reviewed. Leader essays motivate threat selection in the repository review only.",
+  "sentence_edits": [
+    [
+      "This revision adds emergency_stop() and resume_workload() for operators,",
+      "The interface also exposes emergency_stop() and resume_workload() for operators,"
+    ],
+    [
+      "Three controls added in this revision answer questions operators ask before deployment.",
+      "Three controls answer the questions operators ask before any deployment."
+    ],
+    [
+      "The monitor can now be measured rather than described.",
+      "Monitor quality is measured rather than described."
+    ],
+    [
+      "A fourth question follows from the third, and this revision is the first to answer it with a measurement.",
+      "A fourth question follows from the third, and it is answered here with a measurement."
+    ],
+    [
+      "The new tests submit scripted findings and adversarial requests;",
+      "The tests submit scripted findings and adversarial requests;"
+    ],
+    [
+      "Cross-service authority, independent witnesses, outbound-effect settlement, tool-supply integrity and an evidence-gated promotion decision are implemented and tested in this revision, and host isolation and transport are now measured rather than assumed; measuring an assumption is not supplying it. Three limits survive unchanged and are stated as acceptance criteria rather than future work.",
+      "Cross-service authority, independent witnesses, outbound-effect settlement, tool-supply integrity and an evidence-gated promotion decision are implemented and tested here, and host isolation and transport are measured rather than assumed; measuring an assumption is not supplying it. Three limits are stated as acceptance criteria rather than as future work."
+    ],
+    [
+      "The original v11 Word source remains preserved for provenance, while the revised paper is bound separately to its engineering claims. The controls added in this revision run with python -m pytest tests/test_frontier_controls.py tests/test_incident_map.py, and the incident reading is published as docs/THREAT_MODEL_2026.md with its machine-checked form in audit/incident-map.json. The current v14 developer path is DEVELOPER_GUIDE.md; make developer-demo runs the offline artifact-integrity and settlement example, and make all checks the complete release. scripts/build_paper_v14.py regenerates this manuscript from preserved v13 and reviewed content. The example uses no external model or real student data.",
+      "The authority controls run with python -m pytest tests/test_frontier_controls.py tests/test_incident_map.py, and the threat reading is published as docs/THREAT_MODEL_2026.md with its machine-checked form in audit/incident-map.json. DEVELOPER_GUIDE.md is the integration path; make developer-demo runs an offline artifact-integrity and settlement example, make covert-channels reproduces the release-choice measurement, and make all runs the complete release check. This manuscript is itself generated by a script from reviewed content, so every change to its prose is reviewable as code, and each earlier version is preserved unedited for provenance. No external model, network peer or real student record is used anywhere in the reviewer path."
+    ],
+    [
+      "Figure 4. Authority boundaries in v14.",
+      "Figure 4. Authority boundaries."
+    ],
+    [
+      "The v14 fetch_artifact API returns bytes only after matching an independently approved SHA-256 digest.",
+      "The fetch_artifact interface returns bytes only after matching an independently approved SHA-256 digest."
+    ],
+    [
+      "The executable SDK now implements",
+      "The executable SDK implements"
+    ],
+    [
+      "adapter obligations written in prose. They are now performed. The transport connects",
+      "adapter obligations written in prose. The transport component discharges them. It connects"
+    ],
+    [
+      "Three further boundaries are now enforced rather than deferred.",
+      "Three further boundaries are enforced rather than deferred."
+    ],
+    [
+      "Such attempts are now recorded outside the failed transaction",
+      "Such attempts are recorded outside the failed transaction"
+    ],
+    [
+      "It does not fix the decisions *around* those bytes.",
+      "It does not fix the decisions around those bytes."
+    ],
+    [
+      "A security review exposed three practical defects in the reference:",
+      "Adversarial review of the mediation boundary itself found three defects, each now refused:"
+    ],
+    [
+      "A later review of the same kind found one further defect and fixed it. Refusals raised before the request savepoint exists",
+      "A fourth defect concerned what the evidence chain fails to record. Refusals raised before the request savepoint exists"
+    ],
+    [
+      "A fourth question follows from the third, and it is answered here with a measurement. Release escrow fixes the bytes that leave,",
+      "Release escrow fixes the bytes that leave,"
+    ],
+    [
+      "Threats to validity and deployment limits. The experiments use synthetic fixtures",
+      "The experiments use synthetic fixtures"
+    ],
+    [
+      "7. Measuring the Assumptions a Deployment Inherits",
+      "8. Measuring the Assumptions a Deployment Inherits"
+    ],
+    [
+      "8. Relevance to AI \u00d7 Education and Sustainable Development",
+      "9. Relevance to AI \u00d7 Education and Sustainable Development"
+    ],
+    [
+      "9. Conclusion",
+      "11. Conclusion"
+    ]
+  ],
+  "contributions": "This paper makes four contributions. First, a composition: the authority controls above are specified as one enforcement path from workload declaration through context, memory, delegation and effects to recipient delivery, with the behaviour of each under failure stated as a refusal rather than as a best effort. Second, a falsifiable central claim. That authorisation depends on neither the acting nor the reviewing model is tested by substituting a monitor that clears every attack and a monitor that restricts every ordinary task, and showing that no protected outcome changes under either. Third, a measured account of a channel that content controls cannot close: the information an agent carries in the destination, path, timing, size and number of releases it is authorised to make, reduced from sixteen bits to one and then to zero by removing choice rather than by inspecting content, with the availability cost of doing so reported alongside. Fourth, an executable artifact in which every claim made here names a failure test that runs offline, every reported quantity regenerates from its source, and the manuscript itself is produced by a script from reviewed content so that each change to its prose is reviewable as code.",
+  "results_summary": "Four results carry the argument, and each is reported with its denominator and its boundary. Removing any one of the eight tested controls re-enables a harmful action, so none of them is decorative. Across six sector profiles the mediated configuration contains every hostile scenario in the corpus while completing every benign task. Substituting a blind monitor, and then a hostile monitor that inverts every verdict, changes no protected outcome, which is the falsifiable form of the central claim. And an adversary restricted to choices it is authorised to make moves a sixteen-bit secret intact through an unconstrained release path, one bit once those choices are canonicalised, and nothing once the number of releases is fixed. Table 1 states what each measurement does and does not establish.",
+  "headings": {
+    "residual_channel": "7. What Exact-Byte Release Does Not Close",
+    "limitations": "10. Limitations and Deployment Obligations"
+  }
+}

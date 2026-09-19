@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased — submission manuscript
+
+`paper/tbc-v15/Trust_by_Construction.docx` is the manuscript to submit, generated
+by `scripts/build_paper_v15.py` from the preserved v14 artifact. Presentation
+only: the 49 claim-to-test bindings in `implementation.json` are unchanged, and
+no claim, quantity, control or limitation was added, removed or weakened.
+
+- The abstract leads with the problem and the contribution instead of an
+  inventory of fixtures; evidence detail moved to the sections that carry it.
+- Removed the revision-diary voice throughout — no "this revision adds", no
+  "can now be", no version numbers in captions or prose.
+- Added an explicit four-point contributions statement at the end of section 1,
+  and a headline-results paragraph opening section 4 before the table that
+  qualifies each measurement.
+- Promoted the residual-choice channel to its own section (7), since it is the
+  newest result and was previously buried mid-section.
+- Promoted limitations to their own section (10) rather than a sentence prefix
+  inside the education discussion.
+- Reframed the defect-review passage from a changelog of fixes into a statement
+  of what the mediation boundary refuses.
+- **Fixed:** a literal markdown emphasis marker (`*around*`) had leaked into the
+  Word body text.
+- `scripts/check_paper_revision.py` and `tests/test_paper_revision_build.py` now
+  target v15 and additionally assert that v14 is preserved unedited.
+
 ## Unreleased — the channel that survives exact-byte release
 
 Release escrow fixes the bytes that leave. It does not fix the destination,
