@@ -45,14 +45,15 @@ def test_the_nine_states():
 @pytest.mark.parametrize("source,target", list(itertools.product(EffectState, EffectState)))
 def test_only_declared_transitions_are_legal(source, target):
     ledger = EvidenceLedger(TOKEN)
-    record = EffectRecord.restore("req-1", source, ledger=ledger, token=TOKEN)
+    record = EffectRecord.restore("req-1", source, ledger=ledger, token=TOKEN, authorizations=())
     auth = "comp-approval-1" if target is S.COMPENSATED else None
+    receipt = "downstream-refusal" if (source, target) == (S.DISPATCHED, S.DENIED) else None
     if (source, target) in REFERENCE:
-        record.transition(target, reason="test", authorization=auth)
+        record.transition(target, reason="test", authorization=auth, receipt=receipt)
         assert record.state is target
     else:
         with pytest.raises(IllegalTransition):
-            record.transition(target, reason="test", authorization=auth)
+            record.transition(target, reason="test", authorization=auth, receipt=receipt)
         assert record.state is source
 
 

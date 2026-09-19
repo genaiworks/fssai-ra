@@ -103,9 +103,25 @@ jobs:
         working-directory: fssai-ra
         run: python -m fssaira.cli bind
 
-      - name: "Lifecycle 5: falsifiers find zero counterexamples; ablations restore harm"
+      - name: "Lifecycle 3: every domain pack loads drift-free at or above the kernel floor"
         working-directory: fssai-ra
-        run: python -m fssaira.cli falsify
+        run: python -m fssaira.cli pack
+
+      - name: "Lifecycle 5 and 7: falsify, then refuse operation on any change since"
+        working-directory: fssai-ra
+        run: |
+          python -m fssaira.cli falsify --out /tmp/falsify.json
+          python -m fssaira.cli operate --falsify-artifact /tmp/falsify.json --allow-not-run
+
+      - name: audit/results.json and fig1-fig7 match their committed sources
+        working-directory: fssai-ra
+        run: |
+          python scripts/collect_results.py --check
+          python scripts/build_figures.py --check
+
+      - name: Every number in the full paper is bound to a result or a committed record
+        working-directory: fssai-ra
+        run: python scripts/check_submission.py --full-paper
 
       - name: Committed results have not drifted
         working-directory: fssai-ra

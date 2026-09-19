@@ -11,6 +11,10 @@ exactly and says what each number inside them is:
 * ``kind: parameter`` -- a declared setting (learning rate, episode cap). It
   points at the source that sets it when one exists, either through ``values``
   or through ``evidence: {source: "<relpath>#<pointer>", contains: "<text>"}``.
+* ``kind: historical`` -- a past observation that no run regenerates (an earlier
+  test count, a defect found and fixed). It must name the committed record that
+  states it: ``evidence: {source: "<relpath>", contains: "<text>"}``; the record
+  must contain the text, or the binding is a mismatch.
 * ``kind: specification`` / ``kind: citation`` -- not a result (section numbers,
   "seven fields", reference years); covers every token in the quote and needs a
   ``justification``.
@@ -48,7 +52,7 @@ from collect_results import resolve_pointer, split_source  # noqa: E402
 PAPER = ROOT / "paper" / "trust-by-construction.md"
 BINDINGS = ROOT / "paper" / "metric_bindings.yaml"
 RESULTS = ROOT / "audit" / "results.json"
-KINDS = ("result", "parameter", "specification", "citation")
+KINDS = ("result", "parameter", "specification", "citation", "historical")
 
 _UNITS = {"zero": 0, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
           "eight": 8, "nine": 9}
@@ -183,6 +187,10 @@ def load_bindings(path: Path) -> list[dict[str, Any]]:
             raise ValueError(f"{where}: a result binding needs values")
         if binding["kind"] != "result" and not binding.get("justification"):
             raise ValueError(f"{where}: a {binding['kind']} binding needs a justification")
+        if binding["kind"] == "historical":
+            evidence = binding.get("evidence") or {}
+            if not evidence.get("source") or not evidence.get("contains"):
+                raise ValueError(f"{where}: a historical binding needs evidence.source and evidence.contains")
     return bindings
 
 
@@ -235,9 +243,12 @@ def bind(paper_text: str, bindings: list[dict[str, Any]], results: dict[str, Any
 
         evidence = binding.get("evidence")
         if evidence:
-            rel, json_pointer = split_source(evidence["source"])
             try:
-                target = resolve_pointer(json.loads((root / rel).read_text(encoding="utf-8")), json_pointer)
+                if "#" in evidence["source"] or evidence["source"].endswith(".json"):
+                    rel, json_pointer = split_source(evidence["source"])
+                    target = resolve_pointer(json.loads((root / rel).read_text(encoding="utf-8")), json_pointer)
+                else:  # a committed text record (a log, a test, an audit note), matched by substring
+                    target = (root / evidence["source"]).read_text(encoding="utf-8")
             except (OSError, KeyError, ValueError) as exc:
                 report.mismatches.append({"line": first_line, "quote": quote,
                                           "problem": f"evidence does not resolve: {exc}"})

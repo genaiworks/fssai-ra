@@ -5,22 +5,27 @@ Nine states, and only the declared transitions between them (paper §6.2):
     pending ──► approved ──► dispatched ──► committed ──► compensated
        │            │            │  └──► uncertain ──► reconciled ──► compensated
        │            │            │            └──────────────────────► compensated
-       └► denied / expired  ◄────┘ (denied)
+       └► denied / expired  ◄────┘ (denied, only with a downstream receipt)
 
-Three rules the table alone does not express are enforced here:
+Rules the table alone does not express, enforced here:
 
 * An *uncertain* effect is never re-dispatched. Its outcome is established by
   status query and reconciliation, because a blind retry can repeat an
   irreversible external effect.
+* A *dispatched* effect is closed as *denied* only with a downstream receipt
+  showing it was not applied. Without one, its outcome is uncertain.
 * *Compensation* is a separately authorized action. It needs its own
-  authorization, which may not be one already used for this effect.
+  authorization, which may not be one already used for this effect. A record
+  restored without its authorization history cannot be compensated until the
+  history is rebuilt from evidence (:meth:`EffectRecord.from_ledger`).
   Compensation never erases history.
-* Every transition is recorded before it takes effect. If evidence cannot be
-  written, the transition does not happen.
+* With a ledger, every transition is recorded before it takes effect, and a
+  failed evidence write leaves the state unchanged. Without a ledger nothing is
+  evidenced; :attr:`EffectRecord.evidenced` says which.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from enum import Enum
 
 from fssaira.evidence import EvidenceLedger
@@ -51,6 +56,7 @@ TRANSITIONS: Mapping[EffectState, frozenset[EffectState]] = {
     _S.EXPIRED: frozenset(),
 }
 TERMINAL: frozenset[EffectState] = frozenset(s for s, targets in TRANSITIONS.items() if not targets)
+EVIDENCE_KIND = "effect_transition"
 
 
 class IllegalTransition(RuntimeError):
@@ -58,7 +64,7 @@ class IllegalTransition(RuntimeError):
 
 
 class EffectRecord:
-    """Tracks one effect; every accepted transition is evidenced first."""
+    """Tracks one effect; with a ledger, every accepted transition is evidenced first."""
 
     def __init__(
         self,
@@ -68,6 +74,7 @@ class EffectRecord:
         token: str | None = None,
         irreversible_external: bool = False,
         _state: EffectState = EffectState.PENDING,
+        _authorizations: Iterable[str] | None = (),
     ) -> None:
         if not request_id:
             raise ValueError("an effect needs a stable request identifier")
@@ -79,19 +86,65 @@ class EffectRecord:
         self._ledger = ledger
         self._token = token
         self._state = _state
-        self._authorizations: set[str] = set()
-        self.history: list[tuple[EffectState, str]] = [(_state, "restored" if _state is not EffectState.PENDING else "created")]
+        self._history_known = _authorizations is not None
+        self._authorizations: set[str] = set(_authorizations or ())
+        self.history: list[tuple[EffectState, str]] = [
+            (_state, "created" if _state is EffectState.PENDING else "restored")]
 
     @classmethod
-    def restore(cls, request_id: str, state: EffectState, **kwargs: object) -> EffectRecord:
-        """Rebuild a record at a persisted state (e.g. after a crash)."""
-        return cls(request_id, _state=state, **kwargs)  # type: ignore[arg-type]
+    def restore(cls, request_id: str, state: EffectState, *,
+                authorizations: Iterable[str] | None = None, **kwargs: object) -> EffectRecord:
+        """Rebuild a record at a persisted state (e.g. after a crash).
+
+        ``authorizations`` must list every authorization already used for this
+        effect. ``None`` means the history is unknown, and compensation is then
+        refused: an unknown history cannot prove a compensation authorization is
+        separate.
+        """
+        return cls(request_id, _state=state, _authorizations=authorizations, **kwargs)  # type: ignore[arg-type]
+
+    @classmethod
+    def from_ledger(cls, request_id: str, ledger: EvidenceLedger, *, token: str,
+                    irreversible_external: bool = False, checkpoint: object | None = None,
+                    public_keys: dict[str, bytes] | None = None) -> EffectRecord:
+        """Rebuild state and authorization history by replaying verified evidence.
+
+        Chain verification alone detects a naive edit. An insider with storage
+        access can rewrite *and re-chain* history, which the chain cannot detect;
+        pass a notary ``checkpoint`` and its ``public_keys`` to refuse that too.
+        """
+        if not ledger.verify():
+            raise IllegalTransition("the evidence chain does not verify; the effect's history cannot be trusted")
+        if checkpoint is not None:
+            from fssaira.evidence_notary import verify_against_checkpoint
+
+            verdict = verify_against_checkpoint(ledger, checkpoint, public_keys or {})  # type: ignore[arg-type]
+            if not verdict.valid:
+                raise IllegalTransition(f"evidence fails its notary checkpoint ({verdict.code}): {verdict.detail}")
+        state = EffectState.PENDING
+        used: list[str] = []
+        for record in ledger.find(EVIDENCE_KIND, request_id=request_id):
+            source, target = EffectState(record.payload["from"]), EffectState(record.payload["to"])
+            if source is not state or target not in TRANSITIONS[state]:
+                raise IllegalTransition(
+                    f"evidence for {request_id} records {source.value} -> {target.value} from {state.value}")
+            if record.payload.get("authorization"):
+                used.append(record.payload["authorization"])
+            state = target
+        return cls(request_id, ledger=ledger, token=token, irreversible_external=irreversible_external,
+                   _state=state, _authorizations=used)
 
     @property
     def state(self) -> EffectState:
         return self._state
 
-    def transition(self, target: EffectState, *, reason: str, authorization: str | None = None) -> None:
+    @property
+    def evidenced(self) -> bool:
+        """Whether transitions of this record are written to an evidence ledger."""
+        return self._ledger is not None
+
+    def transition(self, target: EffectState, *, reason: str, authorization: str | None = None,
+                   receipt: str | None = None) -> None:
         source = self._state
         if source in TERMINAL:
             raise IllegalTransition(f"{source.value} is terminal; {self.request_id} admits no further transition")
@@ -101,20 +154,31 @@ class EffectRecord:
                     "an uncertain effect is never re-dispatched; query its status and reconcile"
                 )
             raise IllegalTransition(f"{source.value} -> {target.value} is not a declared transition")
+        if source is EffectState.DISPATCHED and target is EffectState.DENIED and not receipt:
+            raise IllegalTransition(
+                "a dispatched effect is closed as denied only with a downstream receipt showing it was "
+                "not applied; otherwise mark it uncertain and reconcile"
+            )
         if target is EffectState.COMPENSATED:
             if not authorization:
                 raise IllegalTransition("compensation requires its own authorization")
+            if not self._history_known:
+                raise IllegalTransition(
+                    "this record was restored without its authorization history; rebuild it with "
+                    "from_ledger before compensating"
+                )
             if authorization in self._authorizations:
                 raise IllegalTransition(
                     "compensation requires a separate authorization, not one already used for this effect"
                 )
         if self._ledger is not None:
-            self._ledger.append("effect_transition", {
+            self._ledger.append(EVIDENCE_KIND, {
                 "request_id": self.request_id,
                 "from": source.value,
                 "to": target.value,
                 "reason": reason,
                 "authorization": authorization or "",
+                "receipt": receipt or "",
                 "irreversible_external": self.irreversible_external,
             }, token=self._token or "")
         if authorization:

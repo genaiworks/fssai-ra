@@ -77,10 +77,14 @@ class Agent:
 
 
 class BoundedAgent:
-    """An untrusted agent: it proposes tool calls; the enforcement point decides.
+    """An agent wrapper: the model proposes tool calls; the enforcement point decides.
 
-    It holds no evidence write credential. Evidence is written by the
-    enforcement point, which holds that credential on a separate path.
+    The wrapper stores no credential of its own. It does hold a reference to the
+    enforcement point, which holds the evidence write credential, so in one
+    process that credential is reachable by code running with the wrapper's
+    privileges. Logical planes are not process isolation; separate workload
+    identities are a deployment obligation (docs/DEPLOYMENT.md). ``fssaira bind``
+    checks that nothing reachable from the model object carries a credential.
     """
 
     def __init__(self, agent: Agent, model: ModelBackend, pep: PolicyEnforcementPoint,

@@ -1,6 +1,7 @@
 PYTHON ?= python3
 
 .PHONY: help install test lint results results-check figures check-submission lifecycle all \
+        adaptive adaptive-oracle adaptive-q \
         demo check api gateway console dev-env \
         stack-up stack-down verify evaluate conformance doctor openapi clean \
         reviewer oversight challenge second-domain domain-packs disclosure threats thesis lab
@@ -114,7 +115,7 @@ security:  ## Kernel floor, education pack failure tests, privacy custody, and c
 falsify:  ## Run every falsifier, or one: make falsify F=F19
 	$(PYTHON) -m fssaira.cli conference falsify $(F)
 
-adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
+adaptive-oracle:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
 	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
 
 ablation:  ## Enabled / disabled / restored for every control, or one falsifier: make ablation F=F10
@@ -187,5 +188,9 @@ joined-demo:  ## Durable joined workflow, synthetic data, no model API
 joined-test:  ## Execute joined-path adversarial regressions
 	$(PYTHON) -m pytest tests/test_joined_workflow.py tests/test_joined_legacy_regressions.py
 
-adaptive:  ## Offline search and trained tabular-Q evaluation (not LLM RL)
+adaptive-q:  ## Offline search and trained tabular-Q evaluation (not LLM RL)
 	PYTHONPATH=src $(PYTHON) scripts/adaptive_attacks.py
+
+# Two different attackers once shared the name `adaptive`; the second definition
+# silently replaced the first, so `make adaptive` stopped running the oracle attacker.
+adaptive: adaptive-oracle adaptive-q  ## Both adaptive attackers: independent-oracle search and tabular-Q

@@ -7,12 +7,15 @@ rules that make "consequential" mean something:
 * it requires process isolation and backend conformance;
 * it requires every consequential gate in :data:`CONSEQUENTIAL_GATES`.
 
-A profile cannot quietly drop a gate that the paper makes mandatory.
+Types are strict. A YAML null is not a fallback, and the string ``"false"`` is
+not a boolean. A profile cannot quietly drop a gate that the paper makes
+mandatory.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -45,6 +48,8 @@ CONSEQUENTIAL_GATES: frozenset[str] = frozenset({
     "table4_obligations_signed",
 })
 
+#: Paper §9.3: teaching sandbox, shadow pilot, bounded operational pilot.
+STAGES: frozenset[str] = frozenset({"sandbox", "shadow_pilot", "bounded_operational_pilot"})
 _ABLATION_VALUES = frozenset({"forbidden", "allowed_in_lab_only"})
 
 
@@ -66,40 +71,67 @@ class DeployProfile:
     isolation_statement: str
 
 
+def _text(mapping: dict, key: str, where: str, message: str | None = None) -> str:
+    value = mapping.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise DeployProfileError(f"{where}: {message or f'{key!r} must be a non-empty string'}")
+    return value.strip()
+
+
+def _flag(mapping: dict, key: str, where: str) -> bool:
+    value = mapping.get(key)
+    if not isinstance(value, bool):
+        raise DeployProfileError(f"{where}: {key!r} must be true or false, not {value!r}")
+    return value
+
+
+def _section(doc: dict, key: str, where: str) -> dict[str, Any]:
+    value = doc.get(key)
+    if not isinstance(value, dict):
+        raise DeployProfileError(f"{where}: {key!r} must be a mapping")
+    return value
+
+
+def _strings(value: Any, where: str, key: str) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list) or not all(isinstance(v, str) and v.strip() for v in value):
+        raise DeployProfileError(f"{where}: {key!r} must be a list of non-empty strings")
+    return tuple(v.strip() for v in value)
+
+
 def load_deploy_profile(path: Path) -> DeployProfile:
     """Load and validate one deployment profile."""
     path = Path(path)
-    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    name = str(doc.get("profile", "")).strip()
-    if not name:
-        raise DeployProfileError(f"{path.name}: profile has no name")
-    consequential = doc.get("consequential")
-    if not isinstance(consequential, bool):
-        raise DeployProfileError(f"{name}: 'consequential' must be true or false")
-    ablation = str(doc.get("ablation_switches", "")).strip()
+    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(doc, dict):
+        raise DeployProfileError(f"{path.name}: a deployment profile must be a mapping")
+    name = _text(doc, "profile", path.name, "profile has no name")
+    consequential = _flag(doc, "consequential", name)
+    stage = _text(doc, "stage", name)
+    if stage not in STAGES:
+        raise DeployProfileError(f"{name}: stage must be one of {sorted(STAGES)}, not {stage!r}")
+    ablation = _text(doc, "ablation_switches", name)
     if ablation not in _ABLATION_VALUES:
         raise DeployProfileError(f"{name}: ablation_switches must be one of {sorted(_ABLATION_VALUES)}")
-    isolation = doc.get("isolation") or {}
-    backends = doc.get("backends") or {}
-    gates = tuple(str(g) for g in (doc.get("required_gates") or ()))
+    isolation = _section(doc, "isolation", name)
+    backends = _section(doc, "backends", name)
+    gates = _strings(doc.get("required_gates"), name, "required_gates")
     unknown = sorted(set(gates) - GATE_IDS)
     if unknown:
         raise DeployProfileError(f"{name}: unknown gate(s) {unknown}")
-    fallback = str(doc.get("fallback", "")).strip()
-    if not fallback:
-        raise DeployProfileError(f"{name}: a profile without a manual fallback cannot fail secure")
-    statement = str(isolation.get("statement", "")).strip()
-    if not statement:
-        raise DeployProfileError(f"{name}: the isolation statement is required, even when isolation is not")
+    fallback = _text(doc, "fallback", name, "a profile without a manual fallback cannot fail secure")
+    statement = _text(isolation, "statement", name,
+                      "the isolation statement is required, even when isolation is not")
 
     profile = DeployProfile(
         name=name,
-        stage=str(doc.get("stage", "")).strip(),
+        stage=stage,
         consequential=consequential,
         ablation_switches=ablation,
-        process_isolation_required=bool(isolation.get("process_isolation_required")),
-        conformance_required=bool(backends.get("conformance_required")),
-        allowed_backends=tuple(str(b) for b in (backends.get("allowed") or ())),
+        process_isolation_required=_flag(isolation, "process_isolation_required", name),
+        conformance_required=_flag(backends, "conformance_required", name),
+        allowed_backends=_strings(backends.get("allowed"), name, "backends.allowed"),
         required_gates=gates,
         fallback=fallback,
         isolation_statement=statement,
@@ -118,6 +150,11 @@ def load_deploy_profile(path: Path) -> DeployProfile:
 
 
 def load_deploy_profiles(directory: Path) -> dict[str, DeployProfile]:
-    """Load every profile in ``directory``, keyed by name."""
-    profiles = [load_deploy_profile(p) for p in sorted(Path(directory).glob("*.yaml"))]
-    return {p.name: p for p in profiles}
+    """Load every profile in ``directory``, keyed by name; duplicate names are refused."""
+    profiles: dict[str, DeployProfile] = {}
+    for path in sorted(Path(directory).glob("*.yaml")):
+        profile = load_deploy_profile(path)
+        if profile.name in profiles:
+            raise DeployProfileError(f"{path.name}: duplicate profile name {profile.name!r}")
+        profiles[profile.name] = profile
+    return profiles

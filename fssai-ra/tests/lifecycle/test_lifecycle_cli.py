@@ -65,16 +65,18 @@ def test_bind_passes_on_the_repository(capsys):
 
 
 def test_operate_needs_a_passing_falsification_of_the_current_configuration(tmp_path, capsys):
-    first = falsification.FALSIFIERS[0].id
     artifact = tmp_path / "falsify.json"
-    assert main(["falsify", "--root", str(ROOT), "--only", first, "--no-ablation",
-                 "--out", str(artifact)]) == 0
+    assert main(["falsify", "--root", str(ROOT), "--out", str(artifact)]) == 0
     capsys.readouterr()
 
     assert main(["operate", "--root", str(ROOT)]) == 1
     assert "fssaira falsify" in capsys.readouterr().out
 
-    assert main(["operate", "--root", str(ROOT), "--falsify-artifact", str(artifact)]) == 0
+    assert main(["operate", "--root", str(ROOT), "--falsify-artifact", str(artifact)]) == 1
+    assert "live_gates_run" in capsys.readouterr().out
+
+    assert main(["operate", "--root", str(ROOT), "--falsify-artifact", str(artifact),
+                 "--allow-not-run"]) == 0
     out = capsys.readouterr().out
     assert "stage operate: PASS" in out
     assert "[NOT RUN] reconciliation_clear" in out

@@ -72,8 +72,32 @@ def cmd_falsify(args: argparse.Namespace) -> int:
                                   conference_only=args.only or None), args)
 
 
+def cmd_promote(args: argparse.Namespace) -> int:
+    return _finish(stages.promote(
+        args.root.resolve(), profile_path=args.profile, backends=args.backend or (),
+        records_path=args.records, obligations_path=args.obligations, interfaces_path=args.interfaces,
+        falsify_artifact=args.falsify_artifact, rerun_conformance=not args.no_rerun_conformance), args)
+
+
+def register_promote(sub: argparse._SubParsersAction) -> None:
+    """``fssaira promote``: lifecycle stage 6."""
+    parser = _common(sub.add_parser(
+        "promote", help="lifecycle 6: run every gate the deployment profile requires"))
+    _root(parser)
+    parser.add_argument("--profile", type=Path, required=True, help="deploy/profiles/<name>.yaml")
+    parser.add_argument("--backend", action="append", help="a backend this deployment uses (repeatable)")
+    parser.add_argument("--records", type=Path, help="conformance records JSON (fssaira.kernel.assurance)")
+    parser.add_argument("--obligations", type=Path, help="signed Table 4 obligations record YAML")
+    parser.add_argument("--interfaces", type=Path, help="interface inventory YAML")
+    parser.add_argument("--falsify-artifact", type=Path, help="JSON written by `fssaira falsify --out`")
+    parser.add_argument("--no-rerun-conformance", action="store_true",
+                        help="trust the records without a fresh memory/sqlite conformance run")
+    parser.set_defaults(func=cmd_promote)
+
+
 def cmd_operate(args: argparse.Namespace) -> int:
-    result = stages.operate(args.root.resolve(), falsify_artifact=args.falsify_artifact)
+    result = stages.operate(args.root.resolve(), falsify_artifact=args.falsify_artifact,
+                            allow_not_run=getattr(args, "allow_not_run", False))
     code = _finish(result, args)
     if not args.json:
         for item in result.artifact.get("not_run", []):
@@ -128,4 +152,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     _root(operate)
     operate.add_argument("--falsify-artifact", type=Path,
                          help="JSON written by `fssaira falsify --out`")
+    operate.add_argument("--allow-not-run", action="store_true",
+                         help="offline check: report live gates (reconciliation, review capacity) as NOT RUN "
+                              "instead of failing")
     operate.set_defaults(func=cmd_operate)
