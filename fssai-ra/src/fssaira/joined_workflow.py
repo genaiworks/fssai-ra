@@ -62,7 +62,9 @@ PACKS = {
 
 
 class Workflow:
-    def __init__(self, path, *, pack="education", profile="teaching", control=True):
+    def __init__(self, path, *, pack="education", profile="teaching", control=True, mediator="legacy"):
+        if mediator not in ("legacy", "tbc"):
+            raise ValueError("UNKNOWN_MEDIATOR")
         if profile != "teaching":
             raise ValueError("NOT_QUALIFIED_FOR_OPERATIONAL_USE")
         if pack not in PACKS:
@@ -100,6 +102,12 @@ class Workflow:
             self.db.execute("ROLLBACK")
             self.db.close()
             raise ValueError("PACK_MISMATCH")
+        stored_mediator = self.db.execute("SELECT v FROM meta WHERE k='mediator'").fetchone()
+        if stored_mediator and stored_mediator[0] != mediator:
+            self.db.execute("ROLLBACK")
+            self.db.close()
+            raise ValueError("MEDIATOR_MISMATCH")
+        self.db.execute("INSERT OR IGNORE INTO meta VALUES('mediator',?)", (mediator,))
         # Add an authorization epoch to older teaching stores. Older contexts lack
         # the binding and are intentionally invalidated rather than silently upgraded.
         self.db.execute("INSERT OR IGNORE INTO meta VALUES('consent_version','1')")

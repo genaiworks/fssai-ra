@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "source": "paper/tbc-v11/TBC_v11.docx",
+  "source_sha256": "21818d38ee18ea31005fd4b3971a70909e18911a1d36110dbebd3d3befdae319",
+  "source_title": "Trust by Construction: A High-Assurance Reference Architecturefor Agentic AI in Learning Institutions",
+  "claims": [
+    {
+      "id": "passport",
+      "paper_term": "AI Workload Passport",
+      "paragraphs": [
+        6,
+        14
+      ],
+      "implementation": "src/fssaira/tbc/contracts.py:Passport",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_inventory_is_default_deny_and_schema_rejects_unknown_fields",
+        "tests/test_tbc_sdk.py:test_invalid_passport_rejected"
+      ],
+      "scope": "Strict authority ceiling and interface inventory; host sockets and filesystem still require OS isolation.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "task",
+      "paper_term": "Task Contract",
+      "paragraphs": [
+        6,
+        14,
+        34,
+        38
+      ],
+      "implementation": "src/fssaira/tbc/contracts.py:TaskContract",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_task_identity_intersection_and_wrong_purpose_are_enforced"
+      ],
+      "scope": "Trusted task enrollment, exact purpose and resource binding, expiry and shared workload budget.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "envelope",
+      "paper_term": "Dynamic Capability Envelope",
+      "paragraphs": [
+        6,
+        15
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime._agent",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_lease_cannot_expand_any_authority_axis",
+        "tests/test_tbc_sdk.py:test_narrowed_resource_scope_cannot_read_old_artifacts_or_memory"
+      ],
+      "scope": "Identity, task, Passport, runtime policy, ancestry, model and zone intersection; data rights supplied by trusted enrollment.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "context",
+      "paper_term": "Context Security Gateway",
+      "paragraphs": [
+        16
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime._handle",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_full_sdk_workflow_uses_independent_approval_and_real_effect",
+        "tests/test_tbc_sdk.py:test_resource_budgets_roll_back_real_operations"
+      ],
+      "scope": "Before-disclosure checks and cumulative byte budget in the joined synthetic records adapter.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "memory",
+      "paper_term": "Memory Gateway",
+      "paragraphs": [
+        6,
+        16
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime._handle",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_memory_integrity_retention_scope_and_reauthorization",
+        "tests/test_tbc_sdk.py:test_memory_and_generated_output_cannot_drop_session_lineage"
+      ],
+      "scope": "Persistent authenticated objects, purpose, namespace, logical retention expiry and source reauthorization. Physical backup erasure is separate.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "ir",
+      "paper_term": "AI-IR",
+      "paragraphs": [
+        6,
+        16,
+        34
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime._handle",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_committed_effect_has_exact_releasable_artifact",
+        "tests/test_tbc_sdk.py:test_effect_approval_substitution_and_guardian_epoch_invalidation"
+      ],
+      "scope": "Typed allowlisted transition, canonical resource and expected version; delegates execution to existing transactional joined mediator.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "lineage",
+      "paper_term": "Data Lineage Firewall",
+      "paragraphs": [
+        6,
+        16
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime._taint",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_memory_and_generated_output_cannot_drop_session_lineage",
+        "tests/test_tbc_sdk.py:test_airlock_preserves_lineage_and_does_not_mint_authority"
+      ],
+      "scope": "Session taint is monotone; transformations and messages cannot lower classification or remove source references.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "escrow",
+      "paper_term": "Release Escrow",
+      "paragraphs": [
+        6,
+        16
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime.authorize_release",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_exact_escrow_binding_one_use_and_recipient_authentication",
+        "tests/test_tbc_sdk.py:test_committed_effect_has_exact_releasable_artifact"
+      ],
+      "scope": "Named reviewer approves exact artifact digest and destination, TTL and epoch; explicit declassification; separate recipient authentication.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "population",
+      "paper_term": "Agent Census",
+      "paragraphs": [
+        20,
+        34
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime.census",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_population_ceiling_is_enforced",
+        "tests/test_tbc_sdk.py:test_population_depth_ancestry_and_revocation",
+        "tests/test_tbc_sdk.py:test_aggregate_sibling_budget_does_not_multiply"
+      ],
+      "scope": "Persistent identity/parent/task/model/zone/expiry/scope; lifetime population ceiling; aggregate calls/bytes/local adapter work. No network adapters or external billed compute.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "airlock",
+      "paper_term": "Semantic Airlock",
+      "paragraphs": [
+        20
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:TrustRuntime._handle",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_airlock_preserves_lineage_and_does_not_mint_authority",
+        "tests/test_tbc_sdk.py:test_potential_source_to_sink_path_denied_even_for_clean_message"
+      ],
+      "scope": "Typed internal message channel with audience, labels, source and epoch checks; natural language carries no authority.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "guardian",
+      "paper_term": "Guardian",
+      "paragraphs": [
+        28,
+        31,
+        33
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:Guardian",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_guardian_only_contracts_and_human_restore_requires_fresh_lease",
+        "tests/test_tbc_sdk.py:test_guardian_detects_configuration_drift_on_dispatch"
+      ],
+      "scope": "Five nested authority modes; contraction and ancestor revocation; named operator restoration invalidates old leases.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "twin",
+      "paper_term": "Security Digital Twin",
+      "paragraphs": [
+        34
+      ],
+      "implementation": "src/fssaira/tbc/runtime.py:Guardian._evaluate_locked",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_guardian_finds_multihop_counterexample_and_contracts_before_use"
+      ],
+      "scope": "Finite capability/message graph with concrete source-to-public counterexample paths. Checked on every model request and prospective message edge; only declared topology is visible.",
+      "status": "implemented-local-reference"
+    },
+    {
+      "id": "sdk",
+      "paper_term": "request_context()",
+      "paragraphs": [
+        31
+      ],
+      "implementation": "src/fssaira/tbc/client.py:SDKClient",
+      "tests": [
+        "tests/test_tbc_sdk.py:test_full_sdk_workflow_uses_independent_approval_and_real_effect",
+        "tests/test_tbc_sdk.py:test_http_adapter_mediates_without_exposing_admin_operations"
+      ],
+      "scope": "All six named primitives plus memory reads, effects, and agent messaging; HTTP boundary available; deterministic reference tools only.",
+      "status": "implemented-local-reference"
+    }
+  ],
+  "limitations": [
+    "Host/process/credential and OS network isolation require deployment enforcement; Python boundaries are not a malicious-code sandbox.",
+    "No arbitrary MCP, browser, shell, cloud API, file-write, streaming, multimodal or external side-effect adapter is enabled.",
+    "Compute units are deterministic local adapter input bytes; external cost is zero because no billed adapter is registered. They are not GPU time or live provider billing measurements.",
+    "Graph assurance covers the declared service topology; undeclared host paths must be denied by the deployment.",
+    "Memory retention is authorization expiry, not forensic erasure of SQLite pages or backups.",
+    "SQLite provides local serialized transactions. Distributed revocation, external exactly-once effects, hardware-backed keys and human-review effectiveness are not established.",
+    "The new SDK uses the existing joined synthetic record correction adapter; enterprise IAM, institutional policy and orchestrator adapters need deployment-specific binding."
+  ]
+}

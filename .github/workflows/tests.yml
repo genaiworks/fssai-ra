@@ -91,6 +91,14 @@ jobs:
           python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
           python -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
 
+      - name: TBC v11 Word specification and SDK inventory remain aligned
+        working-directory: fssai-ra
+        run: python scripts/check_tbc_alignment.py
+
+      - name: TBC SDK joined demonstration
+        working-directory: fssai-ra
+        run: python scripts/tbc_demo.py --output /tmp/tbc-ci-demo
+
       - name: Committed results have not drifted
         working-directory: fssai-ra
         run: python scripts/generate_results.py --check

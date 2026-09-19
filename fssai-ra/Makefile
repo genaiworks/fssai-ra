@@ -167,3 +167,13 @@ joined-test:  ## Execute joined-path adversarial regressions
 
 adaptive:  ## Offline search and trained tabular-Q evaluation (not LLM RL)
 	PYTHONPATH=src $(PYTHON) scripts/adaptive_attacks.py
+
+.PHONY: tbc-test tbc-demo tbc-check
+tbc-test:  ## Test the v11 SDK, Guardian, durable memory and agent composition
+	$(PYTHON) -m pytest tests/test_tbc_sdk.py tests/test_tbc_alignment.py
+
+tbc-demo:  ## Run the paper's SDK path (OUTPUT must name a new directory)
+	$(PYTHON) scripts/tbc_demo.py --output $(if $(OUTPUT),$(OUTPUT),audit/tbc-demo-new)
+
+tbc-check:  ## Check exact Word-paper bindings and the default-deny inventory
+	$(PYTHON) scripts/check_tbc_alignment.py

@@ -1,0 +1,57 @@
+{
+  "task": "correction-1",
+  "purpose": "correction",
+  "subject": "s1",
+  "tenant": "campus",
+  "scope": {
+    "models": [
+      "offline-scripted"
+    ],
+    "data_classes": [
+      "synthetic-academic"
+    ],
+    "zones": [
+      "local"
+    ],
+    "tools": [
+      "summarize",
+      "classify"
+    ],
+    "resources": [
+      "campus/s1"
+    ],
+    "destinations": [
+      "recipient",
+      "public"
+    ],
+    "operations": [
+      "derive_artifact",
+      "execute_effect",
+      "invoke_tool",
+      "persist_memory",
+      "propose_effect",
+      "read_memory",
+      "receive_message",
+      "release_artifact",
+      "request_capability",
+      "request_context",
+      "send_message",
+      "spawn_agent"
+    ],
+    "channels": [
+      "internal"
+    ],
+    "memory": [
+      "task-notes"
+    ]
+  },
+  "budget": {
+    "calls": 200,
+    "context_bytes": 50000,
+    "memory_bytes": 50000,
+    "traffic_bytes": 50000,
+    "compute_units": 50000,
+    "cost_microunits": 0
+  },
+  "expires": 2000000000
+}

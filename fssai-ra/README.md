@@ -1,5 +1,7 @@
 # Trust by Construction — a reference architecture for governed agentic AI
 
+**TBC v11 SDK:** [Engineering guide](docs/TBC_SDK.md). Persistent Passports, Task Contracts, capability envelopes, governed memory, population controls, labelled messages, exact release escrow and an authority-contracting Guardian are available in `fssaira.tbc`. Run `make tbc-test` and `make tbc-demo OUTPUT=/tmp/tbc-demo-new`. This is an opt-in local reference service with an HTTP adapter; deployment isolation remains a separate requirement.
+
 <sub>Repository and Python package: `fssai-ra` / `fssaira`.</sub>
 
 **2026-09-14 adversarial revision:** [Run the durable joined demo and inspect audit evidence](audit/QUICKSTART.md). Synthetic SQLite workflow, independent source confirmation, exact approval, release and appeal; no paid API or install required for this demo. Earlier component results do not establish deployment isolation.
@@ -52,7 +54,7 @@ make demo                                         # guided walkthrough
 make reviewer                                     # all assurance checks, one command
 
 cd fssai-ra && source .venv/bin/activate          # optional: individual commands
-pytest                                            # 601 deterministic tests (187 at the v1.0.0 tag)
+pytest                                            # current suite; v1.0.0 had 187 deterministic tests
 fssaira doctor                                    # what is this deployment, really?
 fssaira verify   profiles/student_support.yaml    # bounded model check: 240 states, 0 violations
 fssaira evaluate profiles/student_support.yaml    # adversarial + utility + ablation
