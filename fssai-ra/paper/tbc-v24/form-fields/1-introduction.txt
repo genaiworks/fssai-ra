@@ -1,0 +1,7 @@
+In a learning institution, AI agents now read student records, change school systems and delegate work to other agents. A transcript assistant should retrieve the requested record, propose a correction and deliver the approved result to the authorised registrar. It should not open another student's file because a document tells it to, approve its own correction, or keep releasing data after revocation. Indirect prompt injection can redirect tool-integrated agents [1].
+
+The harder problem is that permitted steps can combine into an outcome no one allowed. A reader, a summariser and a publisher may each hold a sound tool list and still form a path from a student transcript to a public page. No one agent misbehaves. The chain does.
+
+Trust by Construction treats every agent, including its coordinator, as an untrusted proposer. Separate enforcement services mediate protected reads, delegation, effects and disclosure under one rule: proof before power. Ten design patterns connect institutional policy to executable refusals.
+
+The work builds on control-flow separation [2], data-flow control [3] and agent design patterns [4]. Those bound what one agent may do. The open question is what a set of permitted agents may do as a group. The aim is an integration and test method, not a new security primitive. Proof here means a check of stated rules against trusted state. It does not mean proof that a model is truthful or that a grade is fair.
