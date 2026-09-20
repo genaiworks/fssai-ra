@@ -22,7 +22,7 @@ the form's own field labels, so the form fields and the document are the same te
 - `source/build_v24.py` emits the four paste files in `form-fields/`, the combined
   `Trust_by_Construction_V24_Form_Fields.md`, and the document as DOCX and PDF;
 - the form has no image field, so the paste drops the figure markers and captions;
-  the four figures remain in the document;
+  the six figures remain in the document;
 - the build imports the limits from `scripts/check_submission.py` rather than
   restating them, and refuses to produce a release whose fields do not validate.
 
@@ -39,11 +39,15 @@ the form's own field labels, so the form fields and the document are the same te
 
 ## Verification
 
-`python source/verify_v24.py` — 32 checks, all passing, including:
+`python source/verify_v24.py` — 38 checks, all passing, including:
 
 - the DOCX rebuilds byte-for-byte from `source/`;
 - all four form fields are within their word ranges and character caps, with
-  43, 156, 59 and 51 characters of headroom respectively;
+  8, 92, 25 and 51 characters of headroom respectively;
+- the reference field fits 1,500 characters, the tightest cap the form applies
+  anywhere, because the reference field's own cap is not published;
+- the three-arm comparison in Figure 5 re-runs from the kernel and still reports
+  0, 2 and 10 of 10, and each of the nine ablated controls still restores its harm;
 - the paste text carries no figure markers or captions, and every line of it
   appears in the single source;
 - every citation resolves and every listed reference is cited;
@@ -52,9 +56,8 @@ the form's own field labels, so the form fields and the document are the same te
 - every BUILT row of Figure 4 names a test that exists in `tests/`;
 - the released PDF matches its recorded page count.
 
-Body text is 1,621 words across the four fields, against the form's 1,500 to 1,800.
-The document runs to five pages, the last holding the closing section and the
-references.
+Body text is 1,637 words across the four fields, against the form's 1,500 to 1,800.
+The document runs to five pages and carries six figures.
 
 Tests executed and passing: `tests/test_tbc_sdk.py`, `tests/test_frontier_controls.py`,
 `tests/test_conference_falsification.py`, `tests/test_delegation.py`,
@@ -70,3 +73,39 @@ No new experiments were run for this release and no new performance claims were 
    professional role only, and these are not invented here.
 2. Paste from `form-fields/`, not from `paper/form-ready-abstract.md`.
 3. Re-read the live form in case UNU has changed a requirement.
+
+## Second pass, 19 September 2026
+
+The first V24 release passed every check it had. The checks did not cover whether
+a reviewer could *see* the argument, and two things were invisible.
+
+The three-arm delegation comparison was the paper's strongest evidence and it was
+a sentence. It is now **Figure 5**, a live run of the kernel drawn as a matrix:
+ten named risk classes, three architectures, the refusal code arm C returns for
+each, and the benign chain completing in all three arms so the figure cannot be
+read as a control that refuses everything. The numbers are not typed into the
+build; `build_v24.py` imports `fssaira.delegation_eval`, runs the suite, writes
+`source/delegation-comparison.json`, and refuses to build if the prose and the run
+disagree. `verify_v24.py` re-runs it independently.
+
+The worked registrar case was a dense paragraph. It is now **Figure 2**, seven
+steps with what the assistant proposes on one side and what the gate decides on
+the other, three of them refusals. It is the figure that makes the method legible
+to a reader who is not a security engineer, which at an education conference is
+most of the room.
+
+Also in this pass:
+
+| Gap | Change |
+|---|---|
+| The introduction never said what the contribution was; a reviewer had to infer it. | One sentence now names all three: ten patterns, a composition contract that survives agents spawning agents, and an offline evidence kit. |
+| Six references, none covering agent identity or a public attack benchmark. | Added Chan et al. (2024) on visibility into AI agents, cited where per-agent identity is introduced, and AgentDojo (2024), cited in the evaluation plan. Both were checked against the arXiv API, not recalled. |
+| "A majority of the risk classes pass straight through" named none of them. | The prose now names what arm B catches (a widened scope, an untrusted key) and what walks past it (confused deputies, bearer-chain reuse, unrooted chains, depth evasion). |
+| Figure placement left a third of page 2 blank and pushed two references onto a sixth page. | Figure 3 now leads its section rather than trailing it, and the bibliography is set tighter. Five pages, six figures, no blank half-pages. |
+
+Every character-cap trim above was taken out of redundancy, not out of a claim:
+no statement of scope, limit or negative result was shortened away. The fields
+ran to 8, 92, 25 and 51 characters of headroom. The introduction has almost none:
+any further edit to it must be measured with `scripts/check_submission.py`, and
+`build_v24.py` refuses to produce a release whose fields do not validate, so an
+overrun cannot reach the form unnoticed.

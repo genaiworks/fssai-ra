@@ -2,15 +2,15 @@
   "manuscript": "Trust_by_Construction_V24_Extended_Abstract",
   "author": "Rachana Srivastava",
   "one_source": "source/manuscript.md renders both the document and the form fields",
-  "body_words_excluding_figure_text": 1635,
+  "body_words_excluding_figure_text": 1637,
   "reference_entries": 8,
   "figures_in_manuscript": 6,
   "form_fields_valid": true,
   "form_fields": {
     "Introduction": {
-      "words": 236,
-      "characters": 1481,
-      "character_headroom": 19
+      "words": 238,
+      "characters": 1492,
+      "character_headroom": 8
     },
     "Development Section 1 Methodology Core Argument and Case Context": {
       "words": 566,
@@ -31,7 +31,7 @@
   "pages": 5,
   "evidence_matches_repository_artifact": "evaluation/results/v1.0.0-domain-pack-matrix.json",
   "sha256": {
-    "docx": "27cc4406c81f1cec36684101c0ad594bb8900754520b8d483dd700e623d7450f",
-    "pdf": "8aaf4f1e4ff6b6e1f78f2435a40cd2bd11cebe1cf11c95cb09b69c4a7c2afbae"
+    "docx": "f4bad8245419a4b460bc558965dd3ef43aa657de54827541492ae3325efe2633",
+    "pdf": "2624964428f1c5e9e005b4815380e7dd781f73659f676ea05b76fb6bbb04a9f4"
   }
 }

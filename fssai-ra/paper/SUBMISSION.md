@@ -10,7 +10,7 @@
 
 Use **V24**: [`tbc-v24/form-fields/`](tbc-v24/form-fields/). Paste each numbered
 file into the matching form field. The Microsoft Form requires four separate paste
-fields and a separate reference field, and has no image field, so the four figures
+fields and a separate reference field, and has no image field, so the six figures
 do not travel with the paste; they live in the V24 document for anyone who asks
 for a copy.
 
@@ -35,7 +35,7 @@ Before opening the form:
 - [ ] Add author name, affiliation, email, and professional role; these are not
   invented in the repository.
 - [ ] Run `python scripts/check_submission.py paper/tbc-v24/Trust_by_Construction_V24_Form_Fields.md`; every field must report `valid: true`.
-- [ ] Run `python paper/tbc-v24/source/verify_v24.py`; every check must pass.
+- [ ] Run `python paper/tbc-v24/source/verify_v24.py`; all 38 checks must pass.
 - [ ] Run `pytest` and `python scripts/generate_results.py --check`.
 - [ ] Confirm that release `v1.0.0` and its result files resolve in a signed-out browser.
 - [ ] Paste references into the separate reference field using the supplied style.

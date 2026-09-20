@@ -12,9 +12,9 @@ In a learning institution, AI agents now read student records, change school sys
 
 The harder problem is that permitted steps combine into an outcome no one allowed. A reader, a summariser and a publisher may each hold a sound tool list and still form a path from a student transcript to a public page. No one agent misbehaves. The chain does.
 
-Trust by Construction treats every agent, its coordinator included, as an untrusted proposer. Separate services mediate protected reads, delegation, effects and disclosure under one rule: proof before power. It contributes ten design patterns that turn policy into executable refusals, a composition contract that holds when agents spawn agents, and an offline evidence kit a school can rerun on a laptop.
+Trust by Construction treats every agent, its coordinator included, as an untrusted proposer. Separate services mediate protected reads, delegation, effects and disclosure under one rule: proof before power. The contribution is ten design patterns that turn policy into executable refusals, a composition contract that holds when agents spawn agents, and an offline evidence kit a school can rerun on a laptop.
 
-It builds on control-flow separation [2], data-flow control [3] and agent design patterns [4], which bound what one agent may do; the open question is what permitted agents do together. The aim is an integration and test method, not a new primitive. Proof means checking stated rules against trusted state, not that a model is truthful or a grade fair.
+The work builds on control-flow separation [2], data-flow control [3] and agent design patterns [4], which bound what one agent may do; the open question is what permitted agents do together. The aim is an integration and test method, not a new primitive. Proof means checking stated rules against trusted state, not that a model is truthful or a grade fair.
 
 ## Development Section 1 Methodology Core Argument and Case Context
 
