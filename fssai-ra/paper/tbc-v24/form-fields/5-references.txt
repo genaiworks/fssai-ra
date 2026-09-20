@@ -9,3 +9,7 @@
 [5] Srivastava, R. (2026). FSSAI-RA reference implementation. Repository snapshot 9bb35a1: fssai-ra/evaluation/results/v1.0.0-domain-pack-matrix.json, fssai-ra/tests/test_tbc_sdk.py and fssai-ra/tests/test_delegation.py. https://github.com/genaiworks/fssai-ra/tree/9bb35a1
 
 [6] UNESCO (2024). AI Competency Framework for Students. https://unesdoc.unesco.org/ark:/48223/pf0000391105
+
+[7] Chan, A., et al. (2024). Visibility into AI Agents. ACM FAccT. https://arxiv.org/abs/2401.13138
+
+[8] Debenedetti, E., et al. (2024). AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents. NeurIPS Datasets and Benchmarks. https://arxiv.org/abs/2406.13352

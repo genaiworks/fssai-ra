@@ -58,6 +58,95 @@ c.setStrokeColor(orange);c.setLineWidth(2.5);c.line(405,58,417,80);c.line(405,80
 txt(306,22,'Source restrictions persist through summarisation. The public release is refused.',10,True,color=orange)
 c.save()
 subprocess.run(['pdftoppm','-singlefile','-r','300','-png',str(W/'composition.pdf'),str(W/'composition')],check=True)
+# The worked case, drawn as a sequence: what the assistant asks, what the gate decides.
+green=HexColor('#1F6F4A')
+STEPS=[('LEASE','Work on the grade for record S-1042','Lease issued naming that one record. Any other file is out of scope.','SCOPED'),
+ ('READ','Read S-1042','Within the lease. The read is allowed and recorded.','ALLOWED'),
+ ('DRAFT','Write the corrected grade','Refused. The contract names a second approver.','REFUSED'),
+ ('APPROVE','Instructor confirms this draft','The receipt binds that approval to this draft digest.','BOUND'),
+ ('COMMIT','Write the approved draft','Epoch, scope and approval revalidated, then committed.','ALLOWED'),
+ ('SUBSTITUTE','Write a different draft under that approval','Refused. The receipt names another digest.','REFUSED'),
+ ('REVOKE','Queued write, after the grant is withdrawn','Refused. A stale epoch fails revalidation.','REFUSED')]
+ROWH=30.5;CASE_H=56+ROWH*len(STEPS)+30
+c=canvas.Canvas(str(W/'case-flow.pdf'),pagesize=(612,CASE_H),invariant=1)
+txt(306,CASE_H-18,'ONE GRADE CORRECTION: WHAT THE ASSISTANT ASKS, WHAT THE GATE DECIDES',11.5,True)
+c.setFillColor(gray);c.setFont('Helvetica-Bold',7)
+c.drawString(8,CASE_H-36,'STEP');c.drawString(112,CASE_H-36,'THE ASSISTANT PROPOSES (UNTRUSTED)');c.drawString(330,CASE_H-36,'THE ENFORCEMENT GATE DECIDES (TRUSTED)')
+c.setStrokeColor(HexColor('#C8D2D8'));c.setLineWidth(.7);c.line(8,CASE_H-42,604,CASE_H-42)
+CHIP={'ALLOWED':green,'REFUSED':orange,'SCOPED':navy,'BOUND':navy}
+for i,(stage,ask,verdict,chip) in enumerate(STEPS):
+ top=CASE_H-48-i*ROWH
+ if i%2:c.setFillColor(HexColor('#F7F9FA'));c.rect(8,top-ROWH+6,596,ROWH,fill=1,stroke=0)
+ c.setFillColor(navy);c.setFont('Helvetica-Bold',8);c.drawString(8,top-10,stage)
+ c.setFillColor(gray);c.setFont('Helvetica-Oblique',8);c.drawString(112,top-10,ask)
+ c.setFillColor(HexColor('#52606B'));c.setFont('Helvetica',8);c.drawString(330,top-10,verdict)
+ c.setFillColor(CHIP[chip]);c.setFont('Helvetica-Bold',6.6);c.drawRightString(604,top-10,chip)
+ arrow(320,top-8,328,top-8)
+c.line(8,CASE_H-48-len(STEPS)*ROWH+6,604,CASE_H-48-len(STEPS)*ROWH+6)
+txt(306,17,'No step depends on the assistant behaving. Every verdict is a check of stated rules against trusted state.',8.6,True)
+txt(306,7,'The same seven steps run for a medical record or a benefits claim; only the contract and the lease change.',8,color=gray)
+c.save()
+subprocess.run(['pdftoppm','-singlefile','-r','300','-png',str(W/'case-flow.pdf'),str(W/'case-flow')],check=True)
+
+# The comparison figure. Its numbers come from a live run of the kernel, not from this file.
+import sys as _s0; _s0.path.insert(0,str(REPO/'src'))
+try:
+ from fssaira.delegation_eval import run_delegation_suite, ablate_delegation
+except ModuleNotFoundError as exc:                       # pragma: no cover - environment guard
+ raise SystemExit('the delegation evidence is regenerated live; install the kernel deps (pip install pyyaml): %s'%exc)
+_live=run_delegation_suite().to_dict()
+_ablation=ablate_delegation()
+DEL={k:v for k,v in _live.items() if k!='generated_at'}  # a timestamp would break reproducibility
+DEL['controls_ablated']=len(_ablation)
+DEL['every_control_load_bearing']=all(row['load_bearing'] for row in _ablation)
+json.dump(DEL,open(W/'delegation-comparison.json','w'),indent=2)
+assert DEL['every_control_load_bearing'], 'an ablated control did not restore its harm'
+ARMS=[('unguarded','A  UNGUARDED'),('caller_checked','B  PER-HOP CHECK'),('this_architecture','C  WHOLE CHAIN')]
+_by={}
+for o in _live['outcomes']:_by.setdefault(o['scenario'],{})[o['arm']]=o
+_names=[o['scenario'] for o in _live['outcomes'] if o['arm']=='unguarded']
+_hostile=[n for n in _names if not _by[n]['unguarded']['contained']]
+_benign=[n for n in _names if n not in _hostile]
+assert len(_hostile)==_live['hostile_chains'], (len(_hostile),_live['hostile_chains'])
+DROW=19.5;DEL_H=64+DROW*(len(_names)+1)+34
+c=canvas.Canvas(str(W/'delegation-evidence.pdf'),pagesize=(612,DEL_H),invariant=1)
+txt(306,DEL_H-18,'WHERE LOCAL CORRECTNESS FAILS',12,True)
+txt(306,DEL_H-31,'Ten delegation risk classes against three architectures, from a live run of the offline kernel',8.6,color=gray)
+DX=[262,340,418]
+c.setFillColor(gray);c.setFont('Helvetica-Bold',7)
+c.drawString(8,DEL_H-50,'RISK CLASS');c.drawString(462,DEL_H-50,'WHY ARM C REFUSES')
+for x,(_,label) in zip(DX,ARMS):c.drawCentredString(x,DEL_H-50,label)
+c.setStrokeColor(HexColor('#C8D2D8'));c.setLineWidth(.7);c.line(8,DEL_H-56,604,DEL_H-56)
+def mark(x,y,held):
+ if held:c.setFillColor(green);c.setStrokeColor(green);c.circle(x,y,4.1,fill=1,stroke=1)
+ else:c.setFillColor(HexColor('#FFFFFF'));c.setStrokeColor(orange);c.setLineWidth(1.1);c.circle(x,y,4.1,fill=1,stroke=1)
+for i,name in enumerate(_hostile+_benign):
+ top=DEL_H-62-i*DROW
+ if i==len(_hostile):c.setStrokeColor(HexColor('#C8D2D8'));c.setLineWidth(.6);c.line(8,top+5,604,top+5)
+ elif i%2:c.setFillColor(HexColor('#F7F9FA'));c.rect(8,top-DROW+5,596,DROW,fill=1,stroke=0)
+ label=name.replace('_',' ');label=label[0].upper()+label[1:]
+ c.setFillColor(navy);c.setFont('Helvetica-Bold' if name in _hostile else 'Helvetica-Oblique',8.2)
+ c.drawString(8,top-9,label+('' if name in _hostile else '  (utility control)'))
+ for x,(arm,_) in zip(DX,ARMS):mark(x,top-6,_by[name][arm]['contained'])
+ c.setFillColor(gray);c.setFont('Helvetica',7)
+ c.drawString(462,top-9,_by[name]['this_architecture']['code'].replace('_',' ').title()[:34])
+top=DEL_H-62-len(_names)*DROW
+c.setFillColor(navy);c.setFont('Helvetica-Bold',8.4);c.drawString(8,top-10,'HOSTILE CHAINS CONTAINED')
+for x,(arm,_) in zip(DX,ARMS):
+ a=_live['arms'][arm]
+ c.setFillColor(green if a['contained']==a['of'] else orange);c.setFont('Helvetica-Bold',9.5)
+ c.drawCentredString(x,top-10,'%d / %d'%(a['contained'],a['of']))
+c.setStrokeColor(HexColor('#C8D2D8'));c.setLineWidth(.7);c.line(8,top-17,604,top-17)
+mark(150,25,True);mark(236,25,False)
+c.setFillColor(gray);c.setFont('Helvetica',8)
+c.drawString(159,22,'contained');c.drawString(245,22,'passed through')
+txt(306,9,'Arm B is a correct implementation of the realistic control, not a strawman. Removing any one of the %d named controls restores its harm.'%len(_ablation),7.8,color=orange)
+c.save()
+subprocess.run(['pdftoppm','-singlefile','-r','300','-png',str(W/'delegation-evidence.pdf'),str(W/'delegation-evidence')],check=True)
+# The prose must quote what the run produced.
+for _arm,_word in (('unguarded','none'),('caller_checked','two'),('this_architecture','ten')):
+ assert {'unguarded':0,'caller_checked':2,'this_architecture':10}[_arm]==_live['arms'][_arm]['contained'], \
+  'the manuscript says arm %s contained %s; the live run says %d'%(_arm,_word,_live['arms'][_arm]['contained'])
 canonical=REPO/'evaluation'/'results'/'v1.0.0-domain-pack-matrix.json'
 assert (W/'domain-pack-matrix.json').read_bytes()==canonical.read_bytes(), 'evidence copy has drifted from '+str(canonical)
 
@@ -140,8 +229,8 @@ for i,block in enumerate(s.strip().split('\n\n')):
  elif block.startswith('@FIG:'):
   figure=block.split(':',1)[1]
   p=doc.add_paragraph();p.paragraph_format.space_before=Pt(6);p.paragraph_format.space_after=Pt(4);p.paragraph_format.keep_with_next=True
-  r=p.add_run();r.add_picture(str(W/(figure+'.png')),width=Inches({'patterns':6.5,'swarm-architecture':6.4,'composition':6.4,'claim-matrix':6.6}[figure]))
-  pr=r._r.xpath('.//wp:docPr')[0];pr.set('descr', {'patterns':'Ten patterns arranged across admit, read, delegate, act and release, with checks repeated at every boundary.', 'swarm-architecture':'Untrusted workers share one task envelope and access protected systems through an enforcement gate.', 'composition':'A reader, summariser and publisher form a protected-data path; the public release is refused.', 'claim-matrix':'A table of ten claims. Eight are built and name a regression test, one distributed bound is proposed and not evaluated, and undoing a delivered external effect is not claimed.'}[figure])
+  r=p.add_run();r.add_picture(str(W/(figure+'.png')),width=Inches({'patterns':6.5,'case-flow':6.6,'swarm-architecture':6.4,'composition':6.4,'delegation-evidence':6.6,'claim-matrix':6.6}[figure]))
+  pr=r._r.xpath('.//wp:docPr')[0];pr.set('descr', {'patterns':'Ten patterns arranged across admit, read, delegate, act and release, with checks repeated at every boundary.', 'swarm-architecture':'Untrusted workers share one task envelope and access protected systems through an enforcement gate.', 'composition':'A reader, summariser and publisher form a protected-data path; the public release is refused.', 'case-flow':'Seven steps of a grade correction, each showing what the assistant proposes and what the enforcement gate decides; three steps are refused.', 'delegation-evidence':'Ten delegation risk classes against three architectures. The unguarded arm contains none, per-hop validation contains two, and whole-chain verification contains all ten, while the benign chain completes in every arm.', 'claim-matrix':'A table of ten claims. Eight are built and name a regression test, one distributed bound is proposed and not evaluated, and undoing a delivered external effect is not claimed.'}[figure])
  elif re.match(r'^Figure \d+\.',block):
   p=doc.add_paragraph(block,'Caption');p.paragraph_format.space_after=Pt(8);p.paragraph_format.keep_with_next=False
  elif re.match(r'^\[\d+\]',block):

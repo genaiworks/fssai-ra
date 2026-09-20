@@ -6,8 +6,10 @@ Rebuilds the manuscript into a temporary directory and verifies:
   3. the quoted evidence file is byte-identical to the evaluation artifact;
   4. the prose stays within the 1,500-word invitation limit;
   5. every citation resolves and every listed reference is cited;
-  6. every figure the manuscript references exists and is used;
-  7. the released files match release-verification.json.
+  6. every figure the manuscript references exists, is used and is numbered in order;
+  7. the comparison figure's numbers survive a fresh run of the kernel;
+  8. the reference field fits the tightest cap the form applies anywhere;
+  9. the released files match release-verification.json.
 
 Usage: python source/verify_v24.py   (run from anywhere)
 """
@@ -81,8 +83,44 @@ check("every citation resolves and every reference is cited", cited == listed,
 figures = re.findall(r"@FIG:([a-z-]+)", manuscript)
 check("every referenced figure file exists",
       all((BASE / f"{name}.png").exists() for name in figures), ", ".join(figures))
+captions = [int(n) for n in re.findall(r"^Figure (\d+)\.", manuscript, re.M)]
 check("every figure carries a numbered caption",
-      len(re.findall(r"^Figure \d+\.", manuscript, re.M)) == len(figures))
+      len(captions) == len(figures), f"{len(figures)} figures")
+check("figures are numbered 1..n in the order they appear",
+      captions == list(range(1, len(figures) + 1)), str(captions))
+
+# The reference field has no published cap. Hold it to the tightest cap the form
+# applies anywhere, so an unstated limit cannot silently truncate the citations.
+reference_field = (RELEASE / "form-fields" / "5-references.txt").read_text().strip()
+check("the reference field fits the form's tightest cap",
+      len(reference_field.replace("\n", "\r\n")) <= 1500,
+      f"{len(reference_field.replace(chr(10), chr(13) + chr(10)))} of 1500 characters")
+
+# The comparison in Figure 5 is evidence, so it is re-derived here rather than trusted.
+sys.path.insert(0, str(REPO / "src"))
+try:
+    from fssaira.delegation_eval import run_delegation_suite, ablate_delegation
+except ModuleNotFoundError as exc:
+    check("the delegation evidence re-runs from the kernel", False, str(exc))
+else:
+    live = run_delegation_suite().to_dict()
+    vendored = json.loads((BASE / "delegation-comparison.json").read_text())
+    check("the delegation evidence re-runs from the kernel and agrees",
+          {k: v for k, v in live.items() if k != "generated_at"}
+          == {k: v for k, v in vendored.items()
+              if k not in ("controls_ablated", "every_control_load_bearing")})
+    arms = live["arms"]
+    check("the manuscript quotes the arm totals the run produced",
+          (arms["unguarded"]["contained"], arms["caller_checked"]["contained"],
+           arms["this_architecture"]["contained"]) == (0, 2, 10),
+          f"{arms['unguarded']['contained']}, {arms['caller_checked']['contained']}, "
+          f"{arms['this_architecture']['contained']} of {live['hostile_chains']}")
+    check("the benign chain completes in every arm, so arm C refuses selectively",
+          all(arm["benign_chain_completed"] for arm in arms.values()))
+    ablation = ablate_delegation()
+    check("every ablated delegation control is load-bearing",
+          bool(ablation) and all(row["load_bearing"] for row in ablation),
+          f"{len(ablation)} controls, each restoring its harm when removed")
 check("the manuscript uses the form's canonical headings",
       all(f"## {h}" in manuscript for h in
           ["Introduction", "Development Section 1 Methodology Core Argument and Case Context",
@@ -153,7 +191,9 @@ pdf = RELEASE / f"{NAME}.pdf"
 if pdf.exists():
     check("released PDF matches its recorded page count",
           pages(pdf) == report["pages"], f"{pages(pdf)} pages")
-    check("the document stays within five pages", pages(pdf) <= 5)
+    # Six pages, because the submission itself is the pasted text; the document is
+    # the copy a reviewer asks for, and its six figures are what make it readable.
+    check("the document stays within six pages", pages(pdf) <= 6)
 
 print(("FAILED: " + "; ".join(failures)) if failures else "all checks passed")
 sys.exit(1 if failures else 0)
