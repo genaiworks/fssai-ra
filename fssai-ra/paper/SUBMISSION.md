@@ -8,20 +8,23 @@
 
 ## Submit this version
 
-Use **V24**: [`tbc-v24/form-fields/`](tbc-v24/form-fields/). Paste each numbered
+Use **V26**: [`tbc-v26/form-fields/`](tbc-v26/form-fields/). Paste each numbered
 file into the matching form field. The Microsoft Form requires four separate paste
-fields and a separate reference field, and has no image field, so the six figures
-do not travel with the paste; they live in the V24 document for anyone who asks
+fields and a separate reference field, and has no image field, so the twelve figures
+do not travel with the paste; they live in the V26 document for anyone who asks
 for a copy.
 
-V24 is the only version to release. `tbc-v24/source/manuscript.md` is the single
-source: `source/build_v24.py` renders it both as the paste fields and as
-`Trust_by_Construction_V24_Extended_Abstract.docx`/`.pdf`, so the two cannot drift.
+V26 is the only version to release. `tbc-v26/source/manuscript.md` is the single
+source of the four submitted fields: `source/build_v26.py` renders it both as the
+paste fields and as `Trust_by_Construction_V26_Extended_Abstract.docx`/`.pdf`, so
+the two cannot drift. `source/appendix.md` is an implementation appendix carried by
+the document only; the build never pastes it and the verifier fails if it leaks.
 
-> **Superseded:** [`form-ready-abstract.md`](form-ready-abstract.md) and
+> **Superseded:** [`tbc-v24/`](tbc-v24/) is the previous release, and
+> [`form-ready-abstract.md`](form-ready-abstract.md) and
 > [`extended-abstract.md`](extended-abstract.md) are the September cross-sector
-> paper. They still validate, which makes them easy to paste by mistake. Do not
-> submit them.
+> paper. All three still validate, which makes them easy to paste by mistake. Do
+> not submit them.
 
 | Paste field | Required words | Form character cap |
 |---|---:|---:|
@@ -32,10 +35,11 @@ source: `source/build_v24.py` renders it both as the paste fields and as
 
 Before opening the form:
 
-- [ ] Add author name, affiliation, email, and professional role; these are not
-  invented in the repository.
-- [ ] Run `python scripts/check_submission.py paper/tbc-v24/Trust_by_Construction_V24_Form_Fields.md`; every field must report `valid: true`.
-- [ ] Run `python paper/tbc-v24/source/verify_v24.py`; all 38 checks must pass.
+- [ ] Byline is set: **Rachna Srivastava**, Enterprise Architect | AI Systems
+  Researcher, *Independent work, in a personal capacity*, genaiworks@gmail.com.
+  No employer is named anywhere, by intent — give the form the same details.
+- [ ] Run `python scripts/check_submission.py paper/tbc-v26/Trust_by_Construction_V26_Form_Fields.md`; every field must report `valid: true`.
+- [ ] Run `python paper/tbc-v26/source/verify_v26.py`; all 56 checks must pass.
 - [ ] Run `pytest` and `python scripts/generate_results.py --check`.
 - [ ] Confirm that release `v1.0.0` and its result files resolve in a signed-out browser.
 - [ ] Paste references into the separate reference field using the supplied style.
