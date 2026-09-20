@@ -67,7 +67,7 @@ STEPS=[('LEASE','Work on the grade for record S-1042','Lease issued naming that 
  ('COMMIT','Write the approved draft','Epoch, scope and approval revalidated, then committed.','ALLOWED'),
  ('SUBSTITUTE','Write a different draft under that approval','Refused. The receipt names another digest.','REFUSED'),
  ('REVOKE','Queued write, after the grant is withdrawn','Refused. A stale epoch fails revalidation.','REFUSED')]
-ROWH=30.5;CASE_H=56+ROWH*len(STEPS)+30
+ROWH=25.5;CASE_H=50+ROWH*len(STEPS)+26
 c=canvas.Canvas(str(W/'case-flow.pdf'),pagesize=(612,CASE_H),invariant=1)
 txt(306,CASE_H-18,'ONE GRADE CORRECTION: WHAT THE ASSISTANT ASKS, WHAT THE GATE DECIDES',11.5,True)
 c.setFillColor(gray);c.setFont('Helvetica-Bold',7)
@@ -229,12 +229,12 @@ for i,block in enumerate(s.strip().split('\n\n')):
  elif block.startswith('@FIG:'):
   figure=block.split(':',1)[1]
   p=doc.add_paragraph();p.paragraph_format.space_before=Pt(6);p.paragraph_format.space_after=Pt(4);p.paragraph_format.keep_with_next=True
-  r=p.add_run();r.add_picture(str(W/(figure+'.png')),width=Inches({'patterns':6.5,'case-flow':6.6,'swarm-architecture':6.4,'composition':6.4,'delegation-evidence':6.6,'claim-matrix':6.6}[figure]))
+  r=p.add_run();r.add_picture(str(W/(figure+'.png')),width=Inches({'patterns':6.5,'case-flow':6.6,'swarm-architecture':6.4,'composition':6.2,'delegation-evidence':6.6,'claim-matrix':6.6}[figure]))
   pr=r._r.xpath('.//wp:docPr')[0];pr.set('descr', {'patterns':'Ten patterns arranged across admit, read, delegate, act and release, with checks repeated at every boundary.', 'swarm-architecture':'Untrusted workers share one task envelope and access protected systems through an enforcement gate.', 'composition':'A reader, summariser and publisher form a protected-data path; the public release is refused.', 'case-flow':'Seven steps of a grade correction, each showing what the assistant proposes and what the enforcement gate decides; three steps are refused.', 'delegation-evidence':'Ten delegation risk classes against three architectures. The unguarded arm contains none, per-hop validation contains two, and whole-chain verification contains all ten, while the benign chain completes in every arm.', 'claim-matrix':'A table of ten claims. Eight are built and name a regression test, one distributed bound is proposed and not evaluated, and undoing a delivered external effect is not claimed.'}[figure])
  elif re.match(r'^Figure \d+\.',block):
   p=doc.add_paragraph(block,'Caption');p.paragraph_format.space_after=Pt(8);p.paragraph_format.keep_with_next=False
  elif re.match(r'^\[\d+\]',block):
-  p=doc.add_paragraph(block,'Bibliography');p.paragraph_format.keep_together=True
+  p=doc.add_paragraph(block,'Bibliography');p.paragraph_format.keep_together=True;p.paragraph_format.space_after=Pt(1);p.paragraph_format.space_before=Pt(0);p.runs[0].font.size=Pt(8.2)
  else:
   p=doc.add_paragraph(block);p.paragraph_format.widow_control=True
 # Consistent metadata and refreshable page fields.

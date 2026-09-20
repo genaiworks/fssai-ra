@@ -34,11 +34,11 @@ Figure 2. One grade correction, end to end. Every step is a check of stated rule
 
 The design hypothesis is falsifiable: under an unchanged contract, adding workers must not admit a prohibited effect, information path or total spend. That must be checked on the whole composition, not on each worker alone.
 
-A swarm is a set of agents coordinated on one institutional task. The coordinator may split work and propose workers, but spawning is itself mediated. Each child gets its own identity, an expiry and authority no wider than its ancestors, task and workload ceiling; per-agent identity is what makes a swarm reviewable at all [7]. Replanning changes a proposed task graph, and a trusted gate must admit each new node and edge before use. Agreement among agents is evidence for review, never a credential.
-
 ![Figure](source/swarm-architecture.png)
 
-Figure 3. Proposed swarm extension. Parallel workers share one task budget and revocation epoch; every handoff and effect crosses enforcement. The diagram specifies architecture, not measured distributed performance.
+Figure 3. Proposed swarm extension. Parallel workers share one task budget and revocation epoch; every handoff crosses enforcement. The diagram specifies architecture, not measured distributed performance.
+
+A swarm is a set of agents coordinated on one institutional task. The coordinator may split work and propose workers, but spawning is itself mediated. Each child gets its own identity, an expiry and authority no wider than its ancestors, task and workload ceiling; per-agent identity is what makes a swarm reviewable at all [7]. Replanning changes a proposed task graph, and a trusted gate must admit each new node and edge before use. Agreement among agents is evidence for review, never a credential.
 
 Parallelism must not multiply resources. All descendants draw on task-wide limits for calls, records read, bytes released and consequential effects, plus a workload ceiling across tasks. Depth, population and time limits bound recursive spawning. Atomic reservations precede dispatch, and completion or cancellation settles them without double spending. External effects need adapter reconciliation when the outcome is unclear: a database rollback cannot unsend an email.
 

@@ -28,10 +28,10 @@
       "character_headroom": 51
     }
   },
-  "pages": 6,
+  "pages": 5,
   "evidence_matches_repository_artifact": "evaluation/results/v1.0.0-domain-pack-matrix.json",
   "sha256": {
-    "docx": "1d05ee4c1b4e9d48aef44b0279826be06612828f50147ac5cc55e2bd2b7fe64a",
-    "pdf": "0fa9a40978e94f9a3abd786c0874c259a4b3e7da5105031e61bb82bc2187351f"
+    "docx": "27cc4406c81f1cec36684101c0ad594bb8900754520b8d483dd700e623d7450f",
+    "pdf": "8aaf4f1e4ff6b6e1f78f2435a40cd2bd11cebe1cf11c95cb09b69c4a7c2afbae"
   }
 }

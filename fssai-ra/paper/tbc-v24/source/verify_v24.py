@@ -191,9 +191,7 @@ pdf = RELEASE / f"{NAME}.pdf"
 if pdf.exists():
     check("released PDF matches its recorded page count",
           pages(pdf) == report["pages"], f"{pages(pdf)} pages")
-    # Six pages, because the submission itself is the pasted text; the document is
-    # the copy a reviewer asks for, and its six figures are what make it readable.
-    check("the document stays within six pages", pages(pdf) <= 6)
+    check("the document stays within five pages", pages(pdf) <= 5)
 
 print(("FAILED: " + "; ".join(failures)) if failures else "all checks passed")
 sys.exit(1 if failures else 0)
