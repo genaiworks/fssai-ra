@@ -1,0 +1,122 @@
+[
+  {
+    "arm": "joined",
+    "strategy": "static",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "joined",
+    "strategy": "random",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "joined",
+    "strategy": "adaptive-search",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "joined",
+    "strategy": "tabular-q",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "server-authorization",
+    "strategy": "static",
+    "episodes": 40,
+    "unsupported_corrections": 40,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "server-authorization",
+    "strategy": "random",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "server-authorization",
+    "strategy": "adaptive-search",
+    "episodes": 40,
+    "unsupported_corrections": 40,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "server-authorization",
+    "strategy": "tabular-q",
+    "episodes": 40,
+    "unsupported_corrections": 40,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 1,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "deny-all",
+    "strategy": "static",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 0,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "deny-all",
+    "strategy": "random",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 0,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "deny-all",
+    "strategy": "adaptive-search",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 0,
+    "legitimate_attempted": 1
+  },
+  {
+    "arm": "deny-all",
+    "strategy": "tabular-q",
+    "episodes": 40,
+    "unsupported_corrections": 0,
+    "unauthorized_subject_effects": 0,
+    "unauthorized_bytes": 0,
+    "legitimate_completed": 0,
+    "legitimate_attempted": 1
+  }
+]

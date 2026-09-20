@@ -64,13 +64,16 @@ def action(w, name, refs):
     return result
 
 
-def observation(refs):
-    return ''.join('1' if k in refs else '0' for k in ('context', 'proposal', 'confirmation', 'approval'))
+def observation(refs, remaining):
+    return ''.join('1' if k in refs else '0' for k in ('context', 'proposal', 'confirmation', 'approval')) + ':' + str(remaining)
 
 
 def episode(strategy, seed, qtable, control=True, training=False, steps=8, deny_all=False):
     rng = random.Random(seed)
     refs, trace = {}, []
+    if type(steps) is not int or steps < 1:
+        raise ValueError('positive step budget required')
+    reward = 0.0
     deadline = time.monotonic() + 5
     start = time.perf_counter()
     with tempfile.TemporaryDirectory() as tmp:
@@ -79,8 +82,9 @@ def episode(strategy, seed, qtable, control=True, training=False, steps=8, deny_
         for i in range(steps):
             if time.monotonic() >= deadline:
                 break
-            obs = observation(refs)
-            values = qtable.setdefault(obs, [0.0] * len(ACTIONS))
+            obs = observation(refs, steps - i)
+            values = (qtable.setdefault(obs, [0.0] * len(ACTIONS)) if training
+                      else qtable.get(obs, [0.0] * len(ACTIONS)))
             if strategy == 'static' or (training and seed % 5 == 0):
                 name = STATIC[i % len(STATIC)]
             elif strategy == 'random' or (training and rng.random() < .25):
@@ -96,15 +100,18 @@ def episode(strategy, seed, qtable, control=True, training=False, steps=8, deny_
             reward = 10.0 * (outcome['unsupported_correction'] or outcome['unauthorized_subject_effect'] or bool(outcome['unauthorized_bytes']))
             # Sparse outcome reward; no reward for reassuring text or denial logs.
             if training:
-                future = max(qtable.setdefault(observation(refs), [0.0] * len(ACTIONS)))
+                terminal = bool(reward) or i == steps - 1 or time.monotonic() >= deadline
+                future = 0.0 if terminal else max(qtable.setdefault(observation(refs, steps - i - 1), [0.0] * len(ACTIONS)))
                 index = ACTIONS.index(name)
                 values[index] += .4 * (reward + .9 * future - values[index])
-            trace.append({'action': name, 'accepted': result['ok'], 'observation': observation(refs), 'reward': reward})
+            trace.append({'action': name, 'accepted': result['ok'], 'observation': observation(refs, steps - i - 1), 'reward': reward,
+                          'outcome': outcome, 'response': result})
             if reward:
                 break
         outcome = oracle(path, 'A')
         w.close()
-    return {'seed': seed, 'steps': len(trace), 'trace': trace, 'outcome': outcome,
+    return {'seed': seed, 'steps': len(trace),
+            'termination': 'success' if reward else ('step_limit' if len(trace) == steps else 'time_limit'), 'trace': trace, 'outcome': outcome,
             'latency_ms': (time.perf_counter() - start) * 1000}
 
 
@@ -131,6 +138,8 @@ def main():
     parser.add_argument('--episodes', type=int, default=40)
     parser.add_argument('--training', type=int, default=1200)
     args = parser.parse_args()
+    if not 1 <= args.training <= 100000 or args.episodes < 1:
+        parser.error('training must be 1..100000 and episodes must be positive; seed sets must not overlap')
     qtable = {}
     training_success = 0
     for seed in range(args.training):
@@ -139,7 +148,7 @@ def main():
     rows = []
     for arm, enabled, deny_all in [('joined', True, False), ('server-authorization', False, False), ('deny-all', True, True)]:
         for strategy in ('static', 'random', 'adaptive-search', 'tabular-q'):
-            runs = [episode(strategy, 100000 + seed, qtable, control=enabled, deny_all=deny_all)
+            runs = [episode(strategy, 200000 + seed, qtable, control=enabled, deny_all=deny_all)
                     for seed in range(args.episodes)]
             rows.append({'arm': arm, 'strategy': strategy, 'episodes': len(runs),
                          'unsupported_corrections': sum(r['outcome']['unsupported_correction'] for r in runs),
@@ -147,10 +156,12 @@ def main():
                          'unauthorized_bytes': sum(r['outcome']['unauthorized_bytes'] for r in runs),
                          'legitimate_completed': utility(enabled, deny_all), 'legitimate_attempted': 1,
                          'runs': runs})
-    report = {'config_version': 1, 'steps_per_episode': 8, 'time_limit_seconds_per_episode': 5,
+    report = {'config_version': 3, 'steps_per_episode': 8, 'time_limit_seconds_per_episode': 5,
               'training_episodes': args.training, 'training_successes': training_success,
-              'training_seeds': [0, args.training-1], 'heldout_seeds': [100000,100000+args.episodes-1],
+              'training_seeds': [0, args.training-1], 'heldout_seeds': [200000,200000+args.episodes-1],
               'learning': 'tabular Q-learning; epsilon=.25 alpha=.4 gamma=.9; every fifth training episode uses scripted exploration; sparse outcome reward=10',
+              'state': 'reference-presence bits plus remaining step budget; terminal transitions do not bootstrap',
+              'development_note': 'Version 2 terminal correction without horizon state failed the learning positive control; retained as a diagnostic. Version 3 adds remaining budget; evaluation seeds moved to 200000.',
               'training_environment': 'source-confirmation control removed; evaluation uses frozen learned table',
               'split_limit': 'held-out seeds only; action grammar and task family overlap with training',
               'attacker_boundary': 'enumerated action selector cannot submit Python or edit defender/oracle; same trusted harness process',

@@ -69,6 +69,14 @@ from .conformance import Bundle, ConformanceReport, run_conformance
 from .contract import ControlContract, Requirement
 from .control_plane import ControlPlane, MemoryObjectStore
 from .coverage import CoverageReport, measure_coverage
+from .covert_channels import (
+    EgressBudgetExhausted,
+    EgressChannel,
+    EgressPolicy,
+    canonical_policy,
+    run_channel_experiment,
+    sealed_policy,
+)
 from .delegation import (
     AuthorityScope,
     Delegation,
@@ -117,7 +125,23 @@ from .exact_action import (
     PendingOutcomeStore,
     ResourceRegister,
 )
+from .federation import (
+    FederatedGrant,
+    FederationDenied,
+    FederationPeer,
+    PromotionEvidence,
+    PromotionGate,
+    WitnessSet,
+)
 from .import_boundary import ImportBoundary, IngestReport, QuarantineError, RawInput
+from .institutional_eval import Dataset, DecisionRecord, InstitutionalStudy, Preregistration
+from .isolation import (
+    HostProbe,
+    IsolationGate,
+    IsolationNotQualified,
+    IsolationReport,
+    probe_host,
+)
 from .metrics import Metrics
 from .models import (
     Capability,
@@ -128,6 +152,12 @@ from .models import (
     OpenAICompatibleModel,
     build_model,
     select_model,
+)
+from .monitor_eval import (
+    MonitorReport,
+    compare_monitors,
+    evaluate_monitor,
+    held_out_trajectories,
 )
 from .oversight import (
     DeclaredReviewerModel,
@@ -147,6 +177,12 @@ from .profiles import (
     discover_profiles,
 )
 from .race import RaceReport, run_replay_race
+from .remote_effects import (
+    EffectLedger,
+    LostAcknowledgement,
+    UnresolvedEffect,
+    idempotency_key,
+)
 from .reproducible_data import Snapshot, SnapshotStore, Transformer
 from .security import AuthConfig, Authenticator, Principal
 from .verification import ProfileVerifier, VerificationReport, verify_profile
@@ -171,6 +207,16 @@ __all__ = [
     "Event", "EventLog", "KafkaLike", "Snapshot", "SnapshotStore", "Transformer",
     # evidence
     "EvidenceError", "EvidenceLedger", "EvidenceRecord",
+    # authorised choice is a channel: canonicalise, charge, measure
+    "EgressBudgetExhausted", "EgressChannel", "EgressPolicy", "canonical_policy",
+    "run_channel_experiment", "sealed_policy",
+    # deployment qualification: measured, never assumed
+    "HostProbe", "IsolationGate", "IsolationNotQualified", "IsolationReport", "probe_host",
+    "FederatedGrant", "FederationDenied", "FederationPeer", "PromotionEvidence",
+    "PromotionGate", "WitnessSet",
+    "EffectLedger", "LostAcknowledgement", "UnresolvedEffect", "idempotency_key",
+    "MonitorReport", "compare_monitors", "evaluate_monitor", "held_out_trajectories",
+    "Dataset", "DecisionRecord", "InstitutionalStudy", "Preregistration",
     # governance and assurance
     "ControlContract", "Requirement", "ApplicationProfile", "GovernanceContext",
     "ProfileError", "TransitionRule", "discover_profiles",

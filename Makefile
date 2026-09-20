@@ -61,3 +61,10 @@ docs-check: check-env  ## Verify links, navigation, and published claims
 
 clean:  ## Remove generated caches and package build output
 	$(MAKE) -C $(APP_DIR) clean
+
+.PHONY: all architecture-check
+all: check-env  ## Offline engineering release checks including paper and code synchronization
+	$(MAKE) -C $(APP_DIR) all PYTHON="$(PYTHON)"
+
+architecture-check: check-env  ## Architecture traceability and executed capability contracts
+	$(MAKE) -C $(APP_DIR) architecture-check PYTHON="$(PYTHON)"

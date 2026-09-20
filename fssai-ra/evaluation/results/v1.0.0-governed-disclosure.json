@@ -6,7 +6,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "corporate-confidential-data",
-      "generated_at": "2026-09-14T01:17:44.982243+00:00",
+      "generated_at": "2026-09-15T02:27:44.073322+00:00",
       "summary": {
         "hostile_scenarios": 25,
         "contained_by_arm": {
@@ -581,7 +581,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "financial-consumer-data",
-      "generated_at": "2026-09-14T01:17:45.796531+00:00",
+      "generated_at": "2026-09-15T02:27:44.933657+00:00",
       "summary": {
         "hostile_scenarios": 27,
         "contained_by_arm": {
@@ -1184,7 +1184,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "government-benefits",
-      "generated_at": "2026-09-14T01:17:46.677902+00:00",
+      "generated_at": "2026-09-15T02:27:45.876548+00:00",
       "summary": {
         "hostile_scenarios": 27,
         "contained_by_arm": {
@@ -1788,7 +1788,7 @@
       "schema_version": "1.0",
       "kind": "governed-disclosure",
       "profile_id": "healthcare-record-access",
-      "generated_at": "2026-09-14T01:17:47.425695+00:00",
+      "generated_at": "2026-09-15T02:27:46.678631+00:00",
       "summary": {
         "hostile_scenarios": 27,
         "contained_by_arm": {

@@ -239,7 +239,7 @@ def create_app(
         yield
 
     app = FastAPI(
-        title="FSSAI-RA Control Plane",
+        title="Trust by Construction Control Plane",
         version=__version__,
         description=(
             "Reference API for exact-action proposals, human approval, execution, "

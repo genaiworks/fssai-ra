@@ -1,0 +1,275 @@
+FFFFFF..FF.F.FF.                                                         [100%]
+=================================== FAILURES ===================================
+_______________ test_consent_restore_does_not_resurrect_approval _______________
+
+w = <fssaira.joined_workflow.Workflow object at 0x107de4830>
+
+    def test_consent_restore_does_not_resurrect_approval(w):
+        p, a = approved(w)
+        revoke_restore(w)
+>       assert not call(w, op='execute', proposal=p, approval=a)['ok']
+E       assert not True
+
+tests/test_joined_reaudit.py:34: AssertionError
+_____________ test_consent_restore_does_not_release_cached_result ______________
+
+w = <fssaira.joined_workflow.Workflow object at 0x107de8410>
+
+    def test_consent_restore_does_not_release_cached_result(w):
+        p, a = approved(w)
+        assert call(w, op='execute', proposal=p, approval=a)['ok']
+        revoke_restore(w)
+>       assert not call(w, 'demo-recipient', op='release', proposal=p)['ok']
+E       assert not True
+
+tests/test_joined_reaudit.py:46: AssertionError
+___ test_cached_status_obeys_current_disclosure_authority[execute-consent-0] ___
+
+w = <fssaira.joined_workflow.Workflow object at 0x107de87d0>, kind = 'consent'
+value = 0, operation = 'execute'
+
+    @pytest.mark.parametrize('kind,value', [('consent', 0), ('clock', 101),
+                                            ('policy', 2), ('recipient_version', 2)])
+    @pytest.mark.parametrize('operation', ['execute', 'reconcile'])
+    def test_cached_status_obeys_current_disclosure_authority(w, kind, value, operation):
+        p, a = approved(w)
+        assert call(w, op='execute', proposal=p, approval=a)['ok']
+        assert call(w, 'demo-admin', op='change', kind=kind, value=value)['ok']
+        q = {'op': operation, 'proposal': p}
+        if operation == 'execute':
+            q['approval'] = a
+>       assert call(w, **q) == {'ok': False, 'code': 'DENIED'}
+E       AssertionError: assert {'ok': True, ... 'version': 2} == {'ok': False,...de': 'DENIED'}
+E         
+E         Differing items:
+E         {'ok': True} != {'ok': False}
+E         Left contains 3 more items:
+E         {'replayed': True, 'state': 'committed', 'version': 2}
+E         Right contains 1 more item:
+E         {'code': 'DENIED'}
+E         Use -v to get more diff
+
+tests/test_joined_reaudit.py:60: AssertionError
+___ test_cached_status_obeys_current_disclosure_authority[execute-clock-101] ___
+
+w = <fssaira.joined_workflow.Workflow object at 0x107da1e00>, kind = 'clock'
+value = 101, operation = 'execute'
+
+    @pytest.mark.parametrize('kind,value', [('consent', 0), ('clock', 101),
+                                            ('policy', 2), ('recipient_version', 2)])
+    @pytest.mark.parametrize('operation', ['execute', 'reconcile'])
+    def test_cached_status_obeys_current_disclosure_authority(w, kind, value, operation):
+        p, a = approved(w)
+        assert call(w, op='execute', proposal=p, approval=a)['ok']
+        assert call(w, 'demo-admin', op='change', kind=kind, value=value)['ok']
+        q = {'op': operation, 'proposal': p}
+        if operation == 'execute':
+            q['approval'] = a
+>       assert call(w, **q) == {'ok': False, 'code': 'DENIED'}
+E       AssertionError: assert {'ok': True, ... 'version': 2} == {'ok': False,...de': 'DENIED'}
+E         
+E         Differing items:
+E         {'ok': True} != {'ok': False}
+E         Left contains 3 more items:
+E         {'replayed': True, 'state': 'committed', 'version': 2}
+E         Right contains 1 more item:
+E         {'code': 'DENIED'}
+E         Use -v to get more diff
+
+tests/test_joined_reaudit.py:60: AssertionError
+___ test_cached_status_obeys_current_disclosure_authority[execute-policy-2] ____
+
+w = <fssaira.joined_workflow.Workflow object at 0x107da2ea0>, kind = 'policy'
+value = 2, operation = 'execute'
+
+    @pytest.mark.parametrize('kind,value', [('consent', 0), ('clock', 101),
+                                            ('policy', 2), ('recipient_version', 2)])
+    @pytest.mark.parametrize('operation', ['execute', 'reconcile'])
+    def test_cached_status_obeys_current_disclosure_authority(w, kind, value, operation):
+        p, a = approved(w)
+        assert call(w, op='execute', proposal=p, approval=a)['ok']
+        assert call(w, 'demo-admin', op='change', kind=kind, value=value)['ok']
+        q = {'op': operation, 'proposal': p}
+        if operation == 'execute':
+            q['approval'] = a
+>       assert call(w, **q) == {'ok': False, 'code': 'DENIED'}
+E       AssertionError: assert {'ok': True, ... 'version': 2} == {'ok': False,...de': 'DENIED'}
+E         
+E         Differing items:
+E         {'ok': True} != {'ok': False}
+E         Left contains 3 more items:
+E         {'replayed': True, 'state': 'committed', 'version': 2}
+E         Right contains 1 more item:
+E         {'code': 'DENIED'}
+E         Use -v to get more diff
+
+tests/test_joined_reaudit.py:60: AssertionError
+_ test_cached_status_obeys_current_disclosure_authority[execute-recipient_version-2] _
+
+w = <fssaira.joined_workflow.Workflow object at 0x107deca70>
+kind = 'recipient_version', value = 2, operation = 'execute'
+
+    @pytest.mark.parametrize('kind,value', [('consent', 0), ('clock', 101),
+                                            ('policy', 2), ('recipient_version', 2)])
+    @pytest.mark.parametrize('operation', ['execute', 'reconcile'])
+    def test_cached_status_obeys_current_disclosure_authority(w, kind, value, operation):
+        p, a = approved(w)
+        assert call(w, op='execute', proposal=p, approval=a)['ok']
+        assert call(w, 'demo-admin', op='change', kind=kind, value=value)['ok']
+        q = {'op': operation, 'proposal': p}
+        if operation == 'execute':
+            q['approval'] = a
+>       assert call(w, **q) == {'ok': False, 'code': 'DENIED'}
+E       AssertionError: assert {'ok': True, ... 'version': 2} == {'ok': False,...de': 'DENIED'}
+E         
+E         Differing items:
+E         {'ok': True} != {'ok': False}
+E         Left contains 3 more items:
+E         {'replayed': True, 'state': 'committed', 'version': 2}
+E         Right contains 1 more item:
+E         {'code': 'DENIED'}
+E         Use -v to get more diff
+
+tests/test_joined_reaudit.py:60: AssertionError
+__ test_cached_status_obeys_current_disclosure_authority[reconcile-policy-2] ___
+
+w = <fssaira.joined_workflow.Workflow object at 0x10744cd50>, kind = 'policy'
+value = 2, operation = 'reconcile'
+
+    @pytest.mark.parametrize('kind,value', [('consent', 0), ('clock', 101),
+                                            ('policy', 2), ('recipient_version', 2)])
+    @pytest.mark.parametrize('operation', ['execute', 'reconcile'])
+    def test_cached_status_obeys_current_disclosure_authority(w, kind, value, operation):
+        p, a = approved(w)
+        assert call(w, op='execute', proposal=p, approval=a)['ok']
+        assert call(w, 'demo-admin', op='change', kind=kind, value=value)['ok']
+        q = {'op': operation, 'proposal': p}
+        if operation == 'execute':
+            q['approval'] = a
+>       assert call(w, **q) == {'ok': False, 'code': 'DENIED'}
+E       AssertionError: assert {'ok': True, ...'version': 2}} == {'ok': False,...de': 'DENIED'}
+E         
+E         Differing items:
+E         {'ok': True} != {'ok': False}
+E         Left contains 2 more items:
+E         {'effect': {'value': 'B', 'version': 2}, 'state': 'committed'}
+E         Right contains 1 more item:
+E         {'code': 'DENIED'}
+E         Use -v to get more diff
+
+tests/test_joined_reaudit.py:60: AssertionError
+_ test_cached_status_obeys_current_disclosure_authority[reconcile-recipient_version-2] _
+
+w = <fssaira.joined_workflow.Workflow object at 0x107e28550>
+kind = 'recipient_version', value = 2, operation = 'reconcile'
+
+    @pytest.mark.parametrize('kind,value', [('consent', 0), ('clock', 101),
+                                            ('policy', 2), ('recipient_version', 2)])
+    @pytest.mark.parametrize('operation', ['execute', 'reconcile'])
+    def test_cached_status_obeys_current_disclosure_authority(w, kind, value, operation):
+        p, a = approved(w)
+        assert call(w, op='execute', proposal=p, approval=a)['ok']
+        assert call(w, 'demo-admin', op='change', kind=kind, value=value)['ok']
+        q = {'op': operation, 'proposal': p}
+        if operation == 'execute':
+            q['approval'] = a
+>       assert call(w, **q) == {'ok': False, 'code': 'DENIED'}
+E       AssertionError: assert {'ok': True, ...'version': 2}} == {'ok': False,...de': 'DENIED'}
+E         
+E         Differing items:
+E         {'ok': True} != {'ok': False}
+E         Left contains 2 more items:
+E         {'effect': {'value': 'B', 'version': 2}, 'state': 'committed'}
+E         Right contains 1 more item:
+E         {'code': 'DENIED'}
+E         Use -v to get more diff
+
+tests/test_joined_reaudit.py:60: AssertionError
+_________ test_invalid_checkpoint_is_not_accepted_or_raised[witness0] __________
+
+w = <fssaira.joined_workflow.Workflow object at 0x107dcaf30>
+witness = {'seq': 0, 'head': '0000000000000000000000000000000000000000000000000000000000000000'}
+
+    @pytest.mark.parametrize('witness', [{'seq': 0, 'head': '0' * 64},
+                                          {'seq': True, 'head': 'bad'}, {},
+                                          {'seq': '1', 'head': 'bad'}])
+    def test_invalid_checkpoint_is_not_accepted_or_raised(w, witness):
+>       assert w.verify(witness) is False
+E       AssertionError: assert True is False
+E        +  where True = verify({'seq': 0, 'head': '0000000000000000000000000000000000000000000000000000000000000000'})
+E        +    where verify = <fssaira.joined_workflow.Workflow object at 0x107dcaf30>.verify
+
+tests/test_joined_reaudit.py:75: AssertionError
+_________ test_invalid_checkpoint_is_not_accepted_or_raised[witness2] __________
+
+w = <fssaira.joined_workflow.Workflow object at 0x107490910>, witness = {}
+
+    @pytest.mark.parametrize('witness', [{'seq': 0, 'head': '0' * 64},
+                                          {'seq': True, 'head': 'bad'}, {},
+                                          {'seq': '1', 'head': 'bad'}])
+    def test_invalid_checkpoint_is_not_accepted_or_raised(w, witness):
+>       assert w.verify(witness) is False
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_joined_reaudit.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fssaira.joined_workflow.Workflow object at 0x107490910>, witness = {}
+
+    def verify(self, witness):
+        previous, last = "0" * 64, None
+        for row in self.db.execute("SELECT * FROM evidence ORDER BY seq"):
+            head = hmac.new(bytes.fromhex(self.meta("key")), (previous + row["body"]).encode(), hashlib.sha256).hexdigest()
+            if row["previous"] != previous or row["head"] != head:
+                return False
+            previous, last = head, row
+>           if row["seq"] == witness["seq"] and head != witness["head"]:
+                             ^^^^^^^^^^^^^^
+E           KeyError: 'seq'
+
+src/fssaira/joined_workflow.py:345: KeyError
+_________ test_invalid_checkpoint_is_not_accepted_or_raised[witness3] __________
+
+w = <fssaira.joined_workflow.Workflow object at 0x107d23ad0>
+witness = {'seq': '1', 'head': 'bad'}
+
+    @pytest.mark.parametrize('witness', [{'seq': 0, 'head': '0' * 64},
+                                          {'seq': True, 'head': 'bad'}, {},
+                                          {'seq': '1', 'head': 'bad'}])
+    def test_invalid_checkpoint_is_not_accepted_or_raised(w, witness):
+>       assert w.verify(witness) is False
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_joined_reaudit.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fssaira.joined_workflow.Workflow object at 0x107d23ad0>
+witness = {'seq': '1', 'head': 'bad'}
+
+    def verify(self, witness):
+        previous, last = "0" * 64, None
+        for row in self.db.execute("SELECT * FROM evidence ORDER BY seq"):
+            head = hmac.new(bytes.fromhex(self.meta("key")), (previous + row["body"]).encode(), hashlib.sha256).hexdigest()
+            if row["previous"] != previous or row["head"] != head:
+                return False
+            previous, last = head, row
+            if row["seq"] == witness["seq"] and head != witness["head"]:
+                return False
+>       return last is not None and last["seq"] >= witness["seq"]
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: '>=' not supported between instances of 'int' and 'str'
+
+src/fssaira/joined_workflow.py:347: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_joined_reaudit.py::test_consent_restore_does_not_resurrect_approval
+FAILED tests/test_joined_reaudit.py::test_consent_restore_does_not_release_cached_result
+FAILED tests/test_joined_reaudit.py::test_cached_status_obeys_current_disclosure_authority[execute-consent-0]
+FAILED tests/test_joined_reaudit.py::test_cached_status_obeys_current_disclosure_authority[execute-clock-101]
+FAILED tests/test_joined_reaudit.py::test_cached_status_obeys_current_disclosure_authority[execute-policy-2]
+FAILED tests/test_joined_reaudit.py::test_cached_status_obeys_current_disclosure_authority[execute-recipient_version-2]
+FAILED tests/test_joined_reaudit.py::test_cached_status_obeys_current_disclosure_authority[reconcile-policy-2]
+FAILED tests/test_joined_reaudit.py::test_cached_status_obeys_current_disclosure_authority[reconcile-recipient_version-2]
+FAILED tests/test_joined_reaudit.py::test_invalid_checkpoint_is_not_accepted_or_raised[witness0]
+FAILED tests/test_joined_reaudit.py::test_invalid_checkpoint_is_not_accepted_or_raised[witness2]
+FAILED tests/test_joined_reaudit.py::test_invalid_checkpoint_is_not_accepted_or_raised[witness3]
+11 failed, 5 passed in 0.20s

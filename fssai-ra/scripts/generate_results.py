@@ -391,7 +391,7 @@ def generate(output_dir: Path, tag: str) -> dict:
             "corpus_size": corpus["corpus_size"],
             "corpus_live": corpus["live_challenges"],
             "corpus_contained_arm_a": corpus["contained_by_arm"]["A · unguarded"],
-            "corpus_contained_arm_c": corpus["contained_by_arm"]["C · FSSAI-RA"],
+            "corpus_contained_arm_c": corpus["contained_by_arm"]["C · This work"],
             "corpus_externally_contributed": len(corpus["externally_contributed"]),
             # governed disclosure: the read path, across packs that declare it
             "disclosure_packs": len(disclosure_reports),
@@ -469,7 +469,7 @@ def generate(output_dir: Path, tag: str) -> dict:
                 oversight_policy.declared_consistency()["consistent"]
             ),
             "corpus_fully_contained": (
-                corpus["contained_by_arm"]["C · FSSAI-RA"] == corpus["live_challenges"]
+                corpus["contained_by_arm"]["C · This work"] == corpus["live_challenges"]
             ),
             "delegation_chains_contained_and_benign_completes": delegation.holds,
             "delegation_invariants_all_load_bearing": all(

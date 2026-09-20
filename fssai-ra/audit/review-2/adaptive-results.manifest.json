@@ -1,0 +1,4 @@
+{
+  "sha256": "895ef0ca4e5ee774c01e9e34b0789c08d82532d6a217ba3a74129de6f637cf73",
+  "limitation": "co-located digest detects accidental changes, not a malicious replacement of both files"
+}

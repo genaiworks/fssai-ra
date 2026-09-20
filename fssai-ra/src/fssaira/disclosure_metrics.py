@@ -5,6 +5,9 @@ if it measures the right things from the start. Every indicator here is computed
 from the hash-chained evidence the gate already writes, so a pilot needs no extra
 logging, and no indicator requires reading a protected value.
 
+Authority rechecks before an action are reported separately from reads, so a
+recheck never inflates the count of disclosures.
+
 What these numbers can show: how often access is refused and why, how quickly
 emergency access is reviewed, how often a model claims a lower label than its
 inputs, how often value-level labelling falls back to the session, and whether
@@ -98,6 +101,14 @@ def disclosure_metrics(records: Iterable) -> dict:
                 "median": round(statistics.median(latencies), 3) if latencies else None,
                 "max": round(max(latencies), 3) if latencies else None,
             },
+        },
+        "rechecks": {
+            "authorized": sum(1 for r in rows if r["kind"] == "authorization_recheck"
+                              and r["payload"].get("authorized")),
+            "refused_by_code": dict(sorted(Counter(
+                r["payload"].get("code", "UNKNOWN") for r in rows
+                if r["kind"] == "authorization_recheck" and not r["payload"].get("authorized")
+            ).items())),
         },
         "revocations": sum(1 for r in rows if r["kind"] == "disclosure_grant_revoked"),
         "consent_withdrawals": sum(1 for r in rows if r["kind"] == "consent_withdrawn"),

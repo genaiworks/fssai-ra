@@ -828,5 +828,30 @@
       "assumptions": "trusted parser, policy/source/token configuration, runtime, host and database; synthetic identities",
       "limitation": "bounded fixtures; test parameter scope only; no hostile-code isolation or real human correctness claim"
     }
-  ]
+  ],
+  "latest_verification": {
+    "date": "2026-09-14",
+    "author_checkout_before_latest_update": "59794bf0341e59a8ac67a1a0770e659c1ed32876",
+    "executed_suite": {
+      "tests": 963,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "junit": "audit/latest-executed-tests.xml",
+    "contemporary_mechanisms": {
+      "paper_sections": [
+        "2.1",
+        "6.3",
+        "6.4",
+        "6.5",
+        "7.10"
+      ],
+      "implementation": "src/fssaira/joined_workflow.py",
+      "tests": "tests/test_modern_threat_patterns.py",
+      "cases": "audit/modern-threats.json",
+      "result": "18 passed; 16 denial cases each followed by successful legitimate execution and release",
+      "limitations": "Typed JSON/SQLite tests only; twelve deployment patterns are obligations, not demonstrated network or operating-system isolation."
+    }
+  }
 }

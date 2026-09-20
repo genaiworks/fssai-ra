@@ -1,5 +1,7 @@
 # FSSAI-RA
 
+**TBC v11 implementation:** [Run the SDK and Guardian](fssai-ra/docs/TBC_SDK.md). The supplied paper is preserved unchanged and mapped to executable mechanisms, tests and explicit deployment boundaries.
+
 **2026-09-14 adversarial revision:** [Run the durable joined demo and inspect audit evidence](fssai-ra/audit/QUICKSTART.md). Synthetic SQLite workflow, independent source confirmation, exact approval, release and appeal; no paid API or install required for this demo. Earlier component results do not establish deployment isolation.
 
 [![Tests](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/tests.yml)
@@ -93,7 +95,7 @@ fssaira init my-domain                            # scaffold your own
 ```
 
 No network, no model weights, no GPU. Release `v1.0.0` contains 187 deterministic
-tests; current source has 601 deterministic tests. Both include a bounded model checker over the
+tests; an earlier checked-in benchmark snapshot records 601 deterministic tests. Run pytest for the current total. The source includes a bounded model checker over the
 profile's declared authority space, a portable conformance suite, and versioned
 machine-readable results. These establish specified properties in a synthetic
 environment; they are **not** a security certification or evidence of production

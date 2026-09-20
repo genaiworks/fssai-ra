@@ -6,7 +6,7 @@
 
 ## What this platform provides
 
-FSSAI-RA is a reference platform for institutions that want AI assistance without
+Trust by Construction is a reference platform for institutions that want AI assistance without
 giving a model unchecked institutional authority. The base framework supplies a
 working control plane, a low-side import gateway, durable state adapters, event
 transport, reproducible data jobs, evidence recording, recovery behavior, tests,

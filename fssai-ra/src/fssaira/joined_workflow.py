@@ -32,8 +32,18 @@ def strict_json(raw):
         return out
     if len(raw.encode()) > 16384:
         raise ValueError("REQUEST_TOO_LARGE")
-    return json.loads(raw, object_pairs_hook=pairs,
-                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError("NONFINITE")))
+    value = json.loads(raw, object_pairs_hook=pairs,
+                       parse_constant=lambda _: (_ for _ in ()).throw(ValueError("NONFINITE")))
+    pending = [(value, 0)]
+    while pending:
+        item, depth = pending.pop()
+        if depth > 64:
+            raise ValueError("REQUEST_TOO_DEEP")
+        if isinstance(item, dict):
+            pending.extend((v, depth + 1) for v in item.values())
+        elif isinstance(item, list):
+            pending.extend((v, depth + 1) for v in item)
+    return value
 
 
 class Denied(Exception):
@@ -52,7 +62,9 @@ PACKS = {
 
 
 class Workflow:
-    def __init__(self, path, *, pack="education", profile="teaching", control=True):
+    def __init__(self, path, *, pack="education", profile="teaching", control=True, mediator="legacy"):
+        if mediator not in ("legacy", "tbc"):
+            raise ValueError("UNKNOWN_MEDIATOR")
         if profile != "teaching":
             raise ValueError("NOT_QUALIFIED_FOR_OPERATIONAL_USE")
         if pack not in PACKS:
@@ -74,8 +86,8 @@ class Workflow:
         CREATE TABLE IF NOT EXISTS sinks(id INTEGER PRIMARY KEY, recipient TEXT, bytes BLOB, proposal TEXT);
         CREATE TABLE IF NOT EXISTS evidence(seq INTEGER PRIMARY KEY, previous TEXT, body TEXT, head TEXT);
         ''')
+        self.db.execute("BEGIN IMMEDIATE")
         if not self.db.execute("SELECT 1 FROM meta WHERE k='pack'").fetchone():
-            self.db.execute("BEGIN IMMEDIATE")
             for k, v in {"pack": pack, "policy": "1", "recipient_version": "1", "clock": "0",
                          "key": secrets.token_hex(32)}.items():
                 self.db.execute("INSERT INTO meta VALUES(?,?)", (k, v))
@@ -86,9 +98,20 @@ class Workflow:
                             ("root", "advisor", "", "root", "campus", "s1", "s1", "correction",
                              canonical(["read", "propose", "execute", "release", "delegate"]), 20, 0))
             self.event("seed", {"pack": pack, "synthetic": True})
-            self.db.execute("COMMIT")
         elif self.meta("pack") != pack:
+            self.db.execute("ROLLBACK")
+            self.db.close()
             raise ValueError("PACK_MISMATCH")
+        stored_mediator = self.db.execute("SELECT v FROM meta WHERE k='mediator'").fetchone()
+        if stored_mediator and stored_mediator[0] != mediator:
+            self.db.execute("ROLLBACK")
+            self.db.close()
+            raise ValueError("MEDIATOR_MISMATCH")
+        self.db.execute("INSERT OR IGNORE INTO meta VALUES('mediator',?)", (mediator,))
+        # Add an authorization epoch to older teaching stores. Older contexts lack
+        # the binding and are intentionally invalidated rather than silently upgraded.
+        self.db.execute("INSERT OR IGNORE INTO meta VALUES('consent_version','1')")
+        self.db.execute("COMMIT")
 
     def close(self):
         self.db.close()
@@ -145,9 +168,19 @@ class Workflow:
             self.db.execute("UPDATE grants SET remaining=remaining-1 WHERE id=?", (g["id"],))
         return chain[0]
 
-    def current(self, context):
+    def current_authority(self, context):
         r = self.record(context["tenant"], context["subject"])
-        if (not r["consent"] or r["version"] != context["version"] or
+        if (not r["consent"] or
+                context.get("consent_version") != self.meta("consent_version") or
+                self.meta("policy") != context["policy"] or
+                self.meta("recipient_version") != context["recipient_version"] or
+                int(self.meta("clock")) > context["expires"]):
+            raise Denied("STALE_AUTHORITY")
+        return r
+
+    def current(self, context):
+        r = self.current_authority(context)
+        if (r["version"] != context["version"] or
                 r["source_version"] != context["source_version"] or
                 self.meta("policy") != context["policy"] or
                 self.meta("recipient_version") != context["recipient_version"] or
@@ -170,7 +203,7 @@ class Workflow:
             result = self.handle(*identity, request)
             self.db.execute("COMMIT")
             return {"ok": True, **result}
-        except (Denied, ValueError, KeyError, TypeError, sqlite3.Error):
+        except (Denied, ValueError, KeyError, TypeError, RecursionError, sqlite3.Error):
             if self.db.in_transaction:
                 self.db.execute("ROLLBACK")
             # Never echo untrusted values, exception messages or synthetic rationales.
@@ -197,7 +230,8 @@ class Workflow:
                 raise Denied("CONSENT_REVOKED")
             c = {"tenant": tenant, "subject": subject, "actor": actor, "grant": gid,
                  "version": r["version"], "source_version": r["source_version"], "policy": self.meta("policy"),
-                 "recipient_version": self.meta("recipient_version"), "expires": int(self.meta("clock")) + 100,
+                 "recipient_version": self.meta("recipient_version"),
+                 "consent_version": self.meta("consent_version"), "expires": int(self.meta("clock")) + 100,
                  "value": r["value"], "supported": r["source_value"], "purpose": "correction"}
             cid = self.put("context", c)
             self.event("context", {"context": cid, "digest": digest(c), "actor": actor})
@@ -231,6 +265,7 @@ class Workflow:
                 if type(q["value"]) is not int or q["value"] not in (0, 1):
                     raise Denied("INVALID_CONSENT")
                 self.db.execute("UPDATE records SET consent=? WHERE tenant='campus' AND subject='s1'", (q["value"],))
+                self.db.execute("UPDATE meta SET v=CAST(v AS INTEGER)+1 WHERE k='consent_version'")
             elif q["kind"] == "source":
                 if q["value"] not in (self.pack["before"], self.pack["supported"], self.pack["wrong"]):
                     raise Denied("UNKNOWN_VALUE")
@@ -282,9 +317,7 @@ class Workflow:
                 raise Denied("RECONCILIATION_SCOPE")
             if actor == c["actor"]:
                 self.grant(c["grant"], actor, "execute", c["tenant"], c["subject"])
-                r = self.record(c["tenant"], c["subject"])
-                if not r["consent"] or int(self.meta("clock")) > c["expires"]:
-                    raise Denied("RECONCILIATION_REVOKED")
+                self.current_authority(c)
             e = self.db.execute("SELECT value,version FROM effects WHERE id=?", (q["proposal"],)).fetchone()
             return {"state": "committed" if e else "not_dispatched", "effect": dict(e) if e else None}
         if op == "execute":
@@ -294,6 +327,7 @@ class Workflow:
             self.grant(c["grant"], actor, "execute", c["tenant"], c["subject"])
             old = self.db.execute("SELECT * FROM effects WHERE id=?", (q["proposal"],)).fetchone()
             if old:
+                self.current_authority(c)
                 return {"state": "committed", "replayed": True, "version": old["version"]}
             r = self.current(c)
             self.db.execute("UPDATE records SET value=?,version=version+1 WHERE tenant=? AND subject=?",
@@ -336,15 +370,21 @@ class Workflow:
         return dict(row)
 
     def verify(self, witness):
-        previous, last = "0" * 64, None
+        if (not isinstance(witness, dict) or set(witness) != {"seq", "head"} or
+                type(witness["seq"]) is not int or witness["seq"] < 1 or
+                not isinstance(witness["head"], str) or len(witness["head"]) != 64):
+            return False
+        previous, sequence, witnessed = "0" * 64, 0, False
         for row in self.db.execute("SELECT * FROM evidence ORDER BY seq"):
             head = hmac.new(bytes.fromhex(self.meta("key")), (previous + row["body"]).encode(), hashlib.sha256).hexdigest()
-            if row["previous"] != previous or row["head"] != head:
+            if row["seq"] != sequence + 1 or row["previous"] != previous or row["head"] != head:
                 return False
-            previous, last = head, row
-            if row["seq"] == witness["seq"] and head != witness["head"]:
-                return False
-        return last is not None and last["seq"] >= witness["seq"]
+            previous, sequence = head, row["seq"]
+            if sequence == witness["seq"]:
+                if not hmac.compare_digest(head, witness["head"]):
+                    return False
+                witnessed = True
+        return witnessed
 
 
 def call(world, token="demo-advisor", **request):

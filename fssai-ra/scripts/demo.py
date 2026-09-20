@@ -319,8 +319,8 @@ def main() -> int:
 
     stage = Stage(pause=0.0 if args.fast else 0.7)
     print()
-    print(bold("  FSSAI-RA — a model may propose an action."))
-    print(bold("            It cannot manufacture the authority to execute it."))
+    print(bold("  Trust by Construction — a model may propose an action."))
+    print(bold("                          It cannot manufacture the authority to execute it."))
     print(dim("\n  Fully offline. No network, no model weights, no GPU."))
 
     acts = [ACTS[args.act - 1]] if args.act else list(ACTS)

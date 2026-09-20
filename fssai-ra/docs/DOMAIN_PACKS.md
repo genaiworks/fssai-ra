@@ -4,7 +4,7 @@
 >
 > **Recommended next:** Choose a pack below, run `fssaira profiles`, then follow [`EXTENDING.md`](EXTENDING.md) to build and test your own.
 
-FSSAI-RA is a secure **authority and data-governance kernel**, not an education
+Trust by Construction is a secure **authority and data-governance kernel**, not an education
 application. Education is one worked context. The reusable core controls who may
 request an exact state change, who may authorize it, which evidence version was
 reviewed, whether the resource changed meanwhile, whether a retry is a replay,

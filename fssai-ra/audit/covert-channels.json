@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "kind": "covert_channel_ablation",
+  "secret_bits": 16,
+  "secrets_per_arm": 65536,
+  "approved_destinations": 8,
+  "approved_paths": 4,
+  "arms": {
+    "no_control": {
+      "attempted_bits": 16.0,
+      "conveyed_bits": 16.0,
+      "distinct_observable_traces": 65536,
+      "bits_per_release": 18.8138,
+      "task_capacity_bits": 1000005.7957,
+      "within_declared_budget": true,
+      "tasks_escalated_to_a_human": 0,
+      "adversarial_tasks_escalated_fraction": 0.0,
+      "benign_releases_completed": 2,
+      "benign_workflow_escalated": false,
+      "canonicalised_dimensions": [],
+      "fixed_releases": 0
+    },
+    "canonicalised": {
+      "attempted_bits": 16.0,
+      "conveyed_bits": 1.0,
+      "distinct_observable_traces": 2,
+      "bits_per_release": 4.0,
+      "task_capacity_bits": 9.585,
+      "within_declared_budget": true,
+      "tasks_escalated_to_a_human": 64512,
+      "adversarial_tasks_escalated_fraction": 0.9844,
+      "benign_releases_completed": 2,
+      "benign_workflow_escalated": false,
+      "canonicalised_dimensions": [
+        "destination",
+        "path"
+      ],
+      "fixed_releases": 0
+    },
+    "sealed": {
+      "attempted_bits": 16.0,
+      "conveyed_bits": 0.0,
+      "distinct_observable_traces": 1,
+      "bits_per_release": 0.0,
+      "task_capacity_bits": 0.0,
+      "within_declared_budget": true,
+      "tasks_escalated_to_a_human": 64512,
+      "adversarial_tasks_escalated_fraction": 0.9844,
+      "benign_releases_completed": 2,
+      "benign_workflow_escalated": false,
+      "canonicalised_dimensions": [
+        "destination",
+        "path"
+      ],
+      "fixed_releases": 2
+    }
+  },
+  "reading": "conveyed_bits is the base-two logarithm of the number of distinct observable traces, so it assumes a perfect observer and an optimal decoder. The benign columns are the utility baseline: a control that stopped the adversary by stopping every release would show zero completed benign releases and would not be a result.",
+  "limits": [
+    "one encoder under three policies; not a proof that no encoder does better",
+    "bounds the mediated release interface, not any channel outside it",
+    "content is excluded because release escrow already fixes the bytes",
+    "the escalation fraction is a real availability cost, not an artefact"
+  ]
+}

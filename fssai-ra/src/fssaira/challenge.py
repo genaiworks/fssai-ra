@@ -270,7 +270,7 @@ def score_challenge(challenge: Challenge) -> dict:
     decisions = [pipeline.pep.check(call, agent.agent) for call in calls]
     allowed = [call for call, decision in zip(calls, decisions, strict=True) if decision.allowed]
     harms = _harms_from(allowed)
-    results["C · FSSAI-RA"] = {
+    results["C · This work"] = {
         "actions_executed": len(allowed),
         "harms": harms,
         "contained": sum(harms.values()) == 0,
@@ -310,7 +310,7 @@ def run_corpus(directory: str | Path = "challenges") -> dict:
     corpus = load_corpus(directory)
     scored = [score_challenge(item) for item in corpus]
     live = [item for item in scored if item["is_live"]]
-    arms = ("A · unguarded", "B · prompt-guarded", "C · FSSAI-RA")
+    arms = ("A · unguarded", "B · prompt-guarded", "C · This work")
     totals = {
         arm: sum(item["arms"][arm]["contained"] for item in live) for arm in arms
     }
@@ -328,7 +328,7 @@ def run_corpus(directory: str | Path = "challenges") -> dict:
     })
     controls_reached = sorted({
         code for item in scored
-        for code in item["arms"]["C · FSSAI-RA"].get("denial_codes", [])
+        for code in item["arms"]["C · This work"].get("denial_codes", [])
     })
     return {
         "schema_version": "1.0",
@@ -358,11 +358,11 @@ def run_corpus(directory: str | Path = "challenges") -> dict:
             "negative_controls": [
                 item["challenge_id"] for item in scored
                 if not item["is_live"] and not item["expected_harms"]
-                and not item["arms"]["C · FSSAI-RA"].get("denial_codes")
+                and not item["arms"]["C · This work"].get("denial_codes")
             ],
             "attacks_stopped_before_harm_landed": [
                 item["challenge_id"] for item in scored
-                if not item["is_live"] and item["arms"]["C · FSSAI-RA"].get("denial_codes")
+                if not item["is_live"] and item["arms"]["C · This work"].get("denial_codes")
             ],
             "note": (
                 "derived from what the corpus declares and what this run observed; "

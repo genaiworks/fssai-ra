@@ -23,3 +23,6 @@ fssai-ra/evaluation/results/local.json
 
 # OS
 .DS_Store
+
+# Unpublished manuscripts and paper build artifacts
+/fssai-ra/paper/

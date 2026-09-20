@@ -20,7 +20,7 @@ attacks. What it lacks is an enforcement point independent of the model, a
 binding between a human approval and an exact proposal, and any record the agent
 cannot write.
 
-**Arm C — FSSAI-RA.** The full architecture.
+**Arm C — this work.** The full architecture.
 
 Two properties make the comparison honest:
 
@@ -271,7 +271,7 @@ class ArchitectureComparison:
         return result
 
     def run_fssaira(self) -> ArmResult:
-        result = ArmResult("C · FSSAI-RA", "independent enforcement point, catalogue, named human, guarded evidence")
+        result = ArmResult("C · This work", "independent enforcement point, catalogue, named human, guarded evidence")
         total_records = 0
         for attack in ATTACKS:
             pipeline = FSSAIRAPipeline()

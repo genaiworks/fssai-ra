@@ -1,0 +1,62 @@
+[
+  {
+    "claim": "Delegation cannot enlarge authority",
+    "mechanism": "Attenuated lease; ancestor intersection",
+    "status": "BUILT",
+    "evidence": "test_lease_cannot_expand_any_authority_axis"
+  },
+  {
+    "claim": "Parallel siblings cannot multiply a budget",
+    "mechanism": "One task envelope; atomic reservation",
+    "status": "BUILT",
+    "evidence": "test_aggregate_sibling_budget_does_not_multiply"
+  },
+  {
+    "claim": "Separate processes cannot race a commit",
+    "mechanism": "Serialised authorisation and commit",
+    "status": "BUILT",
+    "evidence": "test_independent_processes_serialize_budget_and_release"
+  },
+  {
+    "claim": "Composition cannot erase a restriction",
+    "mechanism": "Bound source labels; recipient checks",
+    "status": "BUILT",
+    "evidence": "test_potential_source_to_sink_path_denied_even_for_clean_message"
+  },
+  {
+    "claim": "Memory cannot carry a restriction away",
+    "mechanism": "Reauthorised memory; restart persistence",
+    "status": "BUILT",
+    "evidence": "test_restart_preserves_memory_restrictions_budget_and_rejects_legacy_adapter"
+  },
+  {
+    "claim": "Revocation invalidates in-flight authority",
+    "mechanism": "Task epoch revalidated at every use",
+    "status": "BUILT",
+    "evidence": "test_effect_approval_substitution_and_guardian_epoch_invalidation"
+  },
+  {
+    "claim": "A release cannot resume after revocation",
+    "mechanism": "Per-chunk reauthorisation",
+    "status": "BUILT",
+    "evidence": "test_stream_reauthorizes_every_chunk_and_bulk_cannot_bypass"
+  },
+  {
+    "claim": "Checking each step is not checking the sequence",
+    "mechanism": "Stateful harness against a reference model",
+    "status": "BUILT",
+    "evidence": "test_stateful_sequences_hold_and_find_counterexamples_when_a_control_is_removed"
+  },
+  {
+    "claim": "The same bound holds across distributed workers",
+    "mechanism": "Shared epoch and reservations",
+    "status": "PROPOSED",
+    "evidence": "Evaluation plan, section 4"
+  },
+  {
+    "claim": "A delivered external effect can be undone",
+    "mechanism": "Adapter reconciliation only",
+    "status": "NOT CLAIMED",
+    "evidence": "Stated limit"
+  }
+]

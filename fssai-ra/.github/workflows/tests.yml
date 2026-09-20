@@ -1,0 +1,64 @@
+name: Tests
+
+# The README carries a badge for this workflow, so the workflow has to exist and
+# has to run the same check a reviewer runs locally: `make all`. Anything less
+# makes the badge a claim without evidence, which is the failure mode this
+# repository is about.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: fssai-ra
+
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+
+      - name: Offline release check
+        # Lint, the full regression suite, preserved-paper provenance, executed
+        # capability contracts, manuscript bindings, result reproduction and the
+        # deployment qualification decision.
+        run: make all PYTHON=python
+
+      - name: Confirm the runner is not mistaken for a production deployment
+        # A CI runner must report `reference`. If this ever prints `production`,
+        # the qualification logic is wrong and the build should fail loudly.
+        run: |
+          python scripts/qualify_deployment.py --operator ci-runner > qualification.txt
+          cat qualification.txt
+          grep -q 'promotion: reference' qualification.txt
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-py${{ matrix.python-version }}
+          path: |
+            fssai-ra/audit/architecture/full-tests.xml
+            fssai-ra/audit/architecture/results.json
+            fssai-ra/audit/qualification/
+          if-no-files-found: warn
+          retention-days: 14

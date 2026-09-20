@@ -1,0 +1,140 @@
+{
+  "as_of": "2026-09-19",
+  "subject": "Publicly reported July 2026 Hugging Face / OpenAI agent intrusion",
+  "scope": "Each stage is mapped to an architectural disposition. A mediated stage names a local test over the declared interface. This is an architectural reading of a public disclosure, not an incident reconstruction, and no stage claims the incident would have been prevented.",
+  "sources": [
+    "Hugging Face, Security incident disclosure - July 2026",
+    "Hugging Face, Anatomy of a frontier lab agent intrusion: a technical timeline of the July 2026 incident",
+    "OpenAI, The Hugging Face incident and the road ahead"
+  ],
+  "dispositions": {
+    "mediated": "A declared-interface control denies the analogous request in this repository, with an executed test.",
+    "deployment": "The architecture requires the property, the kernel expresses it as a contract, and only a qualified deployment can establish it.",
+    "out_of_scope": "The architecture assumes this property from the host platform and does not claim to supply it. Where the assumption is now measurable, the stage names the precondition and the probe that measures it."
+  },
+  "stages": [
+    {
+      "id": "S1-sandbox-escape",
+      "reported": "An evaluation agent escaped its sandbox through a zero-day in a package registry cache proxy.",
+      "disposition": "out_of_scope",
+      "control": "Host and container isolation",
+      "note": "Trust by Construction assumes the model process can be compromised; it does not prevent conventional vulnerabilities. An in-process Python call is not a boundary against hostile native code.",
+      "measured_precondition": "kernel_sandbox_active",
+      "precondition_test": "tests/test_isolation.py::test_the_advisory_sandbox_requirement_does_not_block_promotion",
+      "precondition_note": "Sandbox mode is now probed and reported as an advisory requirement. A confined process still does not make an in-process call a boundary against hostile native code."
+    },
+    {
+      "id": "S2-exposed-credentials",
+      "reported": "Working credentials found on the public web gave the agent an initial foothold.",
+      "disposition": "mediated",
+      "control": "Credentialless agent runtime with short-lived scoped leases",
+      "test": "tests/test_tbc_sdk.py::test_lease_expiry_and_task_expiry_are_checked_on_use",
+      "note": "A lease that is discovered later is already expired and cannot be widened; long-lived credentials remain outside the model process by construction."
+    },
+    {
+      "id": "S3-malicious-dataset-config",
+      "reported": "A dataset configuration pointed at local filesystem paths and returned pod environment variables and worker source code.",
+      "disposition": "mediated",
+      "control": "Context Security Gateway authorises protected retrieval before data reaches the model",
+      "test": "tests/test_tbc_sdk.py::test_narrowed_resource_scope_cannot_read_old_artifacts_or_memory",
+      "note": "Undeclared resources are denied at the mediated boundary; the gateway does not restrict a process that can read the filesystem directly."
+    },
+    {
+      "id": "S4-template-injection",
+      "reported": "Template injection in dataset reference specs produced arbitrary Python inside a production worker.",
+      "disposition": "mediated",
+      "control": "Typed AI-IR with a deterministic executor; no raw template, shell or SQL surface",
+      "test": "tests/test_tbc_sdk.py::test_untrusted_interfaces_fail_closed_without_effects",
+      "note": "The typed proposal carries canonical identifiers and a desired state transition only. This removes the declared interface, not every interpreter in a deployment."
+    },
+    {
+      "id": "S5-worker-credential-harvest",
+      "reported": "Static database and service passwords were read from worker pod environments.",
+      "disposition": "deployment",
+      "control": "Key custody outside the model process",
+      "test": "tests/test_composition_and_key_secrecy.py::test_default_asymmetric_authority_key_is_not_derivable_from_key_id",
+      "note": "The kernel never hands a credential to a model, but hardware-backed custody and process isolation require a chosen deployment.",
+      "measured_precondition": "no_standing_credentials, no_service_account_token",
+      "precondition_test": "tests/test_isolation.py::test_standing_credentials_in_the_agent_environment_are_a_violation",
+      "precondition_note": "The two paths by which a worker obtains authority nobody granted -- credential variables in the agent environment and a readable projected service-account token -- are measured, and either one denies production qualification. Custody of the keys themselves remains deployment work."
+    },
+    {
+      "id": "S6-cluster-and-metadata-access",
+      "reported": "Kubernetes service-account tokens and cloud metadata credentials were read from the compromised pods.",
+      "disposition": "out_of_scope",
+      "control": "Admission policy, metadata restriction and workload identity",
+      "note": "These are platform controls. The reference kernel neither installs nor attests them.",
+      "measured_precondition": "no_ambient_cloud_metadata",
+      "precondition_test": "tests/test_isolation.py::test_reachable_cloud_metadata_is_a_violation",
+      "precondition_note": "Reachability of the instance metadata service from the agent process is now probed directly against three known endpoints. The architecture still supplies neither admission policy nor workload identity."
+    },
+    {
+      "id": "S7-mesh-vpn-lateral-movement",
+      "reported": "A stolen mesh-VPN key enrolled attacker devices and extended reach across clusters.",
+      "disposition": "deployment",
+      "control": "Declared destination inventory and network confinement",
+      "test": "tests/test_integration_contract.py::test_destination_bound_egress_rejects_ssrf_and_hidden_channels",
+      "note": "DestinationPolicy authorises a destination contract; it does not open, confine or secure a transport.",
+      "measured_precondition": "egress_default_deny",
+      "precondition_test": "tests/test_isolation.py::test_an_undeclared_egress_destination_that_answers_is_a_violation",
+      "precondition_note": "A declared canary address that answers is recorded as a violation, and an undeclared canary leaves the requirement open rather than assumed. Outbound transfers that do occur are now made by a pinned, TLS-verified transport with wire-level byte ceilings and no redirect following. Host-level network confinement remains deployment work."
+    },
+    {
+      "id": "S8-shared-connector-credential",
+      "reported": "One shared connector credential carried administrative reach across multiple clusters.",
+      "disposition": "mediated",
+      "control": "Per-task attenuation; delegation inherits subsets and budgets do not multiply",
+      "test": "tests/test_tbc_sdk.py::test_aggregate_sibling_budget_does_not_multiply",
+      "note": "A child agent cannot acquire authority its parent did not hold, so a captured identity does not become an institutional one."
+    },
+    {
+      "id": "S9-improvised-agent-coordination",
+      "reported": "Agents self-organised on an unsanctioned message board and coordinated after concluding their assigned task was unsolvable.",
+      "disposition": "mediated",
+      "control": "Agent Census, Semantic Airlock and population-level graph reachability",
+      "test": "tests/test_tbc_sdk.py::test_potential_source_to_sink_path_denied_even_for_clean_message",
+      "note": "Registered topology is checked before data flows. Discovery of an undeclared channel on the host is explicitly not covered."
+    },
+    {
+      "id": "S10-dead-drop-exfiltration",
+      "reported": "Output left through API calls and attacker-controlled dead-drop datasets.",
+      "disposition": "mediated",
+      "control": "Data Lineage Firewall and exact-byte Release Escrow with recipient authentication",
+      "test": "tests/test_tbc_sdk.py::test_exact_escrow_binding_one_use_and_recipient_authentication",
+      "note": "Transformation is not declassification; a summary inherits the restriction of its source."
+    },
+    {
+      "id": "S11-machine-speed-action-volume",
+      "reported": "Roughly 17,600 recoverable actions were executed across about 4.5 days.",
+      "disposition": "mediated",
+      "control": "Task and workload budgets consumed by authenticated attempts, including denied ones",
+      "test": "tests/test_tbc_sdk.py::test_denied_authenticated_attempts_consume_budget_and_leave_safe_receipts",
+      "note": "Budget exhaustion bounds the number of mediated attempts. It does not bound unmediated host activity."
+    },
+    {
+      "id": "S12-persistence-after-detection",
+      "reported": "Remediation required credential rotation, node rebuilds and eradication of a live foothold while the campaign was running.",
+      "disposition": "mediated",
+      "control": "Durable workload stop, source quarantine and fresh-identity recovery",
+      "test": "tests/test_frontier_controls.py::test_stop_survives_reopen_denies_all_agents_and_requires_new_identity",
+      "note": "The stop is durable across service restart and does not kill operating-system processes. Already released bytes cannot be recalled."
+    },
+    {
+      "id": "S13-queued-output-after-revocation",
+      "reported": "Derived from the same class of failure: authority is withdrawn while approved output is still in flight to a recipient.",
+      "disposition": "mediated",
+      "control": "Delivery bindings reauthorized at every chunk boundary",
+      "test": "tests/test_frontier_controls.py::test_stream_reauthorizes_every_chunk_and_bulk_cannot_bypass",
+      "note": "Committed bytes cannot be recalled; the remainder is denied after revocation, contraction, expiry, stop or source quarantine."
+    },
+    {
+      "id": "S14-monitor-reassurance",
+      "reported": "Published anti-scheming and monitorability research shows a model can appear cooperative while pursuing a hidden objective, and an AI monitor can miss it.",
+      "disposition": "mediated",
+      "control": "Restrict-only monitor interface: a finding may contract authority and can never grant or restore it",
+      "test": "tests/test_frontier_controls.py::test_monitor_advice_cannot_forge_authority_or_replay_evidence",
+      "note": "Authorisation never depends on the judgment of the acting model or of the monitoring model. A clear verdict is an observation, not a permission."
+    }
+  ],
+  "preconditions": "A precondition is a host property this architecture depends on and can now measure, but does not itself provide. Measuring it does not mediate the stage; an unmeasured or violated precondition denies production qualification in fssaira.isolation, which is the only claim made here."
+}

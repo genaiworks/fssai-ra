@@ -1,11 +1,15 @@
-# Documentation map: what FSSAI-RA means and where to go next
+# Documentation map: Trust by Construction, and where to go next
+
+[Architecture implementation review](ARCHITECTURE_REVIEW.md) — 109-control traceability, executed contracts and qualification gaps.
+
+[TBC v11 SDK and Guardian engineering guide](TBC_SDK.md) — executable Passport, memory, population and release controls mapped to the supplied Word specification.
 
 > **Start here if you opened this repository for the first time.** Choose a
 > route below. Every main document links back to this map.
 
 ## What this repository means
 
-FSSAI-RA is a **reference architecture and teaching testbed for governing the
+Trust by Construction is a **reference architecture and teaching testbed for governing the
 authority of AI agents**. It is not a general chatbot, a finished student system,
 or a claim that AI makes policy fair.
 
@@ -195,6 +199,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) — the study that closes the field-evidence gap: pre-conditions, evidence indicators, human-judged outcomes, and stop criteria.
 - [`SPECIFICATION.md`](SPECIFICATION.md) — normative requirements in six conformance classes, each tied to an executable test, attestation, or measurement.
 - [`RELATED_WORK.md`](RELATED_WORK.md) — foundations inherited, overlap with CaMeL, FIDES, agent design patterns, and AI control, and the contribution stated narrowly.
+- [`THREAT_MODEL_2026.md`](THREAT_MODEL_2026.md) — the 2026 record read architecturally: the public agent-intrusion disclosure, covert-objective and monitorability research, and which stages this kernel mediates, defers to a deployment, or does not cover.
 - [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.
 - [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) — the second constitutional rule: what a model may read and what may leave.
 - [`PRIVACY_REFERENCE.md`](PRIVACY_REFERENCE.md) — the opt-in HTTP privacy profile: session tokens, encrypted records, a strict model registry, entitled identity restoration, and its limits.

@@ -40,7 +40,7 @@ python scripts/demo.py --act 6 --fast
                        28 harmful actions reached the protected asset
   B · prompt-guarded   █████████·························  28.6%  2/7 contained
                        8 harmful actions reached the protected asset
-  C · FSSAI-RA         ██████████████████████████████████ 100.0%  7/7 contained
+  C · This work         ██████████████████████████████████ 100.0%  7/7 contained
                        0 harmful actions reached the protected asset
 ```
 
