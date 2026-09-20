@@ -1,0 +1,7 @@
+For AI for Learning, a registrar can inspect record access, correction authority and release destinations. Institutions should deploy bounded, reversible workflows first, qualify connectors, and evaluate with staff and students before expanding autonomy. A named owner must handle escalation and appeals, and students must be told how to contest a result. Institutions must validate review capacity in practice; excess work should queue or reduce autonomy rather than rely on nominal approval.
+
+For Learning for AI, learners can inspect a forged approval, poisoned memory and a colluding agent chain, then observe which boundary refuses each action. This complements UNESCO's human-centred AI competency agenda [8] with practical understanding of authority and redress, and offline verification reduces computing needs for the teaching lab.
+
+The design aims to support SDG 4 through accountable school workflows and SDG 16 through contestable institutional authority; educational outcomes remain to be evaluated. Because the contract is enforced outside the model, institutions can require the same authority contract and refusal suite across model and vendor changes, so governance attaches to a workflow whose authority can be withdrawn rather than to a vendor's assurances.
+
+More capable models introduce risks beyond authority control. This contribution addresses one tractable requirement: increased autonomy must not silently expand an institutional mandate.

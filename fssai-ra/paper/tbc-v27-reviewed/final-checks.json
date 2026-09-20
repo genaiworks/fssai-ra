@@ -1,0 +1,9 @@
+{
+  "body_words": 1558,
+  "pages": 9,
+  "figures": 12,
+  "targeted_test_cases_passed": 18,
+  "visual_review": "All nine pages inspected; unchanged pages matched previously inspected images byte for byte.",
+  "original_repository_modified": false,
+  "live_portal_verified": false
+}

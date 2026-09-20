@@ -1,0 +1,15 @@
+[1] Zhan, Q., et al. (2024). InjecAgent: Benchmarking Indirect Prompt Injections in Tool-Integrated Large Language Model Agents. Findings of ACL. https://arxiv.org/abs/2403.02691
+
+[2] Debenedetti, E., et al. (2025). Defeating Prompt Injections by Design. arXiv:2503.18813. https://arxiv.org/abs/2503.18813
+
+[3] Costa, M., et al. (2025). Securing AI Agents with Information-Flow Control. arXiv:2505.23643. https://arxiv.org/abs/2505.23643
+
+[4] Beurer-Kellner, L., et al. (2025). Design Patterns for Securing LLM Agents against Prompt Injections. arXiv:2506.08837. https://arxiv.org/abs/2506.08837
+
+[5] Chan, A., et al. (2024). Visibility into AI Agents. ACM FAccT. https://arxiv.org/abs/2401.13138
+
+[6] Srivastava, R. (2026). FSSAI-RA reference implementation. Repository snapshot 9bb35a1. Evidence: fssai-ra/evaluation/results/; regression tests: fssai-ra/tests/test_tbc_sdk.py, test_delegation.py and test_generalization.py. https://github.com/genaiworks/fssai-ra/tree/9bb35a1
+
+[7] Debenedetti, E., et al. (2024). AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents. NeurIPS Datasets and Benchmarks. https://arxiv.org/abs/2406.13352
+
+[8] UNESCO (2024). AI Competency Framework for Students. https://unesdoc.unesco.org/ark:/48223/pf0000391105
