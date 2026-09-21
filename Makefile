@@ -76,3 +76,19 @@ reproduce: check-env  ## Reproduce public workflows and save a fresh evidence bu
 
 manuscript-check: check-env  ## Optional private manuscript checks; requires local-only archives
 	$(MAKE) -C $(APP_DIR) manuscript-check PYTHON="$(PYTHON)"
+
+.PHONY: docker-setup docker-reproduce docker-verify docker-shell
+# Host ownership for bind-mounted evidence on Linux; override for other platforms.
+export LOCAL_UID ?= $(shell id -u)
+export LOCAL_GID ?= $(shell id -g)
+docker-setup:  ## Build the pinned research toolchain (requires Docker Engine + Compose)
+	docker compose build research
+
+docker-reproduce:  ## Run the offline research workflows in Docker
+	docker compose run --rm research python scripts/reproduce.py
+
+docker-verify:  ## Full public test, claim-drift and evidence verification in Docker
+	docker compose run --rm research python scripts/reproduce.py --full --timeout 1800
+
+docker-shell:  ## Open the research environment to test your own use case
+	docker compose run --rm research sh

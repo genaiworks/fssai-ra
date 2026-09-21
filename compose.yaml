@@ -1,0 +1,21 @@
+name: fssaira-research
+services:
+  research:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: fssaira-research:local
+    working_dir: /workspace/fssai-ra
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    volumes:
+      - .:/workspace
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      FSSAI_MODEL: deterministic
+      FSSAI_MODEL_FALLBACK: deny
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /workspace
+    init: true

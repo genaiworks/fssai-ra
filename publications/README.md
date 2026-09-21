@@ -14,7 +14,7 @@ Do not add a DOI, publication date, acceptance status, or archival guarantee unt
 
 | Paper / record | Status | Available materials | Reproduction status |
 |---|---|---|---|
-| Trust by Construction — prior submission | Submitted, as reported by the repository owner; acceptance/publication not asserted | Local-only V27 reviewed manuscript, review notes, and V24 package under `fssai-ra/paper/`; not included in Git | The exact uploaded file/version and cited software snapshot have not been confirmed in this register. Retained files must not be assumed to be the submitted bytes. |
+| [Trust by Construction — UNU submission](unu-submission/README.md) | Submitted, as reported by the repository owner; acceptance/publication not asserted | Local-only V27 reviewed manuscript, review notes, and V24 package under `fssai-ra/paper/`; not included in Git | The exact uploaded file/version and cited software snapshot have not been confirmed in this register. Retained files must not be assumed to be the submitted bytes. |
 
 Older conference demos and presentations remain in their existing directories for stable references. Their presence does not make the platform specific to one sector or venue. Historical submission instructions are records of preparation, not instructions to submit again.
 

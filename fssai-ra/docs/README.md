@@ -283,3 +283,5 @@ Do not proceed from reading to a real pilot until the institution can answer:
 
 If any answer is missing, that is the next document, test, or institutional
 decision—not a reason to add a larger model.
+
+- [Public verification, Docker, and custom use cases](PUBLIC_VERIFICATION.md)

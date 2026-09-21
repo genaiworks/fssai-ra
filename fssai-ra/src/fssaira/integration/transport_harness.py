@@ -155,6 +155,10 @@ class LoopbackTLSServer:
 
     def close(self) -> None:
         self._stop.set()
+        # close() alone need not interrupt another thread blocked in accept()
+        # on Linux. Shut down the listening socket before releasing its fd.
+        with contextlib.suppress(OSError):
+            self._listener.shutdown(socket.SHUT_RDWR)
         with contextlib.suppress(OSError):
             self._listener.close()
         self._thread.join(timeout=2)
@@ -188,6 +192,10 @@ class LoopbackTLSServer:
                 raw, _ = self._listener.accept()
             except OSError:
                 return
+            if self._stop.is_set():
+                raw.close()
+                return
+            raw.settimeout(5)
             try:
                 with self._context.wrap_socket(raw, server_side=True) as connection:
                     connection.settimeout(5)

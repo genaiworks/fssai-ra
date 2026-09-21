@@ -34,7 +34,7 @@ def reference_env():
     return env
 
 
-def steps(output: Path):
+def steps(output: Path, full: bool = False):
     p = 'profiles/student_support.yaml'
     cli = ['-m', 'fssaira.cli']
     specs = [
@@ -75,6 +75,17 @@ def steps(output: Path):
         ('scaffold-evaluate', cli + ['evaluate', domain + '/profile.yaml'], 0),
         ('scaffold-tests', ['-m', 'pytest', domain, '--junitxml=' + str(output / 'scaffold-tests.xml')], 1),
     ]
+    if full:
+        specs += [
+            ('lint', ['-m', 'ruff', 'check', 'src', 'tests', 'scripts', 'jobs', 'adapters'], 0),
+            ('tests', ['-m', 'pytest', '--junitxml=' + str(output / 'tests.xml')], 0),
+            ('docs', ['scripts/check_public_docs.py'], 0),
+            ('architecture', ['scripts/verify_architecture.py', '--output', str(output / 'architecture')], 0),
+            ('result-drift', ['scripts/generate_results.py', '--check'], 0),
+            ('conference-drift', ['scripts/conference_evidence.py', '--check'], 0),
+            ('covert-channel-drift', ['scripts/measure_covert_channels.py', '--check'], 0),
+            ('resilience', ['scripts/check_resilience.py'], 0),
+        ]
     return specs
 
 
@@ -92,6 +103,13 @@ def run_step(name, args, expected, output, timeout):
             code = None
             reason = f'exceeded {timeout} seconds'
     passed = code == expected
+    if passed and name in {'tests', 'domain-tests'}:
+        from xml.etree import ElementTree as ET
+        junit = output / ('tests.xml' if name == 'tests' else 'domain-tests.xml')
+        cases = ET.parse(junit).findall('.//testcase')
+        passed = any(case.find('skipped') is None for case in cases)
+        if not passed:
+            reason = 'no test cases actually executed'
     if passed and name == 'doctor':
         state = json.loads((output / 'doctor.json').read_text())
         passed = state.get('readiness', {}).get('ready_for_pilot') is False
@@ -106,11 +124,18 @@ def run_step(name, args, expected, output, timeout):
             'seconds': round(time.monotonic() - start, 3), 'log': log.name, 'error': reason}
 
 
+def artifact_hashes(output: Path):
+    return {
+        p.relative_to(output).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(output.rglob('*')) if p.is_file() and p != output / 'report.json'
+    }
+
+
 def provenance():
     def git(*args):
         return subprocess.check_output(['git', *args], cwd=APP, text=True).strip()
     inputs = {}
-    for directory in ('src', 'profiles', 'contract', 'scripts'):
+    for directory in ('src', 'profiles', 'contract', 'scripts', 'tests', 'challenges'):
         for path in sorted((APP / directory).rglob('*')):
             if path.is_file() and path.suffix in {'.py', '.yaml', '.json'} and '__pycache__' not in path.parts:
                 inputs[path.relative_to(APP).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -125,6 +150,7 @@ def provenance():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, help='new bundle directory; default: APP/work/reproduction-<unique-id>')
+    parser.add_argument('--full', action='store_true', help='also execute tests, architecture and committed result drift checks')
     parser.add_argument('--timeout', type=int, default=180, help='maximum seconds per step (default 180)')
     args = parser.parse_args()
     if args.timeout <= 0:
@@ -135,10 +161,10 @@ def main():
         parser.error('output already exists; choose a new directory to preserve prior evidence')
     output.mkdir(parents=True)
     report = {'scope': 'Synthetic local reference workflows; not live services or private manuscripts',
-              'started_utc': stamp, 'provenance': provenance(), 'steps': [], 'passed': False}
+              'full': args.full, 'started_utc': stamp, 'provenance': provenance(), 'steps': [], 'passed': False}
     print(f'Evidence bundle: {output}', flush=True)
     try:
-        for name, command, expected in steps(output):
+        for name, command, expected in steps(output, full=args.full):
             print(f'Running {name} (expected exit {expected}) ...', flush=True)
             result = run_step(name, command, expected, output, args.timeout)
             report['steps'].append(result)
@@ -151,10 +177,7 @@ def main():
         print(f'Open {output / "joined/viewer.html"} and {output / "report.json"}')
         return 0
     finally:
-        report['artifacts_sha256'] = {
-            p.relative_to(output).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted(output.rglob('*')) if p.is_file() and p.name != 'report.json'
-        }
+        report['artifacts_sha256'] = artifact_hashes(output)
         (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 
 

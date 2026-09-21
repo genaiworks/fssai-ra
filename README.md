@@ -65,6 +65,21 @@ fssaira conformance --backend sql
 
 The repository folder is named `fssai-ra`; it also contains an application folder named `fssai-ra`. The Python import and command are spelled **`fssaira`**. See the [command reference](fssai-ra/docs/COMMANDS.md) for working directories, outputs, and optional dependencies.
 
+## Verify in Docker or bring your own use case
+
+```bash
+make docker-setup
+make docker-verify
+```
+
+Requires a running Docker Engine and Compose v2. The first build downloads pinned
+Python dependencies; verification then runs without network access and saves a
+fresh evidence bundle under `fssai-ra/work/`. See [Public verification and custom
+use cases](fssai-ra/docs/PUBLIC_VERIFICATION.md) for outputs, integrity checks,
+Windows commands, the live service stack, and testing your own profile and tools.
+The [UNU submission record](publications/unu-submission/README.md) distinguishes
+executable evidence from the submitted manuscript identification still needed.
+
 ## Choose a reading path
 
 | You are here to… | Read in this order |

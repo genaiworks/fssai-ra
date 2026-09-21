@@ -2,6 +2,7 @@
 """Exercise the running Compose stack without third-party HTTP dependencies."""
 from __future__ import annotations
 
+import argparse
 import hashlib
 import hmac
 import json
@@ -38,7 +39,12 @@ def request(
 
 
 def main() -> None:
-    env = load_env(ROOT / "deploy" / ".env")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--env-file', type=Path, default=ROOT / 'deploy/.env')
+    parser.add_argument('--api-url', default='http://127.0.0.1:8080')
+    parser.add_argument('--gateway-url', default='http://127.0.0.1:8081')
+    args = parser.parse_args()
+    env = load_env(args.env_file)
     identities = json.loads(env["FSSAI_AUTH_TOKENS_JSON"])
 
     def token_for(role: str) -> str:
@@ -53,7 +59,7 @@ def main() -> None:
     operator = token_for("platform_operator")
     officer = token_for("student_support_officer")
     agent = token_for("proposer")
-    base = "http://127.0.0.1:8080"
+    base = args.api_url.rstrip('/')
     suffix = uuid.uuid4().hex[:12]
     resource_id = f"smoke-resource-{suffix}"
     request_id = f"smoke-request-{suffix}"
@@ -101,7 +107,7 @@ def main() -> None:
     source, key = next(iter(source_keys.items()))
     data = "Smoke-tested low-side observation."
     signature = hmac.new(key.encode(), data.encode(), hashlib.sha256).hexdigest()
-    status, imported = request("POST", "http://127.0.0.1:8081/v1/imports", {
+    status, imported = request("POST", f"{args.gateway_url.rstrip('/')}/v1/imports", {
         "source": source,
         "content_type": "text/plain",
         "data": data,

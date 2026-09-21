@@ -355,7 +355,19 @@ def test_every_variable_the_example_documents_is_actually_read():
         path.read_text(encoding="utf-8")
         for path in (root / "src" / "fssaira").rglob("*.py")
     )
-    unread = sorted(name for name in documented if name not in source)
+    # Host port settings are consumed by Compose itself, not application Python.
+    # Restrict this exception to actual port bindings; merely mentioning a
+    # variable in Compose must not conceal an unread application setting.
+    import yaml
+
+    compose = yaml.safe_load((root / "deploy" / "compose.yaml").read_text())
+    port_variables = {
+        name
+        for service in compose['services'].values()
+        for binding in service.get('ports', [])
+        for name in re.findall(r"\$\{(FSSAI_[A-Z0-9_]+)(?=[:}])", binding)
+    }
+    unread = sorted(name for name in documented if name not in source and name not in port_variables)
     assert not unread, (
         "deploy/.env.example documents variables no code reads: "
         + ", ".join(unread)

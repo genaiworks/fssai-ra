@@ -140,6 +140,7 @@ def test_an_unreachable_pinned_address_is_reported_as_such(tmp_path):
             port=running.port, qualification_only=True)
         transport = QualifiedTransport(policy, running.qualification(), environ={})
         running.close()
+        assert not running._thread.is_alive(), "closed listener must release accept()"
         with pytest.raises(TransportDenied) as error:
             transport.fetch(running.url(), LOOPBACK)
     assert error.value.code in ('PINNED_ADDRESS_UNREACHABLE', 'TLS_REJECTED')

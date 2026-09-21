@@ -236,3 +236,24 @@ jobs:
           assert "preferred-citation" not in citations[0], "cite papers separately"
           print(f"all metadata agrees on {version}")
           PY
+
+  docker-reproduction:
+    name: Offline Docker reproduction
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build pinned research environment
+        run: make docker-setup
+      - name: Reproduce public tests and evidence without network access
+        run: make docker-verify
+      - name: Preserve evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-reproduction-evidence
+          path: fssai-ra/work/reproduction-*/
+          if-no-files-found: warn
+      - name: Verify evidence bundle integrity
+        run: |
+          docker compose run --rm research sh -c 'for bundle in work/reproduction-*; do python scripts/verify_bundle.py "$bundle" || exit 1; done'

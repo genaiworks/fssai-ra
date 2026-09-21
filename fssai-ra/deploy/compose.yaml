@@ -153,7 +153,7 @@ services:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
       kafka: {condition: service_healthy}
-    ports: ["127.0.0.1:8080:8080"]
+    ports: ["127.0.0.1:${FSSAI_API_PORT:-8080}:8080"]
     # operator-side exists only so the localhost development port is reachable.
     # Production should terminate authenticated ingress in a separately governed
     # reverse proxy and keep the service networks internal.
@@ -175,7 +175,7 @@ services:
       FSSAI_IMPORT_AUDIT_PATH: /var/lib/fssaira/import-audit.sqlite3
     depends_on:
       kafka: {condition: service_healthy}
-    ports: ["127.0.0.1:8081:8081"]
+    ports: ["127.0.0.1:${FSSAI_GATEWAY_PORT:-8081}:8081"]
     # Deliberately not on the `control` network. The gateway can publish inward
     # and cannot reach the control plane, the database, or the console.
     networks: [low-side, data]
@@ -194,7 +194,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       control-api: {condition: service_healthy}
-    ports: ["127.0.0.1:8088:8088"]
+    ports: ["127.0.0.1:${FSSAI_CONSOLE_PORT:-8088}:8088"]
     networks: [operator-side]
     security_opt: ["no-new-privileges:true"]
     restart: unless-stopped
