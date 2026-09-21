@@ -5,6 +5,8 @@ import subprocess
 from pathlib import Path
 from zipfile import ZipFile
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 DOCS_INDEX = DOCS / "README.md"
@@ -117,6 +119,7 @@ def test_interactive_documents_return_to_the_documentation_map():
         assert 'href="../README.md"' in text, f"{relative} cannot return to docs/README.md"
 
 
+@pytest.mark.manuscript
 def test_formatted_abstract_uses_the_current_paper_title():
     title = (ROOT / "paper" / "form-ready-abstract.md").read_text(
         encoding="utf-8"

@@ -14,7 +14,7 @@ help:  ## Show the repository-level commands
 setup:  ## Create .venv and install development dependencies
 	$(SYSTEM_PYTHON) -m venv $(VENV)
 	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install -e "./$(APP_DIR)[dev,privacy]"
+	$(PYTHON) -m pip install -e "./$(APP_DIR)[dev,privacy,api]"
 
 check-env:
 	@test -x "$(PYTHON)" || { \
@@ -41,7 +41,7 @@ results: check-env  ## Regenerate paper figures and the conference evidence pack
 conference-demo: check-env  ## Reusable education demonstration (historical target; DEMO=7 for one)
 	$(MAKE) -C $(APP_DIR) conference-demo PYTHON="$(PYTHON)" DEMO="$(DEMO)"
 
-reviewer: check-env  ## Broad local assurance checks (requires historical manuscript archives)
+reviewer: check-env  ## Public runtime and research assurance checks
 	$(MAKE) -C $(APP_DIR) reviewer PYTHON="$(PYTHON)"
 
 test: check-env  ## Run the deterministic Python suite
@@ -50,7 +50,7 @@ test: check-env  ## Run the deterministic Python suite
 lint: check-env  ## Lint source, tests, jobs, and scripts
 	$(MAKE) -C $(APP_DIR) lint PYTHON="$(PYTHON)"
 
-check: check-env  ## Lint and broad local assurance checks (requires manuscript archives)
+check: check-env  ## Lint and public assurance checks
 	$(MAKE) -C $(APP_DIR) check PYTHON="$(PYTHON)"
 
 doctor: check-env  ## Explain the active deployment configuration
@@ -58,14 +58,21 @@ doctor: check-env  ## Explain the active deployment configuration
 
 docs-check: check-env  ## Verify public documentation, navigation, and software citation
 	$(PYTHON) $(APP_DIR)/scripts/check_public_docs.py
-	cd $(APP_DIR) && $(PYTHON) -m pytest -q tests/test_learning_paths.py -k "not formatted_abstract"
+	cd $(APP_DIR) && $(PYTHON) -m pytest -q tests/test_learning_paths.py
 
 clean:  ## Remove generated caches and package build output
 	$(MAKE) -C $(APP_DIR) clean
 
 .PHONY: all architecture-check
-all: check-env  ## Engineering and paper synchronization checks (requires manuscript archives)
+all: check-env  ## Complete public engineering and evidence checks
 	$(MAKE) -C $(APP_DIR) all PYTHON="$(PYTHON)"
 
 architecture-check: check-env  ## Architecture traceability and executed capability contracts
 	$(MAKE) -C $(APP_DIR) architecture-check PYTHON="$(PYTHON)"
+
+.PHONY: reproduce manuscript-check
+reproduce: check-env  ## Reproduce public workflows and save a fresh evidence bundle
+	$(MAKE) -C $(APP_DIR) reproduce PYTHON="$(PYTHON)"
+
+manuscript-check: check-env  ## Optional private manuscript checks; requires local-only archives
+	$(MAKE) -C $(APP_DIR) manuscript-check PYTHON="$(PYTHON)"

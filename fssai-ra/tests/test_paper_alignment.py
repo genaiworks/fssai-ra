@@ -107,6 +107,7 @@ CLAIMS = [
 ]
 
 
+@pytest.mark.manuscript
 @pytest.mark.parametrize("description,template", CLAIMS, ids=[c[0] for c in CLAIMS])
 def test_every_quoted_figure_matches_a_generated_result(description, template, figures, prose):
     expected = template.format(**figures)
@@ -117,6 +118,7 @@ def test_every_quoted_figure_matches_a_generated_result(description, template, f
     )
 
 
+@pytest.mark.manuscript
 def test_the_paper_quotes_no_stale_scenario_count(prose):
     """Catch the specific drift this project has already had once.
 
@@ -135,6 +137,7 @@ def test_the_paper_quotes_no_stale_scenario_count(prose):
         assert phrase not in prose.lower(), f"the paper still contains the stale figure {phrase!r}"
 
 
+@pytest.mark.manuscript
 def test_the_quoted_test_count_is_not_an_overstatement(figures, prose):
     """A repository statistic, not a scientific result.
 
@@ -151,6 +154,7 @@ def test_the_quoted_test_count_is_not_an_overstatement(figures, prose):
     )
 
 
+@pytest.mark.manuscript
 def test_the_paper_states_its_scope(prose):
     """The paper states what its figures are and where assurance concentrates.
 
@@ -166,12 +170,14 @@ def test_the_paper_states_its_scope(prose):
         assert phrase in prose, f"the paper omits its scope statement {phrase!r}"
 
 
+@pytest.mark.manuscript
 def test_the_paper_reports_utility_beside_containment(prose):
     """The denominator is load-bearing, so its sentence is too."""
     assert "false-denial rate" in prose
     assert "denies everything scores perfectly on containment" in prose
 
 
+@pytest.mark.manuscript
 def test_the_repository_url_and_release_are_stated(prose, figures):
     assert "github.com/genaiworks/fssai-ra" in prose
     assert "v1.0.0" in prose, "an extended abstract must cite a fixed release, not a branch"
@@ -196,6 +202,7 @@ def test_committed_results_match_a_fresh_run():
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+@pytest.mark.manuscript
 def test_the_word_count_fits_the_submission_guidance(prose):
     """The call asks for approximately 1,500 words.
 
@@ -252,6 +259,7 @@ def supplement() -> str:
     return re.sub(r"\s+", " ", SUPPLEMENT.read_text(encoding="utf-8"))
 
 
+@pytest.mark.manuscript
 @pytest.mark.parametrize(
     "description,template", SUPPLEMENT_CLAIMS, ids=[c[0] for c in SUPPLEMENT_CLAIMS]
 )
@@ -266,6 +274,7 @@ def test_every_figure_in_the_supplement_matches_a_generated_result(
     )
 
 
+@pytest.mark.manuscript
 def test_the_supplement_states_its_limits(supplement):
     """A supplement is where detail goes, not where caveats get dropped."""
     for phrase in (
@@ -277,6 +286,7 @@ def test_the_supplement_states_its_limits(supplement):
         assert phrase in supplement, f"the supplement omits the limit {phrase!r}"
 
 
+@pytest.mark.manuscript
 def test_the_supplement_reports_the_benign_case_beside_the_containment(supplement):
     """The same discipline the abstract is held to: a control that refuses
     everything contains everything."""
@@ -284,18 +294,21 @@ def test_the_supplement_reports_the_benign_case_beside_the_containment(supplemen
     assert "Benign completed" in supplement
 
 
+@pytest.mark.manuscript
 def test_the_supplement_does_not_claim_assistance_removes_the_ceiling(supplement):
     """The independent arm reaches 1, not 0, and that has to survive editing."""
     assert "larger ceiling to compute, not permission to stop computing one" in supplement
     assert "**1, not 0**" in supplement
 
 
+@pytest.mark.manuscript
 def test_the_abstract_points_at_the_supplement(prose):
     assert "composition supplement" in prose, (
         "the abstract compresses two contributions and must say where the method is"
     )
 
 
+@pytest.mark.manuscript
 def test_the_abstract_opens_on_a_cross_sector_system_problem(prose):
     """The architecture must not collapse back into one education narrative.
 
@@ -308,6 +321,7 @@ def test_the_abstract_opens_on_a_cross_sector_system_problem(prose):
     assert "A safe model cannot answer those questions on behalf of an unsafe system" in opening
 
 
+@pytest.mark.manuscript
 def test_the_abstract_connects_governance_to_public_voice(prose):
     """Mediation makes action contestable; the paper says what that enables."""
     assert "attributable and contestable" in prose
@@ -382,6 +396,7 @@ def test_the_deck_carries_the_limits_slide(deck):
     assert not missing, f"the deck's limits slide is missing: {missing}"
 
 
+@pytest.mark.manuscript
 def test_the_deck_opens_and_closes_on_the_central_rule(deck, prose):
     """The one sentence worth carrying out of the room appears twice, and in the paper."""
     rule = "cannot manufacture the authority to"
@@ -391,6 +406,7 @@ def test_the_deck_opens_and_closes_on_the_central_rule(deck, prose):
     assert rule in prose, "the paper and the deck must state the same central rule"
 
 
+@pytest.mark.manuscript
 def test_the_deck_and_the_paper_agree_on_the_release(deck, prose):
     assert "v1.0.0" in deck and "v1.0.0" in prose
     assert "github.com/genaiworks/fssai-ra" in deck
@@ -536,6 +552,7 @@ SUBMITTED_CLAIMS = [
 ]
 
 
+@pytest.mark.manuscript
 @pytest.mark.parametrize(
     "description,template", SUBMITTED_CLAIMS, ids=[c[0] for c in SUBMITTED_CLAIMS]
 )
@@ -558,6 +575,7 @@ SPELLED_CLAIMS = [
 ]
 
 
+@pytest.mark.manuscript
 def test_the_submitted_abstract_states_the_assistance_gain_it_measured(figures, submitted):
     """"Fivefold" is a spelled-out figure the numeric templates cannot see."""
     words = {2.0: "twofold", 3.0: "threefold", 4.0: "fourfold", 5.0: "fivefold"}
@@ -566,6 +584,7 @@ def test_the_submitted_abstract_states_the_assistance_gain_it_measured(figures, 
     assert f"raised completed work {words[gain]}" in submitted
 
 
+@pytest.mark.manuscript
 @pytest.mark.parametrize(
     "description,key,template", SPELLED_CLAIMS, ids=[c[0] for c in SPELLED_CLAIMS]
 )
@@ -585,6 +604,7 @@ def test_every_spelled_out_figure_in_the_submitted_abstract_is_current(
     )
 
 
+@pytest.mark.manuscript
 def test_the_submitted_abstract_fits_every_form_field():
     """The form truncates silently; a test is the only thing that will not.
 
@@ -615,6 +635,7 @@ def test_the_submitted_abstract_fits_every_form_field():
     )
 
 
+@pytest.mark.manuscript
 def test_the_submitted_abstract_pastes_as_plain_ascii(submitted):
     """A form field is not a typesetter.
 
@@ -631,6 +652,7 @@ def test_the_submitted_abstract_pastes_as_plain_ascii(submitted):
     )
 
 
+@pytest.mark.manuscript
 def test_the_submitted_abstract_states_its_scope(submitted):
     """The version reviewers read says what its figures are, in one line."""
     for phrase in ("reproducible fixture observations", "synthetic domain packs"):
@@ -741,6 +763,7 @@ def test_no_path_cuts_a_slide_the_script_says_is_never_cut(script, deck_slides):
 
 
 # Full manuscript: previously omitted from alignment checks despite the builder's claim.
+@pytest.mark.manuscript
 @pytest.mark.parametrize("template", [
     "{domain_pack_scenarios_contained} of {domain_pack_scenarios_total} hostile scenarios",
     "{disclosure_contained} of {disclosure_hostile_total} hostile data flows",
@@ -752,6 +775,7 @@ def test_full_manuscript_metrics_match_generated_results(template, figures):
     assert template.format(**figures) in manuscript
 
 
+@pytest.mark.manuscript
 def test_foundation_claims_have_real_evidence_locators_and_scoped_status():
     register = json.loads((ROOT / "paper" / "foundation-claims.json").read_text())
     ids = [claim["id"] for claim in register["claims"]]

@@ -1,6 +1,9 @@
 """Make the user-supplied Word specification an explicit CI claim surface."""
+
 import importlib.util
 from pathlib import Path
+
+import pytest
 
 
 def test_v11_specification_bindings_and_inventory_are_current():
@@ -37,3 +40,6 @@ def test_word_alignment_rejects_source_and_metric_drift(tmp_path):
     paper.write_bytes(paper.read_bytes() + b'changed')
     with pytest.raises(ValueError, match='Paper changed'):
         module.check(tmp_path)
+
+
+pytestmark = pytest.mark.manuscript

@@ -169,27 +169,26 @@ adaptive-search:  ## Offline search and trained tabular-Q evaluation (not LLM RL
 	PYTHONPATH=src $(PYTHON) scripts/adaptive_attacks.py
 
 .PHONY: tbc-test tbc-demo tbc-check
-tbc-test:  ## Test the v11 SDK, Guardian, durable memory and agent composition
-	$(PYTHON) -m pytest tests/test_tbc_sdk.py tests/test_tbc_alignment.py
+tbc-test:  ## Test the public SDK, Guardian, durable memory and agent composition
+	$(PYTHON) -m pytest tests/test_tbc_sdk.py tests/test_sdk_inventory.py
 
 tbc-demo:  ## Run the paper's SDK path (OUTPUT must name a new directory)
 	$(PYTHON) scripts/tbc_demo.py --output $(if $(OUTPUT),$(OUTPUT),audit/tbc-demo-new)
 
-tbc-check:  ## Check exact Word-paper bindings and the default-deny inventory
-	$(PYTHON) scripts/check_tbc_alignment.py
+tbc-check:  ## Check the public Passport, SDK and dispatcher inventory
+	$(PYTHON) scripts/check_sdk_inventory.py
 
 .PHONY: architecture-check
 architecture-check:  ## Validate all architecture controls and execute bound capability tests
-	$(PYTHON) scripts/check_tbc_alignment.py
-	$(PYTHON) scripts/verify_architecture.py
+	$(PYTHON) scripts/check_sdk_inventory.py
+	$(PYTHON) scripts/verify_architecture.py --output work/architecture
 
 .PHONY: all
 all:  ## Offline engineering release check after development dependencies are installed
 	$(PYTHON) -m ruff check src tests scripts jobs adapters
-	$(PYTHON) -m pytest --junitxml=audit/architecture/full-tests.xml
-	$(PYTHON) scripts/check_tbc_alignment.py
-	$(PYTHON) scripts/verify_architecture.py
-	$(PYTHON) scripts/check_paper_revision.py
+	$(PYTHON) -m pytest --junitxml=work/release-check/full-tests.xml
+	$(PYTHON) scripts/check_sdk_inventory.py
+	$(PYTHON) scripts/verify_architecture.py --output work/architecture
 	$(PYTHON) scripts/generate_results.py --check
 	$(PYTHON) scripts/measure_covert_channels.py --check
 	$(PYTHON) scripts/qualify_deployment.py --operator release-check
@@ -219,3 +218,11 @@ developer-demo:  ## Offline v14 artifact integrity and remote recovery example
 .PHONY: covert-channels
 covert-channels:  ## What an authorised release path leaks, and what closes it
 	$(PYTHON) scripts/measure_covert_channels.py
+
+.PHONY: manuscript-check reproduce
+manuscript-check:  ## Optional private manuscript validation; fails clearly if archives are missing
+	$(PYTHON) -m pytest --include-manuscripts -m manuscript
+	$(PYTHON) scripts/check_paper_revision.py
+
+reproduce:  ## Reproduce the public beginner/research workflows into a fresh evidence bundle
+	$(PYTHON) scripts/reproduce.py
