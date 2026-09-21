@@ -31,6 +31,6 @@ Store working outputs under ignored `work/`. Put only deliberately reviewed, sha
 
 ## Historical archive availability
 
-Some paper-alignment scripts refer to local manuscripts such as `paper/extended-abstract.md`, `paper/form-ready-abstract.md`, and `paper/tbc-v11/implementation.json`. The entire paper directory is local-only and absent from new checkouts after this change. Previously committed files remain in Git history; ignoring them does not erase history. The current broad test/release targets include these dependencies.
+Some paper-alignment scripts refer to local manuscripts such as `paper/extended-abstract.md`, `paper/form-ready-abstract.md`, and `paper/tbc-v11/implementation.json`. The entire paper directory is local-only and absent from new checkouts after this change. Previously committed files remain in Git history; ignoring them does not erase history. Public test/release targets do not depend on these private files. `make manuscript-check` explicitly includes historical paper validation and requires its local archive.
 
 The [command reference](../fssai-ra/docs/COMMANDS.md#validation-tiers) provides manuscript-independent runtime checks. A future paper must supply its required artifacts or explicitly mark unavailable checks; a missing archive must not be reported as a completed reproduction.

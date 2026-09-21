@@ -7,7 +7,7 @@
 Two minutes, fully offline. No network, no model weights, no GPU, no Docker.
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[dev,privacy,api]"
 python scripts/demo.py
 ```
 

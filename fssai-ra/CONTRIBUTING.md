@@ -52,7 +52,7 @@ it.
 
 ## Run checks
 ```
-pip install -e ".[dev]"
+pip install -e ".[dev,privacy,api]"
 pytest -q
 python -m pytest tests/test_learning_paths.py -q
 ```

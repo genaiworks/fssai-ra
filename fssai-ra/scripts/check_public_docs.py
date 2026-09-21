@@ -54,9 +54,9 @@ def check(root: Path = ROOT) -> list[str]:
             directory = relative.rstrip("/") + "/"
             if relative not in available and not any(p.startswith(directory) for p in available):
                 errors.append(f"{name}: unavailable in a clean checkout: {target}")
-            elif fragment and resolved.is_file() and resolved.suffix in {'.md', '.html'}:
-                if unquote(fragment) not in anchors(resolved):
-                    errors.append(f"{name}: missing section anchor: {target}")
+            elif (fragment and resolved.is_file() and resolved.suffix in {'.md', '.html'}
+                  and unquote(fragment) not in anchors(resolved)):
+                errors.append(f"{name}: missing section anchor: {target}")
     print(f"Checked file links and anchors in {len(sources)} maintained Markdown documents.")
     return errors
 

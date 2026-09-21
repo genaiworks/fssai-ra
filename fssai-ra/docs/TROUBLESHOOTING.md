@@ -15,7 +15,7 @@ Root command: `make setup`. Application command: `fssaira verify profiles/studen
 | `python: command not found` | System exposes only `python3` | Use `python3` to create the environment; then activate it |
 | `make: command not found` | Make is not installed | Use the direct Python installation steps in [User guide](USER_GUIDE.md#3-install-the-python-tools) |
 | `fssaira: command not found` | Wrong/unactivated environment | In APP use `.venv/bin/python -m fssaira.cli --help`; Windows: `.venv\Scripts\python.exe -m fssaira.cli --help` |
-| `No module named fssaira` | Package not installed into that interpreter | In APP run `python -m pip install -e '.[dev,privacy]'` using the intended environment |
+| `No module named fssaira` | Package not installed into that interpreter | In APP run `python -m pip install -e '.[dev,privacy,api]'` using the intended environment |
 | Missing `profiles/...` or `contract/...` | Command was run from ROOT | Enter the inner `fssai-ra/` directory |
 | Demo says output contains a prior database | It is protecting an earlier run | Use a new `--output work/demo-02`; retain the old evidence |
 | Missing YAML/crypto/test package | Wrong or incomplete installation | Run `python -m pip check`; install the documented extras in the same environment |
@@ -28,7 +28,7 @@ Root command: `make setup`. Application command: `fssaira verify profiles/studen
 | `packet-check` exits 2 without anchor | No independent expected digest was supplied | Obtain a retained trusted digest; do not derive trust from the packet itself |
 | PostgreSQL/Kafka/Redis connection failure | Optional service not configured/running | Use [Platform](PLATFORM.md) or return to memory/SQLite examples |
 | Result-drift check fails | Code, environment, or snapshot differs | Keep raw outputs and inspect the diff before regenerating evidence |
-| Historical paper or manifest missing | That archive is not tracked in this checkout | Use the focused runtime checks and report missing archive-dependent checks explicitly |
+| Historical paper or manifest missing | That archive is not tracked in this checkout | Run `make test` for public checks; only `make manuscript-check` requires the private archive |
 | Broad suite works locally but fails after cloning | Local ignored inputs mask missing distribution files | Inspect `git ls-files` and record required paper/input archives in the publication entry |
 
 ## Save a useful issue report

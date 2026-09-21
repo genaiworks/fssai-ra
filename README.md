@@ -45,6 +45,7 @@ Run these from the **repository root**, the directory containing this README:
 ```bash
 make setup
 make demo
+make reproduce                                   # saves logs and evidence in a fresh work/ directory
 make docs-check
 ```
 
@@ -103,7 +104,7 @@ The [repository map](fssai-ra/docs/REPOSITORY_MAP.md) explains how these pieces 
 
 ## Validation and evidence
 
-Use `make docs-check` for the maintained documentation, `make test` for the full local suite, and `make lint` for Python linting. See [validation tiers](fssai-ra/docs/COMMANDS.md#validation-tiers) before running `make reviewer` or `make all`: some historical paper-alignment checks require manuscript files that are not distributed in a fresh checkout.
+Use `make reproduce` to run the beginner/research workflows and save an evidence bundle, `make docs-check` for links and navigation, `make test` for the public runtime suite, and `make lint` for Python linting. `make reviewer` and `make all` also work without private manuscripts. Historical paper validation is separate: `make manuscript-check` requires local-only archives and reports an error if they are absent. See [validation tiers](fssai-ra/docs/COMMANDS.md#validation-tiers).
 
 Report results with the exact commit, command, configuration, environment, and raw output. Checked-in reports are snapshots of particular experiments, not a live guarantee about every configuration. The [research guide](fssai-ra/docs/RESEARCH_GUIDE.md) explains how to create a reproducible evidence bundle.
 

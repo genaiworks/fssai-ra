@@ -10,7 +10,7 @@ From `fssai-ra/`, using Python 3.10 or later:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev,privacy]'
+.venv/bin/python -m pip install -e '.[dev,privacy,api]'
 make developer-demo PYTHON=.venv/bin/python
 .venv/bin/python -m pytest tests/test_qualified_transport.py tests/test_remote_effects.py tests/test_developer_security_demo.py
 ```
@@ -19,7 +19,7 @@ Dependency installation needs package access. The developer demo and tests use
 synthetic data and local services; they need no model account or API key.
 The demo prints `exact_artifact_bytes: true`, rejects a digest mismatch, and
 shows `UNCERTAIN → UNCERTAIN → CONFIRMED` with exactly one provider submission.
-The broader `make all` target additionally requires historical paper archives and measures the host; see [validation tiers](docs/COMMANDS.md#validation-tiers). Host qualification should report `reference` on a developer machine. Do not turn missing isolation evidence into success to pass a gate.
+The broader `make all` target checks public code, evidence, and host qualification without private manuscripts; see [validation tiers](docs/COMMANDS.md#validation-tiers). Host qualification should report `reference` on a developer machine. Do not turn missing isolation evidence into success to pass a gate.
 
 ## Choose an integration boundary
 
@@ -95,13 +95,7 @@ checks belong outside the model. This ledger does not itself verify an approval.
 .venv/bin/python -m pytest tests/test_developer_security_demo.py
 ```
 
-If the historical manuscript archives are available, additionally run the
-artifact-binding checks. These are separate from the runtime examples above:
-
-```sh
-.venv/bin/python scripts/verify_architecture.py
-.venv/bin/python scripts/check_paper_revision.py
-```
+Run the public architecture bindings with `.venv/bin/python scripts/verify_architecture.py`; fresh results go to `work/architecture/`. Private manuscript drift checks are separate: `make manuscript-check PYTHON=.venv/bin/python` requires the historical archive.
 
 Transport tests use real loopback TLS handshakes and fresh test certificates.
 Monitor tests use scripted findings, not a live-model accuracy experiment. Test

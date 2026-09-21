@@ -52,7 +52,9 @@ The Compose networks reduce accidental connectivity. They are not a physical dat
 diode or cross-domain solution. See `DIODE_DEPLOYMENT.md` before making a physical
 directionality claim.
 
-## Five minute teaching mode
+## Local teaching mode
+
+Run from APP (the inner `fssai-ra/` directory containing `pyproject.toml`).
 
 ```bash
 python3 -m venv .venv
@@ -68,8 +70,7 @@ production-ready.
 
 ## Distributed reference mode
 
-Requirements are Docker with Compose v2 and at least 8 GB of memory for the
-analytics profile.
+Requirements are a running Docker daemon, Compose v2, and at least 8 GB of memory for the analytics profile. Check `docker info` and `docker compose version` first. If the daemon is unavailable, stop here; the local Python/SQLite routes above remain usable. Image downloads are required on the first run.
 
 ```bash
 python3 scripts/bootstrap_dev_env.py
@@ -92,15 +93,15 @@ correctly fail against a generated distributed-stack configuration.
 
 ### Exercise the exact-action API
 
-The checked-in `.env.example` uses the readable placeholders below. If you ran
-`make dev-env`, use the corresponding random token key from
-`FSSAI_AUTH_TOKENS_JSON` instead.
+For the default local `fssaira serve` process, the following tokens are published synthetic fixtures. A generated Compose stack uses different random credentials; use `python scripts/api_walkthrough.py --env-file deploy/.env` against that local stack, or export its token values for manual requests. `deploy/.env` is read by Compose; merely creating it does not configure a separately launched local Python process.
+
+For a repeatable automated local example, run `python scripts/api_walkthrough.py --self-test`. The manual sequence below uses fixed IDs; choose fresh IDs on reruns. It assumes the default student-support profile and no declared review floor/escalation. If you configure a floor, wait for it after `/review`; do not disable it to get an approval.
 
 ```bash
-export OPERATOR_TOKEN='change-me-operator-token'
-export AGENT_TOKEN='change-me-agent-token'
-export OFFICER_TOKEN='change-me-officer-token'
-export SECOND_OFFICER_TOKEN='change-me-second-officer-token'
+export OPERATOR_TOKEN='dev-operator-token'
+export AGENT_TOKEN='dev-agent-token'
+export OFFICER_TOKEN='dev-officer-token'
+export SECOND_OFFICER_TOKEN='dev-second-officer-token'
 
 curl -X POST http://127.0.0.1:8080/v1/resources \
   -H 'Content-Type: application/json' \
@@ -115,13 +116,8 @@ curl -X POST http://127.0.0.1:8080/v1/proposals \
 curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/review \
   -H "Authorization: Bearer $OFFICER_TOKEN"
 
-# Only when the configured load threshold requires escalation: the second
-# officer starts an independently timed review, waits for the declared floor,
-# then endorses the exact proposal digest.
-curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/review \
-  -H "Authorization: Bearer $SECOND_OFFICER_TOKEN"
-curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/endorsement \
-  -H "Authorization: Bearer $SECOND_OFFICER_TOKEN"
+# If you configured a deliberation floor, actually review the proposal and wait
+# for that many seconds before continuing. The default local reference has none.
 
 curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/approval \
   -H 'Content-Type: application/json' \
@@ -134,9 +130,7 @@ curl -X POST http://127.0.0.1:8080/v1/proposals/req-500/execute \
 
 `/review` stores the first presentation time idempotently on the server. If a
 deliberation floor is configured, an immediate approval is refused; refreshing
-or repeating `/review` cannot reset that clock. After the escalation threshold,
-a distinct officer starts their own review and posts `/endorsement` before the
-primary reviewer approves. Both identities and roles are covered by the signed
+or repeating `/review` cannot reset that clock. After the escalation threshold, a distinct officer must call the same `/review` route with a different token, wait for the declared floor, then post `/endorsement` before the primary reviewer approves. The automated walkthrough handles both reviewers using synthetic identities; its wait is not evidence of real human deliberation. Both identities and roles are covered by the signed
 approval artifact and recorded with the action intent.
 
 Changing the target, state, evidence version, reviewer role, or approved payload

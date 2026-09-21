@@ -19,7 +19,7 @@ For the CLI and tests:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[dev,privacy]'
+python -m pip install -e '.[dev,privacy,api]'
 python scripts/demo.py --fast
 fssaira profiles
 fssaira verify profiles/student_support.yaml
@@ -44,7 +44,7 @@ The [feature catalogue](docs/FEATURES.md) explains the purpose, usage, and limit
 
 ## Validation
 
-Run `python -m pytest` for the full local suite and `python -m ruff check src tests scripts jobs adapters` for lint. For checks that work without historical manuscripts, start with the focused commands in the [command reference](docs/COMMANDS.md#validation-tiers). Paper-alignment failures caused by absent local archives must be reported separately from runtime failures.
+Run `python scripts/reproduce.py` for a saved end-to-end evidence bundle, `python -m pytest` for the public runtime suite, and `python -m ruff check src tests scripts jobs adapters` for lint. Public checks do not need private manuscripts. `make manuscript-check` explicitly opts into historical paper checks and requires the local archive. See [validation tiers](docs/COMMANDS.md#validation-tiers).
 
 Numeric snapshots and their denominators belong in [Results](evaluation/results/RESULTS.md); regenerate and inspect evidence before citing a result. These components have different trust boundaries and are not automatically one integrated, production-qualified system.
 

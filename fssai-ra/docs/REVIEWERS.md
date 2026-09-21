@@ -1,4 +1,4 @@
-# For reviewers: check every claim in ten minutes
+# Reviewer guide: reproduce the public evidence
 
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
 >
@@ -7,7 +7,7 @@
 You should not have to take our word for anything in this repository. This page
 is the shortest path from scepticism to a verdict.
 
-Everything below runs **offline** — no network, no model weights, no GPU, no
+The core checks run **locally** — no network, no model weights, no GPU, no
 Docker. If any command needs something you do not have, that is a bug and we want
 the issue.
 
@@ -23,37 +23,48 @@ cd fssai-ra && source .venv/bin/activate
 
 ---
 
-## The ten-minute pass
+## Reproduce from a public checkout
 
-| # | Command | What it settles | Expect |
-|---|---|---|---|
-| 0 | `make reviewer` | **All of the below, in one command** | every check, regenerated rather than typed |
-| 1 | `python scripts/demo.py --fast` | Whether the system does what the paper says | Six acts: quarantine, denial, execution, refusal, tamper detection, comparison |
-| 2 | `pytest` | Whether the code works at all | `945 passed` in a few seconds |
-| 3 | `fssaira verify profiles/student_support.yaml` | Whether the authority invariants hold across the whole declared space | 240 states, 5 invariants, **0 violations** |
-| 4 | `fssaira evaluate profiles/student_support.yaml` | Containment **and** its cost | 30/30 contained, 0 unauthorized mutations, false-denial rate **0.0** |
-| 5 | `fssaira conformance --backend sql` | Whether the properties survive a different backend | 26/26, conformant |
-| 6 | `python scripts/generate_results.py --check` | Whether the committed numbers match a fresh run | `committed results match a fresh run` |
-| 7 | `pytest tests/test_paper_alignment.py` | Whether the paper, the deck, and the READMEs quote real figures | all alignment checks pass |
-| 8 | `python scripts/benchmark.py` | What the governance costs | ~7 µs per decision; ~66 µs per full execution |
-| 9 | `fssaira race-test profiles/student_support.yaml` | Whether simultaneous retries duplicate the action | 32 callers, **1 mutation**, **1 receipt** |
-| 10 | `fssaira oversight profiles/student_support.yaml --sweep` | Whether "a human approved it" survives the queue, across 25 parameter combinations | 11 reviewers sustain 2,640/day; 4 → **0** merit failures; the control never increases harm in any cell |
-| 11 | `fssaira verify profiles/academic_record_correction.yaml` | Whether the method works on a domain it was not designed for | 4,800 states, **0 violations**, no library change |
-| 12 | `fssaira profiles --verify` | Whether one kernel runs across education, corporate, healthcare, financial, and government workflows | 6 packs; 55,440 states; 180/180 hostile contained; 58/58 benign completed; **0 unauthorized mutations** |
-| 13 | `fssaira challenge` | Whether the adversary is ever someone other than us | 7/7 live entries contained; **externally contributed: 0**, printed |
-| 14 | `fssaira coverage` | Whether each contract requirement is *enforced* or only written down | 41 machine-verified, 3 attested, **0 unverified** — it was 18 unverified when this check was written |
-| 15 | `fssaira assisted-review` | What a review assistant does to claim 10 | **5 → 1** merit failures, dependent vs independent, at the same lowered floor; no runtime signal separates them |
-| 16 | `fssaira delegation` | Whether authority survives being passed to another agent | 10/10 chains contained where per-hop validation contains 2/10; 768 states, **0 violations** |
-| 17 | `fssaira disclosure profiles/healthcare_record_access.yaml` | Whether a model can see only what it is entitled to, and never launder it, across whole sessions | 27/27 hostile flows contained for this pack; 14/14 checks load-bearing; **0 violations**; 8,000 stateful operations agree with the reference model |
-| 18 | `fssaira threats` | Whether each alignment and security claim has evidence that exists | 36 failure classes: 21 contained, 10 bounded, 5 residual; **0 missing locators** |
-| 20 | `fssaira thesis` | Whether anyone can refute the foundation across every pack | 6 falsifiers, 104,997 attempts, **0 counterexamples** |
-| 21 | `pytest tests/test_disclosure_production.py tests/test_disclosure_tokens_and_concurrency.py` | Whether durable state, real record sources, token grants, live consent, value labels, and concurrency hold | restarts forget nothing; outages refuse; **0 violations** under thread and process races |
-| 19 | `pytest tests/test_specification.py` | Whether every requirement in the specification cites evidence that exists | every cited test resolves |
+After `make setup`, run `make reproduce` from the repository root. It saves a
+fresh bundle under `fssai-ra/work/reproduction-<timestamp>-<id>/`, prints each step,
+and returns nonzero if an expected outcome does not occur. It uses a deterministic
+model and clears inherited deployment settings in child processes. No paper
+archive, external model account, or Docker service is required.
 
-If any of these disagrees with the paper, **the paper is wrong** and we would like
-to know. That is the point of building alignment as a test.
+Open `report.json` for the commit, source hashes, dependency versions, commands,
+expected and actual exit codes, log names, and artifact hashes. Open
+`joined/viewer.html` for the actual synthetic workflow receipts. A dirty working
+tree is recorded; its commit alone is not a citation for uncommitted changes.
 
----
+For broader validation, run `make reviewer`. This runs the public suite and
+component experiments. `make all` also executes architecture contracts and
+measures the local host. Results do not establish production qualification.
+
+| Check | What success means | What it does not establish |
+|---|---|---|
+| `python -m pytest` | Public runtime, evidence, and documentation tests pass; the actual test count is printed | Private manuscript alignment, deployment security, or human performance |
+| `fssaira verify profiles/student_support.yaml` | No violation in the declared bounded state space | Exhaustiveness outside that model |
+| `fssaira evaluate profiles/student_support.yaml` | Forbidden effects blocked and benign utility reported | Unseen real-world attack coverage |
+| `fssaira conformance --backend sql` | Declared port contracts pass on the local SQL profile | The same result on arbitrary remote services |
+| `python scripts/generate_results.py --check` | Tracked component metrics match regeneration | That a historical snapshot is a new experiment |
+| `fssaira oversight profiles/student_support.yaml --sweep` | Declared queue/reviewer assumptions are exercised | Measured human deliberation quality |
+| `fssaira profiles --verify` | Every shipped profile is checked independently | Correct institutional policy in every sector |
+| `fssaira challenge` | Expected corpus outcomes are reproduced with authorship disclosed | Independent red-team coverage beyond that corpus |
+| `fssaira coverage` | Requirements have resolved test bindings or explicit attestations | An attestation is an executed test |
+| `fssaira disclosure profiles/healthcare_record_access.yaml` | Governed-read/release fixtures pass | Anonymity, physical erasure, or healthcare compliance |
+| `fssaira threats` and `fssaira thesis` | Specified evidence locators/falsifiers check out | A universal security proof |
+| `python scripts/api_walkthrough.py --self-test` | A real localhost API rejects a wrong approver and preserves one effect/receipt on retry | A deployed institutional service |
+
+`doctor` exits **1** for teaching defaults. The generated domain's placeholder
+attack test also fails deliberately. The reproduction runner checks these exact
+expected conditions; it does not turn arbitrary nonzero exits into success.
+
+Private manuscript checks are opt-in: `make manuscript-check`. The command fails
+with a missing-input list when the archive is absent. Default test reports state
+that these checks are outside their scope; a public pass is not a paper pass.
+
+Timing depends on the machine. Use elapsed times recorded by your own run instead
+of assuming an old benchmark or fixed test count applies to this checkout.
 
 ## The four questions we would ask a submission like this
 

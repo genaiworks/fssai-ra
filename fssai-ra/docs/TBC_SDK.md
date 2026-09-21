@@ -4,7 +4,7 @@
 
 **Recommended next:** Follow the [extension guide](EXTENDING.md) to bind the reference to an institutional adapter.
 
-The `fssaira.tbc` package implements the mechanisms specified in TBC v11 as a persistent, local reference service. The supplied Word paper is preserved unchanged in `paper/tbc-v11/TBC_v11.docx`. The implementation manifest binds thirteen architectural mechanisms to code and behavioral tests. Existing component benchmarks retain their original denominators; they are not measurements of this new composition.
+The `fssaira.tbc` package implements the mechanisms specified in TBC v11 as a persistent, local reference service. Historical Word manuscripts and their alignment manifests are local-only. The public Passport, runtime, and behavioral tests are sufficient to reproduce the SDK without those files. Existing component benchmarks retain their original denominators; they are not measurements of this new composition.
 
 ## Run the engineering demonstration
 
@@ -12,8 +12,8 @@ From `fssai-ra/`, using the existing development environment:
 
 ```sh
 .venv/bin/python scripts/tbc_demo.py --output /tmp/tbc-demo-new
-.venv/bin/python -m pytest tests/test_tbc_sdk.py tests/test_tbc_alignment.py
-.venv/bin/python scripts/check_tbc_alignment.py
+.venv/bin/python -m pytest tests/test_tbc_sdk.py tests/test_sdk_inventory.py
+.venv/bin/python scripts/check_sdk_inventory.py
 ```
 
 Choose a new output directory on each demo run. The demo writes a real SQLite database and a JSON report. It uses generated bearer tokens, synthetic records, a deterministic summarizer and simulated named source/reviewer identities. It makes no network request and does not use a model provider. The assertions examine committed records, recipient bytes, memory labels, stored authority state and evidence integrity.
@@ -97,9 +97,11 @@ A contraction can further narrow any scope axis and increments the task epoch. O
 
 Graph checks run inside every model request and before committing a new message edge. They consider both actual session labels and potential protected reads, so even a clean handshake is rejected if the resulting channel creates a future source-to-public route. On an already-present prohibited graph or changed stored Passport, the Guardian commits quarantine and denies the pending request. It emits the actual path as a counterexample. It observes only the declared topology: deployment events for new external channels must be imported by trusted adapters before those channels become usable.
 
-## Maintenance and paper synchronization
+## Maintenance and optional manuscript synchronization
 
-`paper/tbc-v11/implementation.json` records the unchanged Word file's SHA-256, paragraph anchors, implementation symbols, behavioral test functions and the scope of every binding. `scripts/check_tbc_alignment.py` checks those bindings and compares the Passport inventory with the dispatcher. Pytest executes the bound behavior separately; a locator existing is not itself proof that a claim holds.
+The public `scripts/check_sdk_inventory.py` checks Passport, SDK, and dispatcher agreement. To check a private historical manuscript as well, use `make manuscript-check` with the required local archives.
+
+The local-only `paper/tbc-v11/implementation.json` records the unchanged Word file's SHA-256, paragraph anchors, implementation symbols, behavioral test functions and the scope of every binding. `scripts/check_tbc_alignment.py` checks those bindings and compares the Passport inventory with the dispatcher. Pytest executes the bound behavior separately; a locator existing is not itself proof that a claim holds.
 
 When adding a primitive, update the parser, enforcement branch, Passport inventory, tests and mapping together. When changing the paper, review its new claims and update the source hash and anchors deliberately. Do not mechanically refresh the hash to make CI pass. Existing paper figures remain governed by `scripts/generate_results.py --check` and `tests/test_paper_alignment.py`.
 

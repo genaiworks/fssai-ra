@@ -78,7 +78,7 @@ For oversight, label all behavioral parameters as declared assumptions unless me
 
 Use a separate checkout of the cited commit and follow only the proposed reproduction instructions. Confirm every required profile, script, input, and evidence artifact is tracked or supplied through an accessible archive. Local ignored paper drafts can make an author's checkout pass while a reviewer’s checkout fails.
 
-The broad historical alignment suite depends on manuscripts that are not all shipped. Identify required archives rather than hiding their absence. Keep a targeted reproduction command for the specific paper in its publication record. If you change code or data after the final run, rerun the affected experiment and refresh the record.
+The default public suite runs without manuscripts. The optional `make manuscript-check` depends on local-only archives and fails clearly when they are missing. Keep a targeted reproduction command for the specific paper in its publication record. If you change code or data after the final run, rerun the affected experiment and refresh the record.
 
 Before publishing an evidence bundle, review it for personal records, credentials, local filesystem paths, and copyrighted or restricted inputs. Use synthetic fixtures unless an authorized study explicitly permits other data.
 

@@ -158,8 +158,7 @@ domain. No learning gain is claimed until it is measured.
 
 ## Reviewer or auditor route
 
-1. [`REVIEWERS.md`](REVIEWERS.md) — reproduce the current public claims in about
-   ten minutes with `make reviewer`.
+1. [`REVIEWERS.md`](REVIEWERS.md) — reproduce the current public claims with `make reviewer`; elapsed time depends on the host.
 2. [`ASSURANCE.md`](ASSURANCE.md) — inspect every claim and its boundary.
 3. [`RESPONSIBLE_AI.md`](RESPONSIBLE_AI.md) — check unresolved governance risks.
 4. [`GAPS.md`](GAPS.md) — verify that every open claim names the evidence needed
@@ -198,7 +197,7 @@ contain its manuscripts or paper-build inputs.
 | Install from the repository root | `make setup` | creates the project environment with `python3`; installation downloads dependencies |
 | See the idea | `make demo` | one synthetic walkthrough |
 | Check implementation | `make test` | deterministic engineering tests |
-| Check public claims | `make reviewer` | broad local suite and experiments; requires historical manuscript inputs for paper-alignment checks |
+| Check public claims | `make reviewer` | public runtime suite and experiments; private manuscripts are opt-in with `make manuscript-check` |
 | Inspect deployment honesty | `fssaira doctor` | active defaults and readiness blockers; not certification |
 | Check the read path | `fssaira disclosure profiles/healthcare_record_access.yaml` | what a model may see and what may leave, against three architectures |
 | Extend a domain | `fssaira init PATH --domain-id my-domain` | new structure with intentionally empty assurance |

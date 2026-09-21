@@ -15,6 +15,38 @@
 7. [Create your own domain](#7-create-your-own-domain)
 8. [Know what you have demonstrated](#8-know-what-you-have-demonstrated)
 
+## Before you begin
+
+You do not need AI-model training experience. You should be able to open a
+terminal, change directory with `cd`, and copy a command. A **terminal** runs
+commands; a **browser** displays the generated viewer. Text inside code blocks
+is a command to copy; `PATH`, `URL`, and similar uppercase words are placeholders
+only where explicitly labelled.
+
+| Route | Required | Network use | Success checkpoint |
+|---|---|---|---|
+| First demo | Git, Python 3.10+ with SQLite | Clone once; execution is local | Five runs, `verified: true`, viewer opens |
+| Full learning/reproduction | Python venv/pip; Make optional | Dependency installation; experiments use local fixtures | `make reproduce` returns PASS and saves `report.json` |
+| API and console | Above plus Node/npm (CI uses Node 22) | npm installation; localhost requests | API walkthrough passes; console tabs load |
+| Distributed reference | Docker Engine/Desktop and Compose v2 | Image downloads and local services | Health checks and `smoke_stack.py`; separate from core reproduction |
+
+Check tools with `git --version` and `python3 --version` (Windows: `py -3 --version`).
+If `venv` or pip is missing, install your OS's Python venv/pip components before
+continuing. On Linux these may be separate OS packages. A terminal must be allowed
+to create local files and bind localhost ports for the HTTP/TLS demonstrations.
+
+Clone once into a directory you choose:
+
+```bash
+git clone https://github.com/genaiworks/fssai-ra.git
+cd fssai-ra
+```
+
+You are now in **ROOT**, with `README.md`, `Makefile`, and another `fssai-ra/`
+folder. That inner folder is **APP**, containing `pyproject.toml`, `profiles/`,
+and `scripts/`. Do not paste a second clone command if you already have the repo.
+Commands in sections 2–3 explicitly start at ROOT; sections 4–7 use APP.
+
 ## 1. Understand the idea
 
 Imagine an agent helping correct a record. It can read information it is authorized to see and propose a correction. Its confidence is not permission. A trusted service checks the task, resource, role, current record version, independent evidence, and required approval before making the change. A separate release check decides which recipient may receive the result.
@@ -87,7 +119,7 @@ If Make is unavailable, enter the inner directory and use:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[dev,privacy]'
+python -m pip install -e '.[dev,privacy,api]'
 ```
 
 ### Windows PowerShell
@@ -97,7 +129,7 @@ From the repository root:
 ```powershell
 cd fssai-ra
 py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev,privacy]"
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,privacy,api]"
 .\.venv\Scripts\python.exe -m fssaira.cli --help
 .\.venv\Scripts\python.exe scripts/demo.py --fast
 ```
@@ -115,6 +147,36 @@ fssaira doctor
 
 `doctor` may return a nonzero status for teaching defaults, missing isolation, or unconfigured services. Read its findings: it is a deployment diagnostic, not an installation-only test. The [troubleshooting guide](TROUBLESHOOTING.md) distinguishes these cases.
 
+### Reproduce the complete beginner path automatically
+
+From APP with the environment active:
+
+```bash
+python scripts/reproduce.py
+```
+
+Or, from ROOT, run `make reproduce`. Each invocation creates a new output
+folder and prints its absolute path. It runs the local joined demo, SDK, core
+experiments, an actual isolated localhost API, and the new-domain scaffold.
+It explicitly selects a deterministic model and does not inherit your live
+`FSSAI_*` deployment configuration. It stops on an unexpected outcome.
+
+Read these outputs in order:
+
+1. `report.json`: overall `passed`, exact commands, exit codes, timings, commit,
+   source hashes, dependency versions, and artifact hashes.
+2. `joined/viewer.html`: actual local decisions, state, sink bytes, and receipts.
+3. `verify.json` / `evaluate.json`: state-space and scenario results.
+4. `api.json`: wrong-role denial, one state change, retry receipt, evidence checks.
+5. `doctor.json`: expected teaching limitations, not a deployment certificate.
+6. `scaffold-tests.log`: the deliberately failing placeholder attack test.
+
+The final line should begin `PASS: all public workflows reproduced`.
+If it stops, open the named `.log` file and use [Troubleshooting](TROUBLESHOOTING.md).
+Rerun with the default command to obtain a new bundle; do not erase a failure to
+make the report look successful. Do not copy the scripts into another project:
+they rely on the profiles and contracts in this checkout.
+
 ## 4. Explore policies and experiments
 
 Run these commands from the inner directory with the virtual environment active:
@@ -127,6 +189,8 @@ fssaira evaluate profiles/student_support.yaml
 fssaira conformance --backend memory
 fssaira conformance --backend sql
 ```
+
+**Checkpoint:** validation reports a valid profile/contract; verification reports zero violations within its bounds; evaluation reports both containment and benign completion; both conformance commands report conformant. A refusal inside an attack experiment is expected; the experiment command itself should return success.
 
 Read a profile before changing it. Its transitions name allowed operations and reviewer roles. The contract adds the protected asset, enforcement point, owner, test, evidence, and failure response. `verify` explores a bounded declared state space; `evaluate` runs authored attacks, benign cases, and ablations; `conformance` checks a backend's observable behavior.
 
@@ -159,6 +223,8 @@ python scripts/tbc_demo.py --output work/sdk-first-demo
 python scripts/developer_security_demo.py
 ```
 
+**Checkpoint:** the SDK report ends with `"passed": true`; the developer example reports `exact_artifact_bytes: true`, rejects a digest mismatch, and records one provider submission.
+
 Use a new SDK output directory on every run. The SDK example covers tasks, context, governed memory, narrower child agents, labelled messages, exact effects, release escrow, and authority contraction. The developer example checks approved artifact bytes and remote-effect reconciliation using local fixtures.
 
 Read [TBC SDK](TBC_SDK.md) before embedding these components. Trusted runtime objects, databases, and administrative credentials must remain outside model control. These examples do not install a sandbox.
@@ -176,7 +242,7 @@ python -m pip install -e '.[api]'
 fssaira serve --host 127.0.0.1 --port 8080
 ```
 
-Open `http://127.0.0.1:8080/docs` for interactive API documentation and `/health` for service health. The teaching configuration uses synthetic identities and local state. Read [Platform](PLATFORM.md) before changing authentication or storage.
+Open `http://127.0.0.1:8080/docs` for interactive API documentation and `http://127.0.0.1:8080/health` for service health. In another terminal, from APP with the environment active, run `python scripts/api_walkthrough.py`. It creates uniquely named synthetic records, attempts a wrong-role approval, approves with a reviewer, executes, retries, and checks the receipt. Expect `"passed": true`. For a completely self-contained check that starts/stops its own server, run `python scripts/api_walkthrough.py --self-test`. The teaching configuration uses synthetic identities and local state. Read [Platform](PLATFORM.md) before changing authentication or storage.
 
 ### Terminal 2: console
 
@@ -188,7 +254,7 @@ npm ci
 npm run dev
 ```
 
-Open the address printed by Vite, normally `http://localhost:5173`. The development proxy routes `/api` to the API on port 8080. Walk through Deployment → Governance → Actions → Evidence → Assurance. The Intelligence tab shows proposals; it does not give a model execution authority.
+Open the address printed by Vite, normally `http://localhost:5173`. The development proxy routes `/api` to the API on port 8080. Select **Operator** in the console identity selector before loading authenticated data. Walk through Deployment → Governance → Actions → Evidence → Assurance. Deployment blockers are expected for the reference configuration; an HTTP 401 means no valid identity was supplied, not that the server is unavailable. The Intelligence tab shows proposals; it does not give a model execution authority.
 
 The identity selector uses published teaching tokens. A distributed configuration generated by `bootstrap_dev_env.py` uses different tokens; use that configuration's credentials. See the [console guide](../console/README.md). Stop both servers with Ctrl+C.
 
@@ -208,6 +274,8 @@ fssaira verify work/my-domain/profile.yaml
 fssaira evaluate work/my-domain/profile.yaml
 python -m pytest work/my-domain
 ```
+
+**Checkpoint:** the generated profile/contract validate. Pytest intentionally reports one failing placeholder test alongside the passing structural tests. `make test` does not include your ignored `work/` directory; run its tests explicitly while developing it.
 
 The scaffold intentionally includes a failing placeholder adversarial test and an empty assurance document. This is expected: replace the placeholder with your domain's real failure case before claiming a result.
 

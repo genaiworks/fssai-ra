@@ -84,16 +84,18 @@ The `conference` namespace is retained for compatibility. These tools can suppor
 | ROOT | `make help` | List root targets |
 | ROOT | `make setup` | Create environment and install development/privacy dependencies |
 | ROOT | `make demo` | Guided component demonstration |
+| ROOT | `make reproduce` | Run public workflows; save commands, results, environment and hashes in a unique `work/` bundle |
+| ROOT | `make manuscript-check` | Explicit private manuscript validation; requires local archives |
 | ROOT | `make docs-check` | Check maintained documentation, navigation, and software citation |
 | ROOT | `make test`, `make lint` | Full local suite / Python lint |
-| ROOT | `make reviewer`, `make check`, `make all` | Broad checks including legacy paper dependencies; see below |
+| ROOT | `make reviewer`, `make check`, `make all` | Public checks; private paper inputs are not needed |
 | ROOT | `make falsify F=F19`, `make ablation F=F10` | Forward selected adversarial experiments |
 | ROOT | `make results` | **Regenerate** tracked evaluation and education evidence |
 | APP | `make help` | Full application target list |
 | APP | `make developer-demo` | Local artifact-integrity and remote-recovery example |
 | APP | `make joined-test`, `make security-review` | Focused joined-path / integration security regressions |
 | APP | `make tbc-demo OUTPUT=work/sdk-new` | SDK demo in a new directory |
-| APP | `make tbc-test`, `make architecture-check` | SDK/paper or architecture bindings; may need manuscript archives |
+| APP | `make tbc-test`, `make architecture-check` | Public SDK inventory or architecture contracts |
 | APP | `make qualify` | Generate host qualification findings under `audit/qualification/` |
 | APP | `make api`, `make gateway`, `make console` | Long-running local services |
 | APP | `make stack-up`, `make stack-down` | Start/stop Docker reference services |
@@ -108,7 +110,7 @@ For APP targets, activate the environment first or pass `PYTHON=.venv/bin/python
 
 ### 1. Documentation and first-run checks
 
-From ROOT: `make docs-check`. From APP:
+From ROOT: `make docs-check` and `make reproduce`. From APP:
 
 ```bash
 python scripts/joined_demo.py --output work/validation-demo
@@ -128,7 +130,7 @@ python -m pytest tests/test_disclosure.py tests/test_disclosure_tokens_and_concu
 python -m pytest tests/test_qualified_transport.py tests/test_remote_effects.py
 ```
 
-Choose tests for the component you actually use. TLS and privacy checks require cryptography support, included in the recommended `[dev,privacy]` installation.
+Choose tests for the component you actually use. TLS and privacy checks require cryptography support, included in the recommended `[dev,privacy,api]` installation.
 
 ### 3. Whole local checkout and research snapshots
 
@@ -140,7 +142,15 @@ python -m ruff check src tests scripts jobs adapters
 python scripts/generate_results.py --check
 ```
 
-**Archive dependency:** the full suite includes historical manuscript checks referring to local files such as `paper/form-ready-abstract.md` and `paper/tbc-v11/implementation.json`. These files are not all tracked. The existing `reviewer`, `all`, and architecture-alignment targets can therefore fail in a fresh clone even when a focused runtime suite passes. Record missing artifacts explicitly; do not silently skip them and report full validation. [Publication guidance](../../publications/README.md) explains what a paper must make available.
+The default suite explicitly excludes private manuscript checks. It still runs
+public runtime, result-snapshot, deck, README, and documentation checks. The test
+summary states this scope and reports deselected manuscript cases. Fully private
+modules are not collected, so they cannot fail import before runtime tests start.
+
+To validate the historical archive deliberately, run `make manuscript-check`
+from ROOT or APP. This uses `--include-manuscripts -m manuscript` and fails with
+a missing-input list when local-only artifacts are absent. It never reports
+missing private evidence as a passing manuscript check.
 
 ### 4. Deployment checks
 
@@ -151,7 +161,7 @@ Integration services, real credentials, host isolation, and independent evidence
 | Install in APP | Enables |
 |---|---|
 | `python -m pip install -e .` | Core Python/CLI with YAML |
-| `python -m pip install -e '.[dev,privacy]'` | Tests, lint, HTTP test dependencies, and encryption support |
+| `python -m pip install -e '.[dev,privacy,api]'` | Tests, lint, encryption support, and the local API server |
 | `python -m pip install -e '.[api]'` | FastAPI and Uvicorn serving |
 | `python -m pip install -e '.[postgres]'` | PostgreSQL adapter; server remains separate |
 | `python -m pip install -e '.[redis]'` | Redis client; server remains separate |
