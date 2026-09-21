@@ -1,4 +1,4 @@
-# Governed Learning: the education domain pack for the UNU Macau demonstration.
+# Governed Learning: the education domain pack for reusable education demonstrations.
 #
 # Everything here is synthetic. The pack declares what an institution means by
 # student support, transcript correction, financial aid, faculty feedback, and a
@@ -14,7 +14,7 @@
 #   delegation       declared bounds on authority passed between agents
 profile_id: governed-learning-education
 version: "1.0"
-title: Governed Learning (education pack for the UNU Macau demonstration)
+title: Governed Learning (education pack for reusable education demonstrations)
 resource_name: student_record_item
 owner: university_registrar
 manual_fallback: >-

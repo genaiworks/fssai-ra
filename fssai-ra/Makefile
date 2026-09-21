@@ -103,7 +103,7 @@ doctor:  ## Report what this deployment actually is
 demo:  ## The two-minute hero demonstration (fully offline)
 	$(PYTHON) scripts/demo.py
 
-conference-demo:  ## The UNU Macau live demonstration: a malicious AI, nine demos (offline)
+conference-demo:  ## Reusable education demonstration: a malicious AI, nine demos (offline)
 	$(PYTHON) scripts/conference_demo.py $(if $(DEMO),--demo $(DEMO),)
 
 security:  ## Kernel floor, education pack failure tests, privacy custody, and conference tests

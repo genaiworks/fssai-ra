@@ -75,7 +75,7 @@ def build(source: Path = SOURCE, target: Path = TARGET) -> dict:
         f'<w:p><w:pPr><w:pStyle w:val="Title"/><w:jc w:val="left"/></w:pPr>{_run(title)}</w:p>',
         '<w:p><w:pPr><w:spacing w:after="200"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" '
         'w:hAnsi="Arial"/><w:b w:val="0"/><w:i/><w:color w:val="000000"/><w:sz w:val="22"/>'
-        "</w:rPr><w:t>Extended abstract for the UNU Macau AI Conference 2026</w:t></w:r></w:p>",
+        "</w:rPr><w:t>Extended abstract: Governed Agentic AI</w:t></w:r></w:p>",
         _label("Proposed panel"), _plain(meta("Proposed panel")),
         _label("Keywords"), _plain(meta("Keywords")),
         _label("Reference implementation"), _plain(meta("Reference implementation")),

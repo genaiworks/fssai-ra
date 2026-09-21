@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 title: "FSSAI-RA: Fail-Secure Sovereign AI Reference Architecture"
-message: "If you use this software or its method, please cite both the software and the paper."
+message: "If you use this software, cite this software record and the exact commit used. Cite related papers separately when relevant; see publications/README.md in the repository."
 type: software
 authors:
   - family-names: Srivastava
@@ -33,17 +33,3 @@ keywords:
   - delegated authority
   - multi-agent systems
   - human oversight capacity
-preferred-citation:
-  type: conference-paper
-  title: "Trust by Construction: A Cross-Sector Reference Architecture for Governed Agentic AI"
-  authors:
-    - family-names: Srivastava
-      given-names: R.
-  collection-title: "UNU Macau AI Conference 2026 — AI × Education: AI for Learning, Learning for AI"
-  conference:
-    name: "UNU Macau AI Conference 2026"
-    city: "Macau SAR"
-    country: CN
-    date-start: "2026-11-25"
-    date-end: "2026-11-26"
-  year: 2026

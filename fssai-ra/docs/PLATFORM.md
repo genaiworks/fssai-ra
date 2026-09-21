@@ -57,7 +57,7 @@ directionality claim.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,privacy,api]"
 pytest -q
 uvicorn fssaira.api:create_default_app --factory --port 8080
 ```

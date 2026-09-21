@@ -1,6 +1,7 @@
 """Keep the public learning paths executable and honest."""
 
 import re
+import subprocess
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -60,6 +61,10 @@ def test_every_document_artifact_is_linked_from_the_documentation_map():
         path.relative_to(DOCS).as_posix()
         for path in DOCS.rglob("*")
         if path.is_file() and path != DOCS_INDEX
+        and subprocess.run(
+            ["git", "check-ignore", "-q", "--", str(path)], cwd=ROOT,
+            check=False,
+        ).returncode != 0
     }
     missing = sorted(artifacts - index_targets)
     assert not missing, f"docs/README.md does not link these documentation artifacts: {missing}"
@@ -131,15 +136,15 @@ def test_repository_root_has_a_python3_portable_entrypoint():
         assert "cd fssai-ra/fssai-ra" not in text, f"stale nested clone path in {path}"
 
 
-def test_publication_titles_agree_across_both_citations():
+def test_software_citations_agree_and_remain_independent_of_papers():
     import yaml
 
-    title = (ROOT / "paper" / "form-ready-abstract.md").read_text(
-        encoding="utf-8"
-    ).splitlines()[0].removeprefix("# ")
-    for path in (ROOT.parent / "CITATION.cff", ROOT / "CITATION.cff"):
-        citation = yaml.safe_load(path.read_text(encoding="utf-8"))
-        assert citation["preferred-citation"]["title"] == title, path
+    citations = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in
+                 (ROOT.parent / "CITATION.cff", ROOT / "CITATION.cff")]
+    assert citations[0] == citations[1]
+    assert citations[0]["type"] == "software"
+    assert "preferred-citation" not in citations[0]
+    assert citations[0]["repository-code"] == "https://github.com/genaiworks/fssai-ra"
 
 
 def test_package_metadata_sends_readers_to_the_documentation_map():

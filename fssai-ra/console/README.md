@@ -4,8 +4,13 @@ A React operator console for the control plane. It is a client, not a component:
 every operation it performs is available from `fssaira` and the HTTP API, and it
 holds no credential the API does not check.
 
+Start the API first from the application directory: install `.[api]`, then run
+`fssaira serve --host 127.0.0.1 --port 8080`. In a second terminal, enter
+`fssai-ra/console/` relative to the repository root. Node/npm are required
+(CI uses Node 22). See the [complete setup](../docs/USER_GUIDE.md#6-use-the-api-and-console).
+
 ```bash
-npm install
+npm ci
 npm run dev          # http://localhost:5173, proxies /api to 127.0.0.1:8080
 ```
 

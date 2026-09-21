@@ -1,6 +1,6 @@
 # Build and test bounded agent integrations
 
-Start here for v14. The repository is a reference implementation with executable
+Start here for reusable integration development. See the [user guide](docs/USER_GUIDE.md), [feature catalogue](docs/FEATURES.md), and [research workflow](docs/RESEARCH_GUIDE.md). The repository is a reference implementation with executable
 failure cases. It is useful for developing control-plane adapters and teaching
 agent security; passing its tests is not production certification.
 
@@ -12,15 +12,14 @@ From `fssai-ra/`, using Python 3.10 or later:
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev,privacy]'
 make developer-demo PYTHON=.venv/bin/python
-make all PYTHON=.venv/bin/python
+.venv/bin/python -m pytest tests/test_qualified_transport.py tests/test_remote_effects.py tests/test_developer_security_demo.py
 ```
 
 Dependency installation needs package access. The developer demo and tests use
 synthetic data and local services; they need no model account or API key.
 The demo prints `exact_artifact_bytes: true`, rejects a digest mismatch, and
 shows `UNCERTAIN → UNCERTAIN → CONFIRMED` with exactly one provider submission.
-`make all` also measures the host and should report `reference` on a developer
-machine. Do not turn missing isolation evidence into success to pass a gate.
+The broader `make all` target additionally requires historical paper archives and measures the host; see [validation tiers](docs/COMMANDS.md#validation-tiers). Host qualification should report `reference` on a developer machine. Do not turn missing isolation evidence into success to pass a gate.
 
 ## Choose an integration boundary
 
@@ -94,6 +93,12 @@ checks belong outside the model. This ledger does not itself verify an approval.
 ```sh
 .venv/bin/python -m pytest tests/test_qualified_transport.py tests/test_remote_effects.py
 .venv/bin/python -m pytest tests/test_developer_security_demo.py
+```
+
+If the historical manuscript archives are available, additionally run the
+artifact-binding checks. These are separate from the runtime examples above:
+
+```sh
 .venv/bin/python scripts/verify_architecture.py
 .venv/bin/python scripts/check_paper_revision.py
 ```
@@ -101,14 +106,14 @@ checks belong outside the model. This ledger does not itself verify an approval.
 Transport tests use real loopback TLS handshakes and fresh test certificates.
 Monitor tests use scripted findings, not a live-model accuracy experiment. Test
 counts, adversarial episodes and numeric result checks are different units.
-Report them separately. The current manuscript and evidence bindings are in
+Report them separately. The historical v14 manuscript and evidence bindings are in
 `paper/tbc-v14/`; v13 is preserved. See `SECURITY_REVIEW.md` for remaining
 acceptance requirements, and do not infer that all 109 architecture controls are
 fully implemented from the number of passing tests.
 
-## Reproduce the release figures
+## Historical v14 release figures
 
-Figures 4 and 6 in v14 are committed as PNG and SVG in `paper/tbc-v14/figures/`.
+The v14 figure workflow expects PNG and SVG assets in `paper/tbc-v14/figures/`. Those local archive inputs are not all distributed in a fresh checkout; this section applies only when that archive is available.
 Figure 6 reads the architecture-comparison and domain-pack result JSON directly;
 its manifest records the input hashes, counts and rendered asset hashes. The
 paper builder and release checker reject stale or altered figure assets.

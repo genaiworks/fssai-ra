@@ -413,7 +413,7 @@ def test_no_readme_overstates_the_test_count(path, figures):
         int(value.replace(",", ""))
         for value in re.findall(r"(\d[\d,]*) deterministic tests", path.read_text(encoding="utf-8"))
     ]
-    assert quoted, f"{path} should state how many deterministic tests back its claims"
+    # General-purpose READMEs may link to versioned results without quoting counts.
     for count in quoted:
         assert count <= figures["test_count"], (
             f"{path} claims {count} deterministic tests but the repository has "
@@ -446,18 +446,14 @@ def test_the_reviewer_guide_quotes_the_current_test_count(figures):
 
 @pytest.mark.parametrize("path", READMES, ids=lambda p: p.parent.name + "/README.md")
 def test_no_readme_quotes_a_stale_oversight_capacity(path, figures):
-    """Both READMEs lead with the oversight figure, so both are checked.
-
-    It is the most quotable number in the project and therefore the most likely
-    to be repeated somewhere and then left behind when the defaults change.
-    """
-    expected = (
-        f"{figures['oversight_reviewer_roster']} reviewers sustain "
-        f"{figures['oversight_sustainable_per_day']:,.0f} actions/day"
+    """Validate any quoted capacity; general-purpose READMEs need not quote it."""
+    quoted = re.findall(
+        r"(\d+) reviewers sustain ([\d,]+) actions/day",
+        path.read_text(encoding="utf-8"),
     )
-    assert expected in path.read_text(encoding="utf-8"), (
-        f"{path} no longer states the generated oversight capacity figure: {expected!r}"
-    )
+    for reviewers, capacity in quoted:
+        assert int(reviewers) == figures["oversight_reviewer_roster"]
+        assert int(capacity.replace(",", "")) == figures["oversight_sustainable_per_day"]
 
 
 # ---------------------------------------------------------------------------
@@ -465,7 +461,7 @@ def test_no_readme_quotes_a_stale_oversight_capacity(path, figures):
 # ---------------------------------------------------------------------------
 #
 # Everything above guards ``paper/extended-abstract.md``, the proceedings-style
-# version. The version that is pasted into the UNU form is
+# version. The version that is pasted into the historical submission form is
 # ``paper/form-ready-abstract.md``, and until these tests existed it was the one
 # claim surface in the project with no guard at all. That is the wrong way
 # round: the extended abstract is what we would like reviewers to read, and the

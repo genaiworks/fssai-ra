@@ -1378,7 +1378,7 @@ def build_parser() -> argparse.ArgumentParser:
     pilot.set_defaults(func=cmd_pilot_report)
 
     conference = sub.add_parser(
-        "conference", help="the UNU Macau demonstration layer: falsify, ablate, trace, lab")
+        "conference", help="the reusable education demonstration layer: falsify, ablate, trace, lab")
     conference_sub = conference.add_subparsers(dest="conference_command", required=True)
     pack_check = conference_sub.add_parser("pack-check", help="check a domain pack against the kernel floor")
     pack_check.add_argument("path", type=Path)

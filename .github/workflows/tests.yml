@@ -204,6 +204,9 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.13" }
       - run: python -m pip install pyyaml tomli
+      - name: Public documentation links resolve in a clean checkout
+        run: python fssai-ra/scripts/check_public_docs.py
+
       - name: Versions agree across the repository
         run: |
           python - <<'PY'
@@ -223,13 +226,10 @@ jobs:
               assert citation["license"] == "Apache-2.0", path
               print(f"{path} ✓ {version}")
 
-          paper_title = Path("fssai-ra/paper/form-ready-abstract.md").read_text(
-              encoding="utf-8"
-          ).splitlines()[0].removeprefix("# ")
-          for path in (Path("CITATION.cff"), Path("fssai-ra/CITATION.cff")):
-              citation = yaml.safe_load(path.read_text(encoding="utf-8"))
-              assert citation["preferred-citation"]["title"] == paper_title, (
-                  f"{path} preferred citation title disagrees with the paper"
-              )
+          citations = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in
+                       (Path("CITATION.cff"), Path("fssai-ra/CITATION.cff"))]
+          assert citations[0] == citations[1], "software citation copies disagree"
+          assert citations[0]["type"] == "software"
+          assert "preferred-citation" not in citations[0], "cite papers separately"
           print(f"all metadata agrees on {version}")
           PY

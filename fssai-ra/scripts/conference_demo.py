@@ -1,4 +1,4 @@
-"""The UNU Macau live demonstration: a malicious AI, given every chance to break the system.
+"""A reusable education demonstration: a malicious AI, given every chance to break the system.
 
     python scripts/conference_demo.py              # narrated, pauses between demos
     python scripts/conference_demo.py --fast       # no pauses (rehearsal, CI)
@@ -313,7 +313,7 @@ def main() -> int:
         print(__doc__)
         return 0
     stage = Stage(0.0 if args.fast else 1.2)
-    print(paint("TRUST BY CONSTRUCTION · live demonstration · UNU Macau AI Conference 2026", "1"))
+    print(paint("TRUST BY CONSTRUCTION · live demonstration · Governed Agentic AI", "1"))
     print(paint("Intelligence is untrusted. Power and data are mediated.", "2"))
     for number in ([args.demo] if args.demo else sorted(DEMOS)):
         DEMOS[number](stage)

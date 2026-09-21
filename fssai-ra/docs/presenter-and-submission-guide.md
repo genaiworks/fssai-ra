@@ -2,7 +2,7 @@
 
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
 >
-> **Recommended next:** Open the [`../paper/form-ready-abstract.md`](../paper/form-ready-abstract.md), then rehearse with the [maintained deck](presentation/slides.html).
+> **Recommended next:** Open the `../paper/form-ready-abstract.md` (local historical manuscript; see [publication availability](../../publications/README.md#historical-archive-availability)), then rehearse with the [maintained deck](presentation/slides.html).
 
 ## Recommended positioning
 
@@ -16,15 +16,17 @@
 
 The strongest part of the contribution is the connection between a governance requirement and observable system behavior. Make that connection visible throughout the talk. An architecture diagram by itself will not distinguish this from a conventional security presentation.
 
-## Conference and submission context
+## Adapting this material to a venue
 
-The invitation requests an extended abstract by **21 September 2026**. It describes shortlisting for consideration as a panelist and proceedings development, rather than final acceptance. The official Microsoft Form requires four separately pasted fields: Introduction, strictly 200–250 words; Development Section 1, 550–650 words; Development Section 2, 550–650 words; and Conclusion, strictly 200–250 words. References are entered separately. Its text boxes also expose character caps of 1,500, 3,900, 3,900, and 1,500. The form-ready revision fits both sets of constraints. Run `python scripts/check_submission.py` immediately before pasting.
+Use the [publication template](../../publications/TEMPLATE.md) to record a paper's
+venue, status, exact software snapshot, and reproduction instructions. Verify
+that venue's current word limits, field limits, citation format, and artifact
+requirements before submitting. Historical form validators apply only to the
+formats they were written for; they are not a universal submission checklist.
 
-UNU's published conference announcement confirms **25–26 November 2026** and the theme **“AI × Education: AI for Learning, Learning for AI.”** The supplied draft identifies Panel 2 as “Agentic AI in the Loop: From Autonomous Tools to Shared Capacity.” That panel title comes from your material; the linked conference landing page could not be retrieved during this review. The public book-series page confirms the series' scope but does not independently establish acceptance or publication of this particular contribution.
-
-Sources: [UNU conference announcement](https://unu.edu/macau/news/unu-macau-ai-conference-2026-become-sponsor), [UNU–Springer series](https://unu.edu/macau/announcement/book-series-aisd). Submission length and deadline come from your invitation.
-
-Before sending, add the actual author name, affiliation, corresponding email, and professional title. The form separately requires confirmation that the author respected each word limit and that the work is original. References have no displayed word limit. The repository should be public and verified in a signed-out browser before its URL is included in the submitted text.
+Keep venue-specific invitations, deadlines, correspondence, and submitted
+manuscripts in the local-only `paper/` directory. This public guide focuses on
+reusable presentation and evidence practices.
 
 The v1.0.0 baseline records 187 collected tests. Its JSON reports cover adversarial containment, benign utility, ablations, bounded model checking, backend conformance, and a 32-caller single-process replay race. Current-source enhancements add two independent-process races, four abrupt-exit recovery fixtures, and proposal-digest checks for replay identity. They are published separately in `evaluation/results/resilience-student-support.json` and documented in `docs/RESILIENCE.md`. Do not attribute these enhancements to the unchanged v1.0.0 tag. Broader stochastic attacks, power-loss and distributed recovery, reviewer burden, cost and energy evaluation remain open work.
 

@@ -4,6 +4,8 @@
 >
 > **Recommended next:** Policy leader → [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) · AI engineer → [`PLATFORM.md`](PLATFORM.md) · reviewer → [`REVIEWERS.md`](REVIEWERS.md)
 
+For a complete beginner walkthrough with expected outputs, Windows setup, API and console instructions, use the [user guide](USER_GUIDE.md). This page is the shorter conceptual/source-reading tour. See [Commands](COMMANDS.md#validation-tiers) before running the full suite: some historical checks require local manuscript archives.
+
 This is the shortest route from “I cloned it” to “I can explain, test, and
 extend it.” The complete route takes about 90 minutes and stays offline after
 installation; stop after Step 6 for a 45-minute conceptual tour.
