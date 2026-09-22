@@ -6,7 +6,7 @@ Reviewed September 21, 2026. Scope: `security_systems`, including the two confer
 
 Present this as a reproducible engineering experience report. The artifact and live failure demonstrations support a practitioner talk. The current evidence does not support a broad claim that the system solves agent security, outperforms RBAC generally, or is production-ready across regulated industries. A research-paper claim would need stronger baselines, external attacks, realistic benign workloads, and deployment measurements.
 
-Use two distinct pitches: **AIE: exact-action deployment approval and dispatcher integration**; **AI Con: observable-effect evaluation, ablations, and integration failures**. The AIE form allows three submissions, but filling the quota with overlapping versions would dilute the strongest story.
+The AIE package now contains three distinct submissions at the author’s request: deployment approval, security evaluation, and a disclosure workshop. Each has its own audience outcome and can stand alone. The AI Con proposal remains a separate, longer evaluation session.
 
 ## Judge's critique and changes
 
@@ -48,7 +48,7 @@ The measured attackers use a fixed grammar and authored fixtures. One legitimate
 
 ## Submission readiness
 
-The two revised proposals are drafted and mapped to their intended audiences. The AIE document follows the supplied fields exactly: Session Title, Description, Session format, Special Flags, Speaker/Session Pitch, and Possible Tracks. Track names are suggestions until matched to the actual dropdown.
+The three AIE proposals and separate AI Con proposal are drafted and mapped to their intended audiences. The AIE document follows the supplied fields exactly: Session Title, Description, Session format, Special Flags, Speaker/Session Pitch, and Possible Tracks. Track names are suggestions until matched to the actual dropdown.
 
 Before sending, the author needs to confirm the biography and add an anonymously accessible artifact/release URL. A short demo recording would strengthen the application. No submission, publication, or message to organizers was made during this work.
 
