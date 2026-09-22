@@ -1,4 +1,4 @@
-"""The talk, runnable: six scenes, one command, no network, no API key, no GPU.
+"""The talk, runnable: seven scenes, one command, no network, no API key, no GPU.
 
     trustkernel demo                     # every scene against the devtools world
     trustkernel demo --scene 2           # one scene
@@ -258,11 +258,29 @@ def scene_6(stage: Stage) -> None:
               f"{row.disabled:>2} violation(s)  {stage.paint(verdict, colour)}")
     bearing = sum(r.load_bearing for r in rows)
     stage.beat()
-    stage.say(stage.paint(f"{bearing} of {len(rows)} controls load-bearing; "
-                          f"{len(rows) - bearing} redundant by design. {len(rows) * 3} worlds in {elapsed:.1f}s.", "1"))
+    stage.say(stage.paint(f"In {bearing} of {len(rows)} ablations the harm came back; the other {len(rows) - bearing} "
+                          f"are two redundant pairs. {len(rows) * 3} worlds in {elapsed:.1f}s.", "1"))
 
 
-SCENES = {1: scene_1, 2: scene_2, 3: scene_3, 4: scene_4, 5: scene_5, 6: scene_6}
+def scene_7(stage: Stage) -> None:
+    """The same attacks, unchanged, against every domain that ships."""
+    from .matrix import run_matrix
+
+    stage.title(7, "Same kernel, same attacks, every domain",
+                "A new domain is a YAML pack and a cast. No code, no new tests, no fork.")
+    started = time.perf_counter()
+    rows = run_matrix(redteam_attempts=40)
+    print(f"  {'domain':<12} {'falsifiers':>10} {'ablations':>10}   delegation none/per-hop/chain   "
+          f"red team   without executor")
+    for r in rows:
+        u, p, c = r.delegation
+        print(f"  {r.world:<12} {r.falsifiers_held:>4} / {r.falsifiers:<3} {r.ablations_load_bearing:>4} / {r.ablations:<3}"
+              f"   {u:>2} / {p:>2} / {c:>2} of 10{'':<14}{r.redteam_violations:>3}{r.redteam_without_executor:>15}")
+    stage.beat()
+    stage.say(stage.paint(f"{len(rows)} domains, every suite, {time.perf_counter() - started:.1f}s.", "1"))
+
+
+SCENES = {1: scene_1, 2: scene_2, 3: scene_3, 4: scene_4, 5: scene_5, 6: scene_6, 7: scene_7}
 
 
 def run(world: str = "devtools", scenes=None, pause: float = 0.0, color: bool | None = None) -> None:

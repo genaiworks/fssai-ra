@@ -10,11 +10,12 @@ from trustkernel.world import WorldSpec, available_worlds
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("world", available_worlds())
 def test_the_whole_talk_runs_on_every_world(world, capsys):
     assert main(["demo", "--world", world, "--no-color"]) == 0
     out = capsys.readouterr().out
-    assert out.count("SCENE ") == 6
+    assert out.count("SCENE ") == 7
     # Scene 2 must show both halves: the denial, then the leak once the control is removed.
     assert "RECIPIENT_CLASS_NOT_CLEARED" in out and "ATTACK SUCCEEDS" in out
     assert "10 of 10 caught" in out and " 2 of 10 caught" in out

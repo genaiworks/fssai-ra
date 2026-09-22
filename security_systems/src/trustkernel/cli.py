@@ -69,7 +69,8 @@ def cmd_ablate(args) -> int:
             d = row.to_dict()
             print(f"{d['falsifier']}  {d['control']:<46} enabled {d['enabled']:<9} disabled {d['disabled']:<9} "
                   f"restored {d['restored']:<9} {d['load_bearing']}")
-        print(f"\n{sum(r.load_bearing for r in rows)} of {len(rows)} controls load-bearing in world '{args.world}'.")
+        print(f"\nIn {sum(r.load_bearing for r in rows)} of {len(rows)} ablations the harm returned "
+              f"(world '{args.world}').")
     _emit(args, [r.to_dict() for r in rows], table)
     return 0 if all(r.enabled == 0 and r.restored == 0 for r in rows) else 1
 
@@ -144,6 +145,37 @@ def cmd_pack_check(args) -> int:
     return 1 if findings else 0
 
 
+def cmd_check(args) -> int:
+    from .world_check import check_world
+
+    worlds = [args.world] if args.world else available_worlds()
+    results = {w: check_world(w) for w in worlds}
+
+    def table():
+        for world, findings in results.items():
+            print(f"{world:<12} {'OK' if not findings else f'{len(findings)} finding(s)'}")
+            for f in findings:
+                print(f"  {f.code:<34} {f.where:<44} {f.detail}")
+    _emit(args, {w: [f.to_dict() for f in fs] for w, fs in results.items()}, table)
+    return 1 if any(results.values()) else 0
+
+
+def cmd_matrix(args) -> int:
+    from .matrix import run_matrix
+
+    rows = run_matrix(redteam_attempts=args.attempts)
+
+    def table():
+        print(f"{'world':<12} {'falsifiers':>10} {'ablations':>10}  {'delegation (none/per-hop/chain)':<32}"
+              f"{'red team':>9} {'w/o executor':>13}")
+        for r in rows:
+            u, p, c = r.delegation
+            print(f"{r.world:<12} {r.falsifiers_held:>4} / {r.falsifiers:<3} {r.ablations_load_bearing:>4} / {r.ablations:<3}"
+                  f"  {u:>2} / {p:>2} / {c:>2} of 10{'':<16}{r.redteam_violations:>5}{r.redteam_without_executor:>13}")
+    _emit(args, [r.to_dict() for r in rows], table)
+    return 0 if all(r.falsifiers_held == r.falsifiers and r.redteam_violations == 0 for r in rows) else 1
+
+
 def cmd_evidence(args) -> int:
     """Every figure for one world, in one file. Talks, READMEs, and slides quote only this."""
     from .adaptive_attack import run_adaptive
@@ -183,7 +215,7 @@ def cmd_evidence(args) -> int:
         Path(args.out).write_text(text, encoding="utf-8")
         s = bundle["summary"]
         print(f"{args.out}: {s['falsifiers_held']}/{s['falsifiers']} falsifiers held, "
-              f"{s['ablation_load_bearing']}/{s['ablation_rows']} controls load-bearing, "
+              f"{s['ablation_load_bearing']}/{s['ablation_rows']} ablations load-bearing, "
               f"delegation {s['delegation']}, in {seconds}s")
     else:
         sys.stdout.write(text)
@@ -207,8 +239,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = command("worlds", cmd_worlds, "list the worlds that ship", world=False)
     p.add_argument("--ids", action="store_true", help="print only world ids, space separated")
-    p = command("demo", cmd_demo, "run the talk: six scenes against a live world", json_flag=False)
-    p.add_argument("--scene", type=int, action="append", choices=range(1, 7), help="run only this scene")
+    p = command("demo", cmd_demo, "run the talk: seven scenes against a live world", json_flag=False)
+    p.add_argument("--scene", type=int, action="append", choices=range(1, 8), help="run only this scene")
     p.add_argument("--pause", type=float, default=0.0, help="seconds between beats, for a stage")
     p.add_argument("--no-color", action="store_true")
     p = command("falsify", cmd_falsify, "run the 25 falsifiers")
@@ -229,6 +261,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--remove", action="append", default=[], choices=ALL_CONTROLS, metavar="CONTROL")
     p.add_argument("--live", action="store_true")
     p.add_argument("--prove-attacker", action="store_true", help="also run the positive control")
+    p = command("check", cmd_check, "validate a world's wiring against its pack (all worlds by default)",
+                world=False)
+    p.add_argument("--world", help="one world id or path")
+    p = command("matrix", cmd_matrix, "every attack suite against every world", world=False)
+    p.add_argument("--attempts", type=int, default=150, help="red-team attacks per world")
     p = command("pack-check", cmd_pack_check, "check a domain pack against the kernel floor", world=False)
     p.add_argument("pack", help="path to a pack YAML")
     p = command("evidence", cmd_evidence, "every figure for one world, as one JSON bundle", json_flag=False)

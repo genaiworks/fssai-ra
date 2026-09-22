@@ -1,0 +1,319 @@
+"""Drop-in authority for your own agent stack.
+
+Every agent framework has one place where a model's tool call becomes a function call:
+the tool dispatcher. :class:`Guard` sits there. It adds no model, no network, and no
+framework dependency, and it enforces the three rules the evaluation suites measure:
+
+1. **Whole-chain delegation.** An agent acts under an :class:`AgentContext`: a root
+   grant plus the signed chain of hops that led to it. Every call re-derives authority
+   from the root (attenuation, provenance, rooting, expiry, acyclicity, depth,
+   non-delegable consequence, holder binding) instead of trusting the caller's claimed
+   scope or checking only the last hop.
+2. **Exact-action approval.** A consequential tool runs only with an Ed25519 human
+   approval bound to *this* principal, tool, resource, and argument digest, from the
+   declared role, unexpired, and executed exactly once. A replayed call returns the
+   first result; it does not repeat the side effect.
+3. **Labels survive summarization.** Each context carries the join of every data class
+   it has read, and a worker's label flows into whoever consumes its output. Release to
+   a recipient is refused unless the recipient's clearance covers the label. There is
+   no API to lower a label, so a model cannot declassify its own output.
+
+The checks are the kernel's own: :class:`~trustkernel.kernel.delegation.DelegationAuthority`,
+:class:`~trustkernel.kernel.exact_action.AccountableExecutor`, and the pack's
+:class:`~trustkernel.kernel.disclosure.RecipientRule` policy. Denials raise
+:class:`~trustkernel.kernel.exact_action.ExecutionDenied` or
+:class:`~trustkernel.kernel.disclosure.DisclosureDenied` with a stable ``code``.
+
+    guard = Guard.from_pack("worlds/devtools/pack.yaml")
+    lead = guard.root("coordinator", tools={"read_repo", "trigger_deploy"}, resources={"acme-api"})
+    worker = guard.spawn(lead, "reader-agent", tools={"read_repo"})
+
+    @guard.tool(resource="service")
+    def read_repo(service: str) -> str: ...
+
+    @guard.tool(resource="service", action_class=ActionClass.HIGH_IMPACT, approver_role="release_manager")
+    def trigger_deploy(service: str, build: str) -> str: ...
+
+    read_repo(worker, service="acme-api")                     # allowed
+    trigger_deploy(worker, service="acme-api", build="v43")   # ExecutionDenied: not delegated
+"""
+from __future__ import annotations
+
+import functools
+import hashlib
+import json
+import threading
+import time
+import uuid
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from .kernel.accountable_action import ActionClass
+from .kernel.delegation import (
+    ANY,
+    AuthorityScope,
+    ChainVerdict,
+    Delegation,
+    DelegationAuthority,
+    DelegationPolicy,
+    RootGrant,
+)
+from .kernel.disclosure import DisclosureDenied, DisclosurePolicy
+from .kernel.evidence import EvidenceLedger
+from .kernel.exact_action import (
+    AccountableExecutor,
+    ActionProposal,
+    Approval,
+    ApprovalUseStore,
+    AsymmetricApprovalAuthority,
+    CaseRegister,
+    ExecutionDenied,
+)
+from .kernel.pack_floor import load_governed_pack
+
+_EVIDENCE_TOKEN = "guard-evidence-writer"
+
+
+@dataclass(frozen=True)
+class AgentContext:
+    """Who is acting, the authority it descends from, and what it has read."""
+
+    principal: str
+    root: RootGrant
+    chain: tuple[Delegation, ...] = ()
+    session: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
+
+    @property
+    def depth(self) -> int:
+        return len(self.chain)
+
+
+@dataclass(frozen=True)
+class Decision:
+    """One guard decision, kept for audit and for demos."""
+
+    at: float
+    principal: str
+    action: str
+    target: str
+    allowed: bool
+    code: str
+
+    def to_dict(self) -> dict:
+        return self.__dict__.copy()
+
+
+def _digest(value: Any) -> str:
+    return hashlib.sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()[:24]
+
+
+class Guard:
+    """Framework-agnostic authority for agent tool calls. Thread-safe."""
+
+    def __init__(self, *, owner: str = "tool_owner", audience: str = "guarded-tools", max_depth: int = 3,
+                 policy: DisclosurePolicy | None = None, clock: Callable[[], float] = time.time,
+                 approval_seed: bytes | None = None) -> None:
+        self.owner = owner
+        self.audience = audience
+        self.policy = policy
+        self.clock = clock
+        self.delegation = DelegationAuthority(policy=DelegationPolicy(max_depth=max_depth))
+        self.approvals = AsymmetricApprovalAuthority(audience, seed=approval_seed)
+        self.ledger = EvidenceLedger(_EVIDENCE_TOKEN)
+        self.decisions: list[Decision] = []
+        self._uses = ApprovalUseStore()
+        self._proposals: dict[str, ActionProposal] = {}
+        self._done: dict[str, Any] = {}
+        self._labels: dict[str, frozenset[str]] = {}
+        self._lock = threading.RLock()
+
+    @classmethod
+    def from_pack(cls, pack_path: str | Path, **kwargs) -> Guard:
+        """Take the delegation depth bound and the release policy from a floor-checked pack."""
+        pack = load_governed_pack(pack_path, repo_root=kwargs.pop("repo_root", None))
+        kwargs.setdefault("owner", pack.profile.owner)
+        kwargs.setdefault("max_depth", int(pack.delegation.get("max_depth", 3)))
+        return cls(policy=pack.profile.disclosure, **kwargs)
+
+    # -- bookkeeping --------------------------------------------------------------------
+    def _record(self, ctx: AgentContext, action: str, target: str, allowed: bool, code: str) -> None:
+        decision = Decision(self.clock(), ctx.principal, action, target, allowed, code)
+        with self._lock:
+            self.decisions.append(decision)
+            self.ledger.append("guard_decision", decision.to_dict(), token=_EVIDENCE_TOKEN)
+
+    # -- authority --------------------------------------------------------------------
+    @staticmethod
+    def scope(tools: Iterable[str], resources: Iterable[str] = (ANY,),
+              max_action_class: ActionClass = ActionClass.REVERSIBLE) -> AuthorityScope:
+        tools = frozenset(tools)
+        return AuthorityScope(tools=tools, operations=tools, resources=frozenset(resources),
+                              max_action_class=max_action_class)
+
+    def root(self, principal: str, *, tools: Iterable[str], resources: Iterable[str] = (ANY,),
+             max_action_class: ActionClass = ActionClass.HIGH_IMPACT, ttl_seconds: float = 3600.0) -> AgentContext:
+        """The institutional grant a top-level agent starts from. Issued by the tool owner."""
+        grant = RootGrant(principal=principal, scope=self.scope(tools, resources, max_action_class),
+                          owner=self.owner, expires_at=self.clock() + ttl_seconds)
+        return AgentContext(principal, grant)
+
+    def spawn(self, parent: AgentContext, child: str, *, tools: Iterable[str],
+              resources: Iterable[str] | None = None, max_action_class: ActionClass = ActionClass.REVERSIBLE,
+              ttl_seconds: float = 900.0, human_approved: bool = False, purpose: str = "") -> AgentContext:
+        """Hand ``child`` a signed hop. Nothing is checked here; every *use* is checked from the root.
+
+        Two defaults keep honest trees valid: the hop's expiry is clamped to the parent's
+        (a delegate may never outlive its delegator, D4), and ``resources`` defaults to the
+        parent's. Tools and action class are never widened by default. A hop that asks for
+        more than its parent holds is issued as asked and refused at use, where the refusal
+        is recorded.
+        """
+        now = self.clock()
+        held = parent.chain[-1] if parent.chain else parent.root
+        parent_expiry = held.expires_at
+        # Unless narrowed, a child works on exactly the resources its parent holds, never "any".
+        scope = self.scope(tools, resources if resources is not None else held.scope.resources, max_action_class)
+        hop = self.delegation.issue(delegator=parent.principal, delegate=child, scope=scope, issued_at=now,
+                                    expires_at=min(now + ttl_seconds, parent_expiry),
+                                    human_approved=human_approved, purpose=purpose)
+        return AgentContext(child, parent.root, (*parent.chain, hop))
+
+    def authorize(self, ctx: AgentContext, tool: str, *, resource: str = ANY,
+                  action_class: ActionClass = ActionClass.REVERSIBLE,
+                  on_behalf_of: AgentContext | None = None) -> ChainVerdict:
+        """Recompute what the chain confers and check one concrete call. Raises on refusal."""
+        try:
+            verdict = self.delegation.admit_strict(
+                ctx.chain, ctx.root, now=self.clock(), requester=ctx.principal, tool=tool, operation=tool,
+                resource=resource, action_class=action_class,
+                on_behalf_of=on_behalf_of.principal if on_behalf_of else None,
+                beneficiary_chain=on_behalf_of.chain if on_behalf_of else None)
+        except ExecutionDenied as exc:
+            self._record(ctx, tool, resource, False, exc.code)
+            raise
+        self._record(ctx, tool, resource, True, verdict.code)
+        return verdict
+
+    # -- exact-action approval ------------------------------------------------------------
+    def _proposal(self, ctx: AgentContext, tool: str, resource: str, arguments: dict, request_id: str) -> ActionProposal:
+        return ActionProposal(request_id=request_id, requester=ctx.principal, operation=tool, case_id=resource,
+                              expected_version=1, from_status="proposed", to_status="args:" + _digest(arguments),
+                              evidence_version=ctx.session)
+
+    def propose(self, ctx: AgentContext, tool: str, *, resource: str = ANY, **arguments: Any) -> ActionProposal:
+        """What a human is asked to approve: this principal, this tool, this resource, these arguments."""
+        proposal = self._proposal(ctx, tool, resource, arguments, "req-" + uuid.uuid4().hex[:12])
+        with self._lock:
+            self._proposals[proposal.digest] = proposal
+        return proposal
+
+    def approve(self, proposal: ActionProposal, *, approver: str, role: str, ttl_seconds: int = 900) -> Approval:
+        """A human's signed approval of one exact proposal. Stand-in for your approval service."""
+        return self.approvals.approve(proposal, approver=approver, approver_role=role, now=self.clock(),
+                                      ttl_seconds=ttl_seconds)
+
+    def _execute_approved(self, ctx: AgentContext, tool: str, resource: str, arguments: dict, role: str,
+                          approval: Approval | None, run: Callable[[], Any]) -> Any:
+        if approval is None:
+            self._record(ctx, tool, resource, False, "APPROVAL_REQUIRED")
+            raise ExecutionDenied("APPROVAL_REQUIRED", f"{tool} is consequential and needs a signed human approval")
+        with self._lock:
+            approved = self._proposals.get(approval.proposal_digest)
+        # The call the agent is actually making, under the request id the human approved.
+        actual = self._proposal(ctx, tool, resource, arguments,
+                                approved.request_id if approved else "req-unknown-" + uuid.uuid4().hex[:8])
+        with self._lock:
+            if actual.request_id in self._done and actual.digest == approval.proposal_digest:
+                self._record(ctx, tool, resource, True, "REPLAYED_SAME_RESULT")
+                return self._done[actual.request_id]
+            transition = (actual.from_status, actual.to_status)
+            executor = AccountableExecutor(
+                CaseRegister({resource: {"status": "proposed", "version": 1}}), self.ledger, _EVIDENCE_TOKEN,
+                audience=self.audience, approval_keys=self.approvals.verification_keys,
+                allowed_operations={tool}, transition_rules={tool: {transition}},
+                required_approval_roles={(tool, *transition): {role}}, approval_use_store=self._uses)
+            try:
+                executor.execute(actual, approval, now=self.clock())
+            except ExecutionDenied as exc:
+                self._record(ctx, tool, resource, False, exc.code)
+                raise
+            result = run()
+            self._done[actual.request_id] = result
+        self._record(ctx, tool, resource, True, "EXECUTED")
+        return result
+
+    # -- the decorator ------------------------------------------------------------------
+    def tool(self, name: str | None = None, *, resource: str | Callable[[dict], str] = ANY,
+             action_class: ActionClass = ActionClass.REVERSIBLE, approver_role: str | None = None,
+             reads: Iterable[str] = ()) -> Callable:
+        """Wrap a tool so every call is authorized from the root, and approved if consequential.
+
+        ``resource`` names the keyword argument holding the target (or a callable over the
+        keyword arguments). ``reads`` lists the data classes the tool returns; the caller's
+        label absorbs them. The wrapped function takes the :class:`AgentContext` first and
+        an optional ``approval=`` keyword.
+        """
+        def decorate(fn: Callable) -> Callable:
+            tool_name = name or fn.__name__
+
+            @functools.wraps(fn)
+            def wrapper(ctx: AgentContext, /, *args: Any, approval: Approval | None = None, **kwargs: Any) -> Any:
+                if args:
+                    raise TypeError(f"{tool_name}: pass tool arguments by keyword so they can be bound to approvals")
+                target = resource(kwargs) if callable(resource) else kwargs.get(resource, resource)
+                self.authorize(ctx, tool_name, resource=str(target), action_class=action_class)
+                if approver_role is not None:
+                    result = self._execute_approved(ctx, tool_name, str(target), kwargs, approver_role, approval,
+                                                    lambda: fn(**kwargs))
+                else:
+                    result = fn(**kwargs)
+                if reads:
+                    self.observe(ctx, reads)
+                return result
+
+            wrapper.guarded_tool = tool_name  # type: ignore[attr-defined]
+            return wrapper
+        return decorate
+
+    # -- labels and release -------------------------------------------------------------
+    def label(self, ctx: AgentContext) -> frozenset[str]:
+        with self._lock:
+            return self._labels.get(ctx.session, frozenset())
+
+    def observe(self, ctx: AgentContext, classes: Iterable[str]) -> frozenset[str]:
+        """Record that ``ctx`` has read data of these classes. Labels only ever grow."""
+        classes = frozenset(classes)
+        if self.policy is not None:
+            unknown = classes - set(self.policy.field_classes.values()) - set(self.policy.class_zones)
+            if unknown:
+                raise ValueError(f"unknown data classes: {sorted(unknown)}")
+        with self._lock:
+            self._labels[ctx.session] = self._labels.get(ctx.session, frozenset()) | classes
+            return self._labels[ctx.session]
+
+    def consume(self, consumer: AgentContext, producer: AgentContext) -> frozenset[str]:
+        """``consumer`` took ``producer``'s output: the producer's label flows with it."""
+        return self.observe(consumer, self.label(producer))
+
+    def release(self, ctx: AgentContext, content: str, *, recipient: str, purpose: str) -> str:
+        """Send ``content`` to ``recipient`` only if its clearance covers everything ``ctx`` read."""
+        if self.policy is None:
+            raise RuntimeError("release needs a disclosure policy; build the guard with Guard.from_pack")
+        rule = self.policy.recipients.get(recipient)
+        label = self.label(ctx)
+        if rule is None:
+            code, detail = "RECIPIENT_UNKNOWN", f"{recipient!r} is not a declared recipient"
+        elif purpose not in rule.purposes:
+            code, detail = "RECIPIENT_PURPOSE_NOT_ALLOWED", f"{recipient} does not receive data for {purpose}"
+        elif not label <= rule.classes:
+            code, detail = "RECIPIENT_CLASS_NOT_CLEARED", f"{recipient} is not cleared for {sorted(label - rule.classes)}"
+        else:
+            self._record(ctx, "release", recipient, True, "RELEASED")
+            return content
+        self._record(ctx, "release", recipient, False, code)
+        raise DisclosureDenied(code, detail)
+
+
+__all__ = ["ActionClass", "AgentContext", "Decision", "Guard"]

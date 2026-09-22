@@ -13,8 +13,8 @@ contract whose attack nothing can make succeed would prove nothing.
 from __future__ import annotations
 
 import pytest
-from support import ablation, falsifiers
 
+from support import ablation, falsifiers
 from trustkernel.delegation_eval import ablate_delegation, run_delegation_suite
 from trustkernel.kernel.disclosure import DisclosureDenied
 from trustkernel.kernel.evidence import EvidenceLedger

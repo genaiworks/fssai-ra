@@ -354,19 +354,19 @@ class DelegationPolicy:
         decided — and inheriting that number from a reference implementation
         would make it nobody's decision.
 
-        Set ``FSSAI_MAX_DELEGATION_DEPTH`` to switch it on.
+        Set ``TRUSTKERNEL_MAX_DELEGATION_DEPTH`` to switch it on.
         """
         import os
 
         source = os.environ if env is None else env
-        raw_depth = source.get("FSSAI_MAX_DELEGATION_DEPTH")
+        raw_depth = source.get("TRUSTKERNEL_MAX_DELEGATION_DEPTH")
         if not raw_depth:
             return None
         try:
             depth = int(raw_depth)
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                f"FSSAI_MAX_DELEGATION_DEPTH must be an integer, got {raw_depth!r}"
+                f"TRUSTKERNEL_MAX_DELEGATION_DEPTH must be an integer, got {raw_depth!r}"
             ) from exc
 
         def flag(name: str, default: bool) -> bool:
@@ -382,19 +382,19 @@ class DelegationPolicy:
                 f"{name} must be a boolean (true/false), got {raw!r}"
             )
 
-        raw_threshold = source.get("FSSAI_HUMAN_APPROVAL_BELOW_DEPTH", "")
+        raw_threshold = source.get("TRUSTKERNEL_HUMAN_APPROVAL_BELOW_DEPTH", "")
         try:
             threshold = int(raw_threshold) if raw_threshold.strip() else 1
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                "FSSAI_HUMAN_APPROVAL_BELOW_DEPTH must be an integer, "
+                "TRUSTKERNEL_HUMAN_APPROVAL_BELOW_DEPTH must be an integer, "
                 f"got {raw_threshold!r}"
             ) from exc
 
         return cls(
             max_depth=depth,
             allow_machine_delegated_consequence=flag(
-                "FSSAI_ALLOW_MACHINE_DELEGATED_CONSEQUENCE", False
+                "TRUSTKERNEL_ALLOW_MACHINE_DELEGATED_CONSEQUENCE", False
             ),
             human_approval_required_below_depth=threshold,
         )
