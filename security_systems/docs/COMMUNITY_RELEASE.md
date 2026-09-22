@@ -40,3 +40,9 @@ No live model, Windows/Linux run, hosted CI run, external security audit, or par
 The deployment talk now has a focused live example and a reusable integration worksheet. The evaluation talk leads with a concrete failure investigation and ships a small oracle attendees can adapt. The workshop has an actual teaching kit and functioning recovery checkpoints. These close the local content and artifact gaps identified in the review.
 
 They do not guarantee acceptance or “best in conference.” That depends on reviewer fit, competing submissions, delivery, and audience experience. The strongest defensible promise is that attendees can rerun the failures, inspect the repairs, and apply the evaluation method to one of their own tools.
+
+## Generalization and submission revision — September 22, 2026
+
+The current package adds `trustkernel.runtime.GuardedDispatcher`, the importable `trustkernel.evaluation` observer, and a domain-independent adapter example. Tools bind effective defaults before approval, reject duplicate names and invalid resource parameters, and protect cached receipts from caller mutation. The submission text now contains only the six requested fields per proposal and a short package introduction.
+
+Verification: the expanded suite passed **248 tests**; after adding argument-map support for parameters named `resource` or `tool`, the targeted runtime and generalization run passed **16 tests**, including the additional collision regression. Lint and the three-adapter demo passed. The earlier fresh-install 233-test result above remains the record for the previous release, not the current suite count. See `GENERALIZED_RUNTIME.md` for compatibility changes and supported scope.

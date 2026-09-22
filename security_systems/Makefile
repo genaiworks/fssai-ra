@@ -29,6 +29,7 @@ community:     ## fast attendee artifacts and observable-effect checks
 	$(PYTHON) -m workshop.check --implementation solution
 	$(PYTHON) examples/effect_oracle.py
 	$(PYTHON) examples/replay_boundary.py
+	$(PYTHON) examples/generalized_dispatch.py
 
 rehearsal:     ## capture real terminal runs with offline playback
 	$(PYTHON) scripts/record_rehearsal.py

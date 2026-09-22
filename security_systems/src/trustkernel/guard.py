@@ -41,8 +41,8 @@ from __future__ import annotations
 
 import copy
 import functools
-import inspect
 import hashlib
+import inspect
 import json
 import secrets
 import threading
@@ -258,6 +258,15 @@ class Guard:
                 raise ValueError("proposal resource differs from the tool's effective target")
             resource = target
         proposal = self._proposal(ctx, tool, resource, arguments, "req-" + uuid.uuid4().hex[:12])
+        with self._lock:
+            self._proposals[proposal.digest] = proposal
+        return proposal
+
+    def propose_call(self, ctx: AgentContext, tool: str, arguments: dict) -> ActionProposal:
+        """Propose a registered call without reserving names inside its argument map."""
+        self._check_context(ctx)
+        target, arguments = self.prepare(tool, arguments)
+        proposal = self._proposal(ctx, tool, target, arguments, "req-" + uuid.uuid4().hex[:12])
         with self._lock:
             self._proposals[proposal.digest] = proposal
         return proposal

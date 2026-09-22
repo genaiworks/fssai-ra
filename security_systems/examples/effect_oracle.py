@@ -3,40 +3,13 @@
 This miniature uses only the standard library; it is deliberately independent of
 trustkernel's decision logs. The application supplies an independent observer.
 """
-import copy
 import json
-from collections.abc import Callable
-from dataclasses import asdict, dataclass
-from typing import Any
+import sys
+from dataclasses import asdict
+from pathlib import Path
 
-
-class Refused(Exception):
-    pass
-
-
-@dataclass
-class Observation:
-    before: Any
-    after: Any
-    refused: bool
-    harmful_effect: bool
-
-
-def observe_attempt(attempt: Callable, snapshot: Callable, is_harm: Callable,
-                    expected_denials: tuple[type[Exception], ...] = (Refused,)) -> Observation:
-    """Unexpected errors propagate: an unexecuted attack must not become a pass.
-
-    Keep snapshot separate from the component being evaluated. It should read
-    the system of record or recipient sink, not a guard's allow/deny counter.
-    """
-    before = copy.deepcopy(snapshot())
-    refused = False
-    try:
-        attempt()
-    except expected_denials:
-        refused = True
-    after = copy.deepcopy(snapshot())
-    return Observation(before, after, refused, bool(is_harm(before, after)))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from trustkernel.evaluation import Refused, observe_attempt  # noqa: E402
 
 
 def demonstrate():

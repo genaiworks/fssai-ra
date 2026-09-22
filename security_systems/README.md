@@ -15,6 +15,16 @@ pip install pyyaml cryptography && python demo.py
 
 That runs seven scripted scenes with no API key, no GPU and no network after installation. Runtime depends on the machine.
 
+## General-purpose dispatcher
+
+Use `trustkernel.runtime.GuardedDispatcher` to route model-generated `{tool, arguments}` requests through server-owned caller bindings. Registered tools bind effective defaults to approvals and validate target parameters before execution. The same interface works with application-defined tools and resources; see [the integration guide](docs/GENERALIZED_RUNTIME.md).
+
+```bash
+python examples/generalized_dispatch.py
+```
+
+Import the reusable effect observer from `trustkernel.evaluation`. Its snapshot and harm callbacks are supplied by your application and need no conference fixtures.
+
 ## Community kit: run, break, adapt
 
 Start with the [workshop handout](workshop/README.md). It includes editable starter code, two recovery checkpoints, a solution, and seven checks that observe output. The starter deliberately fails five of those checks; the solution preserves legitimate releases and passes all seven.
