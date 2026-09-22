@@ -24,6 +24,9 @@ def _emit(args, payload, table) -> int:
 
 
 def cmd_worlds(args) -> int:
+    if args.ids:
+        print(" ".join(available_worlds()))
+        return 0
     rows = [WorldSpec.load(name).to_summary() for name in available_worlds()]
 
     def table():
@@ -202,7 +205,8 @@ def build_parser() -> argparse.ArgumentParser:
         p.set_defaults(func=func)
         return p
 
-    command("worlds", cmd_worlds, "list the worlds that ship", world=False)
+    p = command("worlds", cmd_worlds, "list the worlds that ship", world=False)
+    p.add_argument("--ids", action="store_true", help="print only world ids, space separated")
     p = command("demo", cmd_demo, "run the talk: six scenes against a live world", json_flag=False)
     p.add_argument("--scene", type=int, action="append", choices=range(1, 7), help="run only this scene")
     p.add_argument("--pause", type=float, default=0.0, help="seconds between beats, for a stage")

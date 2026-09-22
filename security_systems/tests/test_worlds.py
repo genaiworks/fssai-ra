@@ -21,8 +21,8 @@ DEFENCE_IN_DEPTH = {("F11", "residency"), ("F11", "model_attestation"),
                     ("F13", "proposal_digest_binding"), ("F13", "approval_single_use")}
 
 
-def test_both_audiences_ship():
-    assert {"devtools", "education"} <= set(WORLDS)
+def test_worlds_ship():
+    assert "devtools" in WORLDS
 
 
 @pytest.mark.parametrize("world", WORLDS)
@@ -68,10 +68,14 @@ def test_red_team_finds_nothing_until_a_mediator_is_removed(world):
     assert weakened.violations > 0, "an attacker that never wins is indistinguishable from one that cannot run"
 
 
-def test_worlds_do_not_share_key_material():
-    devtools, education = ScenarioWorld("devtools"), ScenarioWorld("education")
-    assert devtools.notary.public_keys != education.notary.public_keys
-    assert devtools.grants.trusted_keys != education.grants.trusted_keys
+def test_worlds_do_not_share_key_material(tmp_path):
+    import shutil
+    clone = tmp_path / "clone"
+    shutil.copytree(WorldSpec.load("devtools").directory, clone)
+    text = (clone / "world.yaml").read_text().replace("world_id: devtools", "world_id: devtools-clone")
+    (clone / "world.yaml").write_text(text)
+    original, copy = ScenarioWorld("devtools"), ScenarioWorld(WorldSpec.load(clone), pack_path=None)
+    assert original.notary.public_keys != copy.notary.public_keys
 
 
 def test_unknown_controls_and_worlds_are_refused():

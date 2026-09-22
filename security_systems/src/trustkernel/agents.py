@@ -12,7 +12,7 @@ that depends on which model was chosen is not a property of the system.
 
 The compromised agent's playbook is not written here. It is read from the world's
 ``scenario.malicious_agent`` block, so the same agent attacks a production estate or
-a student register with that domain's most damaging moves.
+a patient record with that domain's most damaging moves.
 """
 from __future__ import annotations
 

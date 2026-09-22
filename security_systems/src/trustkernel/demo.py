@@ -2,7 +2,7 @@
 
     trustkernel demo                     # every scene against the devtools world
     trustkernel demo --scene 2           # one scene
-    trustkernel demo --world education   # the same talk in another domain
+    trustkernel demo --world <id>        # the same talk in another domain
     trustkernel demo --pause 0.8         # pace it for a stage
 
 Every scene is a real attack against a live :class:`trustkernel.world.ScenarioWorld`.

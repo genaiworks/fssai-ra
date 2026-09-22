@@ -39,8 +39,8 @@ claim over a threat catalogue.
 The chains are the same in every world. What a world supplies, in its
 ``delegation_suite`` block, is the vocabulary: the root principal and its owner,
 a read tool, a drafting tool, a consequential tool, and two resources. In the
-devtools world the consequential tool is a production deploy; in the education
-world it is a financial-aid award. The arms and the verdicts do not change.
+devtools world the consequential tool is a production deploy; in a finance world it
+would be a wire release. The arms and the verdicts do not change.
 """
 from __future__ import annotations
 

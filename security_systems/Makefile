@@ -17,9 +17,9 @@ fast:           ## skip the slow ablation and red-team runs
 lint:
 	$(PYTHON) -m ruff check src tests demo.py
 
-evidence:       ## regenerate every figure for both worlds
-	$(PYTHON) -m trustkernel evidence --world devtools --out evidence/devtools.json
-	$(PYTHON) -m trustkernel evidence --world education --out evidence/education.json
+evidence:       ## regenerate every figure for every world
+	for w in $$($(PYTHON) -m trustkernel worlds --ids); do \
+	  $(PYTHON) -m trustkernel evidence --world $$w --out evidence/$$w.json; done
 
 clean:
 	rm -rf build dist *.egg-info src/*.egg-info .pytest_cache .ruff_cache

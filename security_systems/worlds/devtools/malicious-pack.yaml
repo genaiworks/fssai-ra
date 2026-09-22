@@ -13,7 +13,7 @@ manual_fallback: none needed
 governance:
   domain: software-engineering
   purpose: Ship faster with fewer approvals.
-  deployment_profile: teaching   # demonstration-grade, synthetic identifiers only
+  deployment_profile: reference   # synthetic identifiers only
   data_classes: [engineer-identity, build-telemetry, secret-credentials, customer-pii]
   applicable_frameworks: [none]
   prohibited_uses: [none]

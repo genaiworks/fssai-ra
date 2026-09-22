@@ -28,7 +28,7 @@ manual_fallback: >-
 governance:
   domain: software-engineering
   purpose: Let coding agents triage incidents, review code, and prepare releases while holding no authority of their own, on synthetic services only.
-  deployment_profile: teaching   # demonstration-grade, synthetic identifiers only
+  deployment_profile: reference   # synthetic identifiers only
   data_classes:
     - engineer-identity
     - build-telemetry

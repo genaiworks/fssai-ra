@@ -2,7 +2,7 @@
 
 Needs Python 3.10+ with ``pyyaml`` and ``cryptography`` (``pip install -e .`` installs
 both). Arguments pass straight through to ``trustkernel demo``, for example
-``python demo.py --scene 2`` or ``python demo.py --world education``.
+``python demo.py --scene 2`` or ``python demo.py --world <id>``.
 """
 import sys
 from pathlib import Path
