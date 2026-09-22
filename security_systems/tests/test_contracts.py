@@ -48,7 +48,9 @@ def _holds_and_bears(world: str, *ids: str) -> None:
 
 @pytest.mark.parametrize("world", WORLDS)
 def test_consequential_transitions_need_their_declared_human_role(world):
-    """Derived from the pack: every consequential transition, three ways, on a real executor."""
+    """Derived from the pack: every consequential transition, wrong role then right role, on a real executor.
+
+    Execution with no approval at all is refused a layer earlier and covered by F01."""
     spec = WorldSpec.load(world)
     probe = ScenarioWorld(spec)
     profile = probe.profile
@@ -66,9 +68,6 @@ def test_consequential_transitions_need_their_declared_human_role(world):
                                        required_approval_roles=profile.required_approval_roles)
         proposal = ActionProposal("req-1", "agent-1", rule.operation, "r-1", 1, rule.from_status,
                                   rule.to_status, "e-1")
-        with pytest.raises(ExecutionDenied) as missing:
-            executor.execute(proposal, None, now=spec.now)
-        assert missing.value.code == "APPROVAL_REQUIRED"
         wrong = authority.approve(proposal, approver="someone", approver_role="not-" + rule.approval_role,
                                   now=spec.now)
         with pytest.raises(ExecutionDenied) as role:
