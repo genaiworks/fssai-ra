@@ -1,4 +1,4 @@
-"""Exact-action approval and idempotent execution for the teaching profile.
+"""Exact-action approval and idempotent execution for the reference profile.
 
 The model can propose an action, but it never receives the credential that
 changes the case register. A human approval is bound to the canonical proposal
@@ -23,8 +23,8 @@ from typing import Protocol
 
 from .evidence import EvidenceLedger
 
-TEACHING_APPROVAL_KEY_ID = "teaching-approval-key-1"
-TEACHING_APPROVAL_SIGNING_KEY = "non-secret-demo-key-replace-in-production"
+REFERENCE_APPROVAL_KEY_ID = "reference-approval-key-1"
+REFERENCE_APPROVAL_SIGNING_KEY = "non-secret-demo-key-replace-in-production"
 
 
 def _canonical_digest(value: dict) -> str:
@@ -124,7 +124,7 @@ class PendingOutcome:
 
 
 class PendingOutcomeStore:
-    """In-memory teaching stand-in for a durable transactional outbox."""
+    """In-memory reference stand-in for a durable transactional outbox."""
 
     def __init__(self) -> None:
         self._pending: dict[str, PendingOutcome] = {}
@@ -232,14 +232,14 @@ ResourceRegister = CaseRegister
 
 
 class ApprovalAuthority:
-    """Teaching-profile stand-in for an authenticated human approval service."""
+    """Reference-profile stand-in for an authenticated human approval service."""
 
     def __init__(
         self,
         audience: str = "case-register-executor",
         *,
-        key_id: str = TEACHING_APPROVAL_KEY_ID,
-        signing_key: str = TEACHING_APPROVAL_SIGNING_KEY,
+        key_id: str = REFERENCE_APPROVAL_KEY_ID,
+        signing_key: str = REFERENCE_APPROVAL_SIGNING_KEY,
         oversight=None,
     ) -> None:
         if not key_id:
@@ -363,7 +363,7 @@ def _approval_signature_valid(key: str | bytes, approval: Approval) -> bool:
 
 
 def _approval_signing_payload(approval: Approval) -> str:
-    """Canonical payload authenticated by the teaching approval authority."""
+    """Canonical payload authenticated by the reference approval authority."""
     return json.dumps(
         {
             "approval_id": approval.approval_id,
@@ -382,7 +382,7 @@ def _approval_signing_payload(approval: Approval) -> str:
 
 
 class AccountableExecutor:
-    """The sole teaching-profile write path for consequential transitions."""
+    """The sole reference-profile write path for consequential transitions."""
 
     def __init__(
         self,
@@ -403,7 +403,7 @@ class AccountableExecutor:
         self._token = evidence_token
         self._audience = audience
         self._approval_keys = dict(
-            {TEACHING_APPROVAL_KEY_ID: TEACHING_APPROVAL_SIGNING_KEY}
+            {REFERENCE_APPROVAL_KEY_ID: REFERENCE_APPROVAL_SIGNING_KEY}
             if approval_keys is None
             else approval_keys
         )

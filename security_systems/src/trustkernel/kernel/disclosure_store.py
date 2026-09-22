@@ -10,7 +10,7 @@ about whether a holder has already used their emergency access.
 This module defines one interface and two implementations.
 
 * :class:`MemoryDisclosureStore` keeps today's in-process behaviour for tests,
-  teaching, and single-process tools.
+  reference runs, and single-process tools.
 * :class:`SqlDisclosureStore` persists everything in SQLite or PostgreSQL. Every
   gate decision runs inside one database transaction, so the read of a
   revocation, the consent check, the break-glass count, and the write of the new

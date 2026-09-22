@@ -42,7 +42,7 @@ class ConsentService(Protocol):
 
 
 class MemoryRecordSource:
-    """Synthetic or fixture records held in process. Writable, for teaching."""
+    """Synthetic or fixture records held in process. Writable, for reference runs."""
 
     def __init__(self, records: dict[str, dict[str, str]] | None = None) -> None:
         self._records = {subject: dict(fields) for subject, fields in (records or {}).items()}

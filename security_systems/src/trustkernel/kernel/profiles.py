@@ -226,10 +226,10 @@ def _governance_context(raw: Any) -> GovernanceContext | None:
         if not isinstance(raw[key], str) or not raw[key].strip():
             raise ProfileError(f"governance {key} must be a non-empty string")
     if raw["deployment_profile"] not in {
-        "teaching", "institutional-pilot", "hardware-isolated",
+        "reference", "pilot", "hardware-isolated",
     }:
         raise ProfileError(
-            "governance deployment_profile must be teaching, institutional-pilot, "
+            "governance deployment_profile must be reference, pilot, "
             "or hardware-isolated"
         )
 

@@ -3,7 +3,7 @@
 Domain packs are how the architecture transfers to a new sector, and that makes
 them an attack surface. A pack is configuration written by people with commit
 access, reviewed by people who read YAML quickly. Every weakening below looks like
-ordinary configuration: a grade change marked non-consequential, a role named
+ordinary configuration: a production deploy marked non-consequential, a role named
 ``model``, an external zone added to a class list, a review policy of
 ``auto_approve``, a key called ``skip_evidence`` that the loader silently ignores.
 
@@ -56,9 +56,7 @@ NON_HUMAN_ROLES = frozenset({"model", "agent", "ai", "assistant", "system", "aut
                              "*", "any", "llm", "bot"})
 EXTERNAL_ZONES = frozenset({"external", "public", "internet", "public-cloud"})
 #: A data class whose name carries any of these markers may never reach an external zone.
-#: The first five came from the education domain; ``credential``, ``secret``, and ``pii``
-#: were added when the kernel was generalised to engineering domains. Adding a marker
-#: only ever protects more classes, so no existing pack is weakened by it.
+#: Adding a marker only ever protects more classes, so no existing pack is weakened by it.
 PROTECTED_CLASS_MARKERS = ("identity", "health", "support", "financial", "restricted",
                            "credential", "secret", "pii")
 #: The repository whose ``tests/`` a pack's ``failure_test`` references must resolve in.

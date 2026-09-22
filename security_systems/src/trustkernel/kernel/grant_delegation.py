@@ -102,7 +102,7 @@ class GrantDelegationService:
     """Issues hops, and verifies whole chains before the gate sees a derived grant."""
 
     def __init__(self, gate: DisclosureGate, exchange_authority: GrantAuthority, *,
-                 hop_secret: str = "teaching-grant-delegation-key", max_depth: int = 3,
+                 hop_secret: str = "reference-grant-delegation-key", max_depth: int = 3,
                  enforce_attenuation: bool = True) -> None:
         self.gate = gate
         self.exchange_authority = exchange_authority

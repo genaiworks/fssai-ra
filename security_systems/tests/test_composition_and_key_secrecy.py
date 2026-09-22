@@ -1,19 +1,14 @@
-"""Regression tests for two exploits found by adversarial review of v1.0.0.
-
-Both are executed end to end against the real education world on synthetic data.
-They are kept out of the counted falsifier/ablation suites on purpose: they guard
-claims the paper makes in prose (Rule 1 key secrecy; action/read composition) and
-must not shift the pinned figure counts.
+"""Two exploits found by adversarial review of the reference implementation, regression-tested on every world.
 
 E1  Rule 1 must not rest on a signing key an attacker can reconstruct from source.
     The approval key is generated per world and the executor holds only the public
-    verification key. Reconstructing the key from the published key id, or from the
-    old hard-coded fixture seed, must not forge an approval that executes.
+    verification key. Reconstructing it from the published key id, or from a
+    hard-coded seed, must not forge an approval that executes.
 
 E2  An approved action must not still execute after the read it relied on loses its
     authority (grant revoked, consent withdrawn, or grant expired). This is the
-    action/disclosure composition rule; before the fix the execution path bound the
-    proposal but never rechecked the context's live authority.
+    action/disclosure composition rule: exact-proposal binding stops substitution of
+    *what* is done, not the lapse of *why* it was allowed.
 """
 from __future__ import annotations
 
@@ -24,123 +19,98 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from trustkernel.kernel.custody_errors import DENIALS
-from trustkernel.kernel.exact_action import (
-    Approval,
-    AsymmetricApprovalAuthority,
-    _approval_signing_payload,
-)
-from trustkernel.world import ALL_CONTROLS, ScenarioWorld, WorldSpec
+from trustkernel.kernel.exact_action import Approval, AsymmetricApprovalAuthority, _approval_signing_payload
+from trustkernel.world import ScenarioWorld, available_worlds
 
-SPEC = WorldSpec.load("education")
-STUDENTS = SPEC.subjects
+WORLDS = available_worlds()
 
 
-def EducationWorld(controls=ALL_CONTROLS, **kwargs):  # noqa: N802 - reads as the class it replaced
-    return ScenarioWorld(SPEC, controls, **kwargs)
-
-RESOURCE = "transcript:stu-b7c2:MATH101"
-
-
-def _sign_with(seed: bytes, approval: Approval) -> Approval:
+def _forged(world: ScenarioWorld, proposal, seed: bytes) -> Approval:
+    approver = world.spec.fixture("approver")
+    unsigned = Approval(approval_id="forged-1", proposal_digest=proposal.digest, approver=approver,
+                        approver_role=world.spec.principals[approver], audience=world.audience,
+                        expires_at=world.now + 600, key_id=world.approvals.key_id, signature="")
     key = Ed25519PrivateKey.from_private_bytes(seed)
-    signed = replace(approval, signature=key.sign(_approval_signing_payload(approval).encode()).hex())
-    return signed
+    return replace(unsigned, signature=key.sign(_approval_signing_payload(unsigned).encode()).hex())
 
 
-def _forged_for(world: EducationWorld, proposal, seed: bytes) -> Approval:
-    unsigned = Approval(
-        approval_id="forged-1", proposal_digest=proposal.digest, approver="dr-lin",
-        approver_role="university_registrar", audience="student-records-executor",
-        expires_at=world.now + 600, key_id=world.approvals.key_id, signature="")
-    return _sign_with(seed, unsigned)
+def _victim_proposal(world: ScenarioWorld):
+    victim = world.spec.fixture("action", "victim")
+    return victim["resource"], world.propose(requester=world.spec.fixture("rogue"),
+                                             operation=world.spec.fixture("action", "operation"),
+                                             resource=victim["resource"], to_status=victim["to"])
 
 
 # --- E1: key secrecy --------------------------------------------------------
 
 def test_default_asymmetric_authority_key_is_not_derivable_from_key_id():
-    """The private key must not be sha256(key_id): that value is published."""
     authority = AsymmetricApprovalAuthority(key_id="approval-ed25519-1")
     derivable = Ed25519PrivateKey.from_private_bytes(
-        hashlib.sha256(b"approval-ed25519-1").digest()
-    ).public_key().public_bytes_raw()
+        hashlib.sha256(b"approval-ed25519-1").digest()).public_key().public_bytes_raw()
     assert authority.public_key != derivable
 
 
-def test_world_approval_keys_differ_between_instances():
-    """Two worlds must not share a signing key; source knowledge is not key knowledge."""
-    assert EducationWorld().approvals.public_key != EducationWorld().approvals.public_key
+@pytest.mark.parametrize("world", WORLDS)
+def test_world_approval_keys_differ_between_instances(world):
+    assert ScenarioWorld(world).approvals.public_key != ScenarioWorld(world).approvals.public_key
 
 
-def test_approval_forged_from_old_fixture_seed_is_rejected():
-    """The historical hard-coded seed no longer signs a usable approval."""
-    world = EducationWorld()
-    before = world.register.get(RESOURCE)
-    proposal = world.propose(requester="rogue-agent", operation="correct_transcript_grade",
-                             resource=RESOURCE, to_status="grade:A")
-    forged = _forged_for(world, proposal, hashlib.sha256(b"approval-service").digest())
+@pytest.mark.parametrize("world", WORLDS)
+@pytest.mark.parametrize("seed_source", ["key_id", "well_known_seed"])
+def test_approval_forged_from_a_guessable_seed_is_rejected(world, seed_source):
+    w = ScenarioWorld(world)
+    resource, proposal = _victim_proposal(w)
+    before = w.register.get(resource)
+    seed = hashlib.sha256((w.approvals.key_id if seed_source == "key_id" else "approval-service").encode()).digest()
     with pytest.raises(DENIALS):
-        world.execute(proposal, forged)
-    assert world.register.get(RESOURCE) == before
-    assert world.register.write_log == []
-
-
-def test_approval_forged_from_key_id_seed_is_rejected():
-    world = EducationWorld()
-    before = world.register.get(RESOURCE)
-    proposal = world.propose(requester="rogue-agent", operation="correct_transcript_grade",
-                             resource=RESOURCE, to_status="grade:A")
-    forged = _forged_for(world, proposal, hashlib.sha256(world.approvals.key_id.encode()).digest())
-    with pytest.raises(DENIALS):
-        world.execute(proposal, forged)
-    assert world.register.get(RESOURCE) == before
+        w.execute(proposal, _forged(w, proposal, seed))
+    assert w.register.get(resource) == before and w.register.write_log == []
 
 
 def test_explicit_seed_still_reproducible_for_fixtures():
     seed = b"\x09" * 32
-    a, b = AsymmetricApprovalAuthority("exec", seed=seed), AsymmetricApprovalAuthority("exec", seed=seed)
-    assert a.public_key == b.public_key
+    assert AsymmetricApprovalAuthority("exec", seed=seed).public_key == \
+        AsymmetricApprovalAuthority("exec", seed=seed).public_key
 
 
 # --- E2: action/read composition -------------------------------------------
 
-def _legitimate_proposal(world: EducationWorld):
-    resource = "transcript:stu-a1f3:MATH101"
-    grant = world.grant(holder="support-agent", purpose="academic-support",
-                        subjects=["stu-a1f3"], fields=["current_grades"])
-    world.read(requester="support-agent", grant=grant, purpose="academic-support",
-               subjects=["stu-a1f3"], fields=["current_grades"], session_id="s1")
-    proposal = world.propose(requester="support-agent", operation="correct_transcript_grade",
-                            resource=resource, to_status="grade:B")
-    approval = world.review_and_approve(proposal, reviewer="dr-lin")
-    return resource, grant, proposal, approval
+def _approved_over_a_read(world: ScenarioWorld):
+    fx = world.spec.fixture
+    field = world.spec.field("routine_2")
+    grant = world.grant(holder=fx("agent"), purpose=fx("purpose"), subjects=[fx("subject")], fields=[field])
+    world.read(requester=fx("agent"), grant=grant, purpose=fx("purpose"), subjects=[fx("subject")],
+               fields=[field], session_id="s1")
+    own = fx("action", "own")
+    proposal = world.propose(requester=fx("agent"), operation=fx("action", "operation"),
+                             resource=own["resource"], to_status=own["to"])
+    return grant, proposal, world.review_and_approve(proposal, reviewer=fx("approver"))
 
 
-def test_execute_denied_after_context_grant_revoked():
-    world = EducationWorld()
-    resource, grant, proposal, approval = _legitimate_proposal(world)
-    before = world.register.get(resource)
-    world.data_delegation.revoke(grant.grant_id, by="privacy-officer-ng", reason="composition test")
-    with pytest.raises(DENIALS) as exc:
-        world.execute(proposal, approval, context_grant=grant)
-    assert exc.value.code == "CONTEXT_AUTHORITY_WITHDRAWN"
-    assert world.register.get(resource) == before  # no write happened
-    assert world.register.mutation_count == 0
+@pytest.mark.parametrize("world", WORLDS)
+@pytest.mark.parametrize("lapse", ["revoked", "consent_withdrawn", "expired"])
+def test_execute_denied_after_the_read_authority_lapses(world, lapse):
+    w = ScenarioWorld(world)
+    fx = w.spec.fixture
+    grant, proposal, approval = _approved_over_a_read(w)
+    if lapse == "revoked":
+        w.data_delegation.revoke(grant.grant_id, by=fx("data_officer"), reason="composition test")
+    elif lapse == "consent_withdrawn":
+        w.gate.withdraw_consent(fx("subject"), fx("purpose"), recorded_by=fx("subject"))
+    else:
+        w.tick(3601)
+        approval = w.approvals.approve(proposal, approver=approval.approver, approver_role=approval.approver_role,
+                                       now=w.now, ttl_seconds=900)
+    with pytest.raises(DENIALS) as refused:
+        w.execute(proposal, approval, context_grant=grant)
+    assert refused.value.code == "CONTEXT_AUTHORITY_WITHDRAWN"
+    assert w.register.mutation_count == 0
 
 
-def test_execute_denied_after_consent_withdrawn():
-    world = EducationWorld()
-    resource, grant, proposal, approval = _legitimate_proposal(world)
-    world.gate.withdraw_consent("stu-a1f3", "academic-support", recorded_by="stu-a1f3")
-    with pytest.raises(DENIALS) as exc:
-        world.execute(proposal, approval, context_grant=grant)
-    assert exc.value.code == "CONTEXT_AUTHORITY_WITHDRAWN"
-    assert world.register.mutation_count == 0
-
-
-def test_execute_allowed_when_context_authority_is_still_live():
-    """The check denies withdrawn authority without breaking the legitimate path."""
-    world = EducationWorld()
-    resource, grant, proposal, approval = _legitimate_proposal(world)
-    executed = world.execute(proposal, approval, context_grant=grant)
-    assert executed["result"].status == "grade:B"
-    assert world.register.mutation_count == 1
+@pytest.mark.parametrize("world", WORLDS)
+def test_execute_allowed_while_the_read_authority_is_live(world):
+    w = ScenarioWorld(world)
+    grant, proposal, approval = _approved_over_a_read(w)
+    executed = w.execute(proposal, approval, context_grant=grant)
+    assert executed["result"].status == w.spec.fixture("action", "own", "to")
+    assert w.register.mutation_count == 1

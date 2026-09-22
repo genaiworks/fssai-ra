@@ -567,7 +567,7 @@ class GrantAuthority:
     """
 
     def __init__(self, *, key_id: str = "disclosure-authority-1",
-                 secret: str = "teaching-disclosure-key-not-secret") -> None:
+                 secret: str = "reference-disclosure-key-not-secret") -> None:
         self.key_id = key_id
         self._secret = secret
 
@@ -617,7 +617,7 @@ class DeclassificationAuthority:
     """Signs exact-output declassification approvals for authenticated reviewers."""
 
     def __init__(self, *, key_id: str = "declassification-authority-1",
-                 secret: str = "teaching-declassification-key-not-secret") -> None:
+                 secret: str = "reference-declassification-key-not-secret") -> None:
         self.key_id = key_id
         self._secret = secret
 
@@ -642,7 +642,7 @@ class DeclassificationAuthority:
 
 
 class ConsentRegister:
-    """In-process consent state, for tests and teaching. Deployments use the store
+    """In-process consent state, for tests and reference runs. Deployments use the store
     or an institutional consent service, both checked live on every use."""
 
     def __init__(self) -> None:
