@@ -8,15 +8,12 @@ three report on the same scale.
 The arms
 --------
 **Arm A — unguarded.** The leaf agent presents the scope it says it holds and
-the executor uses it. This is not a strawman; it is the default behaviour of
-every sub-agent framework that passes a context object down and trusts what
-comes back up. The chain is present in the logs and absent from the decision.
+the executor uses it. This is an intentionally weak authored baseline, not a measurement of
+commercial sub-agent frameworks. The chain is present in the logs and absent from the decision.
 
 **Arm B — caller-checked.** Each hop validates its *immediate* delegator: is the
-scope I am being handed within the scope of whoever handed it to me? This is
-what a careful engineer builds after thinking about the problem for an
-afternoon, and it is genuinely a control — it stops outright re-amplification at
-the hop where it happens.
+scope I am being handed within the scope of whoever handed it to me? This authored baseline implements scope attenuation and hop authentication.
+It stops outright re-amplification, but is not a benchmark of RBAC as a class.
 
 What it cannot do is see the chain. It has no view of the root, so it cannot
 tell that the authority lapsed two hops up, that the principal it is talking to

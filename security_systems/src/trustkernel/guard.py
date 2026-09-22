@@ -11,7 +11,7 @@ framework dependency, and it enforces the three rules the evaluation suites meas
    scope or checking only the last hop.
 2. **Exact-action approval.** A consequential tool runs only with an Ed25519 human
    approval bound to *this* principal, tool, resource, and argument digest, from the
-   declared role, unexpired, and executed exactly once. A replayed call returns the
+   declared role, unexpired, and cached after successful execution in this instance. A replayed call returns the
    first result; it does not repeat the side effect.
 3. **Labels survive summarization.** Each context carries the join of every data class
    it has read, and a worker's label flows into whoever consumes its output. Release to
@@ -42,6 +42,7 @@ from __future__ import annotations
 import functools
 import hashlib
 import json
+import secrets
 import threading
 import time
 import uuid
@@ -53,6 +54,7 @@ from typing import Any
 from .kernel.accountable_action import ActionClass
 from .kernel.delegation import (
     ANY,
+    DELEGATION_KEY_ID,
     AuthorityScope,
     ChainVerdict,
     Delegation,
@@ -105,12 +107,34 @@ class Decision:
         return self.__dict__.copy()
 
 
+def _json_payload(value: Any) -> str:
+    """Reject coercions that could bind different Python values to one approval."""
+    def validate(item: Any) -> None:
+        if type(item) is dict:
+            for key, child in item.items():
+                if type(key) is not str:
+                    raise TypeError("tool argument object keys must be strings")
+                validate(child)
+        elif type(item) is list:
+            for child in item:
+                validate(child)
+        elif item is not None and type(item) not in (str, int, float, bool):
+            raise TypeError("tool arguments must contain only JSON values")
+    validate(value)
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
 def _digest(value: Any) -> str:
-    return hashlib.sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()[:24]
+    return hashlib.sha256(_json_payload(value).encode()).hexdigest()
 
 
 class Guard:
-    """Framework-agnostic authority for agent tool calls. Thread-safe."""
+    """Reference guard for a trusted dispatcher, with in-memory replay state.
+
+    Authenticate callers outside this class. Issuance APIs and tool callbacks
+    belong to trusted control-plane code, never to arbitrary agent Python.
+    This library does not provide crash-safe exactly-once external effects.
+    """
 
     def __init__(self, *, owner: str = "tool_owner", audience: str = "guarded-tools", max_depth: int = 3,
                  policy: DisclosurePolicy | None = None, clock: Callable[[], float] = time.time,
@@ -119,7 +143,8 @@ class Guard:
         self.audience = audience
         self.policy = policy
         self.clock = clock
-        self.delegation = DelegationAuthority(policy=DelegationPolicy(max_depth=max_depth))
+        self.delegation = DelegationAuthority(policy=DelegationPolicy(max_depth=max_depth),
+                                              keys={DELEGATION_KEY_ID: secrets.token_hex(32)})
         self.approvals = AsymmetricApprovalAuthority(audience, seed=approval_seed)
         self.ledger = EvidenceLedger(_EVIDENCE_TOKEN)
         self.decisions: list[Decision] = []
@@ -127,6 +152,7 @@ class Guard:
         self._proposals: dict[str, ActionProposal] = {}
         self._done: dict[str, Any] = {}
         self._labels: dict[str, frozenset[str]] = {}
+        self._contexts: dict[str, AgentContext] = {}
         self._lock = threading.RLock()
 
     @classmethod
@@ -144,6 +170,18 @@ class Guard:
             self.decisions.append(decision)
             self.ledger.append("guard_decision", decision.to_dict(), token=_EVIDENCE_TOKEN)
 
+    def _register(self, ctx: AgentContext) -> AgentContext:
+        with self._lock:
+            self._contexts[ctx.session] = ctx
+        return ctx
+
+    def _check_context(self, ctx: AgentContext) -> None:
+        # Contexts are server-issued handles, not caller-authenticated identities.
+        with self._lock:
+            if self._contexts.get(ctx.session) != ctx:
+                self._record(ctx, "context", ctx.session, False, "CONTEXT_NOT_ISSUED")
+                raise ExecutionDenied("CONTEXT_NOT_ISSUED", "context was not issued by this guard or was modified")
+
     # -- authority --------------------------------------------------------------------
     @staticmethod
     def scope(tools: Iterable[str], resources: Iterable[str] = (ANY,),
@@ -157,12 +195,14 @@ class Guard:
         """The institutional grant a top-level agent starts from. Issued by the tool owner."""
         grant = RootGrant(principal=principal, scope=self.scope(tools, resources, max_action_class),
                           owner=self.owner, expires_at=self.clock() + ttl_seconds)
-        return AgentContext(principal, grant)
+        return self._register(AgentContext(principal, grant))
 
     def spawn(self, parent: AgentContext, child: str, *, tools: Iterable[str],
               resources: Iterable[str] | None = None, max_action_class: ActionClass = ActionClass.REVERSIBLE,
               ttl_seconds: float = 900.0, human_approved: bool = False, purpose: str = "") -> AgentContext:
-        """Hand ``child`` a signed hop. Nothing is checked here; every *use* is checked from the root.
+        """Hand ``child`` a signed hop after validating the parent context handle.
+
+        Chain authority is checked from the root at every use.
 
         Two defaults keep honest trees valid: the hop's expiry is clamped to the parent's
         (a delegate may never outlive its delegator, D4), and ``resources`` defaults to the
@@ -170,6 +210,7 @@ class Guard:
         more than its parent holds is issued as asked and refused at use, where the refusal
         is recorded.
         """
+        self._check_context(parent)
         now = self.clock()
         held = parent.chain[-1] if parent.chain else parent.root
         parent_expiry = held.expires_at
@@ -178,7 +219,7 @@ class Guard:
         hop = self.delegation.issue(delegator=parent.principal, delegate=child, scope=scope, issued_at=now,
                                     expires_at=min(now + ttl_seconds, parent_expiry),
                                     human_approved=human_approved, purpose=purpose)
-        return AgentContext(child, parent.root, (*parent.chain, hop))
+        return self._register(AgentContext(child, parent.root, (*parent.chain, hop)))
 
     def authorize(self, ctx: AgentContext, tool: str, *, resource: str = ANY,
                   action_class: ActionClass = ActionClass.REVERSIBLE,
@@ -193,6 +234,9 @@ class Guard:
         except ExecutionDenied as exc:
             self._record(ctx, tool, resource, False, exc.code)
             raise
+        self._check_context(ctx)
+        if on_behalf_of is not None:
+            self._check_context(on_behalf_of)
         self._record(ctx, tool, resource, True, verdict.code)
         return verdict
 
@@ -204,6 +248,7 @@ class Guard:
 
     def propose(self, ctx: AgentContext, tool: str, *, resource: str = ANY, **arguments: Any) -> ActionProposal:
         """What a human is asked to approve: this principal, this tool, this resource, these arguments."""
+        self._check_context(ctx)
         proposal = self._proposal(ctx, tool, resource, arguments, "req-" + uuid.uuid4().hex[:12])
         with self._lock:
             self._proposals[proposal.digest] = proposal
@@ -225,9 +270,6 @@ class Guard:
         actual = self._proposal(ctx, tool, resource, arguments,
                                 approved.request_id if approved else "req-unknown-" + uuid.uuid4().hex[:8])
         with self._lock:
-            if actual.request_id in self._done and actual.digest == approval.proposal_digest:
-                self._record(ctx, tool, resource, True, "REPLAYED_SAME_RESULT")
-                return self._done[actual.request_id]
             transition = (actual.from_status, actual.to_status)
             executor = AccountableExecutor(
                 CaseRegister({resource: {"status": "proposed", "version": 1}}), self.ledger, _EVIDENCE_TOKEN,
@@ -235,6 +277,10 @@ class Guard:
                 allowed_operations={tool}, transition_rules={tool: {transition}},
                 required_approval_roles={(tool, *transition): {role}}, approval_use_store=self._uses)
             try:
+                executor.validate_authorization(actual, approval, now=self.clock())
+                if actual.request_id in self._done:
+                    self._record(ctx, tool, resource, True, "REPLAYED_SAME_RESULT")
+                    return self._done[actual.request_id]
                 executor.execute(actual, approval, now=self.clock())
             except ExecutionDenied as exc:
                 self._record(ctx, tool, resource, False, exc.code)
@@ -255,6 +301,10 @@ class Guard:
         label absorbs them. The wrapped function takes the :class:`AgentContext` first and
         an optional ``approval=`` keyword.
         """
+        if action_class == ActionClass.HIGH_IMPACT and (not approver_role or not approver_role.strip()):
+            raise ValueError("high-impact tools require a nonempty approver_role")
+        reads = frozenset(reads)
+
         def decorate(fn: Callable) -> Callable:
             tool_name = name or fn.__name__
 
@@ -262,15 +312,18 @@ class Guard:
             def wrapper(ctx: AgentContext, /, *args: Any, approval: Approval | None = None, **kwargs: Any) -> Any:
                 if args:
                     raise TypeError(f"{tool_name}: pass tool arguments by keyword so they can be bound to approvals")
+                # Snapshot arguments before hashing and execution; callers retain no mutable alias.
+                kwargs = json.loads(_json_payload(kwargs))
                 target = resource(kwargs) if callable(resource) else kwargs.get(resource, resource)
                 self.authorize(ctx, tool_name, resource=str(target), action_class=action_class)
+                # Taint before invoking: callbacks and exception paths may expose data too.
+                if reads:
+                    self.observe(ctx, reads)
                 if approver_role is not None:
                     result = self._execute_approved(ctx, tool_name, str(target), kwargs, approver_role, approval,
                                                     lambda: fn(**kwargs))
                 else:
                     result = fn(**kwargs)
-                if reads:
-                    self.observe(ctx, reads)
                 return result
 
             wrapper.guarded_tool = tool_name  # type: ignore[attr-defined]
@@ -279,11 +332,13 @@ class Guard:
 
     # -- labels and release -------------------------------------------------------------
     def label(self, ctx: AgentContext) -> frozenset[str]:
+        self._check_context(ctx)
         with self._lock:
             return self._labels.get(ctx.session, frozenset())
 
     def observe(self, ctx: AgentContext, classes: Iterable[str]) -> frozenset[str]:
         """Record that ``ctx`` has read data of these classes. Labels only ever grow."""
+        self._check_context(ctx)
         classes = frozenset(classes)
         if self.policy is not None:
             unknown = classes - set(self.policy.field_classes.values()) - set(self.policy.class_zones)

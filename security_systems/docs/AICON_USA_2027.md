@@ -1,45 +1,53 @@
-# AI Con USA 2027 (Seattle, June 6–11, 2027): submission
+# AI Con USA 2027 — proposed technical session
 
-Deadline: **October 18, 2026**. Figures come from `evidence/<domain>.json`.
+Event: June 6–11, 2027, Seattle and online. Submission deadline: October 18, 2026. TechWell describes standard sessions as one hour, including ten minutes of questions. Sources checked September 21, 2026: [speaker guidance](https://www.techwell.com/software-conferences/be-a-speaker), [event](https://aiconusa.techwell.com/).
 
----
+## Session title
 
-**Session Title**
+Does Your Agent Security Control Work? Attack It, Remove It, Measure the Effect
 
-Authority Doesn't Compose: Securing Multi-Agent AI with Chain Verification, Taint Labels, and Ablation
+## Abstract
 
-*Alternates:* "The Confused Deputy Is Back, and It Spawns Sub-Agents" · "Per-Hop Auth Caught 2 of 10 Agent Attacks. Whole-Chain Verification Caught 10."
+An agent security test returns “denied.” Did the control prevent a harmful action, or did the attack never reach the system it was meant to test?
 
-**Topic areas:** AI Security & Safety (primary); Agentic AI; AI Governance, Regulation, & Compliance
+This technical session presents a reproducible evaluation method for agent authorization and disclosure controls. We start with a synthetic software-delivery workflow: workers read operational data, propose a deployment, and exchange summaries. Success is measured from changed system state or released data, rather than the guard’s own refusal message.
 
-**Session type:** Concurrent session, a technical deep dive with live attacks. Also open to leading a facilitated open space on ablation testing for agent controls.
+The Python harness pairs adversarial cases with legitimate work, removes controls, restores them, and gives attackers a weakened-system positive control. Across 25 falsifiers, all targeted properties hold in the supplied fixtures. Harm returns in 25 of 29 ablation configurations; the denominator includes 27 single-control removals and two paired removals. Four single-control removals remain blocked by a redundant control. That distinction prevents a misleading claim that every check is independently necessary.
 
-**Audience:** Engineers and architects building or securing multi-agent systems. Intermediate to advanced; comfortable reading Python and reasoning about authorization.
+We also examine what the harness missed: integration-wrapper defects involving modified contexts, approval replay, and argument binding. Those become regression tests and explicit deployment assumptions. Four policy worlds demonstrate reuse of the same harness, not independent evidence of industry readiness.
 
-**Abstract**
+Attendees leave able to design effect-based oracles, interpret ablations, and separate reference-code guarantees from deployment responsibilities. The demonstration is scripted and runs without a model API; production reliability and model-level attack resistance remain unmeasured.
 
-Every hop in your agent chain can pass its authorization check while the chain as a whole does something nobody authorized. Agent frameworks inherit an authorization model built for single callers: each tool call is checked against the caller's scope, and the caller's scope against its immediate parent. Across ten hostile delegation chains, that careful per-hop design caught **2 of 10**. Recomputing authority from the root grant on every call caught **10 of 10**, and a legitimate chain completed under every design.
+## Key takeaways
 
-This session dissects why, with live attacks against an open kernel that runs offline on a laptop:
+1. Define an observable harmful outcome and a legitimate-work control before writing attack prompts.
+2. Interpret single and paired ablations without mistaking redundancy for a useless control.
+3. Audit the dispatcher around the kernel: caller identity, approval validation, label propagation, and crash-safe execution.
 
-- **Delegation as a verifiable chain, not a context object.** Each hop is a signed, attenuating capability (tools × operations × resources × action class × expiry). The executor re-derives authority from the root and enforces nine invariants: attenuation, hop provenance, root anchoring, temporal containment, acyclicity, a depth bound, non-delegable consequence, holder binding, and beneficiary attenuation. Per-hop validation enforces only the first two.
-- **Labels that survive summarization.** Model output inherits the join of everything the session read. A worker that calls its own summary "public" can't launder a credential into a company-wide channel. Remove the taint rule and the password lands there live.
-- **Exact-action approval.** An Ed25519 human approval is bound to one principal, tool, resource, and argument digest, and executes exactly once under a 32-way race. The read authority behind the action is re-checked at write time, so revoking a data grant voids an already-approved change.
-- **Proving each control is load-bearing.** An effect-based oracle judges what reached the model, the channel, or the system of record, never the error code. In 25 of 29 ablations the harm returns; the other four are named redundant pairs. Each attacker has a positive control that removes one mediator and wins.
-- **One kernel across regulated domains.** Policy is a YAML pack the kernel refuses to load if it weakens a guarantee. The same suites run unchanged against software delivery, healthcare, financial services, and public benefits, with identical verdicts.
+## Audience and format
 
-Attendees leave with an open-source guard that adds these checks to their own tool dispatcher, one decorator per tool.
+Engineers, security practitioners, architects, and technical evaluators; intermediate Python and authorization knowledge. Proposed topic areas: AI Security & Safety, Agentic AI, and evaluation. Concurrent technical session: 50 minutes plus 10 minutes Q&A, subject to the organizer's final format.
 
-**Key takeaways**
+## Session outline
 
-1. The nine delegation invariants, and why validating each hop against its parent enforces only two of them.
-2. How to carry data labels through LLM summarization, so agents can't declassify their own output.
-3. A reusable verification protocol for agent controls: effect-based oracles, per-control ablation, and attacker positive controls.
+| Minutes | Content | Audience outcome |
+|---|---|---|
+| 0–5 | Deployment and disclosure failures | Agree on what counts as harm |
+| 5–15 | Delegation, exact-action approval, labels | Locate the enforcement boundaries |
+| 15–28 | Effect oracles and attacker positive controls | Distinguish refusal from containment |
+| 28–38 | Single and paired ablations | Explain all 29 configurations |
+| 38–45 | Wrapper defects and regression tests | Challenge the integration, not only the kernel |
+| 45–50 | Transfer to another policy world; limitations | Plan an evaluation without overstating it |
+| 50–60 | Questions | Inspect assumptions and failure cases |
 
-**Speaker bio**
+## Speaker biography
 
-Rachna Srivastava is an enterprise architect and AI systems researcher. Working independently and in a personal capacity, she built an open reference implementation of "trust by construction" for agentic AI: a kernel in which agents hold no authority of their own, and every guarantee is tested by attacking it and removing the control that provides it. Her accompanying research paper was submitted to an academic venue in September 2026.
+Rachna Srivastava is an enterprise architect working independently on agent authorization and evaluation. She built the reference implementation and attack harness presented in this session. She presents in a personal capacity; this work does not represent an employer or institution.
 
-**Why this session**
+## Committee note
 
-Multi-agent orchestration, sub-agents, and tool-server chains are becoming the default architecture, while authorization practice is still per call. This session names the specific failure classes, shows each exploited and fixed live across four regulated domains, and gives attendees both a measurement method and a guard they can adopt. Every number is reproducible from one repository, fully offline, so the demo carries no network risk.
+This is a technical experience report about a reference implementation. Its contribution is the combination of observable-effect evaluation, explicit ablations, positive controls, and a candid integration failure analysis. Delegated capabilities and information-flow controls have substantial prior art. The session does not claim to invent them or to establish regulatory compliance.
+
+## Submission preparation — exclude this section from the form
+
+Provide the public artifact URL, a demo recording, and the accompanying technical handout (`docs/TECHNICAL_NOTE.md`). Confirm the author's biography. These are speaker proposals; no acceptance, publication, production use, or independent security audit is claimed.

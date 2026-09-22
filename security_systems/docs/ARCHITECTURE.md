@@ -1,6 +1,6 @@
 # Architecture
 
-Agents are treated as untrusted code that happens to be good at reasoning. They can read what they're given, think, spawn workers, and propose. Deciding belongs to a small set of **independent mediators**. The agent process holds no credential that would let it act alone, so it can't call, patch, or talk its way past them.
+The intended deployment treats agent requests as untrusted and places decision-making and side-effect credentials in independent mediators. The shipped reference worlds simulate these roles in one Python process; they do not provide process isolation. Arbitrary code in that process can bypass the intended boundary. Production separation and caller authentication are deployment responsibilities.
 
 ```
            ┌──────────────── intelligence plane (untrusted) ────────────────┐
@@ -62,10 +62,10 @@ Falsifiers and attackers judge success from `WorldObservations`, which is record
 | Guard call | Kernel component | What it enforces |
 |---|---|---|
 | `root`, `spawn`, `authorize`, and every `@guard.tool` call | `DelegationAuthority.admit_strict` | Authority re-derived from the root on every call, with all nine delegation invariants. `spawn` clamps expiry to the parent's and inherits the parent's resources, so honest trees stay valid. |
-| `propose`, `approve`, `@guard.tool(approver_role=...)` | `AsymmetricApprovalAuthority`, `AccountableExecutor` | Ed25519 approval bound to principal, tool, resource, and argument digest. Role, audience, and expiry are checked. The first execution's result is returned on replay, and the side effect never runs twice. |
+| `propose`, `approve`, `@guard.tool(approver_role=...)` | `AsymmetricApprovalAuthority`, `AccountableExecutor` | Ed25519 approval bound to principal, tool, resource, and argument digest. Role, audience, and expiry are checked. Successful results are cached within one guard instance; replay revalidates the approval. Crash-safe external execution is not supplied. |
 | `observe`, `consume`, `release`, `@guard.tool(reads=...)` | the pack's `RecipientRule` policy | A per-agent label that only grows, flows to whoever consumes a worker's output, and must be covered by the recipient's clearance and purpose. |
 
-The guard is the enforcement surface; the harness is how you know it works. Both use the same kernel code.
+The guard reuses selected kernel components, but the world harness does not test every wrapper path. Wrapper regressions live in `tests/test_guard_adversarial.py`. See [TECHNICAL_NOTE.md](TECHNICAL_NOTE.md) for the trust boundary, wrapper fixes, and execution limits.
 
 ## Where a domain plugs in
 

@@ -1,124 +1,48 @@
-# AI Engineer CODE Summit 2026 (San Francisco, Nov 10–12): three submissions
+# AI Engineer CODE Summit 2026 — submission fields
 
-Every number is from `evidence/<domain>.json` (regenerate with `make evidence`).
-**Before submitting:** publish the repository (Apache-2.0) and put its URL in each pitch. Reviewers click links.
+One recommended submission for AIE, paired with the separate AI Con proposal. The form allows up to three submissions; there is no need to fill all three slots with overlapping talks.
 
----
+## Session Title
 
-## 1. Talk (priority)
+Your Coding Agent Has Approval. Is It for This Deploy?
 
-**Session Title**
+## Description
 
-Per-Hop Auth Caught 2 of 10 Agent Attacks. Whole-Chain Verification Caught 10.
+Learn how to keep a coding agent from turning approval for one build into permission to deploy another. In this live Python demo, we put a tool dispatcher between a hostile agent and a synthetic production service, then test what actually gets deployed.
 
-**Description**
+We follow one incident-response workflow through three failure cases: a worker borrowing another agent’s authority, a deploy request changing after human review, and a summarizer passing a credential to a public channel. The fixes are concrete: verify the delegation chain, bind approval to the exact action, and carry data labels through worker handoffs.
 
-Your coding agent spawns sub-agents, and every hop passes its authorization check. The chain still leaks your production database password into `#general`.
+Then we attack the fixes. On ten constructed hostile chains, our scope-and-signature-only baseline blocks two; whole-chain verification blocks ten. A legitimate chain completes under all three tested designs. Removing controls exposes which checks prevented harm and which have a backup. We also show bugs found in our own integration wrapper: a changed session identifier erased a label, and cached results skipped approval validation.
 
-I ran ten hostile delegation chains against three architectures:
+You’ll leave with a runnable dispatcher example, adversarial regression tests, and a method for checking side effects instead of trusting “denied” messages. The demo is scripted and runs locally without a model API. The results describe these fixtures—not production effectiveness or a benchmark of commercial agent frameworks.
 
-| Architecture | Hostile chains caught (of 10) |
-|---|---|
-| Trust the leaf's claimed scope | **0** |
-| Check each hop against its parent (careful RBAC) | **2** |
-| Recompute authority from the root on every call | **10** |
+## Session format
 
-A legitimate chain completes under all three. Per-hop checks catch forged and widened hops. They miss the eight attacks that live *in the chain*:
+**Stage Talk (15–20 minutes)** — preferred. Willing to adapt to an Online Talk if requested. Select the matching options offered in the form.
 
-- bearer-chain reuse
-- confused deputy
-- undisclosed beneficiary
-- a loop that launders authority
-- an orphaned delegation
-- depth evasion
-- a worker re-delegating deploy rights
-- a chain rooted in nothing
+## Special Flags
 
-Live against a synthetic production estate, a hijacked worker tries five ways to ship an unreviewed build: no approval, forged "ADMIN" text, a borrowed approval, a swapped target, and calling the tool server directly. Production doesn't move. Then I delete one control at a time and the attacks come back.
+**None.** No special eligibility or launch claim is made.
 
-You leave with three rules and the open-source guard that enforces them, one decorator per tool:
+## Speaker/Session Pitch
 
-1. **Re-derive authority from the root on every call.** A chain authorizes only the agent it names.
-2. **Bind human approval to the exact action.** Principal, tool, resource and argument digest, executed exactly once.
-3. **Let labels survive summarization.** A worker's output carries everything it read, and no agent can declassify its own output.
+I built the Python reference implementation and attack harness used in this session. I can take the audience from a malicious tool request to the authorization check, the resulting system state, and the regression test. I’m Rachna Srivastava, an enterprise architect presenting independent work in a personal capacity.
 
-**Session format:** Talk (preferred), Workshop
+Coding agents increasingly connect incident triage, worker delegation, and deployment tools. That makes the boundary between “the agent proposed it” and “the service executed it” an immediate engineering concern. This talk gives that boundary a concrete implementation and an adversarial test, using a software-delivery workflow throughout.
 
-**Special Flags:** None
+The strongest part of the session is the failure analysis: the original harness passed while its integration wrapper still admitted bypasses. I show the defects and fixes alongside the limits of the evidence. The contribution is an inspectable implementation and evaluation method built on established security ideas. I do not claim a new cryptographic primitive or production deployment results.
 
-**Speaker/Session Pitch** (committee only)
+The stage demo uses local synthetic data and needs no model service. Attendees can rerun the dispatcher example and attack tests. The 20-minute run sheet keeps the broader four-domain evaluation in the supporting material.
 
-Sub-agents, background agents, and MCP tool chains have become the default architecture, while the authorization pattern most frameworks document is still per call. This talk puts a number on the gap, 2 of 10 versus 10 of 10, from an open, runnable harness rather than a thought experiment, and ends with a guard attendees can adopt the same week.
+## Possible Tracks
 
-I'm Rachna Srivastava, an enterprise architect who has spent the past year building a reference implementation of "trust by construction" for agentic systems (independent work, in a personal capacity). The accompanying research paper was submitted to an academic venue in September 2026. The repository has 203 tests. The same attack suites run unchanged against devtools, healthcare, finance, and government domains. The whole demo runs offline in about ten seconds with no API key, so it can't fail on conference Wi-Fi, and every attendee can rerun it in their seat. Repo: `<URL>`.
-
-**Possible Tracks:** Security, Coding Agents, Multi-Agent Systems
+**Coding Agents; Security; Evals.** Choose the closest available labels in the form, up to three. The exact dropdown options were not provided.
 
 ---
 
-## 2. Workshop
+## Organizer facts and author checklist — do not paste into the fields
 
-**Session Title**
-
-Guard Your Agent's Tools, Then Try to Break Them: A Hands-On Lab
-
-**Description**
-
-Bring a laptop, with Python 3.10+ and no API key. You'll leave with your own agent's tools behind a guard, and proof that the guard does something.
-
-**Part 1: guard it (30 min).** Wrap a coordinator and three workers' tools with `trustkernel.guard`, one decorator per tool:
-
-- Delegation is re-derived from the root on every call.
-- Deploys need an Ed25519 human approval bound to the exact arguments, and run exactly once.
-- A worker's data label follows its output, so a credential can't reach `#general` through a summarizer.
-
-**Part 2: break it (40 min).** Attack your own setup and the reference kernel:
-
-- **Replay the ten delegation attacks** that per-hop auth misses: a sibling's stolen chain, a confused deputy, an orphaned hop, a re-delegated deploy.
-- **Run the 25 falsifiers**, judged by what reached the model, the channel, or production, never by whether an error was raised.
-- **Ablate.** Remove one control, rerun, and watch the harm return. Then find the two redundant pairs.
-- **Write a "speed up releases" policy PR** that tries to weaken the kernel. The shipped one is rejected on 39 counts.
-
-**Part 3: bring your domain (10 min).** Four domains ship: devtools, healthcare, finance, and government. A new one is a YAML pack plus a cast. `trustkernel check` tells you if it's miswired, and the full attack suite runs against it with no new tests.
-
-**Session format:** Workshop
-
-**Special Flags:** None
-
-**Speaker/Session Pitch** (committee only)
-
-AI Engineer audiences want to leave with something running. Setup is `pip install pyyaml cryptography`: seconds, with no key, no GPU, and no network after install. A CI job holds that promise to a 60-second budget from a cold clone. Every exercise produces a stable denial code or an observed leak, so the room can check each other's results. I built the guard, kernel, and attack suites, so I can take any question down to the line of code. Repo: `<URL>`.
-
-**Possible Tracks:** Security, Coding Agents, Evals
-
----
-
-## 3. Talk
-
-**Session Title**
-
-Your Agent Guardrail Is Decorative Until You Delete It
-
-**Description**
-
-Most agent guardrails are tested by checking that they raise an error. That proves the code path exists, not that it's what stopped the attack.
-
-This talk is a measurement protocol for agent controls, shown running across four regulated domains:
-
-- **Judge by effect, not by error.** The oracle never asks the guardrail whether it refused. It checks whether a protected value reached the model, an output reached a recipient, or production changed.
-- **Ablate every control.** Rerun each attack with exactly one control removed, then restored. In 25 of 29 ablations the harm comes back. The other four are two redundant pairs, and removing each pair together lets the attack through. The table is credible *because* some rows say no.
-- **Prove your attacker can win.** A red team that finds nothing is indistinguishable from one that can't run. Ours finds 0 violations in 300 attacks, and 103–105 once the execution mediator is removed. A bandit attacker goes from 0 forbidden outcomes to 60 of 60.
-- **Test the policy, not just the code.** Policy is a YAML pack the kernel refuses to load if it weakens a guarantee. Its failure tests are *derived from the pack itself*: every consequential transition is executed with the wrong role and then the right one.
-- **Validate the harness.** A static checker catches fixtures that would make an ablation measure the wrong control.
-
-The same suites run unchanged against devtools (a production deploy), healthcare (a warfarin dose), finance (a credit limit), and government (a benefit termination), with identical verdicts.
-
-**Session format:** Talk
-
-**Special Flags:** None
-
-**Speaker/Session Pitch** (committee only)
-
-Evals for *capability* are mature. Evals for *containment* are mostly anecdotes and screenshots. This talk gives engineers a reusable protocol (effect-based oracles, per-control ablation, attacker positive controls, and policy-derived contract tests) and shows it holding across four domains. It complements my delegation talk (#1) rather than repeating it: #1 is *what* breaks in multi-agent chains; this is *how to prove* any fix works. If only one is accepted, I'd prioritize #1. Repo: `<URL>`.
-
-**Possible Tracks:** Evals, Security, Agent Reliability
+- Event: November 10–12, 2026, San Francisco. CFP closes October 11, 2026, 11:59 PM Pacific. [Official event](https://ai.engineer/code/2026), [speaker CFP and formats](https://sessionize.com/aiecode26/), checked September 21, 2026.
+- Add an anonymously accessible repository/release URL and, ideally, a short demo recording to the committee pitch. No public artifact URL was verified in this review.
+- Confirm biography wording with the speaker. The prior academic-submission claim is omitted because it was not verified.
+- Rehearse using `docs/TALK.md`. These are session proposals; acceptance or proceedings publication is not implied.

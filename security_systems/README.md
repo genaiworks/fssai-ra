@@ -1,21 +1,23 @@
 # trustkernel
 
-**Authority doesn't compose across agents. Per-hop authorization caught 2 of 10 hostile delegation chains. Whole-chain verification caught 10.**
+**Test agent authority at the tool dispatcher, then attack the controls.**
+
+On ten constructed hostile chains, the supplied scope-and-signature baseline blocks two and the full verifier blocks ten. This compares specified fixture implementations, not RBAC or commercial frameworks in general.
 
 trustkernel is two things:
 
 1. **`trustkernel.guard`**, a framework-agnostic guard for your agent's tool dispatcher. It enforces whole-chain delegation, exact-action human approval, and data labels that survive summarization. It has no model, no network, and no framework dependency.
-2. **A falsification harness** that proves the guard's controls are load-bearing. It runs 25 attacks, ablates every control, and uses seeded and adaptive attackers with positive controls. All of it runs unchanged against four regulated domains: devtools, healthcare, finance, and government.
+2. **A falsification harness** that measures selected kernel controls under explicit attacks and ablations. Separate wrapper regression tests check the guard integration. It runs 25 attacks, ablates every control, and uses seeded and adaptive attackers with positive controls. All of it runs unchanged against four regulated domains: devtools, healthcare, finance, and government.
 
 ```bash
 pip install pyyaml cryptography && python demo.py
 ```
 
-That runs seven scenes in about ten seconds, with no API key, no GPU and no network.
+That runs seven scripted scenes with no API key, no GPU and no network after installation. Runtime depends on the machine.
 
 ## The problem
 
-Agent frameworks inherit an authorization model built for a single caller. A tool call is checked against the caller's scope, and a sub-agent's scope is checked against its parent's. Each hop can be locally correct while the chain does something nobody authorized:
+The supplied baseline checks scope attenuation and hop authentication. It omits holder, root, expiry-containment, and other checks present in the full verifier. The following constructed cases expose those omissions; they do not establish what all agent frameworks implement:
 
 | Attack | What happens | Per-hop check | Whole chain |
 |---|---|---|---|
@@ -30,7 +32,7 @@ Agent frameworks inherit an authorization model built for a single caller. A too
 | Scope re-amplification | A hop grants more than it holds | ✓ caught | ✓ `SCOPE_NOT_ATTENUATED` |
 | Forged hop | A hop signed by an untrusted key | ✓ caught | ✓ `DELEGATION_KEY_UNTRUSTED` |
 
-A legitimate two-hop chain completes under all three architectures. The difference isn't that whole-chain verification blocks more; it's that it blocks the right things.
+A legitimate two-hop chain completes under all three architectures. This one benign case establishes limited liveness, not a realistic false-denial rate.
 
 The same composition failure shows up in data. A worker reads a database URL, a summarizer calls its own output "public", and a publisher posts it to `#general`. No single agent broke a rule.
 
@@ -56,7 +58,7 @@ trigger_deploy(reader, service="svc-payments", build="v43")            # ✕ OUT
 proposal = guard.propose(lead, "trigger_deploy", resource="svc-payments", service="svc-payments", build="v42")
 approval = guard.approve(proposal, approver="raj-release", role="release_manager")   # your approval service
 trigger_deploy(lead, service="svc-payments", build="v40", approval=approval)        # ✕ APPROVAL_PAYLOAD_MISMATCH
-trigger_deploy(lead, service="svc-payments", build="v42", approval=approval)        # ✓ exactly once
+trigger_deploy(lead, service="svc-payments", build="v42", approval=approval)        # ✓ cached replay within this instance
 
 guard.consume(lead, reader)                                            # the reader's label flows to lead
 guard.release(lead, summary, recipient="slack_general", purpose="incident-triage")  # ✕ RECIPIENT_CLASS_NOT_CLEARED
@@ -75,14 +77,24 @@ The integration point is your tool dispatcher. [`examples/guarded_agent_loop.py`
   ✕ release to slack_general  RECIPIENT_CLASS_NOT_CLEARED
 ```
 
-Every decision goes onto a hash-chained ledger. The guard is thread-safe and takes an injectable clock.
+Every decision goes onto a hash-chained ledger. The guard uses a lock for approval execution and takes an injectable clock.
 
-## Prove it: the harness
+### Integration boundary
+
+This is an in-process reference library. A trusted dispatcher must authenticate callers and resolve their contexts; agents must not access root issuance, approval issuance, signing keys, original tool callbacks, or direct side-effect credentials. A decorator does not sandbox arbitrary Python in the same process.
+
+Tools accept JSON-valued keyword arguments (string keys, finite numbers, lists, objects, booleans, null); tuples, arbitrary objects, and implicit string conversion are rejected. High-impact registrations require an approver role. Contexts must be issued by this guard and cannot be modified to change authority or reset labels.
+
+The approval result cache is in memory. Successful replay within one instance does not rerun the callback; it still checks approval authenticity and expiry. External effects are not atomically committed with receipts across a crash. A callback failure requires reconciliation, not blind retry. Read labels are applied before invocation, and the trusted dispatcher must call `consume` at every data handoff and mediate every output path.
+
+The full world harness includes controls beyond the decorator, such as read-grant revalidation and signed evidence checkpoints. See [the technical handout](docs/TECHNICAL_NOTE.md) for the claim boundaries and [the reviewer critique](docs/REVIEW.md) for remaining research gaps.
+
+## Test it: the harness
 
 A control that has never been removed and re-tested is an assumption. The harness measures each control three ways.
 
 - **An effect-based oracle.** Every attack is judged by what actually reached a model, a channel, or production, never by whether an error was raised.
-- **Per-control ablation.** Each attack is rerun with exactly one control removed, then restored. A row is load-bearing only if the harm returns.
+- **Per-control ablation.** Each targeted attack is rerun with a control removed, then restored; two additional configurations remove redundant pairs. A row is load-bearing only if the harm returns.
 - **Attackers with positive controls.** A seeded red team and a bandit attacker find nothing, and both win once a mediator is removed. An attacker that never wins is indistinguishable from one that can't run.
 
 ```bash
@@ -105,7 +117,7 @@ From `evidence/<domain>.json`, which `make evidence` regenerates and a test keep
 | finance | 25 / 25 | 25 / 29 | 0 / 2 / 10 | 0 | 103 |
 | government | 25 / 25 | 25 / 29 | 0 / 2 / 10 | 0 | 103 |
 
-The four ablations where the harm didn't return are two redundant pairs. `residency` and `model_attestation` each independently stop routing sensitive data to a weaker model. `proposal_digest_binding` and `approval_single_use` each independently stop replay. Removing either pair together lets the attack through. The table is credible because some rows say no.
+The four ablations where the harm didn't return are two redundant pairs. `residency` and `model_attestation` each independently stop routing sensitive data to a weaker model. `proposal_digest_binding` and `approval_single_use` each independently stop replay. Removing either pair together lets the attack through. The denominator includes 27 single-control removals and two joint removals: 23 single and two joint removals expose harm.
 
 ## One kernel, every domain
 

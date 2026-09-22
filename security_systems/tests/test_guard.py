@@ -125,10 +125,9 @@ def test_depth_is_bounded_by_the_pack(guard, tools):
 def test_a_chain_rooted_in_nothing_confers_nothing(guard, tools):
     rogue_root = guard.root("some-other-service", tools={"read_secret"})
     forged = AgentContext("coordinator", lead(guard).root, rogue_root.chain)
-    child = guard.spawn(AgentContext("some-other-service", forged.root), "agent-a", tools={"read_secret"})
     with pytest.raises(ExecutionDenied) as refused:
-        tools["read_secret"](child, service="acme-api")
-    assert code_of(refused) == "CHAIN_NOT_ROOTED"
+        guard.spawn(AgentContext("some-other-service", forged.root), "agent-a", tools={"read_secret"})
+    assert code_of(refused) == "CONTEXT_NOT_ISSUED"
 
 
 def test_consequential_authority_cannot_be_passed_on_by_a_machine(guard, tools):
