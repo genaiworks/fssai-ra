@@ -1,0 +1,88 @@
+Approval replay boundary
+$ python examples/replay_boundary.py
+{
+  "unsafe_model_released_receipt": true,
+  "guard_released_receipt": false,
+  "guard_denial": "APPROVAL_SIGNATURE_INVALID",
+  "valid_replay_matches": true,
+  "deploy_effects": 1,
+  "experiment_passed": true
+}
+
+
+Denied after write
+$ python examples/effect_oracle.py
+[
+  {
+    "case": "reject_before_write",
+    "before": {
+      "build": "v1"
+    },
+    "after": {
+      "build": "v1"
+    },
+    "refused": true,
+    "harmful_effect": false,
+    "experiment_passed": true
+  },
+  {
+    "case": "write_then_reject",
+    "before": {
+      "build": "v1"
+    },
+    "after": {
+      "build": "unreviewed-v9"
+    },
+    "refused": true,
+    "harmful_effect": true,
+    "experiment_passed": true
+  },
+  {
+    "case": "control_removed",
+    "before": {
+      "build": "v1"
+    },
+    "after": {
+      "build": "unreviewed-v9"
+    },
+    "refused": false,
+    "harmful_effect": true,
+    "experiment_passed": true
+  },
+  {
+    "case": "legitimate_write",
+    "before": {
+      "build": "v1"
+    },
+    "after": {
+      "build": "reviewed-v2"
+    },
+    "refused": false,
+    "harmful_effect": false,
+    "experiment_passed": true
+  }
+]
+
+
+Workshop starter: expected failures
+$ python -m workshop.check --implementation starter
+PASS metrics: releases=1 denial=none
+FAIL secret_public: releases=1 denial=none
+PASS secret_security: releases=1 denial=none
+FAIL reset_session: releases=1 denial=none
+FAIL failed_read: releases=1 denial=none
+FAIL two_handoffs: releases=1 denial=none
+FAIL unknown_recipient: releases=1 denial=none
+2/7 checks passed; failures are expected in the starter and intermediate checkpoints.
+
+
+Workshop solution
+$ python -m workshop.check --implementation solution
+PASS metrics: releases=1 denial=none
+PASS secret_public: releases=0 denial=RECIPIENT_CLASS_NOT_CLEARED
+PASS secret_security: releases=1 denial=none
+PASS reset_session: releases=0 denial=CONTEXT_NOT_ISSUED
+PASS failed_read: releases=0 denial=RECIPIENT_CLASS_NOT_CLEARED
+PASS two_handoffs: releases=0 denial=RECIPIENT_CLASS_NOT_CLEARED
+PASS unknown_recipient: releases=0 denial=RECIPIENT_UNKNOWN
+7/7 checks passed; failures are expected in the starter and intermediate checkpoints.

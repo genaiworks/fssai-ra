@@ -5,7 +5,9 @@
 The "model" here is a script of tool calls, so the run is reproducible offline. In your
 stack, replace ``SCRIPT`` with the tool calls your LLM emits. The only integration point
 is ``dispatch``: every tool call goes through a guarded function with the calling
-agent's context. Nothing else in your framework changes.
+agent's server-selected context. The dispatcher must authenticate callers, protect
+issuer APIs and credentials, and mediate handoffs and output; a decorator alone
+does not provide those deployment boundaries.
 """
 import sys
 from pathlib import Path

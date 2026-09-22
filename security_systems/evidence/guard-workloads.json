@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "python": "3.14.6",
+  "system": "Darwin",
+  "machine": "arm64",
+  "dependencies": {
+    "cryptography": "50.0.1",
+    "pyyaml": "6.0.3"
+  },
+  "benign_grid": {
+    "authored_cases": 36,
+    "completed": 36,
+    "failures": [],
+    "limits": "Fixed authored grid; not a real-workload false-denial estimate."
+  },
+  "read_latency": {
+    "guard_depth_0": {
+      "samples": 1000,
+      "median_us": 10.8335,
+      "p95_us": 13.333
+    },
+    "guard_depth_1": {
+      "samples": 1000,
+      "median_us": 23.625,
+      "p95_us": 26.541
+    },
+    "guard_depth_3": {
+      "samples": 1000,
+      "median_us": 47.375,
+      "p95_us": 52.167
+    }
+  },
+  "measurement_scope": "Warm, sequential, in-process read calls including guard logging. No network, model, approval signing, contention, or baseline speedup claim. One process run; not a deployment SLA. Timing is descriptive, not a CI threshold."
+}

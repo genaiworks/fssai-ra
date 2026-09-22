@@ -16,7 +16,7 @@ The Python harness pairs adversarial cases with legitimate work, removes control
 
 We also examine what the harness missed: integration-wrapper defects involving modified contexts, approval replay, and argument binding. Those become regression tests and explicit deployment assumptions. Four policy worlds demonstrate reuse of the same harness, not independent evidence of industry readiness.
 
-Attendees leave able to design effect-based oracles, interpret ablations, and separate reference-code guarantees from deployment responsibilities. The demonstration is scripted and runs without a model API; production reliability and model-level attack resistance remain unmeasured.
+Attendees receive a copyable standard-library effect oracle, an experiment worksheet, and an offline example that writes an unreviewed build before reporting a denial. They leave able to interpret ablations and separate reference-code guarantees from deployment responsibilities. The demonstration is scripted and runs without a model API; production reliability and model-level attack resistance remain unmeasured.
 
 ## Key takeaways
 

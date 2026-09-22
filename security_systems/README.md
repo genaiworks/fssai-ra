@@ -15,6 +15,26 @@ pip install pyyaml cryptography && python demo.py
 
 That runs seven scripted scenes with no API key, no GPU and no network after installation. Runtime depends on the machine.
 
+## Community kit: run, break, adapt
+
+Start with the [workshop handout](workshop/README.md). It includes editable starter code, two recovery checkpoints, a solution, and seven checks that observe output. The starter deliberately fails five of those checks; the solution preserves legitimate releases and passes all seven.
+
+```bash
+python -m pip install -c requirements-conference.txt -e '.[dev]'
+make community             # solution and two observable-effect demonstrations
+make rehearsal             # offline terminal playback and readable transcript
+python benchmarks/guard_workloads.py --samples 1000
+```
+
+- [Copyable effect oracle](examples/effect_oracle.py): standard-library example that catches a write followed by a refusal.
+- [Cached-receipt demonstration](examples/replay_boundary.py): validate authorization on cache hits too.
+- [Adoption worksheet](docs/ADOPTION.md): map each trust boundary into your own stack.
+- [Claim-to-evidence map](docs/CLAIMS.md): reproduce each assertion and understand its limits.
+- [Speaker package](docs/SPEAKER_PACKAGE.md): recording script and focused stage plans.
+- [Community release status](docs/COMMUNITY_RELEASE.md): tested scope and remaining external work.
+
+The source bundle includes a SHA-256 manifest. After extracting it, run `python scripts/verify_bundle.py .` to check file integrity. Keep the source tree: the worlds and workshop fixtures are part of the exercises.
+
 ## The problem
 
 The supplied baseline checks scope attenuation and hop authentication. It omits holder, root, expiry-containment, and other checks present in the full verifier. The following constructed cases expose those omissions; they do not establish what all agent frameworks implement:

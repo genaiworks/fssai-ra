@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install demo test fast lint evidence clean
+.PHONY: install demo test fast lint evidence community rehearsal clean
 
 install:        ## editable install with test tools
 	$(PYTHON) -m pip install -e '.[dev]'
@@ -15,7 +15,7 @@ fast:           ## skip the slow ablation and red-team runs
 	$(PYTHON) -m pytest -m 'not slow'
 
 lint:
-	$(PYTHON) -m ruff check src tests demo.py examples
+	$(PYTHON) -m ruff check src tests demo.py examples workshop scripts benchmarks
 
 evidence:       ## regenerate every figure for every world
 	for w in $$($(PYTHON) -m trustkernel worlds --ids); do \
@@ -24,3 +24,11 @@ evidence:       ## regenerate every figure for every world
 clean:
 	rm -rf build dist *.egg-info src/*.egg-info .pytest_cache .ruff_cache
 	find . -name __pycache__ -type d -prune -exec rm -rf {} +
+
+community:     ## fast attendee artifacts and observable-effect checks
+	$(PYTHON) -m workshop.check --implementation solution
+	$(PYTHON) examples/effect_oracle.py
+	$(PYTHON) examples/replay_boundary.py
+
+rehearsal:     ## capture real terminal runs with offline playback
+	$(PYTHON) scripts/record_rehearsal.py

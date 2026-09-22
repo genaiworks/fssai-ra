@@ -2,6 +2,8 @@
 
 Reviewed September 21, 2026. Scope: `security_systems`, including the two conference proposals, public guard, evaluation design, evidence, and presentation run sheet. This is a focused review and hardening pass, not an exhaustive independent security audit.
 
+Community extension: see [COMMUNITY_RELEASE.md](COMMUNITY_RELEASE.md) for the complete workshop, reusable examples, clean-install verification, and current limits. The original findings below remain the historical review.
+
 ## Recommendation
 
 Present this as a reproducible engineering experience report. The artifact and live failure demonstrations support a practitioner talk. The current evidence does not support a broad claim that the system solves agent security, outperforms RBAC generally, or is production-ready across regulated industries. A research-paper claim would need stronger baselines, external attacks, realistic benign workloads, and deployment measurements.

@@ -49,17 +49,17 @@ Coding Agents; Security; Agent Infrastructure.
 
 ## Session Title
 
-Your Agent Said “Denied.” Check What Actually Happened.
+203 Tests Passed. Our Agent Guard Still Had Bypasses.
 
 ## Description
 
-Build agent security evaluations that catch a bad deployment or a leaked credential even when the guard logs “denied.” This session shows how to observe the side effect, challenge the control, and verify that the attacker can reach the thing you are trying to protect.
+Learn how to find the security failures your agent tests never exercise. We start with a 203-test suite that passed, then show how its integration wrapper still allowed a modified context to erase a data label and a forged approval to retrieve a cached receipt.
 
-We start with a synthetic coding-agent workflow and an oracle that inspects register mutations and released data. Then we remove a control, rerun the same attack, restore the control, and compare outcomes. A weakened-system positive control checks that the attacker can actually cause harm.
+The kernel checked its rules. The wrapper took a different path. We trace that gap, reproduce a cached-receipt failure pattern, and turn it into a regression that observes released data. A separate miniature writes an unreviewed build and then raises “denied”—a test that trusts the refusal passes; an effect oracle catches the harm.
 
-The reference harness holds its targeted properties on 25 fixed falsifiers. Harm returns in 25 of 29 ablation configurations: 27 single-control removals and two paired removals. Four single removals stay blocked by a redundant control. We unpack one pair to show why “nothing changed when I deleted it” does not establish that a check is useless.
+From those failures, we build a reusable evaluation protocol: observe the target state, preserve legitimate work, remove a control, restore it, and verify that the attacker can win against the weakened system. One paired ablation shows why a redundant control can hide the effect of removing another.
 
-Finally, we examine the boundary the harness missed: its integration wrapper. New regressions exposed bypasses despite the original suite passing. You’ll leave with an effect-oracle pattern, an ablation reporting template, and a way to test your evaluator’s blind spots. These are scripted fixture experiments, not estimates of production attack rates.
+You’ll leave with a standard-library effect oracle, an experiment worksheet, and runnable positive and negative controls. The wider harness supplies 25 falsifiers and 29 ablation configurations; the talk focuses on what those tests missed. All demonstrations are scripted and synthetic. No production attack-rate claim is made.
 
 ## Session format
 
@@ -118,7 +118,7 @@ I’m Rachna Srivastava, an enterprise architect presenting independent work in 
 
 Multi-worker coding workflows move information as well as authority. A summarizer can carry a credential into an output even when its own tool permissions are narrow. This workshop makes that integration problem tangible: every attendee gets both a useful release and a blocked disclosure working, then removes a control to see the failure.
 
-The existing dispatcher example and disclosure harness supply the exercises. The lab deliberately includes failure paths and deployment limits, so attendees understand why labeling and output mediation must be enforced by trusted orchestration code. All runtime exercises work locally after setup.
+The workshop includes editable starter code, two recovery checkpoints, a reference solution, seven observable-output checks, and participant and instructor guides. Both legitimate releases must keep working. The lab deliberately includes failure paths and deployment limits, so attendees understand why labeling and output mediation must be enforced by trusted orchestration code. All runtime exercises work locally after setup.
 
 This is a hands-on data-flow session. The two stage proposals focus separately on deployment approval and evaluation methodology.
 
@@ -131,10 +131,10 @@ Multi-Agent Systems; Security; Coding Agents.
 # Author preparation — do not paste into the submission fields
 
 - Confirm biography and first-person authorship statements before submission.
-- Add an anonymously accessible artifact/release URL to each committee pitch. A short recording strengthens the stage proposals. No public URL or recording was verified during this review.
-- The original suite passed 203 tests; the hardened code passed 218. Those counts support the artifact review, not a security probability or a production claim.
+- Add an anonymously accessible artifact/release URL to each committee pitch. An automated offline terminal recording is included in `evidence/rehearsal/reviewer-demo.html`. Record the human two-minute pitch in `docs/SPEAKER_PACKAGE.md` before applying. Public availability of the new artifact has not been established.
+- The original suite passed 203 tests; see `docs/COMMUNITY_RELEASE.md` for current verification. Test counts describe the artifact, not a security probability or a production claim.
 - Stage talk formats and workshop range come from the [official speaker CFP](https://sessionize.com/aiecode26/), checked September 21, 2026. The user's form establishes the maximum of three submissions. No submission has been sent.
-- The workshop is proposed for 90 minutes: setup and benign release (15), labels and handoffs (20), leak under ablation (20), wrapper regressions (20), adaptation and discussion (15). Test installation on a clean laptop and prepare exercise checkpoints before delivery; this proposal does not assert that a complete teaching kit has already been produced.
+- The workshop is proposed for 90 minutes: setup and benign release (15), labels and handoffs (20), leak under ablation (20), wrapper regressions (20), adaptation and discussion (15). Starter code, checkpoints, solutions, and guides are included under `workshop/`. A live participant pilot and human pacing rehearsal remain necessary before delivery.
 - Workshop participants should use synthetic fixtures. No production credential or private repository is needed.
 
 ## Keep the three presentations distinct
