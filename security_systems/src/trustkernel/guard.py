@@ -39,7 +39,9 @@ The checks are the kernel's own: :class:`~trustkernel.kernel.delegation.Delegati
 """
 from __future__ import annotations
 
+import copy
 import functools
+import inspect
 import hashlib
 import json
 import secrets
@@ -153,6 +155,7 @@ class Guard:
         self._done: dict[str, Any] = {}
         self._labels: dict[str, frozenset[str]] = {}
         self._contexts: dict[str, AgentContext] = {}
+        self._tools: dict[str, tuple[inspect.Signature, Any, Callable]] = {}
         self._lock = threading.RLock()
 
     @classmethod
@@ -249,6 +252,11 @@ class Guard:
     def propose(self, ctx: AgentContext, tool: str, *, resource: str = ANY, **arguments: Any) -> ActionProposal:
         """What a human is asked to approve: this principal, this tool, this resource, these arguments."""
         self._check_context(ctx)
+        if tool in self._tools:
+            target, arguments = self.prepare(tool, arguments)
+            if resource != ANY and resource != target:
+                raise ValueError("proposal resource differs from the tool's effective target")
+            resource = target
         proposal = self._proposal(ctx, tool, resource, arguments, "req-" + uuid.uuid4().hex[:12])
         with self._lock:
             self._proposals[proposal.digest] = proposal
@@ -280,15 +288,46 @@ class Guard:
                 executor.validate_authorization(actual, approval, now=self.clock())
                 if actual.request_id in self._done:
                     self._record(ctx, tool, resource, True, "REPLAYED_SAME_RESULT")
-                    return self._done[actual.request_id]
+                    return copy.deepcopy(self._done[actual.request_id])
                 executor.execute(actual, approval, now=self.clock())
             except ExecutionDenied as exc:
                 self._record(ctx, tool, resource, False, exc.code)
                 raise
             result = run()
-            self._done[actual.request_id] = result
+            self._done[actual.request_id] = copy.deepcopy(result)
         self._record(ctx, tool, resource, True, "EXECUTED")
         return result
+
+    def prepare(self, tool: str, arguments: dict) -> tuple[str, dict]:
+        """Bind defaults and validate a registered tool before approval or execution.
+
+        Resource names refer to function parameters. For a constant or composite
+        resource, register an explicit pure callable returning its string ID.
+        """
+        with self._lock:
+            definition = self._tools.get(tool)
+        if definition is None:
+            raise ExecutionDenied("TOOL_UNKNOWN", f"unregistered tool: {tool}")
+        signature, resource, _ = definition
+        if type(arguments) is not dict:
+            raise TypeError("tool arguments must be an object")
+        arguments = json.loads(_json_payload(arguments))
+        bound = signature.bind(**arguments)
+        bound.apply_defaults()
+        arguments = json.loads(_json_payload(dict(bound.arguments)))
+        target = resource(copy.deepcopy(arguments)) if callable(resource) else (
+            ANY if resource == ANY else arguments[resource])
+        if type(target) is not str or not target.strip():
+            raise TypeError("tool resource must resolve to a nonempty string")
+        return target, arguments
+
+    def invoke(self, ctx: AgentContext, tool: str, arguments: dict, *, approval: Approval | None = None) -> Any:
+        """Invoke a registered tool; caller identity must already be authenticated."""
+        with self._lock:
+            definition = self._tools.get(tool)
+        if definition is None:
+            raise ExecutionDenied("TOOL_UNKNOWN", f"unregistered tool: {tool}")
+        return definition[2](ctx, approval=approval, **arguments)
 
     # -- the decorator ------------------------------------------------------------------
     def tool(self, name: str | None = None, *, resource: str | Callable[[dict], str] = ANY,
@@ -303,18 +342,32 @@ class Guard:
         """
         if action_class == ActionClass.HIGH_IMPACT and (not approver_role or not approver_role.strip()):
             raise ValueError("high-impact tools require a nonempty approver_role")
+        if not isinstance(action_class, ActionClass):
+            raise TypeError("action_class must be an ActionClass")
         reads = frozenset(reads)
 
         def decorate(fn: Callable) -> Callable:
             tool_name = name or fn.__name__
+            if not isinstance(tool_name, str) or not tool_name.strip():
+                raise ValueError("tool name must be nonempty")
+            if inspect.iscoroutinefunction(fn) or inspect.isgeneratorfunction(fn) or inspect.isasyncgenfunction(fn):
+                raise TypeError("this guard supports synchronous non-streaming tools only")
+            signature = inspect.signature(fn)
+            unsupported = (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.VAR_POSITIONAL,
+                           inspect.Parameter.VAR_KEYWORD)
+            if any(p.kind in unsupported for p in signature.parameters.values()):
+                raise TypeError("tools require explicit keyword-compatible parameters; wrap dynamic tools")
+            if "approval" in signature.parameters:
+                raise ValueError("approval is reserved for the guard")
+            if not callable(resource) and resource != ANY and resource not in signature.parameters:
+                raise ValueError("resource must name a tool parameter or be an explicit resolver")
 
             @functools.wraps(fn)
             def wrapper(ctx: AgentContext, /, *args: Any, approval: Approval | None = None, **kwargs: Any) -> Any:
                 if args:
                     raise TypeError(f"{tool_name}: pass tool arguments by keyword so they can be bound to approvals")
                 # Snapshot arguments before hashing and execution; callers retain no mutable alias.
-                kwargs = json.loads(_json_payload(kwargs))
-                target = resource(kwargs) if callable(resource) else kwargs.get(resource, resource)
+                target, kwargs = self.prepare(tool_name, kwargs)
                 self.authorize(ctx, tool_name, resource=str(target), action_class=action_class)
                 # Taint before invoking: callbacks and exception paths may expose data too.
                 if reads:
@@ -327,6 +380,10 @@ class Guard:
                 return result
 
             wrapper.guarded_tool = tool_name  # type: ignore[attr-defined]
+            with self._lock:
+                if tool_name in self._tools:
+                    raise ValueError(f"tool already registered: {tool_name}")
+                self._tools[tool_name] = (signature, resource, wrapper)
             return wrapper
         return decorate
 
