@@ -9,7 +9,7 @@ worlds/<id>/
   malicious-pack.yaml   your own attempt to weaken that policy, which must be rejected
 ```
 
-The fastest start is to copy `worlds/devtools/` and rename things.
+The fastest start is to copy the world closest to yours (`devtools`, `healthcare`, `finance`, or `government`) and rename things. Run `trustkernel check --world <id>` after every edit.
 
 ## 1. The pack (`pack.yaml`)
 
@@ -22,7 +22,20 @@ The pack schema is the kernel's, and `trustkernel pack-check worlds/<id>/pack.ya
 - declares unbounded break-glass access, review capacity, delegation depth, or model approval;
 - contains any key the kernel doesn't read. An ignored key is a trap for the next reviewer.
 
-**Failure tests must exist.** Each contract's `failure_test: tests/test_<id>_pack.py::test_name` must name a real `def test_name(` in this repository, or the world won't start. Write each test to show the denial, then remove that one control and show the harm come back. See `tests/test_devtools_pack.py`.
+**Failure tests must exist.** Each contract's `failure_test` must name a real `def test_name(` in this repository, or the world won't start. You don't have to write any. `tests/test_contracts.py` has **pack-derived contract tests** that read your pack and run against every world:
+
+| Capability in your pack | Cite |
+|---|---|
+| any consequential transition | `tests/test_contracts.py::test_consequential_transitions_need_their_declared_human_role` |
+| `read_protected_context` | `tests/test_contracts.py::test_protected_reads_are_granted_minimal_and_purpose_bound` |
+| `release_labelled_output` | `tests/test_contracts.py::test_labelled_output_cannot_be_released_or_laundered` |
+| `restore_identity` | `tests/test_contracts.py::test_identity_reaches_models_only_as_tokens` |
+| `delegate_authority` | `tests/test_contracts.py::test_delegated_authority_only_narrows` |
+| `erase_subject` | `tests/test_contracts.py::test_erasure_reaches_every_governed_copy` |
+| the declassification approval role's transition | `tests/test_contracts.py::test_declassification_needs_exact_approval` |
+| the break-glass review transition | `tests/test_contracts.py::test_break_glass_opens_a_review_obligation` |
+
+Each rests on falsifiers that must hold, and on ablation rows where removing a control brings the harm back. A domain-specific test (like `tests/test_devtools_pack.py`) is still welcome when your domain has a rule the generic ones don't express.
 
 Two cross-references the loader enforces: every `declassification[].approval_role` and the `break_glass.review_role` must appear as some transition's `approval_role`. A role the disclosure policy relies on has to be one the executor enforces.
 
@@ -76,7 +89,7 @@ The attack suites name roles, never objects. Bind each role to one of your objec
 | `malicious_agent` | fields, purpose, and proposals the compromised agent tries | |
 | `attack` | the red team's vocabulary: `fields`, `purposes`, `endpoints`, plus `extra_*` for the adaptive attacker, and a one-line `goal` | |
 
-The role constraints are the ones the falsifiers depend on. For example, `unnamed` must share `routine`'s class, or F22 would be stopped by class clearance and `minimum_necessary` would no longer be measured.
+The role constraints are the ones the falsifiers depend on, and `trustkernel check` enforces every one of them statically. For example, `unnamed` must share `routine`'s class, or F22 would be stopped by class clearance and `minimum_necessary` would no longer be measured (`WORLD_UNNAMED_CLASS`).
 
 ## 4. The delegation suite (`delegation_suite:`)
 
@@ -95,7 +108,8 @@ delegation_suite:
 trustkernel pack-check worlds/my-world/pack.yaml               # must print "at or above the kernel floor"
 trustkernel pack-check worlds/my-world/malicious-pack.yaml     # must be REJECTED
 trustkernel falsify --world my-world                           # 25 of 25 held
-trustkernel ablate --world my-world                            # 25 of 29 load-bearing, the same four redundant
+trustkernel check --world my-world                             # zero findings
+trustkernel ablate --world my-world                            # harm returns in 25 of 29; the same four redundant
 trustkernel demo --world my-world
 python -m pytest                                               # the cross-world suite now includes you
 trustkernel evidence --world my-world --out evidence/my-world.json

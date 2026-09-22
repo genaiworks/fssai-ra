@@ -5,7 +5,7 @@ PYTHON ?= python3
 install:        ## editable install with test tools
 	$(PYTHON) -m pip install -e '.[dev]'
 
-demo:           ## the talk: six scenes against the devtools world
+demo:           ## the talk: seven scenes, every domain
 	$(PYTHON) demo.py
 
 test:           ## every test, including the slow reference-equivalence runs
@@ -15,7 +15,7 @@ fast:           ## skip the slow ablation and red-team runs
 	$(PYTHON) -m pytest -m 'not slow'
 
 lint:
-	$(PYTHON) -m ruff check src tests demo.py
+	$(PYTHON) -m ruff check src tests demo.py examples
 
 evidence:       ## regenerate every figure for every world
 	for w in $$($(PYTHON) -m trustkernel worlds --ids); do \

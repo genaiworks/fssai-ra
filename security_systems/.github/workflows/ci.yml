@@ -16,8 +16,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e '.[dev]'
-      - run: python -m ruff check src tests demo.py
+      - run: python -m ruff check src tests demo.py examples
       - run: python -m pytest
+      - run: python -m trustkernel check
+      - run: python examples/guarded_agent_loop.py
 
   # The talk promises: clone it, run one command, try to break it. This job holds
   # that promise to a budget, from a clean checkout, with the network cut after install.
