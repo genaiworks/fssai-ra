@@ -236,7 +236,17 @@ def create_app(
     async def lifespan(app: FastAPI):
         app.state.control_plane = plane
         app.state.authenticator = auth
-        yield
+        # A backlog left by a broker outage drains here, not in callers' requests.
+        events = plane.events
+        background = getattr(events, "publisher", None) is not None and \
+            hasattr(events, "start_background")
+        if background:
+            events.start_background(float(os.getenv("FSSAI_EVENT_RELAY_INTERVAL", "2")))
+        try:
+            yield
+        finally:
+            if background:
+                events.stop_background()
 
     app = FastAPI(
         title="Trust by Construction Control Plane",
@@ -319,6 +329,12 @@ def create_app(
             "evidence_records": len(plane.evidence),
             "pending_outcomes": plane.pending_outcomes,
             "unpublished_events": plane.unpublished_events,
+            "review_queue": (None if getattr(plane, "review_queue", None) is None else {
+                "depth": plane.review_queue_depth,
+                "limit": plane.review_queue.queue_limit,
+                "timeout_seconds": plane.review_queue.timeout_seconds,
+                "overload_policy": plane.review_queue.overload_policy,
+            }),
             "model": model.to_dict() if hasattr(model, "to_dict") else None,
             "authentication": {"mode": auth.config.mode, "warnings": auth.warnings},
             # What this deployment has declared about the three things only an

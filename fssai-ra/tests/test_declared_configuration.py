@@ -15,6 +15,7 @@ These tests close it from both ends: the policies are readable from the
 environment, and the deployment the factory builds actually carries them.
 """
 import os
+from pathlib import Path
 
 import pytest
 
@@ -88,15 +89,31 @@ def test_a_non_integer_escalation_threshold_fails_loudly():
 # -- the deployment actually carries it ------------------------------------
 
 
-def test_a_deployment_with_no_declaration_enforces_no_review_ceiling(clean_env, tmp_path):
-    """Stated explicitly so the absence is a decision, not an accident.
-
-    This is the behaviour every release before this one had, and it was never
-    written down anywhere. It is acceptable only because `fssaira doctor` now
-    reports it as a finding.
-    """
+def test_the_packs_declared_review_capacity_is_enforced_without_any_env(clean_env):
+    """A pack passes the kernel floor only by declaring review capacity; that
+    declaration must then be the capacity the approval path enforces. Before this,
+    every shipped profile declared a quota that no approval ever consulted."""
     plane = build_control_plane(profile_path="profiles/student_support.yaml")
-    assert plane.authority._oversight is None
+    monitor = plane.authority._oversight
+    assert monitor is not None
+    assert monitor.policy.max_approvals_per_window == 60
+    assert monitor.policy.min_deliberation_seconds == 45
+    assert plane.review_queue.queue_limit == 100 and plane.review_queue.timeout_seconds == 1800
+
+
+def test_a_pack_without_a_review_block_enforces_no_ceiling(clean_env, tmp_path):
+    """Only a pack with no consequential capability may omit review capacity."""
+    import yaml
+
+    raw = yaml.safe_load(Path("profiles/student_support.yaml").read_text())
+    for rule in raw["transitions"]:
+        rule["consequential"] = False
+    raw.pop("review")
+    raw.pop("controls")
+    path = tmp_path / "routine.yaml"
+    path.write_text(yaml.safe_dump(raw))
+    plane = build_control_plane(profile_path=str(path))
+    assert plane.authority._oversight is None and plane.review_queue is None
 
 
 def test_a_declared_capacity_reaches_the_authority_the_deployment_uses(clean_env):

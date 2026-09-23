@@ -227,6 +227,25 @@ class ReviewLoadPolicy:
         }
 
     @classmethod
+    def from_pack(cls, review: dict | None) -> ReviewLoadPolicy | None:
+        """The capacity a domain pack declares in its ``review`` block, or ``None``.
+
+        The kernel floor requires consequential packs to declare review capacity.
+        Using that declaration here is what makes it a control rather than a
+        document: without this, a pack could pass the floor on a quota that no
+        approval path ever consulted.
+        """
+        if not review:
+            return None
+        escalation = review.get("second_reviewer_after")
+        return cls(
+            max_approvals_per_window=int(review["capacity_per_window"]),
+            window_seconds=float(review["window_seconds"]),
+            min_deliberation_seconds=float(review.get("min_deliberation_seconds", 45.0)),
+            second_reviewer_after=None if escalation in (None, "", "none", "off") else int(escalation),
+        )
+
+    @classmethod
     def from_env(cls, env: dict | None = None) -> ReviewLoadPolicy | None:
         """Build the declared review capacity from the environment, or ``None``.
 

@@ -227,7 +227,8 @@ class KeyCustody:
 
     def __init__(self, *, master_seed: bytes | None = None, clock=None,
                  evidence: Any = None, evidence_token: str | None = None,
-                 store: Any = None, key_wrapper: Any = None) -> None:
+                 store: Any = None, key_wrapper: Any = None,
+                 erasure_journal: str | None = None) -> None:
         if key_wrapper is not None and master_seed is not None:
             raise ValueError("pass a master seed or a key wrapper, not both")
         if store is not None and master_seed is None and key_wrapper is None:
@@ -258,6 +259,12 @@ class KeyCustody:
             self._wrapped = dict(state["wrapped"])
             self._journal = list(state["journal"])
             self._destroyed = set(state["destroyed"])
+        #: Append-only file of erased subjects, kept outside the custody database.
+        #: Replayed at start-up so restoring an older database cannot bring an
+        #: erased subject's keys back.
+        self._erasure_journal = erasure_journal
+        if erasure_journal is not None:
+            self._reapply_external_erasures()
 
     # -- credentials ---------------------------------------------------------
     def register_principal(self, name: str, operations: Iterable[str]) -> str:
@@ -361,6 +368,9 @@ class KeyCustody:
         with self._lock:
             classes = tuple(sorted(cls for (subj, cls) in self._wrapped if subj == subject))
             entry = ErasureEntry(len(self._journal) + 1, subject, self._clock(), erased_by, reason)
+            # The external journal first: if the database write then fails, start-up
+            # re-applies the erasure; the reverse order could lose it.
+            self._record_external_erasure(entry)
             if self._store is not None:  # durable first: a failed write erases nothing
                 self._store.save_erasure(subject, entry)
             for cls in classes:
@@ -373,6 +383,45 @@ class KeyCustody:
                                              "journal_seq": entry.seq,
                                              "certificate_digest": certificate.digest})
         return certificate
+
+    def _external_erasures(self) -> list[dict]:
+        import os
+
+        if not self._erasure_journal or not os.path.exists(self._erasure_journal):
+            return []
+        with open(self._erasure_journal, encoding="utf-8") as handle:
+            return [json.loads(line) for line in handle if line.strip()]
+
+    def _record_external_erasure(self, entry: ErasureEntry) -> None:
+        import os
+
+        if not self._erasure_journal:
+            return
+        with open(self._erasure_journal, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps({"subject": entry.subject, "erased_at": entry.erased_at,
+                                     "erased_by": entry.erased_by, "reason": entry.reason},
+                                    sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+
+    def _reapply_external_erasures(self) -> None:
+        """Erase again every subject the external journal names but this state does not."""
+        for item in self._external_erasures():
+            subject = item["subject"]
+            if subject in self._destroyed and not any(k[0] == subject for k in self._wrapped):
+                continue
+            classes = tuple(sorted(cls for (subj, cls) in self._wrapped if subj == subject))
+            entry = ErasureEntry(len(self._journal) + 1, subject, self._clock(),
+                                 item.get("erased_by", "external-journal"),
+                                 "re-applied from the external erasure journal after a restore")
+            if self._store is not None:
+                self._store.save_erasure(subject, entry)
+            for cls in classes:
+                del self._wrapped[(subject, cls)]
+            self._destroyed.add(subject)
+            self._journal.append(entry)
+            self._log("erasure_reapplied", {"subject": subject, "classes": list(classes),
+                                            "journal_seq": entry.seq})
 
     def is_destroyed(self, subject: str) -> bool:
         return subject in self._destroyed
@@ -404,8 +453,18 @@ class KeyCustody:
             self._wrapped.update(updated)
             rewrapped = len(updated)
             self._kek_generation[data_class] = new_generation
+            # Retire older KEK versions only after every key is safely re-wrapped.
+            # A locally derived KEK cannot be retired: the master key re-derives it.
+            retire = getattr(self._wrapper, "retire", None)
+            try:
+                retired = bool(retire(data_class, new_generation)) if retire else False
+            except Exception as exc:  # the rotation itself succeeded; say so, loudly
+                retired = False
+                self._log("kek_retirement_failed", {"data_class": data_class,
+                                                    "generation": new_generation,
+                                                    "error": type(exc).__name__})
         self._log("kek_rotated", {"data_class": data_class, "generation": new_generation,
-                                  "rewrapped": rewrapped})
+                                  "rewrapped": rewrapped, "old_versions_retired": retired})
         return rewrapped
 
     # -- backup and restore --------------------------------------------------

@@ -99,6 +99,41 @@ class SparkImportValidation(unittest.TestCase):
         self.assertEqual(checkpoint_for("/c/imports", "1"), "/c/imports")
         self.assertEqual(checkpoint_for("/c/imports/", "3"), "/c/imports-g3")
 
+    def signed_body(self, text="Synthetic public policy", key=b"k" * 32, mac=None):
+        import hmac as _hmac
+        value = {"source": "policy-office", "text": text, "stripped": [],
+                 "content_hash": hashlib.sha256(text.encode()).hexdigest()}
+        body = json.dumps({"trace_id": "trace-1", "value": value}, sort_keys=True,
+                          separators=(",", ":"), ensure_ascii=False).encode()
+        signature = mac or _hmac.new(key, body, hashlib.sha256).hexdigest()
+        return json.dumps({"trace_id": "trace-1", "value": value, "mac": signature})
+
+    def test_records_that_bypassed_the_gateway_are_separated_not_imported(self):
+        import os
+
+        from kafka_to_iceberg import split_authentic, validate_batch
+        os.environ["FSSAI_IMPORT_ENVELOPE_KEY"] = "k" * 32
+        try:
+            forged = self.signed_body(mac="0" * 64)
+            unsigned = self.valid_body()          # well formed, no MAC at all
+            batch = self.batch([self.signed_body(), forged, unsigned, "not-json"])
+            authentic, rejected = split_authentic(batch)
+            self.assertEqual(authentic.count(), 1)
+            self.assertEqual(sorted(r.kafka_offset for r in rejected.collect()), [1, 2, 3])
+            validate_batch(authentic)             # the authentic record still passes
+        finally:
+            del os.environ["FSSAI_IMPORT_ENVELOPE_KEY"]
+
+    def test_the_jobs_mac_matches_the_library(self):
+        from kafka_to_iceberg import envelope_is_authentic
+
+        from fssaira.envelope_mac import sign
+        value = {"source": "s", "text": "Ünïcode ✓", "stripped": ["<script"], "content_hash": "h"}
+        envelope = json.dumps({"trace_id": "t", "value": value,
+                               "mac": sign(b"k" * 32, value, "t")})
+        self.assertTrue(envelope_is_authentic(b"k" * 32, envelope))
+        self.assertFalse(envelope_is_authentic(b"x" * 32, envelope))
+
 
 if __name__ == "__main__":
     unittest.main()

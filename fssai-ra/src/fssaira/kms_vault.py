@@ -12,7 +12,8 @@ Configure with ``FSSAI_VAULT_ADDR``, ``FSSAI_VAULT_TOKEN_FILE`` (or
 ``FSSAI_VAULT_TOKEN``), optional ``FSSAI_VAULT_CA_FILE`` for HTTPS, and
 ``FSSAI_VAULT_TRANSIT_MOUNT`` (default ``transit``). The token needs only
 ``create``/``update`` on the transit ``encrypt``, ``decrypt``, ``rewrap`` and
-``keys/<prefix>-*/rotate`` paths and ``read`` on ``keys/<prefix>-*``.
+``keys/<prefix>-*/rotate`` paths and ``read`` on ``keys/<prefix>-*``; with
+``FSSAI_VAULT_RETIRE_ON_ROTATE=true`` also ``update`` on ``keys/<prefix>-*/config``.
 
 What this changes: someone who copies the custody database *and* this host's
 memory still cannot unwrap data keys without Vault answering. What it does not:
@@ -50,7 +51,7 @@ class VaultTransitKeyWrapper:
 
     def __init__(self, addr: str, token: str, *, mount: str = "transit",
                  key_prefix: str = "fssaira", ca_file: str | None = None,
-                 timeout: float = 10.0) -> None:
+                 timeout: float = 10.0, retire_on_rotate: bool = False) -> None:
         if not token:
             raise ValueError("a Vault token is required")
         self.addr = addr.rstrip("/")
@@ -60,6 +61,10 @@ class VaultTransitKeyWrapper:
         self.timeout = timeout
         self._context = ssl.create_default_context(cafile=ca_file) if ca_file else None
         self._ready: set[str] = set()
+        #: After custody has re-wrapped every key, refuse older versions for
+        #: decryption. A wrapped key leaked before the rotation then no longer
+        #: opens -- and neither does a custody backup taken before it.
+        self.retire_on_rotate = retire_on_rotate
 
     @classmethod
     def from_env(cls) -> VaultTransitKeyWrapper | None:
@@ -73,7 +78,9 @@ class VaultTransitKeyWrapper:
                 token = handle.read().strip()
         return cls(addr, token, mount=os.getenv("FSSAI_VAULT_TRANSIT_MOUNT", "transit"),
                    key_prefix=os.getenv("FSSAI_VAULT_KEY_PREFIX", "fssaira"),
-                   ca_file=os.getenv("FSSAI_VAULT_CA_FILE"))
+                   ca_file=os.getenv("FSSAI_VAULT_CA_FILE"),
+                   retire_on_rotate=os.getenv("FSSAI_VAULT_RETIRE_ON_ROTATE", "").lower()
+                   == "true")
 
     # -- HTTP --------------------------------------------------------------
     def _call(self, method: str, path: str, body: dict | None = None) -> dict:
@@ -148,6 +155,14 @@ class VaultTransitKeyWrapper:
             "ciphertext": wrapped.body.decode("ascii"), "context": _context(subject, data_class),
         })["data"]["ciphertext"]
         return b"", ciphertext.encode("ascii"), self._version(ciphertext)
+
+    def retire(self, data_class: str, generation: int) -> bool:
+        """Refuse decryption with versions older than ``generation``, if configured."""
+        if not self.retire_on_rotate:
+            return False
+        name = self._ensure(data_class)
+        self._call("POST", f"keys/{name}/config", {"min_decryption_version": int(generation)})
+        return True
 
 
 __all__ = ["VaultTransitKeyWrapper"]

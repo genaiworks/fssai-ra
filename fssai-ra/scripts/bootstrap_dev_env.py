@@ -4,8 +4,27 @@ import secrets
 from pathlib import Path
 
 destination = Path("deploy/.env")
+
+#: Secrets introduced after a .env may already exist. Missing ones are appended;
+#: existing values are never changed.
+LATER_KEYS = {
+    # Only the import gateway and the Spark import job hold this key, so a record
+    # written straight to Kafka is refused (see fssaira.envelope_mac).
+    "FSSAI_IMPORT_ENVELOPE_KEY": lambda: secrets.token_urlsafe(48),
+    # Only the control plane and event consumers hold this key.
+    "FSSAI_EVENT_ENVELOPE_KEY": lambda: secrets.token_urlsafe(48),
+}
+
 if destination.exists():
-    print(f"preserved existing {destination}")
+    present = {line.split("=", 1)[0] for line in destination.read_text(encoding="utf-8").splitlines()
+               if "=" in line and not line.startswith("#")}
+    missing = {key: make() for key, make in LATER_KEYS.items() if key not in present}
+    if missing:
+        with destination.open("a", encoding="utf-8") as handle:
+            handle.write("".join(f"{key}={value}\n" for key, value in missing.items()))
+        print(f"added {', '.join(sorted(missing))} to existing {destination}")
+    else:
+        print(f"preserved existing {destination}")
 else:
     operator_token = secrets.token_urlsafe(32)
     officer_token = secrets.token_urlsafe(32)
@@ -37,6 +56,7 @@ else:
         "FSSAI_MODEL_FALLBACK": "deny",
         "MINIO_ROOT_USER": "fssaira-local",
         "MINIO_ROOT_PASSWORD": secrets.token_urlsafe(32),
+        **{key: make() for key, make in LATER_KEYS.items()},
     }
     destination.write_text(
         "# Generated for local development; do not commit or use in production.\n"

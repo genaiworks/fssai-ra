@@ -36,7 +36,7 @@ import uuid
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from smoke_stack import load_env  # noqa: E402
+from smoke_stack import enforced_deliberation_floor, load_env  # noqa: E402
 
 
 class Api:
@@ -76,7 +76,8 @@ class Api:
         raise RuntimeError(f"{method} {path} kept failing: {last}")
 
 
-def workflow(api: Api, run: str, index: int, timings: list, errors: list) -> None:
+def workflow(api: Api, run: str, index: int, timings: list, errors: list,
+             floor: float = 0.0) -> None:
     resource, request_id = f"drill-{run}-{index}", f"drill-req-{run}-{index}"
     started = time.monotonic()
     try:
@@ -96,6 +97,8 @@ def workflow(api: Api, run: str, index: int, timings: list, errors: list) -> Non
         api.call("POST", path + "/review", role="officer")
         if api.tokens.get("second"):
             api.call("POST", path + "/review", role="second")
+        time.sleep(floor + 0.5 if floor else 0)  # the server's deliberation floor
+        if api.tokens.get("second"):
             api.call("POST", path + "/endorsement", role="second")
         status, body = api.call("POST", path + "/approval", {"ttl_seconds": 600}, role="officer")
         if status != 201:
@@ -191,7 +194,15 @@ def main() -> int:
     operator_token = api.tokens["operator"]
     run = uuid.uuid4().hex[:6]
     timings, errors = [], []
-    threads = [threading.Thread(target=workflow, args=(api, run, i, timings, errors))
+    health = api.call("GET", "/health")[1]
+    floor = enforced_deliberation_floor(health)
+    capacity = ((health.get("declared_controls") or {}).get("review_capacity") or {})
+    quota = capacity.get("max_approvals_per_window")
+    if quota and args.workflows > quota:
+        parser.error(f"--workflows {args.workflows} exceeds the enforced review quota of {quota} "
+                     "approvals per reviewer per window; the server would rightly refuse the rest. "
+                     "Declare a larger capacity (FSSAI_REVIEW_MAX_PER_WINDOW) for a load test.")
+    threads = [threading.Thread(target=workflow, args=(api, run, i, timings, errors, floor))
                for i in range(args.workflows)]
     report = {"project": args.project, "workflows": args.workflows, "faults": []}
     started = time.monotonic()
@@ -218,8 +229,14 @@ def main() -> int:
         status, body = api.call("GET", f"/v1/resources/drill-{run}-{i}", role="operator")
         versions[i] = (body.get("status"), body.get("version")) if status == 200 else (status, None)
     moved_once = all(v == ("ready_for_officer_review", 2) for v in versions.values())
-    outcomes = api.call("GET", "/v1/evidence?kind=action_outcome&limit=1000",
-                        role="operator")[1]["records"]
+    outcomes, offset = [], 0
+    while True:  # page through everything; the API returns oldest first
+        page = api.call("GET", f"/v1/evidence?kind=action_outcome&limit=1000&offset={offset}",
+                        role="operator")[1]
+        outcomes += page["records"]
+        offset += len(page["records"])
+        if not page["records"] or offset >= page["total"]:
+            break
     mine = [r for r in outcomes if str(r["payload"].get("request_id", "")).startswith(
         f"drill-req-{run}-")]
     chain = api.call("GET", "/v1/evidence/verify", role="operator")[1]

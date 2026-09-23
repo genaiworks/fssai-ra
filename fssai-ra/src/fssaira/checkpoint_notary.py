@@ -61,7 +61,11 @@ class CheckpointNotary:
     def sign(self, ledger) -> Checkpoint:
         """Checkpoint the ledger as it is now and append it durably."""
         with self._lock:
-            checkpoint = self.notary.checkpoint(list(ledger))
+            head = getattr(ledger, "head", None)
+            # Reading the whole ledger on every change would make each execution
+            # slower than the last; the count and head hash are all that is signed.
+            checkpoint = (self.notary.checkpoint_head(*head()) if head is not None
+                          else self.notary.checkpoint(list(ledger)))
             with open(self.path, "a", encoding="utf-8") as handle:
                 handle.write(json.dumps(checkpoint.to_dict(), sort_keys=True) + "\n")
                 handle.flush()
@@ -69,20 +73,60 @@ class CheckpointNotary:
             return checkpoint
 
     def latest(self) -> Checkpoint | None:
-        if not self.path.exists():
+        """The checkpoint with the highest signed count.
+
+        Not simply the last line: concurrent executions can append a checkpoint
+        for a shorter ledger after one for a longer ledger, and trusting the last
+        line would then let a truncation back to the shorter length pass.
+        """
+        authentic, _forged = self._read()
+        if not authentic:
             return None
-        lines = [line for line in self.path.read_text(encoding="utf-8").splitlines() if line]
-        return Checkpoint(**json.loads(lines[-1])) if lines else None
+        return max(authentic, key=lambda item: (item.count, item.signed_at))
+
+    def _read(self) -> tuple[list[Checkpoint], int]:
+        """Checkpoints whose signature verifies, and how many lines did not.
+
+        A forged line (anyone who can write this file can append one) is counted
+        and reported, never trusted: otherwise one fake high-count line would make
+        every later verification fail.
+        """
+        from .evidence_notary import _verify_signature
+
+        if not self.path.exists():
+            return [], 0
+        authentic, forged = [], 0
+        for line in self.path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                item = Checkpoint(**json.loads(line))
+            except (TypeError, ValueError):
+                forged += 1
+                continue
+            if _verify_signature(self.public_keys, item.key_id, item.signature, item.payload()):
+                forged += 1
+            else:
+                authentic.append(item)
+        return authentic, forged
 
     def verify(self, ledger) -> dict:
         """Compare the ledger with the latest retained checkpoint."""
         checkpoint = self.latest()
         if checkpoint is None:
+            _authentic, forged = self._read()
+            if forged:
+                return {"valid": False, "code": "CHECKPOINTS_FORGED",
+                        "detail": f"{forged} checkpoint line(s) failed signature verification",
+                        "forged_checkpoint_lines": forged}
             return {"valid": None, "code": "NO_CHECKPOINT",
                     "detail": "no signed checkpoint has been retained yet"}
         verdict = verify_against_checkpoint(list(ledger), checkpoint, self.public_keys)
+        _authentic, forged = self._read()
         return {"valid": verdict.valid, "code": verdict.code, "detail": verdict.detail,
-                "checkpoint_count": checkpoint.count}
+                "checkpoint_count": checkpoint.count,
+                # Someone wrote to the checkpoint store without the key: investigate.
+                "forged_checkpoint_lines": forged}
 
 
 __all__ = ["CheckpointNotary"]

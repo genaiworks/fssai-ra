@@ -56,7 +56,7 @@ flowchart LR
 | 4 | Active content (scripts, iframes and similar) is stripped and the cleaned text is hashed. | `ImportBoundary._sanitize` | `ingest_intent` audit record | — |
 | 5 | The cleaned record is published to Kafka, keyed by source. | `KafkaEventPublisher.append` | Kafka topic `fssaira.imports` | `kafka-console-consumer.sh` (walkthrough 9.4) |
 | 6 | The gateway records success and answers `202`. | `ImportBoundary.ingest` | `ingest` audit record | `202 {"status":"accepted","broker_offset":N}` |
-| 7 | Every 10 seconds Spark reads new offsets, rejects the whole batch if any row is malformed or its hash does not match, and merges the rest. | `jobs/kafka_to_iceberg.py` | Iceberg `imported_evidence` rows, keyed by **topic, topic generation, partition, offset** | Spark SQL (walkthrough 10.5) |
+| 7 | Every 10 seconds Spark reads new offsets. A record without the gateway's envelope MAC is quarantined (not imported); a malformed signed record stops the batch; the rest is merged. | `jobs/kafka_to_iceberg.py` | Iceberg `imported_evidence` rows, keyed by **topic, topic generation, partition, offset** | Spark SQL (walkthrough 10.5) |
 | 8 | Iceberg commits a new snapshot. Spark saves its checkpoint. A crash between the two replays the batch, and the MERGE key prevents a duplicate row. | Iceberg REST catalog, MinIO | Parquet data plus metadata in `s3://warehouse/` | `…imported_evidence.snapshots` |
 
 Imported text is **not** encrypted and does **not** feed the model. Do not send personal data through this flow.
@@ -87,8 +87,8 @@ By default custody keys and encrypted rows live in memory. Give `KeyCustody` and
 |---|---|---|---|---|
 | 1 | A resource is registered in a starting state. | `ControlPlane.register_resource` | `resources` row; outbox event `resource.registered:<id>` | `GET /v1/resources/{id}` |
 | 2 | Someone (a person, or a model through `/v1/propose-task`) proposes one exact transition. | `ControlPlane.propose` | `objects` (proposal); outbox `action.proposed:<request_id>` | `GET /v1/proposals/{id}` |
-| 3 | A reviewer opens it. The server records when. | `begin_review` | `objects` (review session) | — |
-| 4 | An authorized human approves. The approval is HMAC-signed and bound to the proposal's digest. | `ApprovalAuthority.approve` | `objects` (approval); outbox `action.approved:<approval_id>` | — |
+| 3 | A reviewer opens it. The server records when. The pack's review block applies: at most `queue_limit` proposals may wait, each for at most `timeout_seconds`. | `begin_review`, `ReviewQueuePolicy` | `objects` (review session, review queue) | `/health` → `review_queue` |
+| 4 | An authorized human approves, no sooner than the deliberation floor (45 s in the shipped profiles) and within the per-reviewer quota. The approval is HMAC-signed and bound to the proposal's digest. | `ApprovalAuthority.approve` | `objects` (approval); outbox `action.approved:<approval_id>` | — |
 | 5 | The executor re-checks signature, role, expiry and version, then commits **in one transaction**: intent evidence, the state change, the receipt, outcome evidence and the `action.executed` outbox event. | `AtomicExecutor.execute` | `evidence`, `resources` (v+1), `execution_results`, `approval_uses`, `event_outbox` | `GET /v1/proposals/{id}/evidence` |
 | 6 | The relay publishes pending outbox events to Kafka in order and stamps them published. If Kafka is down, the request still succeeds, the events wait, and inline retries pause for 30 s so requests stay fast. | `OutboxRelay`, `SqlEventOutbox` | `event_outbox.published_at` | `/health` → `unpublished_events` |
 | 7 | An independent consumer rebuilds a monitoring view and drops any event it has already seen (same `event_id`). | `EvidenceProjector`, or `DurableEvidenceProjector` to survive restarts | In memory, or its own SQL tables with the Kafka position | `resume_offsets()`, `summary()` |
@@ -149,7 +149,9 @@ These need an institution, hardware or independent people, and are tracked in [G
 - **Kernel floor:** the server loads its domain pack through `load_governed_pack` and refuses to start if the pack removes a guarantee (a model approver, fail-open review, a missing control contract or failure test).
 - **Teaching defaults:** a `pilot` or `production` deployment refuses to start with a published teaching key.
 - **Durable custody:** refuses to start without a key source.
-- **Spark import stream:** refuses to start if the topic was reset under the current generation.
+- **Spark import stream:** refuses to start if the topic was reset under the current generation, or if it has no envelope key (unless `FSSAI_IMPORT_ALLOW_UNSIGNED=true`).
+- **Production posture:** a `production` deployment refuses to start with a plaintext database, Redis or Kafka link, unauthenticated events or no notary.
+- **Custody:** re-applies every erasure in the external journal, so a restored database cannot bring erased keys back.
 
 ## Encrypting traffic between services
 

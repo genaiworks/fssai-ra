@@ -161,3 +161,42 @@ def test_custody_from_env_prefers_the_key_service(tmp_path, monkeypatch):
     monkeypatch.setenv("FSSAI_VAULT_TOKEN", "token")
     custody, _ = custody_from_env()
     assert custody._wrapper.name == "vault-transit" and custody._master is None
+
+
+def test_a_database_restore_does_not_resurrect_an_erased_subject(tmp_path):
+    """An operator restores the custody database from a backup taken before an erasure."""
+    import shutil
+
+    master = secrets.token_bytes(32)
+    db, backup, journal = tmp_path / "c.sqlite", tmp_path / "backup.sqlite", tmp_path / "erasures.jsonl"
+
+    def open_with_journal(path):
+        store = SqlCustodyStore.open(f"sqlite:///{path}")
+        custody = KeyCustody(master_seed=master, store=store, erasure_journal=journal)
+        reader = custody.register_principal("gate", {"decrypt"})
+        admin = custody.register_principal("admin", {"erase"})
+        writer = custody.register_principal("ingest", {"encrypt"})
+        records = EncryptedRecordSource(FIELDS, custody, writer_credential=writer,
+                                        reader_credential=reader, store=store)
+        return custody, records, admin, store
+
+    custody, records, admin, store = open_with_journal(db)
+    records.load("patient-1", {"patient_name": "Alice Example"})
+    records.load("patient-2", {"patient_name": "Bob Example"})
+    store.database.close()
+    shutil.copy(db, backup)                                   # backup before erasure
+    custody, records, admin, store = open_with_journal(db)
+    custody.destroy_subject(admin, "patient-1", erased_by="dpo", reason="request")
+    store.database.close()
+    shutil.copy(backup, db)                                   # the rollback
+
+    # Without the external journal the erased subject comes back: the danger.
+    unguarded, _r, _a = open_all(db, master)
+    assert not unguarded.is_destroyed("patient-1")
+
+    custody, records, _admin, _store = open_with_journal(db)
+    assert custody.is_destroyed("patient-1")
+    with pytest.raises(RecordNotFound):
+        records.fetch("patient-1", ["patient_name"])
+    assert records.fetch("patient-2", ["patient_name"]) == {"patient_name": "Bob Example"}
+    assert any(e["kind"] == "erasure_reapplied" for e in custody.operations_log)

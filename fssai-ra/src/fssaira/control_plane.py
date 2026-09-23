@@ -17,10 +17,11 @@ one without changing a line.
 """
 from __future__ import annotations
 
+import contextlib
 import threading
 import time
 import uuid
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import Protocol, TypeVar
 
 from .event_transport import EventLog, KafkaLike
@@ -69,6 +70,38 @@ class MemoryObjectStore:
         with self._lock:
             return [key for space, key in self._objects if space == namespace]
 
+    def values(self, namespace: str) -> dict[str, dict]:
+        with self._lock:
+            return {key: dict(v) for (space, key), v in self._objects.items() if space == namespace}
+
+    def delete(self, namespace: str, key: str) -> None:
+        with self._lock:
+            self._objects.pop((namespace, key), None)
+
+
+@dataclass(frozen=True)
+class ReviewQueuePolicy:
+    """The review queue a domain pack declares: how many may wait, and for how long.
+
+    Enforced on the approval path: a new consequential proposal is refused while
+    ``queue_limit`` proposals already await review, and an approval arriving more
+    than ``timeout_seconds`` after the proposal was queued is refused. Both refusals
+    route the case to the manual path; neither approves anything.
+    """
+
+    queue_limit: int
+    timeout_seconds: float
+    overload_policy: str = "defer_to_manual"
+    escalation_role: str = ""
+
+    @classmethod
+    def from_pack(cls, review: dict | None) -> ReviewQueuePolicy | None:
+        if not review or "queue_limit" not in review:
+            return None
+        return cls(int(review["queue_limit"]), float(review["timeout_seconds"]),
+                   str(review.get("overload_policy", "defer_to_manual")),
+                   str(review.get("escalation_role", "")))
+
 
 class ControlPlane:
     """Use-case service shared by the HTTP API and direct Python integrations."""
@@ -92,6 +125,8 @@ class ControlPlane:
         model=None,
         durability: str = "best-effort",
         notary=None,
+        review_queue: ReviewQueuePolicy | None = None,
+        clock=time.time,
     ) -> None:
         self.profile = profile
         self.register = CaseRegister({}) if register is None else register
@@ -124,6 +159,12 @@ class ControlPlane:
         #: Optional :class:`fssaira.checkpoint_notary.CheckpointNotary`. When set,
         #: every executed change signs a checkpoint of the evidence ledger.
         self.notary = notary
+        self.review_queue = review_queue
+        self._clock = clock
+        self._queue_lock = threading.Lock()
+        if review_queue is not None and not all(
+                hasattr(self.objects, name) for name in ("values", "delete")):
+            raise ValueError("a review queue needs an object store with values() and delete()")
         self.executor = executor if executor is not None else profile.make_executor(
             self.register,
             self.evidence,
@@ -177,6 +218,24 @@ class ControlPlane:
         allowed = self.profile.transition_rules.get(operation, set())
         if (from_status, to_status) not in allowed:
             raise ExecutionDenied("TRANSITION_NOT_ALLOWED", "transition is not declared by profile")
+        queued = self._queues(operation, from_status, to_status)
+        # Check and admit under one lock, or concurrent proposals could each see a
+        # free place. The lock is per process: several API processes sharing one
+        # store would need a database-level lock to make the limit exact.
+        admission = self._queue_lock if queued else contextlib.nullcontext()
+        with admission:
+            return self._admit(proposal, queued, resource_id)
+
+    def _admit(self, proposal: ActionProposal, queued: bool, resource_id: str) -> ActionProposal:
+        if queued and self.objects.get("proposal", proposal.request_id) is None:
+            waiting = self._active_queue()
+            if len(waiting) >= self.review_queue.queue_limit:
+                raise ExecutionDenied(
+                    "REVIEW_QUEUE_FULL",
+                    f"{len(waiting)} proposals already await review (limit "
+                    f"{self.review_queue.queue_limit}); {self.review_queue.overload_policy}: "
+                    f"route this case to the manual process and escalate to "
+                    f"{self.review_queue.escalation_role or 'the service owner'}")
         put_once = getattr(self.objects, "put_if_absent", None)
         inserted = (
             put_once("proposal", proposal.request_id, asdict(proposal))
@@ -193,8 +252,33 @@ class ControlPlane:
             raise ExecutionDenied(
                 "REQUEST_ID_CONFLICT", "request ID already belongs to another proposal"
             )
+        if queued:
+            self.objects.put("review_queue", proposal.request_id, {"queued_at": self._clock()})
         self._emit("action.proposed", asdict(proposal), resource_id, proposal.request_id)
         return proposal
+
+    # -- review queue --------------------------------------------------------
+    def _queues(self, operation: str, from_status: str, to_status: str) -> bool:
+        """Only consequential transitions wait for a named human."""
+        if self.review_queue is None:
+            return False
+        return any(rule.consequential and (rule.operation, rule.from_status, rule.to_status)
+                   == (operation, from_status, to_status) for rule in self.profile.transitions)
+
+    def _active_queue(self) -> dict[str, dict]:
+        """Proposals still awaiting review. Timed-out entries leave the queue."""
+        cutoff = self._clock() - self.review_queue.timeout_seconds
+        active = {}
+        for request_id, entry in self.objects.values("review_queue").items():
+            if entry.get("queued_at", 0) >= cutoff:
+                active[request_id] = entry
+            else:
+                self.objects.delete("review_queue", request_id)
+        return active
+
+    @property
+    def review_queue_depth(self) -> int | None:
+        return None if self.review_queue is None else len(self._active_queue())
 
     def begin_review(self, request_id: str, *, reviewer: str) -> dict:
         """Record when this server first presented a proposal to one reviewer.
@@ -333,6 +417,15 @@ class ControlPlane:
         the oversight monitor fails closed rather than assuming.
         """
         proposal = self.get_proposal(request_id)
+        if self.review_queue is not None:
+            entry = self.objects.get("review_queue", request_id)
+            if entry is not None and \
+                    self._clock() - entry["queued_at"] > self.review_queue.timeout_seconds:
+                self.objects.delete("review_queue", request_id)
+                raise ExecutionDenied(
+                    "REVIEW_TIMED_OUT",
+                    f"the proposal waited longer than {self.review_queue.timeout_seconds:g}s; "
+                    "it is deferred to the manual process and must be proposed again")
         approval = self.authority.approve(
             proposal,
             approver=approver,
@@ -343,6 +436,8 @@ class ControlPlane:
             second_approver_role=second_approver_role,
         )
         self.objects.put("approval", request_id, asdict(approval))
+        if self.review_queue is not None:
+            self.objects.delete("review_queue", request_id)
         self._emit(
             "action.approved",
             {"request_id": request_id, "approval_id": approval.approval_id,

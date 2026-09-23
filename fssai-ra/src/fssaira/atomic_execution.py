@@ -200,6 +200,10 @@ class _DatabaseEvidenceView:
         with self._db.transaction() as unit:
             return unit.evidence.find(kind, **match)
 
+    def head(self) -> tuple[int, str]:
+        with self._db.transaction() as unit:
+            return unit.evidence.head()
+
     def records(self) -> list:
         with self._db.transaction() as unit:
             return unit.evidence.records()
@@ -226,6 +230,14 @@ class _DatabaseObjectStoreView:
     def get(self, namespace: str, key: str) -> dict | None:
         with self._db.transaction() as unit:
             return unit.objects.get(namespace, key)
+
+    def values(self, namespace: str) -> dict[str, dict]:
+        with self._db.transaction() as unit:
+            return unit.objects.values(namespace)
+
+    def delete(self, namespace: str, key: str) -> None:
+        with self._db.transaction() as unit:
+            unit.objects.delete(namespace, key)
 
 
 class _DatabaseApprovalUseView:

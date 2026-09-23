@@ -298,6 +298,8 @@ records = EncryptedRecordSource(field_classes, custody, writer_credential=w,
                                 reader_credential=r, store=store)
 ```
 
+**Restoring the custody database must not undo an erasure.** A backup taken before an erasure still holds the erased subject's wrapped keys, and restoring it at database level bypasses `KeyCustody.restore()`. Set `FSSAI_CUSTODY_ERASURE_JOURNAL` (or pass `erasure_journal=`) to a file on *different* storage: every erasure is appended and fsynced there before the database write, and at start-up custody re-erases any subject the journal names that the database still has keys for, logging `erasure_reapplied`. `tests/test_custody_persistence.py` restores a pre-erasure database file and shows both outcomes: without the journal the subject comes back; with it, it does not.
+
 The master key is **never** stored in the database. `load_master_key` reads 32 bytes (raw or hex) and refuses a file other users can read. The database alone yields only ciphertext and wrapped keys: opening it with a different master key fails with `CUSTODY_KEY_UNWRAP_FAILED`. Durable custody refuses to start without a master key rather than silently inventing one. `EvidenceNotary.from_key_file(path)` keeps the notary's signing key stable across restarts the same way. Keep the custody database, the master key file and the notary key apart from the application database and from each other where you can. This is software custody, not an HSM: someone holding both the database and the master key can decrypt.
 
 ### 4.4 Key-encryption keys in a key service
@@ -310,7 +312,7 @@ export FSSAI_VAULT_ADDR=https://vault.internal:8200 FSSAI_VAULT_TOKEN_FILE=/run/
 export FSSAI_VAULT_CA_FILE=/tls/ca.crt            # when Vault serves HTTPS
 ```
 
-`custody_from_env()` then builds custody on Vault; without `FSSAI_VAULT_ADDR` it uses `FSSAI_CUSTODY_MASTER_KEY_FILE`, and with neither it refuses to start. Checked against Vault 1.20 (`tests/test_kms_vault.py`, run with `FSSAI_TEST_VAULT_ADDR`): wrapped keys look like `vault:v1:…`, the process holds no KEK, rotation moves every key to `vault:v2:…`, a key moved to another subject does not open, and an invalid token cannot unwrap. Data keys are still unwrapped into the process to encrypt fields, and Vault in development mode is not an HSM: for hardware-backed keys, run Vault with an HSM seal or use a cloud KMS behind the same interface.
+`custody_from_env()` then builds custody on Vault; without `FSSAI_VAULT_ADDR` it uses `FSSAI_CUSTODY_MASTER_KEY_FILE`, and with neither it refuses to start. Checked against Vault 1.20 (`tests/test_kms_vault.py`, run with `FSSAI_TEST_VAULT_ADDR`): wrapped keys look like `vault:v1:…`, the process holds no KEK, rotation moves every key to `vault:v2:…`, a key moved to another subject does not open, and an invalid token cannot unwrap. Rotation alone does not retire anything: old key versions still decrypt, so a wrapped key leaked before the rotation still opens. With `FSSAI_VAULT_RETIRE_ON_ROTATE=true`, custody raises Vault's `min_decryption_version` once every key is re-wrapped; the live test shows a pre-rotation wrapped key refused. The cost is that custody backups from before the rotation stop restoring, which is the institution's call. The local wrapper cannot retire a version (the master key re-derives it), and says so in its rotation log. Data keys are still unwrapped into the process to encrypt fields, and Vault in development mode is not an HSM: for hardware-backed keys, run Vault with an HSM seal or use a cloud KMS behind the same interface.
 
 ## 5. Run the protected-data lab and inspect every stage
 
@@ -484,6 +486,8 @@ FROM fssaira.event_outbox ORDER BY seq;
 ```
 
 The Redis profile uses `RedisOutboxStore`: `RedisCaseRegister` writes `action.executed` in the same `MULTI/EXEC` as the transition, and the other events are written before publishing. The in-memory profile, when Kafka is configured, uses `MemoryOutboxStore`, which survives an outage but not a restart. With no Kafka configured, events are recorded as published at once, so `unpublished_events` stays 0. Published events older than `FSSAI_EVENT_OUTBOX_RETENTION_SECONDS` (default seven days) are pruned; unpublished ones are never pruned.
+
+**The pack's review block is enforced here.** When no `FSSAI_REVIEW_*` variables are set, the server takes review capacity from the pack's `review` block: `capacity_per_window` and `window_seconds` become the per-reviewer quota, `min_deliberation_seconds` (45 in the shipped profiles) the minimum time between presenting a proposal and approving it, and `second_reviewer_after` the escalation threshold, all enforced by the oversight monitor. `queue_limit` refuses a new consequential proposal while that many await review (`REVIEW_QUEUE_FULL`), and `timeout_seconds` refuses an approval arriving later than that (`REVIEW_TIMED_OUT`); both route the case to the manual process and approve nothing. `/health` reports `review_queue`. Scripts that act as reviewers (`smoke_stack.py`, `api_walkthrough.py`, `fault_drill.py`) read the enforced floor from `/health` and wait it out instead of assuming it away.
 
 **Many writers.** Evidence appends take a PostgreSQL transaction-scoped advisory lock before reading the chain head. Without it, two writers could lock the same head row, compute the same next `seq` and fail on the primary key; `tests/test_postgres_concurrency.py` reproduced exactly that against a real server (`duplicate key … evidence_pkey`) before the fix. With the lock, 64 concurrent executions, 16 racing on one request, and 32 complete workflows in parallel all produce one valid chain and one change per request. Run it with `FSSAI_TEST_POSTGRES_URL` pointing at a disposable database.
 
@@ -687,6 +691,8 @@ Topic `fssaira.imports` carries:
 
 `trace_id`, timestamp and offset vary. Kafka key is the source name. The broker supplies topic, partition, offset and record timestamp; these are outside the JSON value. Ordering is within a partition, not global. A producer configured with `enable.idempotence=true`, `acks=all`, retries and bounded in-flight requests protects its own broker retries; it does not deduplicate a newly issued business request. See [Kafka producer configuration](https://kafka.apache.org/33/configuration/producer-configs/).
 
+**Envelopes are authenticated.** The broker does not authenticate producers by itself, so anything that could reach it could otherwise write a forged import (Spark's content hash is computed by whoever writes the record) or a forged lifecycle event. The gateway adds `mac`, an HMAC-SHA256 over the canonical `{"trace_id", "value"}` under `FSSAI_IMPORT_ENVELOPE_KEY`; the control plane does the same under `FSSAI_EVENT_ENVELOPE_KEY`. The Spark job refuses any batch containing a record with a missing or wrong MAC, and `KafkaEventConsumer(mac_key=…)` routes such records to the dead-letter topic without calling the handler. With no key the Spark job refuses to start unless `FSSAI_IMPORT_ALLOW_UNSIGNED=true` says otherwise explicitly. `scripts/bootstrap_dev_env.py` generates both keys, and appends them to an existing `deploy/.env` without changing other values. **Upgrading a stack whose import topic already holds unsigned records:** the job will stop on the first one; delete and recreate the topic and raise `FSSAI_IMPORT_TOPIC_GENERATION`, or drain it with `FSSAI_IMPORT_ALLOW_UNSIGNED=true` once, deliberately.
+
 Topic `fssaira.events` carries control events shaped as `value: {kind, payload}`. It is separate from imported document text. `EvidenceProjector` builds a monitoring view from these events. After the replay fix it ignores already applied offsets per topic/partition in an ordered run. Its view and offset state are in memory; after restart it rebuilds from the beginning. `DurableEvidenceProjector(url)` stores the view, the applied `event_id`s and the next offset per partition in one transaction per event, so a restart resumes from `resume_offsets()` and a crash never leaves half an event applied.
 
 ### 9.4 Consumer acknowledgment and dead letters
@@ -720,7 +726,7 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.t
 |---|---|---|
 | PostgreSQL | `ssl=on`; `pg_hba` allows `hostssl` only | `sslmode=verify-full&sslrootcert=/tls/ca.crt` in `FSSAI_DATABASE_URL` |
 | Redis | TLS port only (`--port 0`) | `rediss://` URL plus `FSSAI_REDIS_CA_FILE` |
-| Kafka | `INTERNAL` listener is `SSL` (PEM key and truststore) | `FSSAI_KAFKA_SECURITY_PROTOCOL=SSL`, `FSSAI_KAFKA_SSL_CA_LOCATION`; Spark reads the same variables |
+| Kafka | `INTERNAL` listener is `SSL`, **client certificate required** (mutual TLS) | `FSSAI_KAFKA_SECURITY_PROTOCOL=SSL`, `FSSAI_KAFKA_SSL_CA_LOCATION`, `FSSAI_KAFKA_SSL_CERT_LOCATION`/`_KEY_LOCATION`; Spark uses `FSSAI_KAFKA_SSL_KEYSTORE_PEM`. Each client has its own certificate (`kafka-client-*`) |
 | MinIO | `--certs-dir` | `https://minio:9000` endpoints; Java clients use the PKCS12 truststore |
 | Control API, import gateway | uvicorn `--ssl-certfile/--ssl-keyfile` | `https://…`; the console's nginx verifies the API certificate (`deploy/tls/console-nginx.conf`); `smoke_stack.py --ca-file` |
 
@@ -974,7 +980,7 @@ The current verifier collects records to the driver. For large archives, impleme
 
 ### 11.4 Signed checkpoints in the running system
 
-Set `FSSAI_NOTARY_KEY_FILE` (an owner-only file with 32 random bytes) and `FSSAI_NOTARY_CHECKPOINT_DIR`. The control plane then signs a checkpoint (record count and head hash, Ed25519) after every executed change and appends it to `checkpoints.jsonl`, fsynced. `GET /v1/evidence/checkpoint` returns the latest checkpoint and the public key for external retention, and `GET /v1/evidence/verify` adds a `checkpoint` verdict: `CHECKPOINT_VALID`, `LEDGER_TRUNCATED`, `HISTORY_REWRITTEN`, or `NO_CHECKPOINT` when nothing has been signed yet. Mount the checkpoint directory on storage the ledger's writer cannot rewrite, and copy checkpoints off the host. The notary signs in the same process as the control plane, so it protects history that was already checkpointed and copied; it does not stop a compromised process from signing a falsified ledger from then on.
+Set `FSSAI_NOTARY_KEY_FILE` (an owner-only file with 32 random bytes) and `FSSAI_NOTARY_CHECKPOINT_DIR`. The control plane then signs a checkpoint (record count and head hash, Ed25519) after every executed change and appends it to `checkpoints.jsonl`, fsynced. `GET /v1/evidence/checkpoint` returns the latest checkpoint and the public key for external retention, and `GET /v1/evidence/verify` adds a `checkpoint` verdict: `CHECKPOINT_VALID`, `LEDGER_TRUNCATED`, `HISTORY_REWRITTEN`, or `NO_CHECKPOINT` when nothing has been signed yet. The authoritative checkpoint is the one with the **highest signed count** whose signature verifies, not the last line: concurrent executions can append a shorter checkpoint after a longer one. Lines that fail verification are ignored and reported as `forged_checkpoint_lines`, so one forged high-count line cannot make every later check fail. Signing reads only the ledger's head (count and last hash, `head()` on every ledger), not the whole ledger. Mount the checkpoint directory on storage the ledger's writer cannot rewrite, and copy checkpoints off the host. The notary signs in the same process as the control plane, so it protects history that was already checkpointed and copied; it does not stop a compromised process from signing a falsified ledger from then on.
 
 ## 12. Failure and recovery walkthrough
 
@@ -1185,3 +1191,27 @@ docker rm -v fssaira-pipeline-lab
 ```
 
 Do not use these names against an existing service, and do not use `docker compose down -v` on a shared environment. Preserve your evidence bundle before deleting test storage.
+
+## 16. Devil's-advocate review of the fixes
+
+Every claim added in sections 4–15 was re-examined on the assumption that it was wrong. Where the suspicion held, the fix and its evidence are listed; where it did not, that is recorded too.
+
+| Suspicion | Verdict | What changed | Evidence |
+|---|---|---|---|
+| The review capacity every pack declares to pass the kernel floor is enforced nowhere | **Confirmed.** Only the education simulation read it | Capacity, deliberation floor and escalation drive the oversight monitor; `queue_limit` and `timeout_seconds` are enforced by the control plane (`REVIEW_QUEUE_FULL`, `REVIEW_TIMED_OUT`); `/health` shows the queue | `tests/test_review_queue.py` (memory, SQL, Redis); `test_declared_configuration.py` |
+| Shipped profiles would declare a 0-second deliberation floor so demos run | **Rejected as a fix.** A zero floor teaches rubber-stamping | Profiles declare 45 s; scripts acting as reviewers read the enforced floor from `/health` and wait | Live: smoke test waited 45 s and passed; drill p50 45.7 s |
+| Kafka lets anything on the network write imports or events | **Confirmed**, with or without TLS | HMAC envelope (`fssaira.envelope_mac`); Spark refuses unsigned imports unless explicitly allowed; consumers dead-letter unsigned events | Live: a record written with a valid client certificate but no MAC was not imported |
+| …and anything on the network can read them | **Confirmed** | Kafka requires client certificates in the TLS overlay | Live: no certificate → `certificate required`; own certificate → delivered |
+| Refusing an unsigned record stops the stream | **Confirmed**: one forged write halted every import | Unauthenticated records go to `quarantined_imports` (positions and a hash, never content) and the stream continues; malformed *authentic* records still stop it | Live: forged record quarantined, the next signed import landed |
+| The quarantine table would accept the rows the job writes | **Wrong**: `NOT NULL` columns refused nullable rows | Columns made nullable | Live failure, then success |
+| Requests pay for the whole backlog after an outage | **Confirmed** | At most 10 events relayed per request; a background relay drains the rest | `test_event_outbox.py` |
+| The notary is cheap and trustworthy under load | **Two defects**: each execution read the whole ledger; the last line, not the highest count, was trusted | Sign from `head()`; highest *authentic* count wins; forged lines are reported, not trusted | `test_checkpoint_notary.py` |
+| Restoring the custody database cannot undo an erasure | **Confirmed it could** | External erasure journal replayed at start-up | Test restores a pre-erasure database: without the journal the subject returns; with it, it does not |
+| Vault rotation retires old keys | **False** | Optional `FSSAI_VAULT_RETIRE_ON_ROTATE`; the local wrapper states it cannot retire | Live Vault: a pre-rotation wrapped key is refused |
+| The image's failure-test manifest proves the tests pass | **False**: it proved they exist | The build runs every cited failure test and records only those that passed; a failure stops the build | The first build caught 5 tests that could not find their pack when run against the installed package |
+| "Production" means protected | **False**: it only blocked teaching keys | Plaintext database, Kafka or Redis, unauthenticated events and a missing notary block a `production` start | `tests/test_production_posture.py` |
+| The drill's outcome check reads all evidence | **False**: only the oldest 1000 records | Pages through all evidence | Code review |
+| The local Spark extra matches the image | **False**: 4.1 locally, 3.5.1 in the image | Pinned to 3.5 | `pyproject.toml` |
+| The import gateway's ID store is ephemeral in Compose | **Refuted**: it has a durable path on a volume | None | `deploy/compose.yaml` |
+
+Still true after this review: an attacker who holds a Kafka client certificate *and* an envelope key can write accepted records; the notary signs in the same process it protects; the queue limit is exact within one API process (admission holds a lock) but several processes sharing one store would need a database-level lock; and none of this is a multi-node qualification.

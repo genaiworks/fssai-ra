@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import hmac
 import json
+import time
 import urllib.error
 import urllib.request
 import uuid
@@ -25,6 +26,16 @@ def load_env(path: Path) -> dict[str, str]:
 
 #: TLS context for https endpoints (``--ca-file``); None uses the system trust store.
 TLS_CONTEXT = None
+
+
+def enforced_deliberation_floor(health: dict) -> float:
+    """Seconds the server makes a reviewer wait between presentation and approval.
+
+    Read from the running server, never assumed: a script that approves sooner is
+    refused, and one that skips the wait would be demonstrating rubber-stamping.
+    """
+    capacity = (health.get("declared_controls") or {}).get("review_capacity") or {}
+    return float(capacity.get("min_deliberation_seconds") or 0)
 
 
 def request(
@@ -95,6 +106,10 @@ def main() -> None:
         "POST", f"{base}/v1/proposals/{request_id}/review", {}, token=officer,
     )
     assert status == 201
+    floor = enforced_deliberation_floor(health)
+    if floor:
+        print(f"Waiting {floor:g} s: the server enforces a deliberation floor.", flush=True)
+        time.sleep(floor + 0.5)
     status, _ = request(
         "POST", f"{base}/v1/proposals/{request_id}/approval", {"ttl_seconds": 300},
         token=officer,

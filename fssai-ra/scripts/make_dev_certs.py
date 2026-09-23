@@ -26,6 +26,10 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 SERVICES = ("postgres", "redis", "kafka", "minio", "iceberg-rest", "control-api", "import-gateway")
+#: Kafka requires a client certificate (mutual TLS), so only these may read or write
+#: topics. Each is written as .crt/.key and as a combined .pem (key then certificate).
+KAFKA_CLIENTS = ("kafka-client-control-api", "kafka-client-import-gateway",
+                 "kafka-client-spark", "kafka-client-admin")
 TRUSTSTORE_PASSWORD = "changeit"
 
 
@@ -84,8 +88,13 @@ def make(out: Path, days: int = 365) -> None:
             .not_valid_after(now + dt.timedelta(days=days))
             .add_extension(x509.SubjectAlternativeName(names), critical=False)
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-            .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]),
-                           critical=False)
+            # Kafka validates its keystore with a self-handshake in which its own
+            # certificate also acts as the client, so with client authentication
+            # required the broker certificate needs clientAuth as well.
+            .add_extension(x509.ExtendedKeyUsage(
+                [ExtendedKeyUsageOID.SERVER_AUTH]
+                + ([ExtendedKeyUsageOID.CLIENT_AUTH] if service == "kafka" else [])),
+                critical=False)
             # Key identifiers are required by strict verifiers, including Python 3.13's
             # default TLS context (VERIFY_X509_STRICT).
             .add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()),
@@ -100,7 +109,31 @@ def make(out: Path, days: int = 365) -> None:
         # Kafka reads one PEM file holding the key followed by the certificate chain.
         if service == "kafka":
             _write(out / "kafka.pem", _key_pem(key) + cert_pem, 0o600)
-    print(f"wrote a development CA and {len(SERVICES)} server certificates to {out}")
+    for client in KAFKA_CLIENTS:
+        key = ec.generate_private_key(ec.SECP256R1())
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(_name(client))
+            .issuer_name(ca.subject)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - dt.timedelta(minutes=5))
+            .not_valid_after(now + dt.timedelta(days=days))
+            .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+            .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.CLIENT_AUTH]),
+                           critical=False)
+            .add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()),
+                           critical=False)
+            .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()),
+                           critical=False)
+            .sign(ca_key, hashes.SHA256())
+        )
+        cert_pem = cert.public_bytes(serialization.Encoding.PEM)
+        _write(out / f"{client}.crt", cert_pem, 0o644)
+        _write(out / f"{client}.key", _key_pem(key), 0o600)
+        _write(out / f"{client}.pem", _key_pem(key) + cert_pem, 0o600)
+    print(f"wrote a development CA, {len(SERVICES)} server and {len(KAFKA_CLIENTS)} Kafka "
+          f"client certificates to {out}")
 
 
 def main() -> None:
