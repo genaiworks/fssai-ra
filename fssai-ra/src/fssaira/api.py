@@ -532,12 +532,27 @@ def create_app(
     @app.get("/v1/evidence/verify", tags=["evidence"])
     def verify_evidence(caller: Caller):
         valid = plane.evidence.verify()
-        if not valid:
+        checkpoint = plane.notary.verify(plane.evidence) if plane.notary is not None else None
+        if not valid or (checkpoint is not None and checkpoint["valid"] is False):
             plane.metrics.tamper_detected += 1
         return {
             "chain_valid": valid,
             "records": len(plane.evidence),
+            # A chain alone cannot show a deleted tail; the signed checkpoint can.
+            "checkpoint": checkpoint,
             "note": "tamper-evidence detects an alteration; it does not prevent one",
+        }
+
+    @app.get("/v1/evidence/checkpoint", tags=["evidence"])
+    def latest_checkpoint(caller: Caller):
+        """The latest signed checkpoint and the notary's public key, for external retention."""
+        if plane.notary is None:
+            raise HTTPException(status_code=404, detail="no evidence notary is configured")
+        latest = plane.notary.latest()
+        return {
+            "checkpoint": None if latest is None else latest.to_dict(),
+            "public_keys": {key: value.hex() for key, value in plane.notary.public_keys.items()},
+            "note": "copy checkpoints to storage the ledger's writer cannot change",
         }
 
     # -- assurance on demand ----------------------------------------------

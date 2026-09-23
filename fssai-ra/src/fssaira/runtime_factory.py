@@ -41,7 +41,6 @@ from .control_plane import ControlPlane
 from .exact_action import ApprovalAuthority
 from .metrics import Metrics
 from .oversight import OversightMonitor, ReviewLoadPolicy
-from .profiles import ApplicationProfile
 
 TEACHING_KEY_PREFIX = "non-secret"
 
@@ -71,9 +70,14 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
                 f"refusing to start a {declared} deployment with teaching defaults active: "
                 + "; ".join(item.code for item in blocking)
             )
-    profile = ApplicationProfile.load(
+    # The kernel floor is enforced where the deployment starts, not only in tests:
+    # a pack that weakens a guarantee (a model approver, a fail-open review, a
+    # missing control contract) raises PackRejected and the server does not start.
+    from .pack_floor import load_governed_pack
+
+    profile = load_governed_pack(
         Path(profile_path or os.getenv("FSSAI_PROFILE", "profiles/student_support.yaml"))
-    )
+    ).profile
     evidence_token = os.getenv("FSSAI_EVIDENCE_TOKEN", "teaching-evidence-writer")
     key_id = os.getenv("FSSAI_APPROVAL_KEY_ID", "teaching-approval-key-1")
     signing_key = os.getenv(
@@ -121,6 +125,9 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         )
 
     model = _build_model()
+    from .checkpoint_notary import CheckpointNotary
+
+    notary = CheckpointNotary.from_env()
 
     # 1. SQL profile: the only one with single-transaction durability.
     database_url = os.getenv("FSSAI_DATABASE_URL")
@@ -143,6 +150,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
             approval_keys=approval_keys,
             metrics=metrics,
             model=model,
+            notary=notary,
             durability="single-transaction",
             executor=AtomicExecutor(
                 database,
@@ -183,6 +191,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
             approval_keys=approval_keys,
             metrics=metrics,
             model=model,
+            notary=notary,
             durability="best-effort",
         )
 
@@ -200,6 +209,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         events=events,
         metrics=metrics,
         model=model,
+        notary=notary,
         durability="volatile",
     )
 

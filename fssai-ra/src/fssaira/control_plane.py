@@ -91,6 +91,7 @@ class ControlPlane:
         metrics: Metrics | None = None,
         model=None,
         durability: str = "best-effort",
+        notary=None,
     ) -> None:
         self.profile = profile
         self.register = CaseRegister({}) if register is None else register
@@ -120,6 +121,9 @@ class ControlPlane:
         #: and must be reconciled. Reported on ``/health`` so a reader knows
         #: which durability claim a given result was produced under.
         self.durability = durability
+        #: Optional :class:`fssaira.checkpoint_notary.CheckpointNotary`. When set,
+        #: every executed change signs a checkpoint of the evidence ledger.
+        self.notary = notary
         self.executor = executor if executor is not None else profile.make_executor(
             self.register,
             self.evidence,
@@ -356,6 +360,8 @@ class ControlPlane:
         result = self.executor.execute(proposal, approval)
         if not result.replayed:
             self.metrics.mutations += 1
+            if self.notary is not None:
+                self.notary.sign(self.evidence)
         self.objects.put("result", request_id, asdict(result))
         self._emit("action.executed", asdict(result), proposal.case_id, request_id)
         return result

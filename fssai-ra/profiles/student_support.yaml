@@ -35,3 +35,33 @@ transitions:
     to_status: draft
     consequential: true
     approval_role: student_support_officer
+
+# Kernel-floor control contracts (pack_floor.check_pack). Reference values for
+# this synthetic profile: an adopting institution replaces the owners, capacity and
+# responses with its own signed-off decisions.
+controls:
+  prepare_case_for_review:
+    protected_asset: The support case status changed by prepare_case_for_review
+    permitted_operation: A student_support_officer approves one exact prepare_case_for_review (draft to ready_for_officer_review) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: student_support_officer
+    failure_test: tests/test_profile_floor.py::test_student_support_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the student_support_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged support case to manual review
+  return_case_for_correction:
+    protected_asset: The support case status changed by return_case_for_correction
+    permitted_operation: A student_support_officer approves one exact return_case_for_correction (ready_for_officer_review to draft) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: student_support_officer
+    failure_test: tests/test_profile_floor.py::test_student_support_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the student_support_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged support case to manual review
+
+# Declared review capacity. Overload defers to the manual route; it never approves.
+review:
+  capacity_per_window: 60
+  window_seconds: 3600
+  queue_limit: 100
+  timeout_seconds: 1800
+  overload_policy: defer_to_manual
+  escalation_role: student_services

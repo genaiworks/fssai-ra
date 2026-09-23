@@ -128,3 +128,36 @@ def test_ingest_credential_still_cannot_decrypt_after_restart(tmp_path):
     row = restarted._rows[("patient-1", "patient_name")]
     with pytest.raises(CustodyDenied):
         custody2.decrypt(writer, row, subject="patient-1", field="patient_name")
+
+
+def test_custody_from_env_uses_the_master_key_file(tmp_path, monkeypatch):
+    from fssaira.custody_store import custody_from_env
+
+    key = tmp_path / "master.key"
+    key.write_text(secrets.token_hex(32))
+    os.chmod(key, 0o600)
+    monkeypatch.delenv("FSSAI_VAULT_ADDR", raising=False)
+    monkeypatch.setenv("FSSAI_CUSTODY_STORE_URL", f"sqlite:///{tmp_path / 'c.sqlite'}")
+    monkeypatch.setenv("FSSAI_CUSTODY_MASTER_KEY_FILE", str(key))
+    custody, store = custody_from_env()
+    assert custody._wrapper.name == "local" and store is not None
+
+
+def test_custody_from_env_refuses_a_store_without_keys(tmp_path, monkeypatch):
+    from fssaira.custody_store import custody_from_env
+
+    monkeypatch.delenv("FSSAI_VAULT_ADDR", raising=False)
+    monkeypatch.delenv("FSSAI_CUSTODY_MASTER_KEY_FILE", raising=False)
+    monkeypatch.setenv("FSSAI_CUSTODY_STORE_URL", f"sqlite:///{tmp_path / 'c.sqlite'}")
+    with pytest.raises(ValueError):
+        custody_from_env()
+
+
+def test_custody_from_env_prefers_the_key_service(tmp_path, monkeypatch):
+    from fssaira.custody_store import custody_from_env
+
+    monkeypatch.setenv("FSSAI_CUSTODY_STORE_URL", f"sqlite:///{tmp_path / 'c.sqlite'}")
+    monkeypatch.setenv("FSSAI_VAULT_ADDR", "http://vault.invalid:8200")
+    monkeypatch.setenv("FSSAI_VAULT_TOKEN", "token")
+    custody, _ = custody_from_env()
+    assert custody._wrapper.name == "vault-transit" and custody._master is None

@@ -19,8 +19,8 @@ two dialects:
 * **SQLite** -- no infrastructure, so continuous integration can prove the
   atomicity property on every commit rather than asserting it in prose.
 * **PostgreSQL** -- the same code with ``SELECT ... FOR UPDATE`` row locking.
-  Multi-writer qualification and serialization-failure retry are not implemented
-  by this module. The SQLite fixtures do not qualify PostgreSQL concurrency.
+  Evidence appends are serialized with a transaction-scoped advisory lock;
+  ``tests/test_postgres_concurrency.py`` runs many writers against a real server.
 
 The claim boundary is unchanged for anything outside the database. If the real
 side effect is in a third system (a payment, an email, a student record in a
@@ -462,6 +462,14 @@ class _TxEvidence:
     def append(self, kind: str, payload: dict, *, token: str) -> EvidenceRecord:
         if self.token is not None and token != self.token:
             raise EvidenceError("no evidence write authority")
+        if self._u.database.dialect is POSTGRES:
+            # Serialize appends to this chain until commit. ``FOR UPDATE`` on the
+            # head row is not enough: a waiting writer re-reads the same head
+            # after the first commits (the head row itself is unchanged), computes
+            # the same next ``seq`` and fails on the primary key. Found by
+            # tests/test_postgres_concurrency.py against a real server.
+            self._u.execute("SELECT pg_advisory_xact_lock(hashtext(?))",
+                            (self._u.table("evidence"),))
         lock = self._u.database.dialect.for_update
         row = self._u.one(
             f"SELECT seq, hash FROM {self._u.table('evidence')} ORDER BY seq DESC LIMIT 1{lock}"

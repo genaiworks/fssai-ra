@@ -143,3 +143,108 @@ transitions:
     to_status: emergency_access_reviewed
     consequential: true
     approval_role: emergency_access_reviewer
+
+# Kernel-floor control contracts (pack_floor.check_pack). Reference values for
+# this synthetic profile: an adopting institution replaces the owners, capacity and
+# responses with its own signed-off decisions.
+controls:
+  authorize_treatment_access:
+    protected_asset: The health record access request status changed by authorize_treatment_access
+    permitted_operation: A healthcare_privacy_officer approves one exact authorize_treatment_access (identity_verified to treatment_access_active) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_profile_floor.py::test_healthcare_record_access_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the healthcare_privacy_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged health record access request to manual review
+  request_secondary_use:
+    protected_asset: The health record access request status changed by request_secondary_use
+    permitted_operation: A healthcare_privacy_officer approves one exact request_secondary_use (identity_verified to awaiting_research_review) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_profile_floor.py::test_healthcare_record_access_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the healthcare_privacy_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged health record access request to manual review
+  approve_secondary_use:
+    protected_asset: The health record access request status changed by approve_secondary_use
+    permitted_operation: A research_review_authority approves one exact approve_secondary_use (awaiting_research_review to research_access_active) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: research_review_authority
+    failure_test: tests/test_profile_floor.py::test_healthcare_record_access_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the research_review_authority approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged health record access request to manual review
+  revoke_treatment_access:
+    protected_asset: The health record access request status changed by revoke_treatment_access
+    permitted_operation: A healthcare_privacy_officer approves one exact revoke_treatment_access (treatment_access_active to access_revoked) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_profile_floor.py::test_healthcare_record_access_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the healthcare_privacy_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged health record access request to manual review
+  revoke_research_access:
+    protected_asset: The health record access request status changed by revoke_research_access
+    permitted_operation: A healthcare_privacy_officer approves one exact revoke_research_access (research_access_active to access_revoked) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_profile_floor.py::test_healthcare_record_access_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the healthcare_privacy_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged health record access request to manual review
+  record_break_glass_review:
+    protected_asset: The health record access request status changed by record_break_glass_review
+    permitted_operation: A emergency_access_reviewer approves one exact record_break_glass_review (emergency_access_pending_review to emergency_access_reviewed) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: emergency_access_reviewer
+    failure_test: tests/test_profile_floor.py::test_healthcare_record_access_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the emergency_access_reviewer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged health record access request to manual review
+
+  # Data capabilities the kernel requires of any pack with a disclosure policy.
+  # Their failure tests exercise the shared kernel mediators this profile uses.
+  read_protected_context:
+    protected_asset: Protected records placed into a model context
+    permitted_operation: A holder reads named fields of named subjects for a declared purpose
+    enforcement_point: context_gate
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_education_pack.py::test_unnecessary_sensitive_fields_are_denied
+    evidence_artifact: Disclosure intent and outcome records with digests, never values
+    failure_response: Deny, release nothing, and record the refusal code
+  release_labelled_output:
+    protected_asset: A model output derived from protected records
+    permitted_operation: Release to a recipient whose clearance dominates the output label
+    enforcement_point: release_gate
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_education_pack.py::test_model_cannot_self_declassify_a_summary
+    evidence_artifact: Release receipt with the output label and content digest
+    failure_response: Deny the release and keep the output labelled
+  restore_identity:
+    protected_asset: The link between a token and a real subject
+    permitted_operation: Restore identity only for a recipient cleared for identity fields
+    enforcement_point: release_gate
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_education_pack.py::test_identity_is_restored_only_for_entitled_recipients
+    evidence_artifact: Identity restoration record naming the release receipt
+    failure_response: Release tokens only and record the refusal
+  delegate_authority:
+    protected_asset: Authority passed from one agent to another
+    permitted_operation: Delegate an equal or narrower slice for the same purpose and a shorter time
+    enforcement_point: delegation_verifier
+    owner: healthcare_information_security_officer
+    failure_test: tests/test_education_pack.py::test_delegated_agent_cannot_escalate
+    evidence_artifact: Verified grant chain with the effective scope
+    failure_response: Refuse the chain and record the escalation attempt
+  erase_subject:
+    protected_asset: Every governed copy of a subject's data
+    permitted_operation: The privacy owner erases a subject by destroying the subject's keys
+    enforcement_point: key_custody
+    owner: healthcare_privacy_officer
+    failure_test: tests/test_privacy_custody.py::test_erasure_reaches_backups_tokens_indexes_and_outputs
+    evidence_artifact: Erasure certificate and a read-back verification of every governed copy
+    failure_response: Report every readable location and keep the request open
+
+# Declared review capacity. Overload defers to the manual route; it never approves.
+review:
+  capacity_per_window: 60
+  window_seconds: 3600
+  queue_limit: 100
+  timeout_seconds: 1800
+  overload_policy: defer_to_manual
+  escalation_role: health_information_management
