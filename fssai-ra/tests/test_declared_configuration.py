@@ -419,3 +419,17 @@ def test_the_example_says_what_happens_when_nothing_is_declared():
     example = (root / "deploy" / ".env.example").read_text(encoding="utf-8")
     assert "enforces no review ceiling" in example
     assert "reviewers are treated as" in example
+
+
+def test_reference_compose_images_are_digest_pinned():
+    """A reproducible deployment must not silently float mutable image tags."""
+    import pathlib
+
+    import yaml
+
+    root = pathlib.Path(__file__).resolve().parent.parent
+    compose = yaml.safe_load((root / "deploy" / "compose.yaml").read_text())
+    required = {"postgres", "redis", "kafka", "ollama", "ollama-pull", "minio", "minio-init"}
+    for name in required:
+        image = compose["services"][name]["image"]
+        assert "@sha256:" in image, f"{name} uses a mutable image reference: {image}"

@@ -789,6 +789,8 @@ CREATE TABLE IF NOT EXISTS sovereign.fssaira.imported_evidence (
   stripped ARRAY<STRING>,
   content_hash STRING,
   trace_id STRING NOT NULL,
+  kafka_topic STRING,
+  topic_generation STRING,
   kafka_partition INT NOT NULL,
   kafka_offset BIGINT NOT NULL,
   imported_at TIMESTAMP NOT NULL
@@ -814,6 +816,12 @@ The analytics profile is built from pinned, checksum-verified inputs. Starting i
 | 5 | `spark-iceberg` | Runs `jobs/kafka_to_iceberg.py` as its default command and restarts unless stopped | Same image as step 4 |
 
 `deploy/Dockerfile.analytics` starts from `apache/spark:3.5.1-scala2.12-java17-python3-ubuntu`, pinned by digest (Spark 3.5.1, Scala 2.12.18, Java 17, **Python 3.10**). The earlier `3.5.1-python3` tag ships Python 3.8, on which the jobs cannot import the `fssaira` package (it requires Python 3.10+), so the bootstrap step always failed there. At **build time** it downloads the jars listed in `deploy/analytics/jars.lock.json` from Maven Central and rejects any whose SHA-512 does not match. The jars are the Iceberg Spark runtime 1.9.1 for Spark 3.5 and Scala 2.12, the Iceberg AWS bundle 1.9.1, `spark-sql-kafka-0-10_2.12` 3.5.1 and its token provider, `kafka-clients` 3.4.1 and `commons-pool2` 2.11.1. The build therefore needs internet access, and the running containers do not: they sit on the internal `data` and `catalog` networks.
+
+The core Compose images are also digest-pinned: PostgreSQL 17.6, Redis 8.2.9,
+Kafka 4.3.1, and the optional Ollama model service. A digest identifies the
+exact image bytes; the human-readable version remains in this walkthrough so an
+operator can audit the intended release. Rebuilds should
+update both the digest and the documented version together.
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/compose.yaml \
