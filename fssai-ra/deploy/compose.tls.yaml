@@ -4,8 +4,11 @@
 #   docker compose --env-file deploy/.env -f deploy/compose.yaml \
 #     -f deploy/compose.tls.yaml up -d
 #
-# PostgreSQL, Redis and Kafka then accept only TLS connections, and every client
-# verifies the server certificate and host name against deploy/certs/ca.crt.
+# PostgreSQL, Redis, Kafka and MinIO then accept only TLS connections, and every
+# client verifies the server certificate and host name against deploy/certs/ca.crt.
+# Still plain HTTP on internal networks: the Iceberg REST catalog API (table
+# metadata pointers, no row data) and the control API and gateway, which are
+# meant to sit behind an institution's TLS-terminating reverse proxy.
 # The generated CA is for local development; use the institution's own CA and
 # certificate rotation in a deployment.
 
@@ -21,6 +24,11 @@ services:
         install -m 600 -o 70 -g 70 /src/postgres.key /tls/postgres.key
         install -m 600 -o 999 -g 1000 /src/redis.key /tls/redis.key
         install -m 600 -o 1000 -g 1000 /src/kafka.pem /tls/kafka.pem
+        install -m 644 /src/truststore.p12 /tls/truststore.p12
+        mkdir -p /tls/minio/CAs
+        install -m 644 /src/minio.crt /tls/minio/public.crt
+        install -m 600 /src/minio.key /tls/minio/private.key
+        install -m 644 /src/ca.crt /tls/minio/CAs/ca.crt
         echo "TLS material installed"
     volumes:
       - ./certs:/src:ro
@@ -93,10 +101,47 @@ services:
     volumes:
       - tls-certs:/tls:ro
 
+  # -- analytics: object storage over TLS ----------------------------------
+  minio:
+    command: ["server", "/data", "--console-address", ":9001", "--certs-dir", "/tls/minio"]
+    environment:
+      SSL_CERT_FILE: /tls/ca.crt
+      MC_HOST_tlslocal: https://localhost:9000
+    healthcheck:
+      test: ["CMD", "mc", "ready", "tlslocal"]
+    volumes:
+      - tls-certs:/tls:ro
+    depends_on:
+      tls-init: {condition: service_completed_successfully}
+
+  minio-init:
+    environment:
+      SSL_CERT_FILE: /tls/ca.crt
+    command:
+      - 'mc alias set warehouse https://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null; mc mb --ignore-existing warehouse/warehouse'
+    volumes:
+      - tls-certs:/tls:ro
+
+  iceberg-rest:
+    environment:
+      CATALOG_S3_ENDPOINT: https://minio:9000
+      JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/tls/truststore.p12 -Djavax.net.ssl.trustStoreType=PKCS12 -Djavax.net.ssl.trustStorePassword=changeit
+    volumes:
+      - tls-certs:/tls:ro
+
+  iceberg-bootstrap:
+    environment:
+      S3_ENDPOINT: https://minio:9000
+      JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/tls/truststore.p12 -Djavax.net.ssl.trustStoreType=PKCS12 -Djavax.net.ssl.trustStorePassword=changeit
+    volumes:
+      - tls-certs:/tls:ro
+
   spark-iceberg:
     environment:
       FSSAI_KAFKA_SECURITY_PROTOCOL: SSL
       FSSAI_KAFKA_SSL_CA_LOCATION: /tls/ca.crt
+      S3_ENDPOINT: https://minio:9000
+      JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/tls/truststore.p12 -Djavax.net.ssl.trustStoreType=PKCS12 -Djavax.net.ssl.trustStorePassword=changeit
     volumes:
       - tls-certs:/tls:ro
 

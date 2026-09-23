@@ -22,9 +22,11 @@ from pathlib import Path
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 SERVICES = ("postgres", "redis", "kafka", "minio", "iceberg-rest")
+TRUSTSTORE_PASSWORD = "changeit"
 
 
 def _name(common_name: str) -> x509.Name:
@@ -62,6 +64,11 @@ def make(out: Path, days: int = 365) -> None:
     )
     _write(out / "ca.crt", ca.public_bytes(serialization.Encoding.PEM), 0o644)
     _write(out / "ca.key", _key_pem(ca_key), 0o600)
+    # Java clients (Spark, the Iceberg catalog) read trust anchors from a keystore.
+    # The password only protects integrity of public data, so it is the usual default.
+    _write(out / "truststore.p12", pkcs12.serialize_java_truststore(
+        [pkcs12.PKCS12Certificate(ca, b"fssaira-dev-ca")],
+        serialization.BestAvailableEncryption(TRUSTSTORE_PASSWORD.encode())), 0o644)
 
     for service in SERVICES:
         key = ec.generate_private_key(ec.SECP256R1())

@@ -64,6 +64,41 @@ class SparkImportValidation(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "batch not committed"):
                     write_batch(batch, 0)
 
+    def test_a_replay_is_not_a_conflict_but_a_reused_position_is(self):
+        from kafka_to_iceberg import position_conflicts
+        stored = self.batch([self.valid_body()])
+        replay = self.batch([self.valid_body()])
+        self.assertEqual(position_conflicts(replay, stored).count(), 0)
+        other = self.valid_body().replace('trace-1', 'trace-after-reset')
+        self.assertEqual(position_conflicts(self.batch([other]), stored).count(), 1)
+
+    def rows(self, triples):
+        return self.spark.createDataFrame(
+            triples, "kafka_partition int, kafka_offset long, trace_id string")
+
+    def test_continuity_accepts_an_unchanged_topic(self):
+        from kafka_to_iceberg import continuity_problems
+        broker = self.rows([(0, 0, "a"), (0, 1, "b"), (0, 2, "c")])
+        stored = self.rows([(0, 0, "a"), (0, 1, "b")])
+        self.assertEqual(continuity_problems(broker, stored), [])
+
+    def test_continuity_detects_a_recreated_topic(self):
+        from kafka_to_iceberg import continuity_problems
+        stored = self.rows([(0, 0, "smoke")])
+        broker = self.rows([(0, 0, "probe-one"), (0, 1, "probe-two")])
+        self.assertEqual(len(continuity_problems(broker, stored)), 1)
+
+    def test_continuity_detects_offsets_going_backwards(self):
+        from kafka_to_iceberg import continuity_problems
+        stored = self.rows([(0, 0, "a"), (0, 5, "f")])
+        broker = self.rows([(0, 0, "a"), (0, 1, "b")])
+        self.assertIn("latest is 1", continuity_problems(broker, stored)[0])
+
+    def test_each_generation_has_its_own_checkpoint(self):
+        from kafka_to_iceberg import checkpoint_for
+        self.assertEqual(checkpoint_for("/c/imports", "1"), "/c/imports")
+        self.assertEqual(checkpoint_for("/c/imports/", "3"), "/c/imports-g3")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -79,7 +79,7 @@ Run all of it in one process, with no Docker:
 .venv/bin/python scripts/pipeline_walkthrough.py --output work/flow2-demo
 ```
 
-Custody keys, the token vault and grants live **in memory** in this reference implementation. A production deployment needs a key-management service and a persistent disclosure store (`FSSAI_DISCLOSURE_STORE`).
+By default custody keys and encrypted rows live in memory. Give `KeyCustody` and `EncryptedRecordSource` a `SqlCustodyStore` and a master key file, and keys, the erasure journal and rows survive restarts (walkthrough 4.3); grants persist with `FSSAI_DISCLOSURE_STORE`. Token-vault mappings are session-scoped by design. A hardware key service is still the production recommendation.
 
 ## Flow 3 · Change: an approved action changes state exactly once
 
@@ -91,7 +91,7 @@ Custody keys, the token vault and grants live **in memory** in this reference im
 | 4 | An authorized human approves. The approval is HMAC-signed and bound to the proposal's digest. | `ApprovalAuthority.approve` | `objects` (approval); outbox `action.approved:<approval_id>` | — |
 | 5 | The executor re-checks signature, role, expiry and version, then commits **in one transaction**: intent evidence, the state change, the receipt, outcome evidence and the `action.executed` outbox event. | `AtomicExecutor.execute` | `evidence`, `resources` (v+1), `execution_results`, `approval_uses`, `event_outbox` | `GET /v1/proposals/{id}/evidence` |
 | 6 | The relay publishes pending outbox events to Kafka in order and stamps them published. If Kafka is down, the request still succeeds, the events wait, and inline retries pause for 30 s so requests stay fast. | `OutboxRelay`, `SqlEventOutbox` | `event_outbox.published_at` | `/health` → `unpublished_events` |
-| 7 | An independent consumer rebuilds a monitoring view and drops any event it has already seen (same `event_id`). | `EvidenceProjector` | In memory | — |
+| 7 | An independent consumer rebuilds a monitoring view and drops any event it has already seen (same `event_id`). | `EvidenceProjector`, or `DurableEvidenceProjector` to survive restarts | In memory, or its own SQL tables with the Kafka position | `resume_offsets()`, `summary()` |
 | 8 | Repeating the same request returns the original receipt, with no second change and no second event. | `validate_replay` | Nothing new | Response `replayed: true` |
 
 Try it without Docker:
@@ -101,6 +101,8 @@ Try it without Docker:
 ```
 
 After a broker outage, call `POST /v1/recovery/reconcile` (platform operator). It publishes any backlog and reports `events_relayed` and `unpublished_events`.
+
+The outbox works the same way in every profile: PostgreSQL (`event_outbox` table), Redis (written in the transition's `MULTI/EXEC`) and in-memory. Published events are pruned after seven days.
 
 **Redis** is an alternative to PostgreSQL for this flow, not a cache. It is used only when `FSSAI_DATABASE_URL` is unset. Its writes retry a bounded number of times under contention (`FSSAI_REDIS_MAX_ATTEMPTS`, default 64) and then fail closed with `STATE_CONTENTION`.
 
@@ -132,9 +134,16 @@ Flow 1 is not connected to the model. Imported documents are stored for analysis
 | Grant revoked after the model answered | Release denied | Saved output cannot be released |
 | Approval reused or content changed | Execution denied | Nothing written |
 | Kafka down during a change | Request succeeds; `unpublished_events > 0` | Events stay in the outbox until relayed |
+| Kafka topic reset or recreated | Spark stream refuses to start | Raise `FSSAI_IMPORT_TOPIC_GENERATION`; the new generation reads the topic from the beginning |
+| API or custody process restarts | Nothing visible | With `SqlCustodyStore`, keys, erasures and rows are reloaded |
+| Plain (non-TLS) connection to a service (TLS overlay) | Connection refused | Clients must verify the CA and host name |
 | Redis under sustained contention | `STATE_CONTENTION` | Nothing written |
 | Ledger tail deleted | Chain still verifies internally | Signed checkpoint and archive re-run both flag it |
 
 ## What code cannot close
 
-These need an institution, hardware or independent people, and are tracked in [GAPS.md](GAPS.md): production key management (KMS/HSM), qualification of specific Postgres/Kafka/Spark deployments under load and failover, TLS and storage encryption in the deployed topology, a physical one-way link, human-review studies and independent security assessment.
+These need an institution, hardware or independent people, and are tracked in [GAPS.md](GAPS.md): a hardware-backed key service (KMS/HSM), certificates from the institution's own CA, qualification of specific Postgres/Kafka/Spark deployments under load and failover, storage encryption on the deployed disks, a physical one-way link, human-review studies and independent security assessment.
+
+## Encrypting traffic between services
+
+`deploy/compose.tls.yaml` makes PostgreSQL, Redis, Kafka and MinIO accept only TLS, and every client verifies the certificate and host name. Generate development certificates with `scripts/make_dev_certs.py`, then add `-f deploy/compose.tls.yaml` to the Compose command (walkthrough 9.5).

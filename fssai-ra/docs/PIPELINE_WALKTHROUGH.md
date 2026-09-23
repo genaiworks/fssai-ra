@@ -86,7 +86,7 @@ What to notice:
 | A PostgreSQL commit and its Kafka event are one atomic step | Half true. The event is written to the `event_outbox` table **in the same transaction**; publishing to Kafka happens afterwards through a relay, at least once, with a stable `event_id` for deduplication (section 7). |
 | Decision evidence flows into Iceberg automatically | No. `archive_evidence()` has to be called explicitly. |
 | Redis caches PostgreSQL | No. They are alternatives, and Compose uses PostgreSQL. |
-| Vault, keys and grants survive an API restart | No. Custody and token-vault state are in memory unless `FSSAI_DISCLOSURE_STORE` and a real key service are wired in. |
+| Vault, keys and grants survive an API restart | Grants persist with `FSSAI_DISCLOSURE_STORE`. Custody keys, the erasure journal and encrypted rows persist when `KeyCustody` and `EncryptedRecordSource` are given a `SqlCustodyStore` and the master key file (section 4.3). Token-vault mappings are session-scoped by design and do not survive. |
 
 ### 0.5 A learning order that keeps it small
 
@@ -143,7 +143,7 @@ flowchart TD
     V --> W[Authorized output plus evidence digest]
 ```
 
-The diagram shows responsibilities, not one transaction. PostgreSQL and Redis are alternative control-state branches. The SQL-encrypted record store is demonstrated by the new lab; default deployed privacy custody remains in memory. Iceberg-to-governed-record ingestion, transactional PostgreSQL-to-Kafka publication, durable key/vault services and physical recipient delivery require additional integration.
+The diagram shows responsibilities, not one transaction. PostgreSQL and Redis are alternative control-state branches. Custody and encrypted records can persist through `SqlCustodyStore` (section 4.3), and lifecycle events use a transactional outbox in every profile (section 7). Iceberg-to-governed-record ingestion, a hardware-backed key service and physical recipient delivery still require integration.
 
 ### Three workflows to keep separate
 
@@ -281,7 +281,24 @@ The field lab encrypts values **before** sending them to SQL. It does not encryp
 
 PostgreSQL passwords, TLS and disk encryption solve different problems. Use authenticated TLS for transport and approved disk/object encryption for files, WAL, backups, Kafka segments and Redis persistence. Neither replaces application field encryption when the database administrator should not read fields. PostgreSQL describes these distinct layers in its [encryption options](https://www.postgresql.org/docs/17/encryption-options.html).
 
-The Compose file currently uses development plaintext Kafka listeners, Redis TCP and HTTP service endpoints. Its PostgreSQL checksum setting detects storage corruption; it is not encryption. Do not describe the default stack as encrypted end to end.
+The base Compose file uses plaintext Kafka listeners, Redis TCP and HTTP service endpoints. **The TLS overlay `deploy/compose.tls.yaml` encrypts PostgreSQL, Redis, Kafka and MinIO** and makes every client verify the server certificate and host name (section 9.5). Its PostgreSQL checksum setting detects storage corruption; it is not encryption. The control API, import gateway and Iceberg REST catalog stay plain HTTP on internal networks; put the first two behind a TLS-terminating reverse proxy. Do not describe even the TLS stack as encrypted end to end.
+
+### 4.3 Durable key custody
+
+`KeyCustody(master_seed=..., store=SqlCustodyStore.open(url))` keeps wrapped data keys, key-encryption-key generations, the erasure journal and destroyed subjects in their own tables. `EncryptedRecordSource(..., store=same_store)` keeps encrypted rows (nonce and ciphertext only). Both load at start-up and write through on every change; erasure, rotation and restore each commit in one transaction.
+
+```python
+from fssaira.custody_store import SqlCustodyStore, load_master_key
+from fssaira.encrypted_records import EncryptedRecordSource
+from fssaira.key_custody import KeyCustody
+
+store = SqlCustodyStore.open("postgresql://…/custody")   # or sqlite:///custody.sqlite
+custody = KeyCustody(master_seed=load_master_key("/run/secrets/custody-master.key"), store=store)
+records = EncryptedRecordSource(field_classes, custody, writer_credential=w,
+                                reader_credential=r, store=store)
+```
+
+The master key is **never** stored in the database. `load_master_key` reads 32 bytes (raw or hex) and refuses a file other users can read. The database alone yields only ciphertext and wrapped keys: opening it with a different master key fails with `CUSTODY_KEY_UNWRAP_FAILED`. Durable custody refuses to start without a master key rather than silently inventing one. `EvidenceNotary.from_key_file(path)` keeps the notary's signing key stable across restarts the same way. Keep the custody database, the master key file and the notary key apart from the application database and from each other where you can. This is software custody, not an HSM: someone holding both the database and the master key can decrypt.
 
 ## 5. Run the protected-data lab and inspect every stage
 
@@ -371,7 +388,7 @@ SQL
 
 For each run expect four rows, `nonce_bytes=12`, and Alice's `patient_name` body length of 29. The lab proves decryption before erasure, denies decryption after erasing patient-1, and proves patient-2 still decrypts. A negative literal search for Alice in a database file is only an additional observation, not proof of encryption or erasure.
 
-**Persistence boundary:** SQL ciphertext survives the process, but this lab's custody, token vault, grants and notary signing key do not. It is an insert-only teaching adapter, not a production persistence layer or automatic replacement for `EncryptedRecordSource`. The lab also deliberately erases patient-1 before finishing. A second process cannot reopen its ciphertext with a newly generated master seed.
+**Persistence boundary:** SQL ciphertext survives the process, but this lab's custody, token vault, grants and notary signing key do not. It is an insert-only teaching adapter. For durable custody use `SqlCustodyStore` (section 4.3), which persists keys, the erasure journal and encrypted rows together. The lab also deliberately erases patient-1 before finishing. A second process cannot reopen its ciphertext with a newly generated master seed.
 
 ### 5.3 What each check establishes
 
@@ -454,7 +471,7 @@ SELECT seq, event_id, published_at IS NOT NULL AS published
 FROM fssaira.event_outbox ORDER BY seq;
 ```
 
-The Redis and in-memory profiles still publish directly after their writes; the outbox applies to the SQL profile.
+The Redis profile uses `RedisOutboxStore`: `RedisCaseRegister` writes `action.executed` in the same `MULTI/EXEC` as the transition, and the other events are written before publishing. The in-memory profile, when Kafka is configured, uses `MemoryOutboxStore`, which survives an outage but not a restart. With no Kafka configured, events are recorded as published at once, so `unpublished_events` stays 0. Published events older than `FSSAI_EVENT_OUTBOX_RETENTION_SECONDS` (default seven days) are pruned; unpublished ones are never pruned.
 
 Use the existing API walkthrough:
 
@@ -656,7 +673,7 @@ Topic `fssaira.imports` carries:
 
 `trace_id`, timestamp and offset vary. Kafka key is the source name. The broker supplies topic, partition, offset and record timestamp; these are outside the JSON value. Ordering is within a partition, not global. A producer configured with `enable.idempotence=true`, `acks=all`, retries and bounded in-flight requests protects its own broker retries; it does not deduplicate a newly issued business request. See [Kafka producer configuration](https://kafka.apache.org/33/configuration/producer-configs/).
 
-Topic `fssaira.events` carries control events shaped as `value: {kind, payload}`. It is separate from imported document text. `EvidenceProjector` builds a monitoring view from these events. After the replay fix it ignores already applied offsets per topic/partition in an ordered run. Its view and offset state are in memory; after restart rebuild from the beginning or implement a durable projection that commits rows and cursor together.
+Topic `fssaira.events` carries control events shaped as `value: {kind, payload}`. It is separate from imported document text. `EvidenceProjector` builds a monitoring view from these events. After the replay fix it ignores already applied offsets per topic/partition in an ordered run. Its view and offset state are in memory; after restart it rebuilds from the beginning. `DurableEvidenceProjector(url)` stores the view, the applied `event_id`s and the next offset per partition in one transaction per event, so a restart resumes from `resume_offsets()` and a crash never leaves half an event applied.
 
 ### 9.4 Consumer acknowledgment and dead letters
 
@@ -673,7 +690,28 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml exec kafka \
   --property print.partition=true --property print.offset=true --property print.key=true
 ```
 
-Compose uses one broker, replication factor 1 and 168-hour log retention. `acks=all` on one broker is not multi-node durability. Retention can make replay impossible after a prolonged outage; Kafka is transport, not the sole evidence archive.
+Compose uses one broker, replication factor 1 and 168-hour log retention. The log now lives on the `kafka-data` volume (`KAFKA_LOG_DIRS`). Previously the image wrote to `/tmp` inside the container, so every container recreate silently emptied Kafka and restarted offsets at zero. Upgrading an existing stack starts once from an empty log; the Spark start-up check in section 10.2 then asks you to raise the topic generation. `acks=all` on one broker is not multi-node durability. Retention can make replay impossible after a prolonged outage; Kafka is transport, not the sole evidence archive.
+
+### 9.5 Encrypt service traffic with the TLS overlay
+
+```bash
+.venv/bin/python scripts/make_dev_certs.py --out deploy/certs     # git-ignored
+docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.tls.yaml \
+  --profile analytics up --build -d
+```
+
+`make_dev_certs.py` creates a development CA and one certificate per service, named for its Compose host name, plus a Java truststore for Spark and the catalog. A one-shot `tls-init` service copies each private key into a volume owned by the user its server runs as. Then:
+
+| Service | Server setting | Client setting |
+|---|---|---|
+| PostgreSQL | `ssl=on`; `pg_hba` allows `hostssl` only | `sslmode=verify-full&sslrootcert=/tls/ca.crt` in `FSSAI_DATABASE_URL` |
+| Redis | TLS port only (`--port 0`) | `rediss://` URL plus `FSSAI_REDIS_CA_FILE` |
+| Kafka | `INTERNAL` listener is `SSL` (PEM key and truststore) | `FSSAI_KAFKA_SECURITY_PROTOCOL=SSL`, `FSSAI_KAFKA_SSL_CA_LOCATION`; Spark reads the same variables |
+| MinIO | `--certs-dir` | `https://minio:9000` endpoints; Java clients use the PKCS12 truststore |
+
+What the live check showed (section 15): plain connections to all four are refused, TLS with the CA connects (PostgreSQL negotiated TLSv1.3), and a wrong host name or a missing CA is refused. Python 3.13 verifies strictly, which requires key identifiers in certificates; the generator adds them and `tests/test_service_tls_config.py` performs a real strict handshake.
+
+Use the institution's CA and certificate rotation in a deployment. The development CA key sits in `deploy/certs/ca.key`; anyone with it can issue trusted certificates for this stack.
 
 ## 10. Kafka → Spark → Iceberg → MinIO: the data pipeline
 
@@ -723,7 +761,12 @@ ON target.kafka_topic = source.kafka_topic
    AND target.kafka_offset = source.kafka_offset
 ```
 
-`topic_generation` comes from `FSSAI_IMPORT_TOPIC_GENERATION` (default `1`). Kafka restarts offsets at zero when a topic is deleted and recreated, so raise the generation when you recreate one; otherwise new records would match old rows and be skipped. The job still subscribes to exactly one topic. Tables created before this change are migrated by `bootstrap_iceberg.py`, which adds the two columns and backfills existing rows with the configured topic and generation. One writer per table is still the supported setup.
+`topic_generation` comes from `FSSAI_IMPORT_TOPIC_GENERATION` (default `1`). Kafka restarts offsets at zero when a topic is deleted and recreated, so raise the generation when you recreate one. Two checks now make a forgotten generation fail loudly instead of losing records silently (both were found and verified on a live stack):
+
+* **At start-up**, `check_topic_continuity` compares the broker's earliest record and latest offset per partition with what the table stores for this generation. A different record at a stored position, or stored offsets beyond the broker's latest, stops the job with "the import topic was reset or recreated … Raise FSSAI_IMPORT_TOPIC_GENERATION". Without it, a restarted stream resumed from its old checkpoint and skipped the new topic's first records.
+* **In each batch**, `position_conflicts` refuses to merge a record whose position is already stored with a different `trace_id` or hash. A genuine replay has the same `trace_id` and is skipped as before.
+
+Each generation also gets its own checkpoint (`…/imports` for generation 1, `…/imports-g<N>` after), so a new generation always reads the topic from the beginning. The job still subscribes to exactly one topic. Tables created before this change are migrated by `bootstrap_iceberg.py`, which adds the two columns and backfills existing rows with the configured topic and generation. One writer per table is still the supported setup.
 
 Checkpoint directory `/opt/fssaira/checkpoints/imports` is mounted on `spark-checkpoints`. It is Spark progress state, not a backup of source text or encryption keys. Do not share a checkpoint between different queries. Spark explains the `foreachBatch` replay contract in its [streaming guide](https://spark.apache.org/docs/3.5.6/structured-streaming-programming-guide.html).
 
@@ -925,7 +968,8 @@ The current verifier collects records to the driver. For large archives, impleme
 | Kafka retention removes unread offsets | Stream fails due to data loss | Recover from an independent source/archive; do not silently set failOnDataLoss=false |
 | MinIO bucket/files missing | Catalog/write/read errors | Restore required objects and metadata; a snapshot ID alone cannot recover bytes |
 | Grant/consent revoked after generation | Release denied | Reauthorize through the institutional process; saved output does not retain permission |
-| Custody process lost in this lab | Ciphertext remains but keys are gone | No automatic recovery; production requires durable KMS/wrapped-key lifecycle |
+| Custody process lost in this lab | Ciphertext remains but keys are gone | The lab is ephemeral by design. With `SqlCustodyStore` and the master key file, a restarted process reads the same data; without the master key it cannot |
+| Kafka container recreated | Previously: empty topic, offsets restart at 0 | Log is on the volume now; if a topic is still reset, the Spark start-up check stops and asks for a new generation |
 | Old key backup restored after erasure | Risk of reintroducing DEKs | Replay authenticated current erasure journal with independent freshness watermark |
 | Evidence tail deleted | Plain chain may still verify | Compare signed count/head from independent custody |
 
@@ -975,7 +1019,7 @@ Run positive and negative tests for unauthorized fields, wrong tenant/subject, s
 | Hash chain described as detecting all deletion | Corrected ledger/PostgreSQL/Spark descriptions; added signed-checkpoint truncation demonstration |
 | `all` optional dependencies omitted explicit privacy package | Added `cryptography` to the `all` extra |
 | Duplicate software citation files disagreed on release date | Aligned application citation metadata with the repository-root citation |
-| Sensitive record/vault/key persistence was not wired to default PostgreSQL | Lab demonstrates storage pattern only; durable custody and privacy API integration remain open |
+| Sensitive record/vault/key persistence was not wired to default PostgreSQL | **Fixed in code.** `SqlCustodyStore` persists wrapped keys, generations, erasure journal and encrypted rows (SQLite and PostgreSQL, verified live); master key and notary key load from owner-only files. The token vault stays session-scoped by design |
 | PostgreSQL and Kafka are not one commit | **Fixed in code.** `event_outbox` table written in the state transaction, `OutboxRelay`, stable `event_id`s, projector deduplication, backlog on `/health` and `/metrics` (`tests/test_event_outbox.py`) |
 | Iceberg archives can append duplicate full ledgers | **Fixed in code.** `ledger_id` column, incremental archive from the high-water mark, refusal on truncation or divergence (`tests/test_iceberg_backend.py`) |
 | Spark sink identity omitted topic and topic generation | **Fixed in code.** MERGE key is topic, generation, partition, offset; bootstrap migrates and backfills old tables |
@@ -984,7 +1028,11 @@ Run positive and negative tests for unauthorized fields, wrong tenant/subject, s
 | Redis retries were unbounded | **Fixed in code.** Bounded retry budget with backoff; fail closed with `STATE_CONTENTION` |
 | Quickstart bucket/catalog/dependency provisioning incomplete | Compose now pins MinIO and the catalog by digest, builds Spark 3.5.1 with SHA-512-locked jars, creates the bucket and tables automatically, persists the catalog database, and starts the stream (section 10.4). It has now been run end to end (section 15), which found and fixed a Python 3.8 base image that made bootstrap fail. Qualification under load and failover remains open |
 | Walkthrough did not say how the three workflows relate | Added section 0: one mental model, a tool-to-workflow map, the one implemented join (`/v1/propose-task` with governed context) and the joins that do not exist yet |
-| Service transports and stored operational JSON are not fully encrypted | Documented actual exposure and required TLS/storage/application protections |
+| Service transports were plaintext | **Fixed as an overlay.** `deploy/compose.tls.yaml` + `scripts/make_dev_certs.py`: PostgreSQL, Redis, Kafka and MinIO accept only TLS; clients verify CA and host name (verified live, including refusals). Stored operational JSON is still not field-encrypted |
+| Redis and in-memory profiles published events directly | **Fixed in code.** `RedisOutboxStore` (written in the transition's MULTI/EXEC) and `MemoryOutboxStore`; published events pruned after `FSSAI_EVENT_OUTBOX_RETENTION_SECONDS` |
+| Monitoring projection lost its view and position on restart | **Fixed in code.** `DurableEvidenceProjector` |
+| Kafka stored its log in the container, not on its volume | **Fixed.** `KAFKA_LOG_DIRS` on the volume, fixed `CLUSTER_ID` |
+| Spark could silently skip records after a topic reset | **Fixed in code.** Start-up continuity check, per-batch position-conflict check, per-generation checkpoints |
 
 This is an implementation walkthrough and a bounded set of repairs, not a claim that all production gaps are closed. The broader [gap register](GAPS.md), [privacy reference limits](PRIVACY_REFERENCE.md) and [security guide](SECURITY.md) remain applicable.
 
@@ -1048,7 +1096,27 @@ Executed on 23 September 2026 on a working tree based on commit `775c53f`, again
 | Independent Spark verifier against Iceberg | `trace_rows=1`, `bad_hashes=0`, `duplicate_kafka_positions=0`, `snapshot_count=2`, verdict **PASS** |
 | Spark restart and checkpoint recovery | Container restarted cleanly; rerunning the verifier returned **PASS** with the same snapshot and no duplicate source position |
 
-Not covered by this run: multi-broker Kafka, PostgreSQL failover, concurrent writers, sustained load, and TLS between services.
+Not covered by this run: multi-broker Kafka, PostgreSQL failover, concurrent writers and sustained load.
+
+### Recorded validation for the open-items revision
+
+Executed on 23 September 2026 against a second live stack (`-p fssaira-tls`) started with `deploy/compose.tls.yaml`, and against a disposable PostgreSQL 17 container. All data was synthetic.
+
+| Check | Observed result |
+|---|---|
+| TLS stack start-up | All services healthy; `tls-init` installed keys; bootstrap reached MinIO over HTTPS |
+| PostgreSQL | Plain connection rejected by `pg_hba`; `verify-full` connected with TLSv1.3; wrong host name refused |
+| Redis | Plain connection reset; TLS with CA connected; TLS without CA refused. First attempt **failed** because generated certificates lacked key identifiers that Python 3.13's strict verification requires; fixed in the generator and covered by a strict-handshake test |
+| Kafka | Plain producer timed out; TLS producer delivered; Spark's Kafka client ran with `security.protocol = SSL` and a PEM truststore |
+| MinIO | Plain HTTP answered `400` (HTTP to HTTPS port); HTTPS with CA `200`; HTTPS without CA refused |
+| Smoke test over TLS | Passed; 4 outbox events, all published |
+| Signed import over TLS into Iceberg | Row present, read back over HTTPS S3 |
+| Kafka container recreated (old config) | **Defect found:** topic emptied and offsets restarted at 0, because the log was in `/tmp` inside the container. Spark then silently skipped a new document at a reused offset |
+| Kafka recreated after the `KAFKA_LOG_DIRS` fix | Offsets 0–1 present before and after (`fssaira.imports:0:2` both times) |
+| Per-batch position guard | Reused position with different record: batch refused with the reset message |
+| Start-up continuity check | Generation 1 after a reset: job refused to start, nothing written. Before this check, a restarted stream resumed from a stale checkpoint and lost "Persistence probe one" |
+| Generation raised to 3 | New checkpoint `imports-g3`; both probe documents written, including the one previously lost |
+| Durable custody on PostgreSQL 17 | Data readable after restart; rotation (generation 2) and erasure persisted; other subject unaffected; only custody tables created; plaintext absent from `pg_dump` |
 
 The live run used a disposable topic named `fssaira_imports_final` and checkpoint
 directory `/opt/fssaira/checkpoints/final`. The topic name is deliberately paired

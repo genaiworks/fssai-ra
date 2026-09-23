@@ -69,6 +69,7 @@ def test_dev_certificates_name_each_service(tmp_path):
 
 def test_dev_certificates_pass_a_strict_tls_handshake(tmp_path):
     """Python 3.13+ verifies strictly by default; the certificates must satisfy it."""
+    import contextlib
     import importlib.util
     import ssl
     from pathlib import Path
@@ -90,10 +91,8 @@ def test_dev_certificates_pass_a_strict_tls_handshake(tmp_path):
         server = server_ctx.wrap_bio(s_in, s_out, server_side=True)
         for _ in range(10):
             for end, outgoing, incoming in ((client, c_out, s_in), (server, s_out, c_in)):
-                try:
+                with contextlib.suppress(ssl.SSLWantReadError):
                     end.do_handshake()
-                except ssl.SSLWantReadError:
-                    pass
                 incoming.write(outgoing.read())
         return client.version()
 

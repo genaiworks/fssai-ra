@@ -94,6 +94,13 @@ services:
   kafka:
     image: apache/kafka:4.3.1
     environment:
+      # Keep the log on the kafka-data volume. The image default is
+      # /tmp/kafka-logs inside the container, which every recreate wipes: offsets
+      # restart at zero and consumers keyed on offsets can mistake new records
+      # for ones they have already processed.
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      # Fixed so the formatted storage on the volume stays valid across restarts.
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:-5L6g3nShT-eMCtK--X86sw}
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
@@ -267,6 +274,8 @@ services:
       KAFKA_BOOTSTRAP: kafka:29092
       FSSAI_IMPORT_TOPIC: ${FSSAI_IMPORT_TOPIC:-fssaira.imports}
       FSSAI_CHECKPOINT: ${FSSAI_CHECKPOINT:-/opt/fssaira/checkpoints/imports}
+      # Raise when the import topic is deleted and recreated (offsets restart at 0).
+      FSSAI_IMPORT_TOPIC_GENERATION: ${FSSAI_IMPORT_TOPIC_GENERATION:-1}
       ICEBERG_CATALOG_URI: http://iceberg-rest:8181
       ICEBERG_WAREHOUSE: s3://warehouse/
       S3_ENDPOINT: http://minio:9000
