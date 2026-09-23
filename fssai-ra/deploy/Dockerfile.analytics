@@ -1,0 +1,17 @@
+# Spark and Scala versions match every connector in analytics/jars.lock.json.
+FROM apache/spark:3.5.1-python3
+USER root
+COPY deploy/analytics /tmp/analytics-build
+RUN python3 /tmp/analytics-build/fetch_jars.py /tmp/analytics-build/jars.lock.json /opt/spark/jars \
+ && python3 -m pip install --no-cache-dir PyYAML==6.0.2 \
+ && mkdir -p /opt/fssaira/checkpoints /opt/fssaira/results \
+ && chown -R 185:0 /opt/fssaira \
+ && rm -rf /tmp/analytics-build
+ENV PYTHONPATH=/opt/fssaira/src \
+    PYTHONDONTWRITEBYTECODE=1
+COPY jobs /opt/fssaira/jobs
+COPY src /opt/fssaira/src
+USER 185
+WORKDIR /opt/fssaira
+ENTRYPOINT ["/opt/spark/bin/spark-submit", "--master", "local[2]", "--conf", "spark.ui.enabled=false", "--conf", "spark.sql.shuffle.partitions=4"]
+CMD ["/opt/fssaira/jobs/kafka_to_iceberg.py"]

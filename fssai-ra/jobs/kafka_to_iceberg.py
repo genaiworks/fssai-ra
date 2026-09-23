@@ -86,13 +86,19 @@ def main() -> None:
         .load()
     )
     parsed = parse_imports(stream)
-    query = (
+    writer = (
         parsed.writeStream.foreachBatch(write_batch)
         .option("checkpointLocation", checkpoint)
-        .trigger(processingTime="10 seconds")
-        .start()
     )
-    query.awaitTermination()
+    if os.getenv("FSSAI_AVAILABLE_NOW", "false").lower() == "true":
+        writer = writer.trigger(availableNow=True)
+    else:
+        writer = writer.trigger(processingTime="10 seconds")
+    query = writer.start()
+    try:
+        query.awaitTermination()
+    finally:
+        spark.stop()
 
 
 if __name__ == "__main__":

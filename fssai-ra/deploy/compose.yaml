@@ -201,7 +201,7 @@ services:
 
   # ------------------------------------------------------- analytics and archive
   minio:
-    image: minio/minio:latest
+    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     profiles: [analytics]
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
@@ -217,25 +217,49 @@ services:
     networks: [catalog]
     restart: unless-stopped
 
+  minio-init:
+    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    profiles: [analytics]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - 'mc alias set warehouse http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null; mc mb --ignore-existing warehouse/warehouse'
+    depends_on:
+      minio: {condition: service_healthy}
+    networks: [catalog]
+    restart: "no"
+
   iceberg-rest:
-    image: apache/iceberg-rest-fixture
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.catalog
     profiles: [analytics]
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
       AWS_REGION: us-east-1
+      CATALOG_URI: jdbc:sqlite:/var/lib/iceberg/catalog.db
       CATALOG_WAREHOUSE: s3://warehouse/
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
       CATALOG_S3_ENDPOINT: http://minio:9000
       CATALOG_S3_PATH__STYLE__ACCESS: "true"
-    depends_on: [minio]
+    depends_on:
+      minio-init: {condition: service_completed_successfully}
+    volumes:
+      - catalog-data:/var/lib/iceberg
     networks: [catalog, data]
     restart: unless-stopped
 
-  spark-iceberg:
-    image: tabulario/spark-iceberg
+  iceberg-bootstrap:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.analytics
+    image: fssaira-analytics:local
     profiles: [analytics]
-    environment:
+    command: ["/opt/fssaira/jobs/bootstrap_iceberg.py"]
+    environment: &analytics-env
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
       AWS_REGION: us-east-1
@@ -243,12 +267,27 @@ services:
       ICEBERG_CATALOG_URI: http://iceberg-rest:8181
       ICEBERG_WAREHOUSE: s3://warehouse/
       S3_ENDPOINT: http://minio:9000
+    depends_on:
+      iceberg-rest: {condition: service_started}
+    networks: [data, catalog]
+    restart: "no"
+
+  spark-iceberg:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.analytics
+    image: fssaira-analytics:local
+    profiles: [analytics]
+    environment: *analytics-env
     volumes:
       - ../jobs:/opt/fssaira/jobs:ro
       - ../src:/opt/fssaira/src:ro
       - spark-checkpoints:/opt/fssaira/checkpoints
-    depends_on: [kafka, iceberg-rest]
+    depends_on:
+      kafka: {condition: service_healthy}
+      iceberg-bootstrap: {condition: service_completed_successfully}
     networks: [data, catalog]
+    restart: unless-stopped
 
 networks:
   # Reachable from the host, so a developer can open the console and the API.
@@ -267,6 +306,7 @@ volumes:
   redis-data: {}
   kafka-data: {}
   object-data: {}
+  catalog-data: {}
   ollama-models: {}
   spark-checkpoints: {}
   import-audit: {}

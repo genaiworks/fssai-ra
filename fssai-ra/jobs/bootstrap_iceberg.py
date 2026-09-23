@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import os
 import sys
+import time
+import urllib.error
+import urllib.request
 
 from pyspark.sql import SparkSession
 
@@ -38,6 +41,16 @@ def build_spark(app_name: str = "fssaira-bootstrap") -> SparkSession:
 def main() -> None:
     from fssaira.iceberg_backend import TABLE_DDL
 
+    # The REST process can be started before its HTTP listener is ready.
+    uri = os.getenv("ICEBERG_CATALOG_URI", "http://iceberg-rest:8181")
+    for attempt in range(60):
+        try:
+            with urllib.request.urlopen(uri + "/v1/config", timeout=3):
+                break
+        except (OSError, urllib.error.URLError):
+            if attempt == 59:
+                raise RuntimeError("Iceberg catalog did not become ready") from None
+            time.sleep(1)
     spark = build_spark()
     spark.sql(f"CREATE NAMESPACE IF NOT EXISTS {CATALOG}.{NAMESPACE}")
     for name, ddl in TABLE_DDL.items():
