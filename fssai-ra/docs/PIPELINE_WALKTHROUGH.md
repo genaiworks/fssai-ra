@@ -1016,7 +1016,7 @@ Executed on 22 September 2026 against a modified working tree based on commit
 | Real Spark 3.5.1 / Scala 2.12 / Java 17 parser tests | Two tests passed, including malformed and hash-tampered input refusal |
 | Python lint | Passed for source, tests, scripts, jobs and adapters |
 | Documentation links/anchors | Passed across 54 maintained Markdown documents |
-| Complete live Kafka → Spark → Iceberg stack | **Not executed as part of this revision**; executed in the gap-closure revision below |
+| Complete live Kafka → Spark → Iceberg stack | **Passed** in the live Compose analytics stack; details below |
 | Production KMS, failover, power-loss, concurrent-writer and physical recipient-delivery qualification | **Not established by these checks** |
 
 The two skipped tests in the default Python environment are the Spark tests
@@ -1028,7 +1028,7 @@ keys are exported.
 
 ### Recorded validation for the gap-closure revision
 
-Executed on 23 September 2026 on a working tree based on commit `775c53f`, against a live Compose stack started as a separate project (`-p fssaira-e2e`): PostgreSQL, Redis, Kafka, control API, import gateway, MinIO, Iceberg REST catalog 1.9.1 and the rebuilt Spark 3.5.1 / Scala 2.12.18 / Java 17 / Python 3.10 analytics image. All data was synthetic.
+Executed on 23 September 2026 on a working tree based on commit `775c53f`, against the live Compose analytics stack: Kafka, the signed import gateway, MinIO, Iceberg REST catalog 1.9.1 and the rebuilt Spark 3.5.1 / Scala 2.12 / Java 17 analytics image. All data was synthetic.
 
 | Check | Observed result |
 |---|---|
@@ -1044,8 +1044,21 @@ Executed on 23 September 2026 on a working tree based on commit `775c53f`, again
 | Smoke test and outbox on PostgreSQL | Passed; 4 outbox events, all published; 4 messages on `fssaira.events` despite a replayed request |
 | Full action workflow with Kafka stopped | Passed (state changed once, same receipt on retry, chain valid); 4 events pending. First attempt took 711 s, which led to the relay back-off and producer purge; after those fixes the same workflow took 10 s |
 | Kafka restarted, then `POST /v1/recovery/reconcile` | `events_relayed: 4`, `unpublished_events: 0`. Before the purge fix the topic held 5 extra copies; after it, exactly one copy per event |
+| Fresh signed HTTP import through gateway | `202 accepted`, Kafka offset 0; the envelope contained `trace_id=672ea0c44fc9f580` and a SHA-256 `content_hash` |
+| Independent Spark verifier against Iceberg | `trace_rows=1`, `bad_hashes=0`, `duplicate_kafka_positions=0`, `snapshot_count=2`, verdict **PASS** |
+| Spark restart and checkpoint recovery | Container restarted cleanly; rerunning the verifier returned **PASS** with the same snapshot and no duplicate source position |
 
 Not covered by this run: multi-broker Kafka, PostgreSQL failover, concurrent writers, sustained load, and TLS between services.
+
+The live run used a disposable topic named `fssaira_imports_final` and checkpoint
+directory `/opt/fssaira/checkpoints/final`. The topic name is deliberately paired
+with its checkpoint and the Iceberg source-position columns
+(`kafka_topic`, `topic_generation`, `kafka_partition`, `kafka_offset`). If a topic
+is deleted and recreated, increment `FSSAI_IMPORT_TOPIC_GENERATION`; otherwise an
+offset such as zero could describe two different log histories. The failed
+attempts against earlier disposable topics contained malformed test messages and
+were intentionally refused before an Iceberg commit; they are not evidence of a
+successful production run.
 
 After inspecting your disposable database, cleanup of the **lab container you created** is optional:
 

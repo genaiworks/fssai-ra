@@ -56,7 +56,7 @@ def run_workflow(plane, request_id="req-1", resource_id="S-1"):
 def test_every_event_has_a_stable_id_and_is_stored(tmp_path):
     database, plane = build(tmp_path)
     run_workflow(plane)
-    ids = [row["event_id"] for row in plane.events.pending()]
+    ids = [row["event_id"] for row in plane.events.read_all()]
     assert ids[0] == "resource.registered:S-1"
     assert ids[1] == "action.proposed:req-1"
     assert ids[2].startswith("action.approved:")
@@ -246,3 +246,125 @@ def test_publisher_purges_an_undelivered_message():
     with pytest.raises(RuntimeError, match="undelivered"):
         publisher.append({"event_id": "e"}, key="k")
     assert StuckProducer.purged
+
+
+# -- every profile, no transport, retention ------------------------------------
+
+
+def redis_plane(publisher=None):
+    import fakeredis
+
+    from fssaira.event_outbox import EventOutbox, RedisOutboxStore
+    from fssaira.redis_backend import (
+        RedisApprovalUseStore,
+        RedisCaseRegister,
+        RedisEvidenceLedger,
+        RedisObjectStore,
+        RedisPendingOutcomeStore,
+    )
+
+    client = fakeredis.FakeRedis(decode_responses=True)
+    outbox = RedisOutboxStore(client, "t")
+    plane = ControlPlane(
+        ApplicationProfile.load("profiles/student_support.yaml"),
+        register=RedisCaseRegister(client, "t", outbox=outbox),
+        evidence=RedisEvidenceLedger(client, TOKEN, "t"),
+        evidence_token=TOKEN,
+        objects=RedisObjectStore(client, "t"),
+        events=EventOutbox(outbox, publisher=publisher),
+        outcome_store=RedisPendingOutcomeStore(client, "t"),
+        approval_use_store=RedisApprovalUseStore(client, "t"),
+    )
+    return plane, outbox
+
+
+def test_redis_profile_survives_a_broker_outage_and_catches_up():
+    down = RecordingPublisher(fail=True)
+    plane, _outbox = redis_plane(down)
+    result = run_workflow(plane)
+    assert result.version == 2
+    assert plane.unpublished_events == 4
+    down.fail = False
+    assert plane.relay_events() == 4
+    kinds = [v["kind"] for _k, v, _t in down.sent]
+    assert kinds == ["resource.registered", "action.proposed", "action.approved",
+                     "action.executed"]
+    assert plane.unpublished_events == 0
+
+
+def test_redis_register_writes_the_event_with_the_transition():
+    plane, outbox = redis_plane()
+    plane.register_resource("S-1", status="draft")
+    plane.propose(
+        request_id="req-1", requester="agent-1", operation="prepare_case_for_review",
+        resource_id="S-1", from_status="draft", to_status="ready_for_officer_review",
+        evidence_version="snapshot-1",
+    )
+    plane.approve("req-1", approver="officer-1", approver_role="student_support_officer")
+    plane.register.transition(plane.get_proposal("req-1"))  # no control-plane emit
+    row = outbox.get("action.executed:req-1")
+    assert row is not None and row["value"]["payload"]["version"] == 2
+
+
+def test_redis_replay_does_not_duplicate_the_event():
+    publisher = RecordingPublisher()
+    plane, _outbox = redis_plane(publisher)
+    run_workflow(plane)
+    assert plane.execute("req-1").replayed
+    assert [v["kind"] for _k, v, _t in publisher.sent].count("action.executed") == 1
+
+
+def test_memory_outbox_keeps_requests_working_during_an_outage():
+    from fssaira.event_outbox import EventOutbox, MemoryOutboxStore
+
+    down = RecordingPublisher(fail=True)
+    plane = ControlPlane(ApplicationProfile.load("profiles/student_support.yaml"),
+                         events=EventOutbox(MemoryOutboxStore(), publisher=down))
+    assert run_workflow(plane).version == 2
+    assert plane.unpublished_events == 4
+    down.fail = False
+    assert plane.relay_events() == 4
+
+
+@pytest.mark.parametrize("backend", ["sql", "redis", "memory"])
+def test_without_a_transport_nothing_is_reported_as_owed(tmp_path, backend):
+    if backend == "sql":
+        _database, plane = build(tmp_path)
+    elif backend == "redis":
+        plane, _ = redis_plane()
+    else:
+        from fssaira.event_outbox import EventOutbox, MemoryOutboxStore
+
+        plane = ControlPlane(ApplicationProfile.load("profiles/student_support.yaml"),
+                             events=EventOutbox(MemoryOutboxStore()))
+    run_workflow(plane)
+    assert len(plane.events) == 4
+    assert plane.unpublished_events == 0
+
+
+@pytest.mark.parametrize("backend", ["sql", "redis", "memory"])
+def test_old_published_events_are_pruned_and_pending_ones_kept(tmp_path, backend):
+    import fakeredis
+
+    from fssaira.event_outbox import (
+        EventOutbox,
+        MemoryOutboxStore,
+        RedisOutboxStore,
+        SqlOutboxStore,
+    )
+
+    store = {
+        "sql": lambda: SqlOutboxStore(open_sqlite(str(tmp_path / "p.sqlite"), evidence_token=TOKEN)),
+        "redis": lambda: RedisOutboxStore(fakeredis.FakeRedis(decode_responses=True), "p"),
+        "memory": MemoryOutboxStore,
+    }[backend]()
+    publisher = RecordingPublisher()
+    outbox = EventOutbox(store, publisher=publisher, retention_seconds=0.0)
+    outbox.append({"event_id": "old", "kind": "k", "payload": {}}, key="r")
+    publisher.fail = True
+    outbox.append({"event_id": "stuck", "kind": "k", "payload": {}}, key="r")
+    import time as _time
+    _time.sleep(0.01)
+    outbox.prune()  # also runs automatically, at most hourly, on append
+    assert [row["event_id"] for row in outbox.read_all()] == ["stuck"]
+    assert outbox.unpublished_count() == 1

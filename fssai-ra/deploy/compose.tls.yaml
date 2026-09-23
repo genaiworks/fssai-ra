@@ -1,0 +1,104 @@
+# TLS between services. Apply on top of compose.yaml:
+#
+#   python scripts/make_dev_certs.py --out deploy/certs
+#   docker compose --env-file deploy/.env -f deploy/compose.yaml \
+#     -f deploy/compose.tls.yaml up -d
+#
+# PostgreSQL, Redis and Kafka then accept only TLS connections, and every client
+# verifies the server certificate and host name against deploy/certs/ca.crt.
+# The generated CA is for local development; use the institution's own CA and
+# certificate rotation in a deployment.
+
+services:
+  tls-init:
+    # Copies keys into a volume with the owner each server process runs as.
+    image: postgres:17.6-alpine
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        install -m 644 /src/ca.crt /tls/ca.crt
+        for s in postgres redis kafka minio iceberg-rest; do install -m 644 /src/$$s.crt /tls/$$s.crt; done
+        install -m 600 -o 70 -g 70 /src/postgres.key /tls/postgres.key
+        install -m 600 -o 999 -g 1000 /src/redis.key /tls/redis.key
+        install -m 600 -o 1000 -g 1000 /src/kafka.pem /tls/kafka.pem
+        echo "TLS material installed"
+    volumes:
+      - ./certs:/src:ro
+      - tls-certs:/tls
+    network_mode: none
+    restart: "no"
+
+  postgres:
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/tls/postgres.crt
+      - -c
+      - ssl_key_file=/tls/postgres.key
+      - -c
+      - ssl_min_protocol_version=TLSv1.2
+      - -c
+      - hba_file=/tls-config/pg_hba.conf
+    volumes:
+      - tls-certs:/tls:ro
+      - ./tls:/tls-config:ro
+    depends_on:
+      tls-init: {condition: service_completed_successfully}
+
+  redis:
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}",
+              "--port", "0", "--tls-port", "6379",
+              "--tls-cert-file", "/tls/redis.crt", "--tls-key-file", "/tls/redis.key",
+              "--tls-ca-cert-file", "/tls/ca.crt", "--tls-auth-clients", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cacert", "/tls/ca.crt", "-h", "localhost",
+             "-a", "${REDIS_PASSWORD}", "ping"]
+    volumes:
+      - tls-certs:/tls:ro
+    depends_on:
+      tls-init: {condition: service_completed_successfully}
+
+  kafka:
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:SSL
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_KEYSTORE_LOCATION: /tls/kafka.pem
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /tls/ca.crt
+      KAFKA_SSL_CLIENT_AUTH: none
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --command-config /tls-config/kafka-client.properties --list"]
+    volumes:
+      - tls-certs:/tls:ro
+      - ./tls:/tls-config:ro
+    depends_on:
+      tls-init: {condition: service_completed_successfully}
+
+  control-api:
+    environment:
+      FSSAI_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=verify-full&sslrootcert=/tls/ca.crt
+      FSSAI_REDIS_URL: rediss://:${REDIS_PASSWORD}@redis:6379/0
+      FSSAI_REDIS_CA_FILE: /tls/ca.crt
+      FSSAI_KAFKA_SECURITY_PROTOCOL: SSL
+      FSSAI_KAFKA_SSL_CA_LOCATION: /tls/ca.crt
+    volumes:
+      - tls-certs:/tls:ro
+
+  import-gateway:
+    environment:
+      FSSAI_KAFKA_SECURITY_PROTOCOL: SSL
+      FSSAI_KAFKA_SSL_CA_LOCATION: /tls/ca.crt
+    volumes:
+      - tls-certs:/tls:ro
+
+  spark-iceberg:
+    environment:
+      FSSAI_KAFKA_SECURITY_PROTOCOL: SSL
+      FSSAI_KAFKA_SSL_CA_LOCATION: /tls/ca.crt
+    volumes:
+      - tls-certs:/tls:ro
+
+volumes:
+  tls-certs: {}

@@ -111,6 +111,17 @@ class EvidenceNotary:
         self.key_id = key_id
         self._clock = clock or time.time
 
+    @classmethod
+    def from_key_file(cls, path, *, key_id: str = "evidence-notary-1", clock=None):
+        """A notary whose signing key survives restarts, read from an owner-only file.
+
+        Keep the file, and the checkpoints this notary signs, away from the system
+        that writes the ledger; otherwise one administrator can rewrite both.
+        """
+        from .custody_store import load_master_key
+
+        return cls(key_id=key_id, seed=load_master_key(path), clock=clock)
+
     @property
     def public_keys(self) -> dict[str, bytes]:
         *_, encoding, public_format = _ed25519()

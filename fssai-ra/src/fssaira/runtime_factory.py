@@ -157,6 +157,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
     # 2. Redis profile: durable across restarts, two stores, reconciliation needed.
     redis_url = os.getenv("FSSAI_REDIS_URL")
     if redis_url:
+        from .event_outbox import EventOutbox, RedisOutboxStore
         from .redis_backend import (
             RedisApprovalUseStore,
             RedisCaseRegister,
@@ -168,14 +169,15 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
 
         client = connect_redis(redis_url)
         prefix = os.getenv("FSSAI_REDIS_PREFIX", "fssaira")
+        outbox = RedisOutboxStore(client, prefix)
         return ControlPlane(
             profile,
-            register=RedisCaseRegister(client, prefix),
+            register=RedisCaseRegister(client, prefix, outbox=outbox),
             evidence=RedisEvidenceLedger(client, evidence_token, prefix),
             evidence_token=evidence_token,
             authority=authority,
             objects=RedisObjectStore(client, prefix),
-            events=events,
+            events=EventOutbox(outbox, publisher=events),
             outcome_store=RedisPendingOutcomeStore(client, prefix),
             approval_use_store=RedisApprovalUseStore(client, prefix),
             approval_keys=approval_keys,
@@ -185,6 +187,11 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         )
 
     # 3. Teaching profile: everything in memory, nothing survives a restart.
+    if events is not None:
+        from .event_outbox import EventOutbox, MemoryOutboxStore
+
+        # A broker outage must not fail a change that has already happened.
+        events = EventOutbox(MemoryOutboxStore(), publisher=events)
     return ControlPlane(
         profile,
         evidence_token=evidence_token,

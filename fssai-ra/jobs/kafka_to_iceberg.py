@@ -82,6 +82,22 @@ def parse_imports(stream, generation: str = "1"):
     )
 
 
+def kafka_tls_options() -> dict:
+    """Kafka source options for a TLS broker; empty for plaintext.
+
+    The Java client verifies the broker's host name by default. The CA is read
+    as PEM, so no Java keystore is needed.
+    """
+    if os.getenv("FSSAI_KAFKA_SECURITY_PROTOCOL", "").strip().upper() != "SSL":
+        return {}
+    options = {"kafka.security.protocol": "SSL"}
+    ca = os.getenv("FSSAI_KAFKA_SSL_CA_LOCATION")
+    if ca:
+        options.update({"kafka.ssl.truststore.type": "PEM",
+                        "kafka.ssl.truststore.location": ca})
+    return options
+
+
 def main() -> None:
     spark = build_spark()
     bootstrap = os.getenv("KAFKA_BOOTSTRAP", "kafka:29092")
@@ -89,14 +105,16 @@ def main() -> None:
     if "," in topic:
         raise ValueError("one immutable Kafka topic per import table/checkpoint is required")
     checkpoint = os.getenv("FSSAI_CHECKPOINT", "/opt/fssaira/checkpoints/imports")
-    stream = (
+    reader = (
         spark.readStream.format("kafka")
         .option("kafka.bootstrap.servers", bootstrap)
         .option("subscribe", topic)
         .option("startingOffsets", "earliest")
         .option("failOnDataLoss", "true")
-        .load()
     )
+    for key, value in kafka_tls_options().items():
+        reader = reader.option(key, value)
+    stream = reader.load()
     parsed = parse_imports(stream, os.getenv("FSSAI_IMPORT_TOPIC_GENERATION", "1"))
     writer = (
         parsed.writeStream.foreachBatch(write_batch)

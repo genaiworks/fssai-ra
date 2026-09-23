@@ -23,7 +23,13 @@ def connect_redis(url: str):
         import redis
     except ImportError as exc:  # pragma: no cover
         raise ImportError("Redis backend requires the 'redis' extra") from exc
-    return redis.Redis.from_url(url, decode_responses=True)
+    options = {}
+    # ``rediss://`` URLs use TLS. Verify the server against a private CA when one
+    # is configured; the host name in the URL must match the certificate.
+    ca_file = os.getenv("FSSAI_REDIS_CA_FILE")
+    if url.startswith("rediss://") and ca_file:
+        options.update(ssl_ca_certs=ca_file, ssl_cert_reqs="required", ssl_check_hostname=True)
+    return redis.Redis.from_url(url, decode_responses=True, **options)
 
 
 class RedisObjectStore(ObjectStore):
@@ -97,9 +103,14 @@ class RedisCaseRegister:
     nothing is written, rather than spinning for as long as contention lasts.
     """
 
-    def __init__(self, client, prefix: str = "fssaira", *, max_attempts: int | None = None) -> None:
+    def __init__(self, client, prefix: str = "fssaira", *, max_attempts: int | None = None,
+                 outbox=None) -> None:
         self.client, self.prefix = client, prefix
         self.max_attempts = _max_attempts(max_attempts)
+        #: Optional :class:`fssaira.event_outbox.RedisOutboxStore`. When set, the
+        #: ``action.executed`` event is written in the same MULTI/EXEC as the
+        #: transition, so a committed change always has its event.
+        self.outbox = outbox
 
     def _case_key(self, case_id: str) -> str:
         return f"{self.prefix}:case:{case_id}"
@@ -143,6 +154,8 @@ class RedisCaseRegister:
         )
         case_key = self._case_key(proposal.case_id)
         result_key = self._result_key(proposal.request_id)
+        event_id = f"action.executed:{proposal.request_id}"
+        event_seq = self.outbox.next_seq() if self.outbox is not None else 0
         for attempt in range(self.max_attempts):
             try:
                 with self.client.pipeline() as pipe:
@@ -177,6 +190,11 @@ class RedisCaseRegister:
                     }, sort_keys=True))
                     pipe.set(result_key, json.dumps(asdict(result), sort_keys=True))
                     pipe.incr(f"{self.prefix}:mutation-count")
+                    if self.outbox is not None:
+                        self.outbox.queue_in(pipe, event_id, proposal.case_id, {
+                            "event_id": event_id, "kind": "action.executed",
+                            "payload": asdict(result),
+                        }, event_seq)
                     pipe.execute()
                     return result
             except redis.WatchError:

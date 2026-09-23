@@ -48,7 +48,7 @@ class EncryptedRecordSource:
     """Records encrypted field by field under per-subject keys."""
 
     def __init__(self, field_classes: dict[str, str], custody: KeyCustody, *,
-                 writer_credential: str, reader_credential: str) -> None:
+                 writer_credential: str, reader_credential: str, store=None) -> None:
         self._classes = dict(field_classes)
         self._custody = custody
         self._writer = writer_credential
@@ -57,6 +57,13 @@ class EncryptedRecordSource:
         self._versions: dict[str, int] = {}
         self._snapshots = 0
         self._lock = threading.RLock()
+        #: Optional :class:`fssaira.custody_store.SqlCustodyStore`. When set,
+        #: ciphertext rows survive a restart; plaintext is never stored.
+        self._store = store
+        if store is not None:
+            self._rows = store.load_rows()
+            for (subject, _name), ciphertext in self._rows.items():
+                self._versions[subject] = max(self._versions.get(subject, 0), ciphertext.version)
 
     def load(self, subject: str, fields: dict[str, str]) -> None:
         with self._lock:
@@ -70,6 +77,8 @@ class EncryptedRecordSource:
                     plaintext=str(value), version=version)
                 for name, value in fields.items()
             }
+            if self._store is not None:
+                self._store.save_rows(staged)
             self._rows.update(staged)
             self._versions[subject] = version
 
@@ -104,6 +113,8 @@ class EncryptedRecordSource:
 
     def restore_snapshot(self, snapshot: RecordSnapshot) -> None:
         with self._lock:
+            if self._store is not None:
+                self._store.replace_rows(dict(snapshot.rows))
             self._rows = dict(snapshot.rows)
             # Preserve the live high-water mark and recover it on a fresh instance.
             for (subject, _name), ciphertext in self._rows.items():

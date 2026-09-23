@@ -270,7 +270,7 @@ class SqlDatabase:
 
 
 def open_sqlite(path: str = ":memory:", schema: str = "fssaira",
-                *, evidence_token: str | None = None) -> SqlDatabase:
+                *, evidence_token: str | None = None, create_schema: bool = True) -> SqlDatabase:
     """Zero-infrastructure SQL profile. Used by the atomicity tests."""
     import sqlite3
 
@@ -282,12 +282,13 @@ def open_sqlite(path: str = ":memory:", schema: str = "fssaira",
         return connection
 
     database = SqlDatabase(connect, SQLITE, schema, evidence_token=evidence_token)
-    database.create_schema()
+    if create_schema:
+        database.create_schema()
     return database
 
 
 def open_postgres(dsn: str, schema: str = "fssaira",
-                  *, evidence_token: str | None = None) -> SqlDatabase:
+                  *, evidence_token: str | None = None, create_schema: bool = True) -> SqlDatabase:
     """Production SQL profile. Requires the ``postgres`` extra (``psycopg``)."""
     try:
         import psycopg
@@ -301,7 +302,8 @@ def open_postgres(dsn: str, schema: str = "fssaira",
         return connection
 
     database = SqlDatabase(connect, POSTGRES, schema, evidence_token=evidence_token)
-    database.create_schema()
+    if create_schema:
+        database.create_schema()
     return database
 
 
@@ -654,6 +656,15 @@ class _TxEventOutbox:
             f"SELECT COUNT(*) FROM {self._u.table('event_outbox')} WHERE published_at IS NULL"
         )
         return int(row[0]) if row else 0
+
+    def prune_published(self, before: float) -> int:
+        """Delete events published before ``before``. Unpublished events are kept."""
+        cursor = self._u.execute(
+            f"DELETE FROM {self._u.table('event_outbox')} "
+            "WHERE published_at IS NOT NULL AND published_at < ?",
+            (before,),
+        )
+        return max(int(getattr(cursor, "rowcount", 0) or 0), 0)
 
 
 __all__ = [

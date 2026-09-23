@@ -168,6 +168,7 @@ services:
               "--host", "0.0.0.0", "--port", "8081"]
     environment:
       FSSAI_KAFKA_BOOTSTRAP: kafka:29092
+      FSSAI_IMPORT_TOPIC: ${FSSAI_IMPORT_TOPIC:-fssaira.imports}
       FSSAI_IMPORT_SOURCE_KEYS_JSON: ${FSSAI_IMPORT_SOURCE_KEYS_JSON}
       FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
       # Quarantine and ingest evidence belongs on the low side and must survive
@@ -264,6 +265,8 @@ services:
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
       AWS_REGION: us-east-1
       KAFKA_BOOTSTRAP: kafka:29092
+      FSSAI_IMPORT_TOPIC: ${FSSAI_IMPORT_TOPIC:-fssaira.imports}
+      FSSAI_CHECKPOINT: ${FSSAI_CHECKPOINT:-/opt/fssaira/checkpoints/imports}
       ICEBERG_CATALOG_URI: http://iceberg-rest:8181
       ICEBERG_WAREHOUSE: s3://warehouse/
       S3_ENDPOINT: http://minio:9000

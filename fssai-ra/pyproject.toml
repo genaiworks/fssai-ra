@@ -89,6 +89,9 @@ markers = [
   "slow: takes more than a second",
 ]
 filterwarnings = ["ignore::DeprecationWarning"]
+# A test running longer than this dumps every thread's stack, so a hang
+# diagnoses itself instead of looking like a slow suite.
+faulthandler_timeout = 300
 
 [tool.ruff]
 line-length = 100
