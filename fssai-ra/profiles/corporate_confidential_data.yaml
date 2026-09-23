@@ -221,5 +221,9 @@ review:
   window_seconds: 3600
   queue_limit: 100
   timeout_seconds: 1800
+  # Minimum time between presenting a proposal to a reviewer and approving it.
+  # 60 approvals x 45 s = 45 minutes of a 60-minute window: the quota and the
+  # floor are consistent. Enforced by the oversight monitor on every approval.
+  min_deliberation_seconds: 45
   overload_policy: defer_to_manual
   escalation_role: enterprise_data_governance

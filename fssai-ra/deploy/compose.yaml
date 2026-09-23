@@ -22,6 +22,7 @@ x-control-env: &control-env
   FSSAI_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
   FSSAI_KAFKA_BOOTSTRAP: kafka:29092
   FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
+  FSSAI_EVENT_ENVELOPE_KEY: ${FSSAI_EVENT_ENVELOPE_KEY:-}
   FSSAI_APPROVAL_SIGNING_KEY: ${FSSAI_APPROVAL_SIGNING_KEY}
   FSSAI_APPROVAL_KEY_ID: ${FSSAI_APPROVAL_KEY_ID:-pilot-approval-key-1}
   FSSAI_AUTH_MODE: ${FSSAI_AUTH_MODE:-token}
@@ -36,6 +37,7 @@ x-control-env: &control-env
   # doctor` reports as a finding. A compose-level fallback would hand every
   # deployment the reference numbers and make the declaration nobody's decision.
   # See deploy/.env.example for what each one commits you to.
+  # Empty FSSAI_REVIEW_* values mean "enforce the domain pack's review block".
   FSSAI_REVIEW_MAX_PER_WINDOW: ${FSSAI_REVIEW_MAX_PER_WINDOW:-}
   FSSAI_REVIEW_WINDOW_SECONDS: ${FSSAI_REVIEW_WINDOW_SECONDS:-}
   FSSAI_REVIEW_DELIBERATION_FLOOR: ${FSSAI_REVIEW_DELIBERATION_FLOOR:-}
@@ -175,6 +177,7 @@ services:
               "--host", "0.0.0.0", "--port", "8081"]
     environment:
       FSSAI_KAFKA_BOOTSTRAP: kafka:29092
+      FSSAI_IMPORT_ENVELOPE_KEY: ${FSSAI_IMPORT_ENVELOPE_KEY:-}
       FSSAI_IMPORT_TOPIC: ${FSSAI_IMPORT_TOPIC:-fssaira.imports}
       FSSAI_IMPORT_SOURCE_KEYS_JSON: ${FSSAI_IMPORT_SOURCE_KEYS_JSON}
       FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
@@ -276,6 +279,7 @@ services:
       FSSAI_CHECKPOINT: ${FSSAI_CHECKPOINT:-/opt/fssaira/checkpoints/imports}
       # Raise when the import topic is deleted and recreated (offsets restart at 0).
       FSSAI_IMPORT_TOPIC_GENERATION: ${FSSAI_IMPORT_TOPIC_GENERATION:-1}
+      FSSAI_IMPORT_ENVELOPE_KEY: ${FSSAI_IMPORT_ENVELOPE_KEY:-}
       ICEBERG_CATALOG_URI: http://iceberg-rest:8181
       ICEBERG_WAREHOUSE: s3://warehouse/
       S3_ENDPOINT: http://minio:9000

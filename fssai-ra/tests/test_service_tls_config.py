@@ -99,3 +99,15 @@ def test_dev_certificates_pass_a_strict_tls_handshake(tmp_path):
     assert handshake("redis") in {"TLSv1.2", "TLSv1.3"}
     with pytest.raises(ssl.SSLCertVerificationError):
         handshake("not-redis")
+
+
+def test_kafka_client_certificate_is_passed_for_mutual_tls(monkeypatch):
+    monkeypatch.setenv("FSSAI_KAFKA_SECURITY_PROTOCOL", "SSL")
+    monkeypatch.setenv("FSSAI_KAFKA_SSL_CA_LOCATION", "/tls/ca.crt")
+    monkeypatch.setenv("FSSAI_KAFKA_SSL_CERT_LOCATION", "/tls/kafka-client-control-api.crt")
+    monkeypatch.setenv("FSSAI_KAFKA_SSL_KEY_LOCATION", "/tls/kafka-client-control-api.key")
+    config = kafka_security_config()
+    assert config["ssl.certificate.location"].endswith(".crt")
+    monkeypatch.delenv("FSSAI_KAFKA_SSL_KEY_LOCATION")
+    with pytest.raises(ValueError):
+        kafka_security_config()

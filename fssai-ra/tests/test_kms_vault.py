@@ -98,3 +98,22 @@ def test_a_revoked_token_cannot_unwrap(tmp_path):
 def test_custody_refuses_both_a_master_key_and_a_key_service():
     with pytest.raises(ValueError):
         KeyCustody(master_seed=secrets.token_bytes(32), key_wrapper=wrapper("x"))
+
+
+def test_rotation_can_retire_old_key_versions(tmp_path):
+    """With retirement on, a wrapped key from before the rotation no longer opens."""
+    prefix = "t" + uuid.uuid4().hex[:8]
+    retiring = VaultTransitKeyWrapper(ADDR, TOKEN, key_prefix=prefix, retire_on_rotate=True)
+    store = SqlCustodyStore.open(f"sqlite:///{tmp_path / 'c.sqlite'}")
+    custody = KeyCustody(key_wrapper=retiring, store=store)
+    writer = custody.register_principal("ingest", {"encrypt"})
+    reader = custody.register_principal("gate", {"decrypt"})
+    admin = custody.register_principal("admin", {"rotate", "backup"})
+    records = EncryptedRecordSource(FIELDS, custody, writer_credential=writer,
+                                    reader_credential=reader, store=store)
+    records.load("patient-1", {"patient_name": "Alice Example"})
+    leaked = custody._wrapped[("patient-1", "synthetic-health-record")]   # e.g. an old backup
+    custody.rotate_kek(admin, "synthetic-health-record")
+    assert records.fetch("patient-1", ["patient_name"]) == {"patient_name": "Alice Example"}
+    with pytest.raises(CustodyDenied):
+        retiring.unwrap("patient-1", "synthetic-health-record", leaked)

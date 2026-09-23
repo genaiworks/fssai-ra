@@ -75,9 +75,10 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
     # missing control contract) raises PackRejected and the server does not start.
     from .pack_floor import load_governed_pack
 
-    profile = load_governed_pack(
+    pack = load_governed_pack(
         Path(profile_path or os.getenv("FSSAI_PROFILE", "profiles/student_support.yaml"))
-    ).profile
+    )
+    profile = pack.profile
     evidence_token = os.getenv("FSSAI_EVIDENCE_TOKEN", "teaching-evidence-writer")
     key_id = os.getenv("FSSAI_APPROVAL_KEY_ID", "teaching-approval-key-1")
     signing_key = os.getenv(
@@ -93,7 +94,13 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
     # Inheriting our shipped quota would publish a capacity figure nobody at the
     # institution agreed to; `configuration_warnings` reports the absence.
     oversight = None
-    review_policy = ReviewLoadPolicy.from_env()
+    # An explicit FSSAI_REVIEW_* declaration wins; otherwise the pack's own review
+    # block is enforced, so capacity that passed the kernel floor is also the
+    # capacity the approval path applies.
+    review_policy = ReviewLoadPolicy.from_env() or ReviewLoadPolicy.from_pack(pack.review)
+    from .control_plane import ReviewQueuePolicy
+
+    review_queue = ReviewQueuePolicy.from_pack(pack.review)
     assistance = ReviewAssistance.from_env()
     if assistance.mode is not AssistanceMode.UNAIDED:
         # This failure is visible only in the declaration. At approval time an
@@ -118,10 +125,12 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
     events = None
     kafka_bootstrap = os.getenv("FSSAI_KAFKA_BOOTSTRAP")
     if kafka_bootstrap:
+        from .envelope_mac import key_from_env
         from .kafka_backend import KafkaEventPublisher
 
         events = KafkaEventPublisher(
-            kafka_bootstrap, os.getenv("FSSAI_KAFKA_TOPIC", "fssaira.events")
+            kafka_bootstrap, os.getenv("FSSAI_KAFKA_TOPIC", "fssaira.events"),
+            mac_key=key_from_env("FSSAI_EVENT_ENVELOPE_KEY"),
         )
 
     model = _build_model()
@@ -151,6 +160,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
             metrics=metrics,
             model=model,
             notary=notary,
+            review_queue=review_queue,
             durability="single-transaction",
             executor=AtomicExecutor(
                 database,
@@ -192,6 +202,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
             metrics=metrics,
             model=model,
             notary=notary,
+            review_queue=review_queue,
             durability="best-effort",
         )
 
@@ -210,6 +221,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         metrics=metrics,
         model=model,
         notary=notary,
+        review_queue=review_queue,
         durability="volatile",
     )
 
@@ -235,11 +247,61 @@ def _build_model():
         )
 
 
+def transport_findings() -> list[Warning_]:
+    """Plain-text links, unauthenticated events and a missing notary.
+
+    Each is ``high`` in general and ``blocking`` when the deployment declares
+    itself ``production``: the documentation says production needs verified TLS,
+    authenticated events and signed checkpoints, so declaring production without
+    them is refused rather than published on /health.
+    """
+    from urllib.parse import parse_qs, urlparse
+
+    production = os.getenv("FSSAI_DEPLOYMENT_PROFILE", "teaching").strip().lower() == "production"
+    severity = "blocking" if production else "high"
+    findings: list[Warning_] = []
+    database = os.getenv("FSSAI_DATABASE_URL", "")
+    if database.startswith(("postgres://", "postgresql://")):
+        mode = (parse_qs(urlparse(database).query).get("sslmode") or ["prefer"])[0]
+        if mode in {"disable", "allow", "prefer"}:
+            findings.append(Warning_(
+                severity, "PLAINTEXT_DATABASE_TRANSPORT",
+                f"the database connection may be unencrypted (sslmode={mode})",
+                "use sslmode=verify-full with sslrootcert; see deploy/compose.tls.yaml"))
+        elif mode != "verify-full":
+            findings.append(Warning_(
+                severity, "UNVERIFIED_DATABASE_TLS",
+                f"sslmode={mode} encrypts but does not verify the server's identity",
+                "use sslmode=verify-full with sslrootcert"))
+    redis = os.getenv("FSSAI_REDIS_URL", "")
+    if redis.startswith("redis://") and not database:
+        findings.append(Warning_(
+            severity, "PLAINTEXT_STATE_TRANSPORT", "the Redis state connection is unencrypted",
+            "use a rediss:// URL with FSSAI_REDIS_CA_FILE"))
+    if os.getenv("FSSAI_KAFKA_BOOTSTRAP"):
+        if os.getenv("FSSAI_KAFKA_SECURITY_PROTOCOL", "").strip().upper() != "SSL":
+            findings.append(Warning_(
+                severity, "PLAINTEXT_EVENT_TRANSPORT", "lifecycle events travel unencrypted",
+                "set FSSAI_KAFKA_SECURITY_PROTOCOL=SSL and FSSAI_KAFKA_SSL_CA_LOCATION"))
+        if not os.getenv("FSSAI_EVENT_ENVELOPE_KEY"):
+            findings.append(Warning_(
+                severity, "UNAUTHENTICATED_EVENTS",
+                "anything that can reach the broker can publish lifecycle events that the "
+                "monitor will count",
+                "set FSSAI_EVENT_ENVELOPE_KEY here and in every consumer"))
+    if not os.getenv("FSSAI_NOTARY_KEY_FILE"):
+        findings.append(Warning_(
+            "blocking" if production else "medium", "NO_EVIDENCE_NOTARY",
+            "no signed checkpoints are kept, so deleting the newest evidence is undetectable",
+            "set FSSAI_NOTARY_KEY_FILE and FSSAI_NOTARY_CHECKPOINT_DIR"))
+    return findings
+
+
 def configuration_warnings() -> list[Warning_]:
     """Everything about this configuration that would fail an institutional review."""
     from .security import AuthConfig
 
-    warnings: list[Warning_] = []
+    warnings: list[Warning_] = list(transport_findings())
     signing_key = os.getenv("FSSAI_APPROVAL_SIGNING_KEY", "")
     if not signing_key or signing_key.startswith(TEACHING_KEY_PREFIX):
         warnings.append(Warning_(

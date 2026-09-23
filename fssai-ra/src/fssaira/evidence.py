@@ -100,6 +100,11 @@ class EvidenceLedger:
                 out.append(rec)
         return out
 
+    def head(self) -> tuple[int, str]:
+        """Record count and head hash, without copying the ledger."""
+        with self._lock:
+            return len(self._records), (self._records[-1].hash if self._records else GENESIS_HASH)
+
     def __iter__(self) -> Iterator[EvidenceRecord]:
         return iter(list(self._records))
 

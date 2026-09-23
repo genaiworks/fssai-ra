@@ -48,7 +48,12 @@ def create_import_app(
     topic = os.getenv("FSSAI_IMPORT_TOPIC", "fssaira.imports")
     if publisher is None:
         bootstrap = os.environ["FSSAI_KAFKA_BOOTSTRAP"]
-        publisher = KafkaEventPublisher(bootstrap, topic)
+        from .envelope_mac import key_from_env
+
+        # Spark rejects imports without this MAC, so a record written to Kafka by
+        # anything other than this gateway never reaches the table.
+        publisher = KafkaEventPublisher(bootstrap, topic,
+                                        mac_key=key_from_env("FSSAI_IMPORT_ENVELOPE_KEY"))
     keys = trusted_keys
     if keys is None:
         try:

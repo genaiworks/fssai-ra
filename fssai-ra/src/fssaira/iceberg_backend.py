@@ -182,6 +182,22 @@ TABLE_DDL = {
         PARTITIONED BY (days(archived_at))
         TBLPROPERTIES ('format-version'='2')
     """,
+    # Import records refused because they carried no valid gateway MAC. Positions
+    # and a hash of the raw bytes only: the content is untrusted by definition.
+    # Columns are nullable: a rejected record may be malformed and lack any field.
+    "quarantined_imports": """
+        CREATE TABLE IF NOT EXISTS {catalog}.{namespace}.quarantined_imports (
+            kafka_topic STRING,
+            topic_generation STRING,
+            kafka_partition INT,
+            kafka_offset BIGINT,
+            trace_id STRING,
+            reason STRING,
+            raw_sha256 STRING,
+            quarantined_at TIMESTAMP
+        ) USING iceberg
+        TBLPROPERTIES ('format-version'='2')
+    """,
     "control_events": """
         CREATE TABLE IF NOT EXISTS {catalog}.{namespace}.control_events (
             event_kind STRING NOT NULL,

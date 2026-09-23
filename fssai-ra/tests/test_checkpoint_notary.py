@@ -3,6 +3,7 @@ import json
 import os
 import secrets
 
+import pytest
 from fastapi.testclient import TestClient
 
 from fssaira import ApplicationProfile, ControlPlane
@@ -54,7 +55,19 @@ def test_a_forged_checkpoint_line_is_rejected(tmp_path):
     row = json.loads(path.read_text())
     row["count"] = 0
     path.write_text(json.dumps(row) + "\n")
-    assert not notary.verify(ledger(1))["valid"]
+    verdict = notary.verify(ledger(1))
+    assert verdict["valid"] is False and verdict["code"] == "CHECKPOINTS_FORGED"
+
+
+def test_a_forged_high_count_line_cannot_hijack_verification(tmp_path):
+    notary = CheckpointNotary.from_files(key_file(tmp_path), tmp_path / "cp")
+    led = ledger(2)
+    notary.sign(led)
+    with open(tmp_path / "cp" / "checkpoints.jsonl", "a") as handle:
+        handle.write(json.dumps({"count": 999, "head_hash": "0" * 64, "signed_at": 9e9,
+                                 "key_id": "evidence-notary-1", "signature": "00" * 64}) + "\n")
+    verdict = notary.verify(led)
+    assert verdict["valid"] is True and verdict["forged_checkpoint_lines"] == 1
 
 
 def test_no_checkpoint_yet_is_reported_not_passed(tmp_path):
@@ -85,3 +98,48 @@ def test_executions_are_checkpointed_and_exposed_over_http(tmp_path, monkeypatch
     assert set(checkpoint["public_keys"]) == {notary.notary.key_id}
     verify = client.get("/v1/evidence/verify", headers=token).json()
     assert verify["checkpoint"]["valid"] is True
+
+
+def test_the_highest_signed_count_is_authoritative_whatever_the_line_order(tmp_path):
+    notary = CheckpointNotary.from_files(key_file(tmp_path), tmp_path / "cp")
+    longer = ledger(3)
+    notary.sign(longer)
+    notary.sign(EvidenceLedger("t"))   # a late write from a slower thread, count 0
+    assert notary.latest().count == 3
+    truncated = EvidenceLedger("t")
+    truncated._records.extend(list(longer)[:2])
+    assert notary.verify(truncated)["code"] == "LEDGER_TRUNCATED"
+
+
+def test_signing_uses_the_head_not_the_whole_ledger(tmp_path):
+    class HeadOnly:
+        def head(self):
+            return 2, "ab" * 32
+
+        def __iter__(self):
+            raise AssertionError("the notary read the whole ledger")
+
+    notary = CheckpointNotary.from_files(key_file(tmp_path), tmp_path / "cp")
+    checkpoint = notary.sign(HeadOnly())
+    assert checkpoint.count == 2 and checkpoint.head_hash == "ab" * 32
+
+
+@pytest.mark.parametrize("backend", ["memory", "sql", "redis"])
+def test_every_ledger_reports_its_head(tmp_path, backend):
+    if backend == "memory":
+        led = ledger(3)
+    elif backend == "sql":
+        from fssaira.atomic_execution import sql_evidence
+        from fssaira.sql_backend import open_sqlite
+        led = sql_evidence(open_sqlite(str(tmp_path / "h.sqlite"), evidence_token="t"))
+        for i in range(3):
+            led.append("decision", {"request_id": f"r-{i}"}, token="t")
+    else:
+        import fakeredis
+
+        from fssaira.redis_backend import RedisEvidenceLedger
+        led = RedisEvidenceLedger(fakeredis.FakeRedis(decode_responses=True), "t", "h")
+        for i in range(3):
+            led.append("decision", {"request_id": f"r-{i}"}, token="t")
+    records = list(led)
+    assert led.head() == (3, records[-1].hash)

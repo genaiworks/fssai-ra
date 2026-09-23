@@ -368,3 +368,52 @@ def test_old_published_events_are_pruned_and_pending_ones_kept(tmp_path, backend
     outbox.prune()  # also runs automatically, at most hourly, on append
     assert [row["event_id"] for row in outbox.read_all()] == ["stuck"]
     assert outbox.unpublished_count() == 1
+
+
+def test_a_request_relays_only_a_bounded_batch_of_backlog(tmp_path):
+    from fssaira.event_outbox import EventOutbox, MemoryOutboxStore
+
+    publisher = RecordingPublisher(fail=True)
+    outbox = EventOutbox(MemoryOutboxStore(), publisher=publisher, retry_after=0.0,
+                         inline_limit=5)
+    for index in range(30):
+        outbox.append({"event_id": f"e-{index}", "kind": "k", "payload": {}}, key="r")
+    publisher.fail = False
+    outbox.append({"event_id": "e-30", "kind": "k", "payload": {}}, key="r")
+    assert len(publisher.sent) == 5            # the request paid for five, not 31
+    assert outbox.relay(force=True) == 26      # the rest is background or reconcile work
+
+
+def test_the_background_relay_drains_the_backlog(tmp_path):
+    import time as _time
+
+    from fssaira.event_outbox import EventOutbox, MemoryOutboxStore
+
+    publisher = RecordingPublisher(fail=True)
+    outbox = EventOutbox(MemoryOutboxStore(), publisher=publisher, retry_after=0.0,
+                         inline_limit=1)
+    for index in range(10):
+        outbox.append({"event_id": f"e-{index}", "kind": "k", "payload": {}}, key="r")
+    publisher.fail = False
+    outbox.start_background(interval=0.05)
+    try:
+        deadline = _time.monotonic() + 5
+        while outbox.unpublished_count() and _time.monotonic() < deadline:
+            _time.sleep(0.05)
+    finally:
+        outbox.stop_background()
+    assert outbox.unpublished_count() == 0 and len(publisher.sent) == 10
+
+
+def test_the_api_runs_the_background_relay_for_its_lifetime():
+    from fastapi.testclient import TestClient
+
+    from fssaira.api import create_app
+    from fssaira.event_outbox import EventOutbox, MemoryOutboxStore
+    from fssaira.security import Authenticator
+
+    outbox = EventOutbox(MemoryOutboxStore(), publisher=RecordingPublisher())
+    plane = ControlPlane(ApplicationProfile.load("profiles/student_support.yaml"), events=outbox)
+    with TestClient(create_app(plane, authenticator=Authenticator())):
+        assert outbox._thread is not None and outbox._thread.is_alive()
+    assert outbox._thread is None

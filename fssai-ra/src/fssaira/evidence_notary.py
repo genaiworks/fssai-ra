@@ -127,6 +127,12 @@ class EvidenceNotary:
         *_, encoding, public_format = _ed25519()
         return {self.key_id: self._key.public_key().public_bytes(encoding.Raw, public_format.Raw)}
 
+    def checkpoint_head(self, count: int, head_hash: str) -> Checkpoint:
+        """Sign a count and head hash already read from the ledger."""
+        unsigned = Checkpoint(count, head_hash, round(self._clock(), 6), self.key_id, "")
+        return Checkpoint(count, head_hash, unsigned.signed_at, self.key_id,
+                          self._key.sign(unsigned.payload()).hex())
+
     def checkpoint(self, records: Iterable[EvidenceRecord]) -> Checkpoint:
         items = list(records)
         head = items[-1].hash if items else GENESIS_HASH

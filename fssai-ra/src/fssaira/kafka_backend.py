@@ -54,6 +54,12 @@ def kafka_security_config() -> dict:
     ca = os.getenv("FSSAI_KAFKA_SSL_CA_LOCATION")
     if ca:
         config["ssl.ca.location"] = ca
+    # Client certificate for a broker that requires mutual TLS.
+    cert, key = os.getenv("FSSAI_KAFKA_SSL_CERT_LOCATION"), os.getenv("FSSAI_KAFKA_SSL_KEY_LOCATION")
+    if bool(cert) != bool(key):
+        raise ValueError("set both FSSAI_KAFKA_SSL_CERT_LOCATION and FSSAI_KAFKA_SSL_KEY_LOCATION")
+    if cert:
+        config.update({"ssl.certificate.location": cert, "ssl.key.location": key})
     return config
 
 
@@ -63,10 +69,14 @@ class KafkaEventPublisher:
     name = "kafka"
 
     def __init__(self, bootstrap_servers: str, topic: str = DEFAULT_TOPIC,
-                 *, client_id: str = "fssaira-control-plane", flush_timeout: float = 10.0) -> None:
+                 *, client_id: str = "fssaira-control-plane", flush_timeout: float = 10.0,
+                 mac_key: bytes | None = None) -> None:
         kafka = _require_kafka()
         self.topic = topic
         self.flush_timeout = flush_timeout
+        #: When set, every envelope carries an HMAC so consumers can reject records
+        #: written by anything other than a key holder (see fssaira.envelope_mac).
+        self.mac_key = mac_key
         self.producer = kafka.Producer({
             **kafka_security_config(),
             "bootstrap.servers": bootstrap_servers,
@@ -79,11 +89,13 @@ class KafkaEventPublisher:
 
     def append(self, value: dict, key: str = "", trace_id: str = "") -> int:
         body = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
-        envelope = json.dumps({
-            "value": value,
-            "trace_id": trace_id or hashlib.sha256(body.encode()).hexdigest()[:16],
-            "published_at": time.time(),
-        }, sort_keys=True, default=str).encode()
+        trace = trace_id or hashlib.sha256(body.encode()).hexdigest()[:16]
+        fields = {"value": value, "trace_id": trace, "published_at": time.time()}
+        if getattr(self, "mac_key", None):
+            from .envelope_mac import sign
+
+            fields["mac"] = sign(self.mac_key, value, trace)
+        envelope = json.dumps(fields, sort_keys=True, default=str).encode()
         delivered: list = []
 
         def callback(error, message):
@@ -137,8 +149,11 @@ class KafkaEventConsumer:
         *,
         from_beginning: bool = True,
         dead_letter: bool = True,
+        mac_key: bytes | None = None,
     ) -> None:
         kafka = _require_kafka()
+        #: When set, a record without a valid envelope MAC never reaches the handler.
+        self.mac_key = mac_key
         self.topics = [topics] if isinstance(topics, str) else list(topics)
         self.consumer = kafka.Consumer({
             **kafka_security_config(),
@@ -230,6 +245,9 @@ class KafkaEventConsumer:
         event = self._parse(message)
         if event is None:
             self._to_dead_letter({"raw": repr(message.value())[:2000]}, "unparseable")
+        elif getattr(self, "mac_key", None) and not self._authentic(message):
+            self._to_dead_letter({"raw": repr(message.value())[:2000]},
+                                 "envelope MAC missing or invalid")
         else:
             try:
                 handler(event)
@@ -244,6 +262,14 @@ class KafkaEventConsumer:
         # the source offset remains uncommitted for recovery.
         self.consumer.commit(message, asynchronous=False)
         self.processed += 1
+
+    def _authentic(self, message) -> bool:
+        from .envelope_mac import verify
+
+        try:
+            return verify(self.mac_key, json.loads(message.value()))
+        except (TypeError, ValueError):
+            return False
 
     def _to_dead_letter(self, payload: dict, reason: str) -> None:
         if self._dead_letter is None:

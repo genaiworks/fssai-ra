@@ -485,6 +485,11 @@ class _TxEvidence:
         )
         return EvidenceRecord(seq, ts, kind, payload, prev, digest)
 
+    def head(self) -> tuple[int, str]:
+        row = self._u.one(
+            f"SELECT seq, hash FROM {self._u.table('evidence')} ORDER BY seq DESC LIMIT 1")
+        return (0, GENESIS_HASH) if row is None else (int(row[0]) + 1, row[1])
+
     def records(self) -> list[EvidenceRecord]:
         rows = self._u.all(
             f"SELECT seq, ts, kind, payload, prev_hash, hash FROM {self._u.table('evidence')} ORDER BY seq"
@@ -538,6 +543,17 @@ class _TxObjects:
             (namespace, key),
         )
         return None if row is None else self._u.database.loads(row[0])
+
+    def values(self, namespace: str) -> dict[str, dict]:
+        rows = self._u.all(
+            f"SELECT key, value FROM {self._u.table('objects')} WHERE namespace = ?", (namespace,))
+        return {r[0]: self._u.database.loads(r[1]) for r in rows}
+
+    def delete(self, namespace: str, key: str) -> None:
+        self._u.execute(
+            f"DELETE FROM {self._u.table('objects')} WHERE namespace = ? AND key = ?",
+            (namespace, key),
+        )
 
 
 class _TxApprovalUses:

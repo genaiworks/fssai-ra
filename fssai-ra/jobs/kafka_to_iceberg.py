@@ -16,6 +16,42 @@ ENVELOPE_SCHEMA = StructType([
 ])
 
 
+def make_envelope_verifier(key: bytes):
+    """A self-contained check of the gateway's HMAC over ``{"trace_id", "value"}``.
+
+    Returned as a nested function so Spark ships it to Python workers by value:
+    they need neither this module nor fssaira on their path. A test pins it to
+    ``fssaira.envelope_mac``'s canonical form.
+    """
+    def verify(raw):
+        import hashlib
+        import hmac
+        import json
+
+        try:
+            envelope = json.loads(raw)
+            body = json.dumps({"trace_id": envelope.get("trace_id", ""),
+                               "value": envelope["value"]},
+                              sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+                              default=str).encode("utf-8")
+            mac = envelope.get("mac")
+            return isinstance(mac, str) and hmac.compare_digest(
+                hmac.new(key, body, hashlib.sha256).hexdigest(), mac)
+        except (TypeError, ValueError, KeyError, AttributeError):
+            return False
+
+    return verify
+
+
+def envelope_is_authentic(key: bytes, raw: str | None) -> bool:
+    return make_envelope_verifier(key)(raw)
+
+
+def envelope_key() -> bytes | None:
+    raw = os.getenv("FSSAI_IMPORT_ENVELOPE_KEY", "").strip()
+    return raw.encode("utf-8") if raw else None
+
+
 #: A row's stable identity in the sink, used for in-batch de-duplication and MERGE.
 IDENTITY = ["kafka_topic", "topic_generation", "kafka_partition", "kafka_offset"]
 
@@ -31,6 +67,50 @@ def validate_batch(batch) -> None:
         # Fail before the sink/checkpoint commit. Never silently skip a bad event.
         # Do not log the payload: a quarantine writer needs separate authorization.
         raise ValueError("invalid import envelope or content hash; batch not committed")
+
+
+def split_authentic(batch):
+    """Separate records the gateway signed from records it did not.
+
+    Returns ``(authentic, rejected)``; ``rejected`` is ``None`` without an envelope
+    key. A record without a valid MAC did not come through the gateway's source
+    check, so it is not data to import. It is quarantined rather than allowed to
+    stop the stream: otherwise one forged write would halt every later import.
+    """
+    key = envelope_key()
+    if key is None or "raw_envelope" not in batch.columns:
+        return batch, None
+    from pyspark.sql.types import BooleanType
+
+    verify = F.udf(make_envelope_verifier(key), BooleanType())
+    marked = batch.withColumn("_authentic", verify(F.col("raw_envelope")))
+    return (marked.where(F.col("_authentic")).drop("_authentic"),
+            marked.where(~F.col("_authentic")).drop("_authentic"))
+
+
+def quarantine(rejected, table: str) -> int:
+    """Record rejected positions, never their content, idempotently."""
+    rows = rejected.select(
+        *IDENTITY, F.coalesce(F.col("trace_id"), F.lit("")).alias("trace_id"),
+        F.lit("envelope MAC missing or invalid").alias("reason"),
+        F.sha2(F.coalesce(F.col("raw_envelope"), F.lit("")), 256).alias("raw_sha256"),
+        F.current_timestamp().alias("quarantined_at"),
+    ).dropDuplicates(IDENTITY)
+    count = rows.count()
+    if count:
+        view = "fssaira_import_quarantine"
+        rows.createOrReplaceTempView(view)
+        rejected.sparkSession.sql(f"""
+            MERGE INTO {table} target USING {view} source
+            ON target.kafka_topic = source.kafka_topic
+               AND target.topic_generation = source.topic_generation
+               AND target.kafka_partition = source.kafka_partition
+               AND target.kafka_offset = source.kafka_offset
+            WHEN NOT MATCHED THEN INSERT *
+        """)
+        print(f"WARNING: quarantined {count} import record(s) without a valid gateway MAC "
+              f"in {table}; investigate who can write to the import topic", flush=True)
+    return count
 
 
 def position_conflicts(batch, existing):
@@ -64,8 +144,13 @@ def write_batch(batch, _batch_id: int) -> None:
     """
     if batch.rdd.isEmpty():
         return
+    batch, rejected = split_authentic(batch)
+    if rejected is not None:
+        quarantine(rejected, f"{CATALOG}.{NAMESPACE}.quarantined_imports")
+    if batch.rdd.isEmpty():
+        return
     validate_batch(batch)
-    prepared = batch.dropDuplicates(IDENTITY)
+    prepared = batch.drop("raw_envelope").dropDuplicates(IDENTITY)
     table = f"{CATALOG}.{NAMESPACE}.imported_evidence"
     bounds = prepared.agg(F.min("kafka_offset"), F.max("kafka_offset")).first()
     existing = (
@@ -95,6 +180,7 @@ def parse_imports(stream, generation: str = "1"):
     return (
         stream.select(
             F.from_json(F.col("value").cast("string"), ENVELOPE_SCHEMA).alias("event"),
+            F.col("value").cast("string").alias("raw_envelope"),
             F.col("topic").alias("kafka_topic"),
             F.lit(generation).alias("topic_generation"),
             F.col("partition").alias("kafka_partition"),
@@ -105,7 +191,7 @@ def parse_imports(stream, generation: str = "1"):
             "event.value.source", "event.value.text", "event.value.stripped",
             "event.value.content_hash", "event.trace_id",
             "kafka_topic", "topic_generation",
-            "kafka_partition", "kafka_offset", "imported_at",
+            "kafka_partition", "kafka_offset", "imported_at", "raw_envelope",
         )
     )
 
@@ -185,6 +271,11 @@ def kafka_tls_options() -> dict:
     if ca:
         options.update({"kafka.ssl.truststore.type": "PEM",
                         "kafka.ssl.truststore.location": ca})
+    # Client certificate (PEM file: private key then certificate) for mutual TLS.
+    keystore = os.getenv("FSSAI_KAFKA_SSL_KEYSTORE_PEM")
+    if keystore:
+        options.update({"kafka.ssl.keystore.type": "PEM",
+                        "kafka.ssl.keystore.location": keystore})
     return options
 
 
@@ -194,6 +285,12 @@ def main() -> None:
     topic = os.getenv("FSSAI_IMPORT_TOPIC", "fssaira.imports")
     if "," in topic:
         raise ValueError("one immutable Kafka topic per import table/checkpoint is required")
+    if envelope_key() is None and \
+            os.getenv("FSSAI_IMPORT_ALLOW_UNSIGNED", "").lower() != "true":
+        raise RuntimeError(
+            "FSSAI_IMPORT_ENVELOPE_KEY is not set, so the job cannot tell gateway imports "
+            "from records written straight to Kafka. Set the key (the gateway's), or set "
+            "FSSAI_IMPORT_ALLOW_UNSIGNED=true to accept that risk explicitly")
     generation = os.getenv("FSSAI_IMPORT_TOPIC_GENERATION", "1")
     checkpoint = checkpoint_for(
         os.getenv("FSSAI_CHECKPOINT") or "/opt/fssaira/checkpoints/imports", generation)

@@ -51,6 +51,12 @@ class RedisObjectStore(ObjectStore):
         value = self.client.hget(self._key(namespace), key)
         return None if value is None else json.loads(value)
 
+    def values(self, namespace: str) -> dict[str, dict]:
+        return {k: json.loads(v) for k, v in self.client.hgetall(self._key(namespace)).items()}
+
+    def delete(self, namespace: str, key: str) -> None:
+        self.client.hdel(self._key(namespace), key)
+
 
 class RedisApprovalUseStore:
     def __init__(self, client, prefix: str = "fssaira") -> None:
@@ -239,6 +245,13 @@ class RedisEvidenceLedger:
         raise RuntimeError(
             f"EVIDENCE_CONTENTION: the ledger kept changing during {self.max_attempts} attempt(s)"
         )
+
+    def head(self) -> tuple[int, str]:
+        with self.client.pipeline() as pipe:
+            pipe.llen(self.key)
+            pipe.lindex(self.key, -1)
+            count, last = pipe.execute()
+        return int(count), (GENESIS_HASH if last is None else json.loads(last)["hash"])
 
     def _records(self) -> list[EvidenceRecord]:
         return [EvidenceRecord(**json.loads(value)) for value in self.client.lrange(self.key, 0, -1)]

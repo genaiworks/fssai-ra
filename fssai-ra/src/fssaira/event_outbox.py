@@ -282,15 +282,16 @@ class OutboxRelay:
         self.publisher = publisher
         self.batch_size = batch_size
 
-    def relay_once(self) -> int:
-        """Publish everything pending now. Stops and re-raises at the first failure.
+    def relay_once(self, limit: int | None = None) -> int:
+        """Publish pending events, oldest first, at most ``limit`` of them.
 
-        Stopping at the first failure keeps per-key order: a later event is never
-        published ahead of an earlier one that the broker refused.
+        Stops and re-raises at the first failure. Stopping keeps per-key order: a
+        later event is never published ahead of an earlier one the broker refused.
         """
         published = 0
-        while True:
-            batch = self.store.pending(self.batch_size)
+        while limit is None or published < limit:
+            size = self.batch_size if limit is None else min(self.batch_size, limit - published)
+            batch = self.store.pending(size)
             if not batch:
                 return published
             for row in batch:
@@ -298,6 +299,7 @@ class OutboxRelay:
                 self.publisher.append(row["value"], key=row["key"], trace_id=row["event_id"])
                 self.store.mark_published(row["event_id"])
                 published += 1
+        return published
 
 
 class EventOutbox:
@@ -315,7 +317,7 @@ class EventOutbox:
     """
 
     def __init__(self, store, *, publisher=None, retry_after: float | None = None,
-                 retention_seconds: float | None = None,
+                 retention_seconds: float | None = None, inline_limit: int = 10,
                  clock: Callable[[], float] = time.monotonic) -> None:
         self.store = _as_store(store)
         self.publisher = publisher
@@ -331,6 +333,12 @@ class EventOutbox:
         self._clock = clock
         self._paused_until = 0.0
         self._next_prune = 0.0
+        #: Events a request may publish inline. A backlog left by an outage is the
+        #: background relay's job, not the next caller's latency.
+        self.inline_limit = inline_limit
+        self._relay_lock = threading.Lock()
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
 
     def append(self, value: dict, key: str = "", trace_id: str = "") -> int:
         event_id = value.get("event_id") or trace_id
@@ -342,25 +350,51 @@ class EventOutbox:
             # its transaction; with no transport, nothing is owed.
             self.store.mark_published(event_id)
         seq = self.store.get(event_id)["seq"]
-        self.relay()
+        self.relay(limit=self.inline_limit)
         self._maybe_prune()
         return seq
 
-    def relay(self, *, force: bool = False) -> int:
-        """Best-effort publication of every pending event. Returns the number sent."""
+    def relay(self, *, force: bool = False, limit: int | None = None) -> int:
+        """Best-effort publication of pending events. Returns the number sent."""
         if self._relay is None:
             return 0
         if not force and self._clock() < self._paused_until:
             return 0
+        if not self._relay_lock.acquire(blocking=force):
+            return 0  # another thread is relaying; ordering stays with it
         try:
-            sent = self._relay.relay_once()
+            sent = self._relay.relay_once(limit)
         except Exception as exc:  # broker down: keep events pending, keep serving
             self._paused_until = self._clock() + self.retry_after
             log.warning("event relay deferred for %.0fs; %d event(s) pending: %s",
                         self.retry_after, self.unpublished_count(), exc)
             return 0
+        finally:
+            self._relay_lock.release()
         self._paused_until = 0.0
         return sent
+
+    def start_background(self, interval: float = 2.0) -> None:
+        """Drain the backlog on a daemon thread every ``interval`` seconds."""
+        if self._relay is None or self._thread is not None:
+            return
+
+        def loop():
+            while not self._stop.wait(interval):
+                try:
+                    self.relay()
+                except Exception as exc:  # the thread must survive a bad cycle
+                    log.warning("background event relay failed: %s", exc)
+
+        self._stop.clear()
+        self._thread = threading.Thread(target=loop, name="fssaira-event-relay", daemon=True)
+        self._thread.start()
+
+    def stop_background(self) -> None:
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(5)
+            self._thread = None
 
     def prune(self) -> int:
         """Delete published events older than the retention period."""

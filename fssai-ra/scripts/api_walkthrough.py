@@ -39,7 +39,9 @@ def exercise(base, tokens, wait=0):
             raise RuntimeError(f'{method} {path}: expected HTTP {expected}, got {status}: {result}')
         return result
 
-    request('GET', '/health')
+    health = request('GET', '/health')
+    capacity = (health.get('declared_controls') or {}).get('review_capacity') or {}
+    wait = max(wait, float(capacity.get('min_deliberation_seconds') or 0))
     suffix = uuid.uuid4().hex[:12]
     resource = 'walkthrough-' + suffix
     request('POST', '/v1/resources', {'resource_id': resource, 'status': 'draft', 'version': 1},

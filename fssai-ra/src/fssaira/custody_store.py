@@ -250,6 +250,7 @@ def custody_from_env(**options):
     if not url:
         return None
     store = SqlCustodyStore.open(url, os.getenv("FSSAI_CUSTODY_SCHEMA", "fssaira_custody"))
+    options.setdefault("erasure_journal", os.getenv("FSSAI_CUSTODY_ERASURE_JOURNAL") or None)
     wrapper = VaultTransitKeyWrapper.from_env()
     if wrapper is not None:
         return KeyCustody(key_wrapper=wrapper, store=store, **options), store

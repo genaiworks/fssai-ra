@@ -148,3 +148,24 @@ def test_a_deployed_image_checks_failure_tests_against_its_manifest(tmp_path, mo
     manifest.write_text("")
     codes = {f.code for f in check_pack(raw, repo_root=tmp_path)}
     assert codes == {"PACK_FAILURE_TEST_MISSING"}              # and refused without it
+
+
+def test_the_build_manifest_refuses_a_failing_failure_test(tmp_path):
+    """The image build runs every referenced failure test; one failure stops it."""
+    import subprocess
+    import sys
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_probe.py").write_text(
+        "def test_holds():\n    assert True\n\n\ndef test_broken():\n    assert False\n")
+    (tmp_path / "profiles").mkdir()
+    (tmp_path / "profiles" / "p.yaml").write_text(
+        "controls:\n"
+        "  a: {failure_test: 'tests/test_probe.py::test_holds'}\n"
+        "  b: {failure_test: 'tests/test_probe.py::test_broken'}\n")
+    script = Path("scripts/failure_test_manifest.py").resolve()
+    result = subprocess.run([sys.executable, str(script), "--run", "profiles"], cwd=tmp_path,
+                            capture_output=True, text=True)
+    assert result.returncode == 1
+    assert "failure test failure: tests/test_probe.py::test_broken" in result.stderr
+    assert "test_holds" not in result.stdout

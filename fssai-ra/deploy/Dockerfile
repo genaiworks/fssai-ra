@@ -16,11 +16,17 @@ COPY src ./src
 RUN python -m pip install --upgrade pip build \
  && python -m pip wheel --no-deps --wheel-dir /wheels . \
  && python -m pip wheel --wheel-dir /wheels ".[platform]"
-# Record which failure tests exist in this source tree. The server checks every
-# pack's failure_test against this list, because tests/ is not shipped.
+# Run every failure test the shipped packs cite, and record only those that
+# passed. A failing, skipped or missing test fails the build. The server checks
+# each pack's failure_test against this list, because tests/ is not shipped.
 COPY tests ./tests
+COPY profiles ./profiles
+COPY conference ./conference
+COPY contract ./contract
 COPY scripts/failure_test_manifest.py ./
-RUN python failure_test_manifest.py tests > /build/failure-tests.txt
+# PYTHONPATH=src tests this source tree; the installed copy supplies dependencies.
+RUN python -m pip install --find-links=/wheels ".[platform,privacy,dev]" pyyaml \
+ && PYTHONPATH=/build/src python failure_test_manifest.py --run profiles > /build/failure-tests.txt
 
 FROM python:3.13-slim
 
