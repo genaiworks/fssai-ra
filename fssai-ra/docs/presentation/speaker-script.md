@@ -1,11 +1,11 @@
-# Panel script — UNU Macau AI Conference 2026
+# Panel script — Governed Agentic AI
 
 > **Documentation navigation:** [Documentation map](../README.md) · [Start here](../START_HERE.md) · [Policy route](../README.md#policy-leader-route) · [Engineering route](../README.md#ai-engineer-route) · [Glossary](../GLOSSARY.md)
 >
-> **Recommended next:** Present with [`slides.html`](slides.html); return to the [conference route](../README.md#conference-author-and-presenter-route).
+> **Recommended next:** Present with [`slides.html`](slides.html); return to the [research author route](../README.md#research-author-route).
 
 **Session:** Agentic AI in the Loop — From Autonomous Tools to Shared Capacity
-**Conference:** AI × Education: AI for Learning, Learning for AI · 25–26 November 2026 · Macau SAR
+**Audience:** Researchers, educators, and practitioners of governed agentic AI
 **Talk:** Trust by Construction — A Cross-Sector Reference Architecture for Governed Agentic AI
 **Deck:** [`slides.html`](slides.html) — arrow keys or click to advance, `n` for these notes on screen, `g` for the slide grid, `⌘P` for a PDF.
 

@@ -16,7 +16,7 @@
 I would support this as a conference contribution about a testable reference
 framework, with its limitations stated prominently. I would not approve it as a
 production-qualified system or as evidence of improved educational outcomes.
-This is an editorial assessment, not a decision by UNU or Springer.
+This is an editorial assessment, not an acceptance decision by a venue or publisher.
 
 The strongest contribution is the connection between an institutional obligation,
 an enforcement boundary, an executable failure test, and retained evidence. Keep

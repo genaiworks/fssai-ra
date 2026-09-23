@@ -1,0 +1,21 @@
+{
+  "python": "3.14.6",
+  "system": "macOS ARM64",
+  "fresh_environment": true,
+  "source": "extracted source archive",
+  "dependency_install": "pinned constraints; no pip cache; network used",
+  "pytest": {
+    "passed": 233,
+    "seconds": 148.28
+  },
+  "ruff": "passed",
+  "community_examples": "passed",
+  "workshop_solution": "7/7",
+  "authored_benign_cases": "36/36",
+  "limits": [
+    "No live model",
+    "No human pilot",
+    "No hosted CI result",
+    "No external audit"
+  ]
+}

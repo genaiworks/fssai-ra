@@ -1,4 +1,25 @@
-# Documentation map: Trust by Construction, and where to go next
+# FSSAI-RA documentation index
+
+
+[End-to-end technical workflow](END_TO_END_WORKFLOW.md) — the whole system in four simple flows, step by step. Read this first.
+
+[Full technical pipeline walkthrough](PIPELINE_WALKTHROUGH.md) — source data, encryption, PostgreSQL, Redis, Kafka, Spark, Iceberg and independently verifiable output.
+
+## Begin here
+
+This documentation covers the reusable platform across sectors and publications.
+For your first visit, read these guides in order; the specialist routes below
+remain available when you need more depth.
+
+| Guide | What you will learn |
+|---|---|
+| [User guide](USER_GUIDE.md) | Prerequisites, first run, evidence walkthrough, installation, API, console, and a new domain |
+| [Feature catalogue](FEATURES.md) | Every major implementation area, how to exercise it, and what its evidence does not establish |
+| [Command reference](COMMANDS.md) | CLI commands, Make targets, working directories, dependencies, and validation tiers |
+| [Repository map](REPOSITORY_MAP.md) | Source layout, reading order, generated evidence, and historical artifacts |
+| [Troubleshooting](TROUBLESHOOTING.md) | Common failures and concrete recovery steps |
+| [Research guide](RESEARCH_GUIDE.md) | Reproducible evidence and citing the platform in additional papers |
+| [Publication register](../../publications/README.md) | Existing submission context and a template for future papers |
 
 [Architecture implementation review](ARCHITECTURE_REVIEW.md) — 109-control traceability, executed contracts and qualification gaps.
 
@@ -42,7 +63,7 @@ Iceberg, local-model adapters, and a deployable data-diode seam—implements tho
 duties. The technologies are replaceable. The authority contract and its failure
 tests are the “narrow waist” that should remain stable.
 
-## The shared first three steps
+## Shared learning path
 
 Everyone should take the same opening route before specialising:
 
@@ -141,8 +162,7 @@ domain. No learning gain is claimed until it is measured.
 
 ## Reviewer or auditor route
 
-1. [`REVIEWERS.md`](REVIEWERS.md) — reproduce the current public claims in about
-   ten minutes with `make reviewer`.
+1. [`REVIEWERS.md`](REVIEWERS.md) — reproduce the current public claims with `make reviewer`; elapsed time depends on the host.
 2. [`ASSURANCE.md`](ASSURANCE.md) — inspect every claim and its boundary.
 3. [`RESPONSIBLE_AI.md`](RESPONSIBLE_AI.md) — check unresolved governance risks.
 4. [`GAPS.md`](GAPS.md) — verify that every open claim names the evidence needed
@@ -153,39 +173,40 @@ domain. No learning gain is claimed until it is measured.
    compare the original proposed build specification with the implemented
    repository; do not treat its proposed results as current results.
 
-## Conference author and presenter route
+## Research author route
 
-1. [`presenter-and-submission-guide.md`](presenter-and-submission-guide.md) —
-   submission constraints, positioning, claims, and rehearsal advice.
-2. [`../paper/form-ready-abstract.md`](../paper/form-ready-abstract.md) — the four
-   validated form fields.
-3. [`../paper/extended-abstract.md`](../paper/extended-abstract.md) — the readable
-   proceedings-oriented version.
-4. [`../paper/composition-supplement.md`](../paper/composition-supplement.md) —
-   delegated authority and assisted review in full, for questions the abstract
-   compresses.
-5. [Maintained browser deck](presentation/slides.html) — the current presentation.
-6. [Maintained panel script](presentation/speaker-script.md) — timings and cut
-   paths for 5, 10, 12, or 16 minutes.
+1. [Research guide](RESEARCH_GUIDE.md) — define the question and preserve inputs, commands, environment, and raw outputs.
+2. [Publication register](../../publications/README.md) — cite the software independently and create a record for each paper.
+3. [Results](../evaluation/results/RESULTS.md) and [Assurance](ASSURANCE.md) — inspect denominators and limits before quoting figures.
+4. [Reviewer guide](REVIEWERS.md) — use the broader checks with the archive prerequisites in [Commands](COMMANDS.md#validation-tiers).
 
-The following files are retained for provenance and are **not the rehearsal
-source**: [`speaker-script.md`](speaker-script.md) and
-[`trust-by-construction-final.pptx`](trust-by-construction-final.pptx). The
-current Word abstract is [`extended-abstract.docx`](extended-abstract.docx).
+## Historical conference and presentation materials
+
+The [presenter and submission guide](presenter-and-submission-guide.md),
+[browser deck](presentation/slides.html), and [panel script](presentation/speaker-script.md)
+are retained as conference-context materials. They do not define the scope of the
+platform or identify the exact bytes submitted. The repository owner reports
+that a prior paper has been submitted; see the publication register for the
+limits of the retained record.
+
+Older assets remain available for provenance: [speaker script](speaker-script.md),
+`trust-by-construction-final.pptx` (local-only historical artifact), and `extended-abstract.docx` (local-only historical artifact).
+The entire `paper/` directory is local-only and ignored; clean clones do not
+contain its manuscripts or paper-build inputs.
 
 ## What to run at each confidence level
 
 | Need | Command | Meaning |
 |---|---|---|
-| Install from the repository root | `make setup` | creates the project environment with `python3` |
+| Install from the repository root | `make setup` | creates the project environment with `python3`; installation downloads dependencies |
 | See the idea | `make demo` | one synthetic walkthrough |
 | Check implementation | `make test` | deterministic engineering tests |
-| Check public claims | `make reviewer` | evaluation, verification, transfer, oversight, delegation, assisted review, resilience, and result-drift checks |
+| Check public claims | `make reviewer` | public runtime suite and experiments; private manuscripts are opt-in with `make manuscript-check` |
 | Inspect deployment honesty | `fssaira doctor` | active defaults and readiness blockers; not certification |
 | Check the read path | `fssaira disclosure profiles/healthcare_record_access.yaml` | what a model may see and what may leave, against three architectures |
-| Extend a domain | `fssaira init my_domain --output PATH` | new structure with intentionally empty assurance |
+| Extend a domain | `fssaira init PATH --domain-id my-domain` | new structure with intentionally empty assurance |
 
-Always activate the virtual environment first. On macOS, the initial interpreter
+For CLI commands, enter the inner application directory and activate its virtual environment first. On macOS, the initial interpreter
 is usually `python3`; after `source .venv/bin/activate`, use `python`.
 
 ## Complete documentation and artifact index
@@ -203,7 +224,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.
 - [`GOVERNED_DISCLOSURE.md`](GOVERNED_DISCLOSURE.md) — the second constitutional rule: what a model may read and what may leave.
 - [`PRIVACY_REFERENCE.md`](PRIVACY_REFERENCE.md) — the opt-in HTTP privacy profile: session tokens, encrypted records, a strict model registry, entitled identity restoration, and its limits.
-- [`../conference/README.md`](../conference/README.md) — the UNU Macau demonstration package: education pack, falsifiers, ablation, attack lab, and generated evidence.
+- [`../conference/README.md`](../conference/README.md) — the reusable education demonstration package: education pack, falsifiers, ablation, attack lab, and generated evidence.
 - [`DOMAIN_PACKS.md`](DOMAIN_PACKS.md) — reusable corporate, healthcare, and education domain packs.
 - [`GLOSSARY.md`](GLOSSARY.md) — policy and engineering vocabulary in one table.
 - [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) — education framework and rubric.
@@ -228,7 +249,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`presentation/speaker-script.md`](presentation/speaker-script.md) — maintained
   deck script.
 - [`openapi.json`](openapi.json) — generated API contract.
-- [`extended-abstract.docx`](extended-abstract.docx) — current formatted abstract.
+- `extended-abstract.docx` (local-only historical artifact) — earlier formatted abstract.
 
 ### Interactive tools and presentation assets
 
@@ -248,7 +269,7 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`github-implementation-blueprint.md`](github-implementation-blueprint.md) —
   pre-implementation specification.
 - [`speaker-script.md`](speaker-script.md) — superseded PowerPoint script.
-- [`trust-by-construction-final.pptx`](trust-by-construction-final.pptx) —
+- `trust-by-construction-final.pptx` (local-only historical artifact) —
   superseded v1.0.0-era deck.
 
 ## The stopping rule
@@ -266,3 +287,5 @@ Do not proceed from reading to a real pilot until the institution can answer:
 
 If any answer is missing, that is the next document, test, or institutional
 decision—not a reason to add a larger model.
+
+- [Public verification, Docker, and custom use cases](PUBLIC_VERIFICATION.md)

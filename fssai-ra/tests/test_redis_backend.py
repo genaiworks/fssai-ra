@@ -67,3 +67,46 @@ def test_redis_register_detects_stale_version_atomically():
         assert getattr(exc, "code", None) == "CASE_VERSION_CONFLICT"
     else:
         raise AssertionError("stale transition was accepted")
+
+
+def test_sustained_contention_fails_closed_instead_of_spinning(monkeypatch):
+    import pytest
+    import redis
+
+    from fssaira import ExecutionDenied
+
+    client = fakeredis.FakeRedis(decode_responses=True)
+    register = RedisCaseRegister(client, "contended", max_attempts=3)
+    register.seed("R-9", status="draft", version=1)
+    attempts = []
+
+    def always_conflict(self, *args, **kwargs):
+        attempts.append(1)
+        raise redis.WatchError("another writer changed a watched key")
+
+    monkeypatch.setattr(redis.client.Pipeline, "execute", always_conflict)
+    proposal = ActionProposal(
+        request_id="r-9", requester="agent", operation="prepare_case_for_review",
+        case_id="R-9", expected_version=1, from_status="draft",
+        to_status="ready_for_officer_review", evidence_version="snapshot",
+    )
+    with pytest.raises(ExecutionDenied) as exc:
+        register.transition(proposal)
+    assert exc.value.code == "STATE_CONTENTION" and len(attempts) == 3
+    monkeypatch.undo()
+    assert register.get("R-9") == {"status": "draft", "version": 1}
+
+
+def test_evidence_append_contention_is_bounded(monkeypatch):
+    import pytest
+    import redis
+
+    client = fakeredis.FakeRedis(decode_responses=True)
+    ledger = RedisEvidenceLedger(client, "token", "contended", max_attempts=2)
+
+    def always_conflict(self, *args, **kwargs):
+        raise redis.WatchError("conflict")
+
+    monkeypatch.setattr(redis.client.Pipeline, "execute", always_conflict)
+    with pytest.raises(RuntimeError, match="EVIDENCE_CONTENTION"):
+        ledger.append("decision", {"request_id": "r"}, token="token")

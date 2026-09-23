@@ -34,7 +34,7 @@ jobs:
 
       - name: Install
         working-directory: fssai-ra
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev,privacy,api]"
 
       - name: Compile
         working-directory: fssai-ra
@@ -54,7 +54,7 @@ jobs:
 
       - name: Install
         working-directory: fssai-ra
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev,privacy,api]"
 
       # These four are the repository's own claims, checked on every commit.
       # A failure here means a public claim has stopped being true.
@@ -91,19 +91,22 @@ jobs:
           python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
           python -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
 
-      - name: TBC v11 Word specification and SDK inventory remain aligned
+      - name: Public Passport and SDK inventory remain aligned
         working-directory: fssai-ra
-        run: python scripts/check_tbc_alignment.py
+        run: python scripts/check_sdk_inventory.py
 
       - name: Architecture traceability and executed capability contracts
         working-directory: fssai-ra
         run: |
-          python scripts/verify_architecture.py
-          python scripts/check_paper_revision.py
+          python scripts/verify_architecture.py --output work/architecture
 
       - name: TBC SDK joined demonstration
         working-directory: fssai-ra
         run: python scripts/tbc_demo.py --output /tmp/tbc-ci-demo
+
+      - name: Reproduce the beginner workflows from the public checkout
+        working-directory: fssai-ra
+        run: python scripts/reproduce.py
 
       - name: Committed results have not drifted
         working-directory: fssai-ra
@@ -171,7 +174,7 @@ jobs:
         with: { python-version: "3.14", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
       - name: Install the tested dependency surface
         working-directory: fssai-ra
-        run: python -m pip install -e ".[dev]" pip-audit
+        run: python -m pip install -e ".[dev,privacy,api]" pip-audit
       - name: Audit published dependencies
         working-directory: fssai-ra
         run: python -m pip_audit
@@ -204,6 +207,9 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.13" }
       - run: python -m pip install pyyaml tomli
+      - name: Public documentation links resolve in a clean checkout
+        run: python fssai-ra/scripts/check_public_docs.py
+
       - name: Versions agree across the repository
         run: |
           python - <<'PY'
@@ -223,13 +229,31 @@ jobs:
               assert citation["license"] == "Apache-2.0", path
               print(f"{path} ✓ {version}")
 
-          paper_title = Path("fssai-ra/paper/form-ready-abstract.md").read_text(
-              encoding="utf-8"
-          ).splitlines()[0].removeprefix("# ")
-          for path in (Path("CITATION.cff"), Path("fssai-ra/CITATION.cff")):
-              citation = yaml.safe_load(path.read_text(encoding="utf-8"))
-              assert citation["preferred-citation"]["title"] == paper_title, (
-                  f"{path} preferred citation title disagrees with the paper"
-              )
+          citations = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in
+                       (Path("CITATION.cff"), Path("fssai-ra/CITATION.cff"))]
+          assert citations[0] == citations[1], "software citation copies disagree"
+          assert citations[0]["type"] == "software"
+          assert "preferred-citation" not in citations[0], "cite papers separately"
           print(f"all metadata agrees on {version}")
           PY
+
+  docker-reproduction:
+    name: Offline Docker reproduction
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build pinned research environment
+        run: make docker-setup
+      - name: Reproduce public tests and evidence without network access
+        run: make docker-verify
+      - name: Preserve evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-reproduction-evidence
+          path: fssai-ra/work/reproduction-*/
+          if-no-files-found: warn
+      - name: Verify evidence bundle integrity
+        run: |
+          docker compose run --rm research sh -c 'for bundle in work/reproduction-*; do python scripts/verify_bundle.py "$bundle" || exit 1; done'

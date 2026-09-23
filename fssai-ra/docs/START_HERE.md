@@ -4,8 +4,10 @@
 >
 > **Recommended next:** Policy leader → [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) · AI engineer → [`PLATFORM.md`](PLATFORM.md) · reviewer → [`REVIEWERS.md`](REVIEWERS.md)
 
+For a complete beginner walkthrough with expected outputs, Windows setup, API and console instructions, use the [user guide](USER_GUIDE.md). This page is the shorter conceptual/source-reading tour. The default suite checks public code and evidence. Only the optional `make manuscript-check` requires private manuscript archives.
+
 This is the shortest route from “I cloned it” to “I can explain, test, and
-extend it.” The complete route takes about 90 minutes and stays offline after
+extend it.” The complete route is a self-paced study session and stays local after
 installation; stop after Step 6 for a 45-minute conceptual tour.
 
 The one idea to keep in your head is:
@@ -236,7 +238,7 @@ administrative trust.
 ## Step 14 · Extend it safely (8 minutes)
 
 ```bash
-fssaira init my_domain --output /tmp/fssaira-my-domain
+fssaira init my_domain --domain-id my-domain
 ```
 
 Follow [`docs/EXTENDING.md`](EXTENDING.md). Replace the generated example with

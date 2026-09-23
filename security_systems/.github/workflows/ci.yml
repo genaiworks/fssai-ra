@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m ruff check src tests demo.py examples
+      - run: python -m pytest
+      - run: python -m trustkernel check
+      - run: python examples/guarded_agent_loop.py
+
+  # The talk promises: clone it, run one command, try to break it. This job holds
+  # that promise to a budget, from a clean checkout, with the network cut after install.
+  cold-clone:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pyyaml cryptography
+      - name: demo runs offline inside 60 seconds
+        run: |
+          sudo iptables -I OUTPUT -o eth0 -j REJECT
+          timeout 60 python demo.py --no-color

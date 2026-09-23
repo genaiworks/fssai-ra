@@ -68,6 +68,8 @@ class CustodyCode:
     KEY_ABSENT = "CUSTODY_KEY_ABSENT"
     CIPHERTEXT_BINDING = "CUSTODY_CIPHERTEXT_BINDING_INVALID"
     RESTORE_WITHOUT_JOURNAL = "CUSTODY_RESTORE_WITHOUT_JOURNAL"
+    #: The wrapped key did not open: a different master key, or a tampered key row.
+    KEY_UNWRAP_FAILED = "CUSTODY_KEY_UNWRAP_FAILED"
 
 
 class CustodyDenied(PermissionError):
@@ -184,7 +186,11 @@ class KeyCustody:
     """
 
     def __init__(self, *, master_seed: bytes | None = None, clock=None,
-                 evidence: Any = None, evidence_token: str | None = None) -> None:
+                 evidence: Any = None, evidence_token: str | None = None,
+                 store: Any = None) -> None:
+        if store is not None and master_seed is None:
+            raise ValueError("durable custody needs the master key it was created with "
+                             "(see fssaira.custody_store.load_master_key)")
         self._master = master_seed if master_seed is not None else secrets.token_bytes(32)
         self._clock = clock or time.time
         self._lock = threading.RLock()
@@ -196,6 +202,15 @@ class KeyCustody:
         self._evidence = evidence
         self._evidence_token = evidence_token
         self.operations_log: list[dict] = []
+        #: Optional :class:`fssaira.custody_store.SqlCustodyStore`. When set, keys,
+        #: generations and the erasure journal survive a restart.
+        self._store = store
+        if store is not None:
+            state = store.load()
+            self._kek_generation = dict(state["generations"])
+            self._wrapped = dict(state["wrapped"])
+            self._journal = list(state["journal"])
+            self._destroyed = set(state["destroyed"])
 
     # -- credentials ---------------------------------------------------------
     def register_principal(self, name: str, operations: Iterable[str]) -> str:
@@ -243,8 +258,12 @@ class KeyCustody:
         if wrapped is None:
             raise CustodyDenied(CustodyCode.KEY_ABSENT,
                                 f"no data key for {subject} in class {data_class}")
-        dek = _aesgcm()(self._kek(data_class, wrapped.kek_generation)).decrypt(
-            wrapped.nonce, wrapped.body, _wrap_binding(subject, data_class))
+        try:
+            dek = _aesgcm()(self._kek(data_class, wrapped.kek_generation)).decrypt(
+                wrapped.nonce, wrapped.body, _wrap_binding(subject, data_class))
+        except Exception as exc:  # cryptography.exceptions.InvalidTag
+            raise CustodyDenied(CustodyCode.KEY_UNWRAP_FAILED,
+                                "the wrapped data key did not open under this master key") from exc
         return dek, wrapped.key_generation
 
     def _dek(self, subject: str, data_class: str) -> tuple[bytes, int]:
@@ -255,8 +274,10 @@ class KeyCustody:
                 nonce = secrets.token_bytes(12)
                 body = _aesgcm()(self._kek(data_class, generation)).encrypt(
                     nonce, dek, _wrap_binding(subject, data_class))
-                self._wrapped[(subject, data_class)] = WrappedKey(data_class, generation, 1,
-                                                                  nonce, body)
+                wrapped = WrappedKey(data_class, generation, 1, nonce, body)
+                if self._store is not None:
+                    self._store.save_new_key(subject, wrapped)
+                self._wrapped[(subject, data_class)] = wrapped
             return self._unwrap(subject, data_class)
 
     # -- operations ----------------------------------------------------------
@@ -293,10 +314,12 @@ class KeyCustody:
         self._authorize(credential, "erase")
         with self._lock:
             classes = tuple(sorted(cls for (subj, cls) in self._wrapped if subj == subject))
+            entry = ErasureEntry(len(self._journal) + 1, subject, self._clock(), erased_by, reason)
+            if self._store is not None:  # durable first: a failed write erases nothing
+                self._store.save_erasure(subject, entry)
             for cls in classes:
                 del self._wrapped[(subject, cls)]
             self._destroyed.add(subject)
-            entry = ErasureEntry(len(self._journal) + 1, subject, self._clock(), erased_by, reason)
             self._journal.append(entry)
         certificate = ErasureCertificate(subject, classes, entry.seq, entry.erased_at,
                                          erased_by, reason)
@@ -320,7 +343,7 @@ class KeyCustody:
         self._authorize(credential, "rotate")
         with self._lock:
             new_generation = self._current_kek_generation(data_class) + 1
-            rewrapped = 0
+            updated: dict[tuple[str, str], WrappedKey] = {}
             for (subject, cls), wrapped in list(self._wrapped.items()):
                 if cls != data_class:
                     continue
@@ -329,9 +352,12 @@ class KeyCustody:
                 nonce = secrets.token_bytes(12)
                 body = _aesgcm()(self._kek(cls, new_generation)).encrypt(
                     nonce, dek, _wrap_binding(subject, cls))
-                self._wrapped[(subject, cls)] = WrappedKey(cls, new_generation,
-                                                           wrapped.key_generation, nonce, body)
-                rewrapped += 1
+                updated[(subject, cls)] = WrappedKey(cls, new_generation,
+                                                     wrapped.key_generation, nonce, body)
+            if self._store is not None:  # all rewrapped keys commit together
+                self._store.save_rotation(data_class, new_generation, updated)
+            self._wrapped.update(updated)
+            rewrapped = len(updated)
             self._kek_generation[data_class] = new_generation
         self._log("kek_rotated", {"data_class": data_class, "generation": new_generation,
                                   "rewrapped": rewrapped})
@@ -383,6 +409,8 @@ class KeyCustody:
             else:
                 self._destroyed = {s for s in self._destroyed
                                    if not any(k[0] == s for k in self._wrapped)}
+            if self._store is not None:
+                self._store.save_restore(self._wrapped, self._destroyed, self._journal)
         self._log("custody_restored", {"keys": len(backup.wrapped), "journal_replayed": replay_journal,
                                        "re_destroyed": removed})
         return removed

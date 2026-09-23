@@ -1,5 +1,8 @@
 # Evidence gaps and the work that closes them
 
+The [pipeline walkthrough](PIPELINE_WALKTHROUGH.md#14-corrections-made-and-remaining-implementation-gaps) distinguishes implemented paths, newly tested SQL encryption examples and remaining distributed-integration gaps.
+
+
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
 >
 > **Recommended next:** Convert the applicable rows into pilot exit criteria with [`ADOPTION.md`](ADOPTION.md), then attach the resulting evidence in [`ASSURANCE.md`](ASSURANCE.md).

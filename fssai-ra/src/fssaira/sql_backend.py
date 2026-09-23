@@ -148,7 +148,21 @@ def schema_statements(dialect: Dialect, schema: str = "fssaira") -> list[str]:
                 name  {dialect.text_type} PRIMARY KEY,
                 value {dialect.big_int} NOT NULL
             )""",
+        # Transactional event outbox. A lifecycle event is written here in the
+        # same transaction as the change it describes; a relay publishes it to
+        # Kafka afterwards and stamps ``published_at``. ``event_id`` is stable,
+        # so a republished event can be recognised downstream.
+        f"""CREATE TABLE IF NOT EXISTS {prefix}event_outbox (
+                event_id     {dialect.text_type} PRIMARY KEY,
+                seq          {dialect.big_int}   NOT NULL UNIQUE,
+                event_key    {dialect.text_type} NOT NULL,
+                value        {dialect.json_type} NOT NULL,
+                created_at   {'REAL' if dialect is SQLITE else 'DOUBLE PRECISION'} NOT NULL,
+                published_at {'REAL' if dialect is SQLITE else 'DOUBLE PRECISION'}
+            )""",
         f"CREATE INDEX IF NOT EXISTS fssaira_evidence_kind ON {prefix}evidence (kind)",
+        f"CREATE INDEX IF NOT EXISTS fssaira_event_outbox_unpublished "
+        f"ON {prefix}event_outbox (published_at, seq)",
     ]
     return statements
 
@@ -256,7 +270,7 @@ class SqlDatabase:
 
 
 def open_sqlite(path: str = ":memory:", schema: str = "fssaira",
-                *, evidence_token: str | None = None) -> SqlDatabase:
+                *, evidence_token: str | None = None, create_schema: bool = True) -> SqlDatabase:
     """Zero-infrastructure SQL profile. Used by the atomicity tests."""
     import sqlite3
 
@@ -268,12 +282,13 @@ def open_sqlite(path: str = ":memory:", schema: str = "fssaira",
         return connection
 
     database = SqlDatabase(connect, SQLITE, schema, evidence_token=evidence_token)
-    database.create_schema()
+    if create_schema:
+        database.create_schema()
     return database
 
 
 def open_postgres(dsn: str, schema: str = "fssaira",
-                  *, evidence_token: str | None = None) -> SqlDatabase:
+                  *, evidence_token: str | None = None, create_schema: bool = True) -> SqlDatabase:
     """Production SQL profile. Requires the ``postgres`` extra (``psycopg``)."""
     try:
         import psycopg
@@ -287,7 +302,8 @@ def open_postgres(dsn: str, schema: str = "fssaira",
         return connection
 
     database = SqlDatabase(connect, POSTGRES, schema, evidence_token=evidence_token)
-    database.create_schema()
+    if create_schema:
+        database.create_schema()
     return database
 
 
@@ -299,8 +315,8 @@ def open_postgres(dsn: str, schema: str = "fssaira",
 class SqlUnitOfWork:
     """Every port, bound to one open transaction.
 
-    ``unit.register``, ``unit.evidence``, ``unit.objects``, ``unit.approvals``
-    and ``unit.outbox`` all write through the same cursor, so a caller that uses
+    ``unit.register``, ``unit.evidence``, ``unit.objects``, ``unit.approvals``,
+    ``unit.outbox`` and ``unit.events`` all write through the same cursor, so a caller that uses
     them inside one ``with database.transaction()`` block gets all-or-nothing
     semantics without knowing anything about SQL.
     """
@@ -315,6 +331,7 @@ class SqlUnitOfWork:
         self.objects = _TxObjects(self)
         self.approvals = _TxApprovalUses(self)
         self.outbox = _TxOutbox(self)
+        self.events = _TxEventOutbox(self)
 
     # -- low level ---------------------------------------------------------
     def execute(self, sql: str, params: tuple = ()) -> Any:
@@ -572,6 +589,82 @@ class _TxOutbox:
     def __len__(self) -> int:
         row = self._u.one(f"SELECT COUNT(*) FROM {self._u.table('pending_outcomes')}")
         return int(row[0]) if row else 0
+
+
+class _TxEventOutbox:
+    """Lifecycle events waiting for, or already given to, the event transport."""
+
+    _COLUMNS = "event_id, seq, event_key, value, created_at, published_at"
+
+    def __init__(self, unit: SqlUnitOfWork) -> None:
+        self._u = unit
+
+    def enqueue(self, event_id: str, key: str, value: dict) -> bool:
+        """Insert once. Returns ``False`` when this ``event_id`` is already stored."""
+        table = self._u.table("event_outbox")
+        if self._u.one(f"SELECT 1 FROM {table} WHERE event_id = ?", (event_id,)):
+            return False
+        self._u.bump("event_outbox_seq")
+        seq = self._u.counter("event_outbox_seq")
+        row = self._u.one(
+            f"INSERT INTO {table} (event_id, seq, event_key, value, created_at) "
+            "VALUES (?, ?, ?, ?, ?) ON CONFLICT (event_id) DO NOTHING RETURNING event_id",
+            (event_id, seq, key, self._u.database.dumps(value), time.time()),
+        )
+        return row is not None
+
+    def _row(self, row: tuple) -> dict:
+        return {
+            "event_id": row[0], "seq": int(row[1]), "key": row[2],
+            "value": self._u.database.loads(row[3]), "created_at": float(row[4]),
+            "published_at": None if row[5] is None else float(row[5]),
+        }
+
+    def get(self, event_id: str) -> dict | None:
+        row = self._u.one(
+            f"SELECT {self._COLUMNS} FROM {self._u.table('event_outbox')} WHERE event_id = ?",
+            (event_id,),
+        )
+        return None if row is None else self._row(row)
+
+    def pending(self, limit: int | None = None) -> list[dict]:
+        sql = (f"SELECT {self._COLUMNS} FROM {self._u.table('event_outbox')} "
+               "WHERE published_at IS NULL ORDER BY seq")
+        if limit is not None:
+            sql += f" LIMIT {int(limit)}"
+        return [self._row(row) for row in self._u.all(sql)]
+
+    def all(self) -> list[dict]:
+        rows = self._u.all(
+            f"SELECT {self._COLUMNS} FROM {self._u.table('event_outbox')} ORDER BY seq"
+        )
+        return [self._row(row) for row in rows]
+
+    def mark_published(self, event_id: str) -> None:
+        self._u.execute(
+            f"UPDATE {self._u.table('event_outbox')} SET published_at = ? "
+            "WHERE event_id = ? AND published_at IS NULL",
+            (time.time(), event_id),
+        )
+
+    def count(self) -> int:
+        row = self._u.one(f"SELECT COUNT(*) FROM {self._u.table('event_outbox')}")
+        return int(row[0]) if row else 0
+
+    def unpublished_count(self) -> int:
+        row = self._u.one(
+            f"SELECT COUNT(*) FROM {self._u.table('event_outbox')} WHERE published_at IS NULL"
+        )
+        return int(row[0]) if row else 0
+
+    def prune_published(self, before: float) -> int:
+        """Delete events published before ``before``. Unpublished events are kept."""
+        cursor = self._u.execute(
+            f"DELETE FROM {self._u.table('event_outbox')} "
+            "WHERE published_at IS NOT NULL AND published_at < ?",
+            (before,),
+        )
+        return max(int(getattr(cursor, "rowcount", 0) or 0), 0)
 
 
 __all__ = [

@@ -1,0 +1,390 @@
+# Retail Banking: the finance domain pack. Every customer and value is synthetic.
+#
+# Fraud and servicing agents investigate alerts and draft decisions. The kernel lets them
+# propose; only a credit officer changes a limit, only a payments officer releases a wire,
+# SAR case notes never leave the AML unit (no tipping off), and credit files never reach a
+# servicing chat. Every control contract cites a pack-derived test in tests/test_contracts.py.
+profile_id: retail-banking-finance
+version: '1.0'
+title: Retail Banking (finance pack)
+resource_name: account_decision
+owner: chief_risk_officer
+manual_fallback: Leave the account unchanged, hold any pending payment, and route the case to the staffed fraud
+  desk.
+governance:
+  domain: financial-services
+  purpose: Let fraud and servicing agents investigate alerts, summarize accounts, and draft decisions while holding
+    no authority of their own, on synthetic customers only.
+  applicable_frameworks:
+  - Consumer financial privacy law and purpose limitation
+  - Anti-money-laundering rules, including confidentiality of suspicious activity reports
+  - Credit decisioning, adverse-action, and model-risk management requirements
+  prohibited_uses:
+  - An agent changing a credit limit or releasing a wire without the named officer
+  - Disclosing suspicious-activity case notes to anyone outside the AML unit (tipping off)
+  - Using credit files for cross-sell marketing
+  - Sending identity, KYC, or credit data to an external model or partner
+  processing_basis: Fraud investigation, credit decisions, servicing, AML compliance, and risk reporting on synthetic
+    customers.
+  data_minimization_rule: Release only the fields the stated purpose needs, for the named customers, to the named
+    holder, for a bounded time.
+  retention_rule: Retain decision evidence for the declared regulatory period; working copies only for the session
+    that needed them.
+  deletion_rule: Erase a customer on a valid request by destroying the customer's data keys; keep digests and surrogate
+    identifiers only.
+  residency_rule: Identity, KYC, credit, and AML data stay on bank infrastructure; account activity may use an approved
+    financial cloud.
+  incident_response: Freeze automated decisions, hold pending payments, preserve evidence, and page fraud operations
+    and compliance.
+  deployment_profile: reference
+  data_classes: &id001
+  - customer-identity
+  - account-activity
+  - credit-financial
+  - kyc-pii
+  - sar-restricted
+  - aggregate-risk
+  owners:
+    data: chief_risk_officer
+    privacy: data_protection_officer
+    security: aml_officer
+identity_fields:
+  customer_name: CUSTOMER_NAME
+  tax_id: TAX_ID
+  account_ref: ACCOUNT_REF
+disclosure:
+  subject_kind: customer
+  purposes:
+  - fraud-investigation
+  - credit-decision
+  - customer-service
+  - aml-compliance
+  - risk-reporting
+  - fraud-emergency-freeze
+  fields:
+    customer_name:
+      class: customer-identity
+    tax_id:
+      class: customer-identity
+    account_ref:
+      class: customer-identity
+    txn_velocity:
+      class: account-activity
+    balance_band:
+      class: account-activity
+    merchant_mix:
+      class: account-activity
+    credit_file:
+      class: credit-financial
+    kyc_documents:
+      class: kyc-pii
+    sar_case_notes:
+      class: sar-restricted
+  model_endpoints:
+    bank_local_model: bank-private
+    bank_local_model_b: bank-private
+    approved_fin_cloud_model: approved-fin-cloud
+    public_chat_api: external
+  class_zones:
+    customer-identity:
+    - bank-private
+    account-activity:
+    - bank-private
+    - approved-fin-cloud
+    credit-financial:
+    - bank-private
+    kyc-pii:
+    - bank-private
+    sar-restricted:
+    - bank-private
+    aggregate-risk:
+    - bank-private
+    - approved-fin-cloud
+  recipients:
+    fraud_ops:
+      classes:
+      - customer-identity
+      - account-activity
+      - credit-financial
+      - kyc-pii
+      purposes:
+      - fraud-investigation
+      - fraud-emergency-freeze
+      zone: bank-private
+    servicing_chat:
+      classes:
+      - account-activity
+      purposes:
+      - fraud-investigation
+      - customer-service
+      zone: bank-private
+    credit_committee:
+      classes:
+      - customer-identity
+      - account-activity
+      - credit-financial
+      purposes:
+      - credit-decision
+      zone: bank-private
+    aml_unit:
+      classes:
+      - customer-identity
+      - account-activity
+      - kyc-pii
+      - sar-restricted
+      purposes:
+      - aml-compliance
+      zone: bank-private
+    customer_app:
+      classes:
+      - customer-identity
+      - account-activity
+      purposes:
+      - customer-service
+      zone: bank-private
+      subject_scope: self
+    risk_dashboard:
+      classes:
+      - aggregate-risk
+      purposes:
+      - risk-reporting
+      zone: approved-fin-cloud
+    external_partner_api:
+      classes: []
+      purposes: []
+      zone: external
+  declassification:
+  - name: aggregate_for_risk_reporting
+    from_classes:
+    - account-activity
+    to_class: aggregate-risk
+    purposes:
+    - risk-reporting
+    approval_role: chief_risk_officer
+    removes_subject_identity: true
+  break_glass:
+    purposes:
+    - fraud-emergency-freeze
+    max_ttl_seconds: 1800
+    max_unreviewed_per_holder: 1
+    review_role: aml_officer
+transitions:
+- operation: set_credit_limit
+  from_status: limit:5k
+  to_status: limit:10k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:5k
+  to_status: limit:25k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:5k
+  to_status: limit:50k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:10k
+  to_status: limit:5k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:10k
+  to_status: limit:25k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:10k
+  to_status: limit:50k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:25k
+  to_status: limit:5k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:25k
+  to_status: limit:10k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:25k
+  to_status: limit:50k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:50k
+  to_status: limit:5k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:50k
+  to_status: limit:10k
+  consequential: true
+  approval_role: credit_officer
+- operation: set_credit_limit
+  from_status: limit:50k
+  to_status: limit:25k
+  consequential: true
+  approval_role: credit_officer
+- operation: flag_transaction
+  from_status: txn:clear
+  to_status: txn:flagged
+  consequential: false
+  approval_role: fraud_analyst
+- operation: release_wire
+  from_status: wire:held
+  to_status: wire:released
+  consequential: true
+  approval_role: payments_officer
+- operation: file_sar
+  from_status: sar:draft
+  to_status: sar:filed
+  consequential: true
+  approval_role: aml_officer
+- operation: approve_risk_report
+  from_status: report:draft
+  to_status: report:approved
+  consequential: true
+  approval_role: chief_risk_officer
+- operation: review_break_glass
+  from_status: glass:open
+  to_status: glass:reviewed
+  consequential: true
+  approval_role: aml_officer
+controls:
+  set_credit_limit:
+    protected_asset: A customer's credit limit
+    permitted_operation: Change one customer's limit at the reviewed account version, signed by a credit officer
+    enforcement_point: execution_mediator
+    owner: credit_officer
+    failure_test: tests/test_contracts.py::test_consequential_transitions_need_their_declared_human_role
+    evidence_artifact: Signed execution receipt binding proposal digest, approval, and ledger checkpoint
+    failure_response: Deny, record the refusal, and escalate to the named owner
+  release_wire:
+    protected_asset: An outbound wire transfer
+    permitted_operation: A payments officer releases one exact held wire
+    enforcement_point: execution_mediator
+    owner: payments_officer
+    failure_test: tests/test_contracts.py::test_consequential_transitions_need_their_declared_human_role
+    evidence_artifact: Signed execution receipt naming the approver and the proposal digest
+    failure_response: Deny and route the request to staffed handling
+  file_sar:
+    protected_asset: A suspicious activity report
+    permitted_operation: The AML officer files one exact report
+    enforcement_point: execution_mediator
+    owner: aml_officer
+    failure_test: tests/test_contracts.py::test_consequential_transitions_need_their_declared_human_role
+    evidence_artifact: Signed execution receipt naming the approver and the proposal digest
+    failure_response: Deny and route the request to staffed handling
+  approve_risk_report:
+    protected_asset: Aggregated risk data leaving the bank
+    permitted_operation: The chief risk officer approves one exact aggregated output
+    enforcement_point: execution_mediator
+    owner: chief_risk_officer
+    failure_test: tests/test_contracts.py::test_declassification_needs_exact_approval
+    evidence_artifact: Declassification approval bound to the exact output digest
+    failure_response: Deny and keep the output at its original label
+  review_break_glass:
+    protected_asset: Emergency access to credit files
+    permitted_operation: The AML officer reviews one emergency access after the fact
+    enforcement_point: context_gate
+    owner: aml_officer
+    failure_test: tests/test_contracts.py::test_break_glass_opens_a_review_obligation
+    evidence_artifact: Break-glass review record naming holder and reviewer
+    failure_response: Refuse further emergency access by the holder until reviewed
+  read_protected_context:
+    protected_asset: Records placed into a model context
+    permitted_operation: A holder reads named fields of named subjects for a declared purpose
+    enforcement_point: context_gate
+    owner: data_protection_officer
+    failure_test: tests/test_contracts.py::test_protected_reads_are_granted_minimal_and_purpose_bound
+    evidence_artifact: Disclosure intent and outcome records with digests, never values
+    failure_response: Deny, release nothing, and record the refusal code
+  release_labelled_output:
+    protected_asset: A model output derived from protected records
+    permitted_operation: Release to a recipient whose clearance dominates the output label
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_contracts.py::test_labelled_output_cannot_be_released_or_laundered
+    evidence_artifact: Release receipt with the output label
+    failure_response: Deny the release and keep the output labelled
+  restore_identity:
+    protected_asset: The link between a token and a real person
+    permitted_operation: Restore identity only for a recipient cleared for identity fields
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_contracts.py::test_identity_reaches_models_only_as_tokens
+    evidence_artifact: Identity restoration record naming the release receipt
+    failure_response: Release tokens only and record the refusal
+  delegate_authority:
+    protected_asset: Authority passed from one agent to another
+    permitted_operation: Delegate an equal or narrower slice for the same purpose and a shorter time
+    enforcement_point: delegation_verifier
+    owner: aml_officer
+    failure_test: tests/test_contracts.py::test_delegated_authority_only_narrows
+    evidence_artifact: Verified grant chain with the effective scope
+    failure_response: Refuse the chain and record the escalation attempt
+  erase_subject:
+    protected_asset: Every governed copy of one subject's data
+    permitted_operation: The data protection owner erases a subject by destroying the subject's keys
+    enforcement_point: key_custody
+    owner: data_protection_officer
+    failure_test: tests/test_contracts.py::test_erasure_reaches_every_governed_copy
+    evidence_artifact: Erasure certificate and a read-back verification of every governed copy
+    failure_response: Report every readable location and keep the request open
+model_manifests:
+  bank_local_model:
+    provider: ollama-local
+    model_id: qwen2.5:7b
+    capabilities:
+    - summarize
+    - propose_action
+    allowed_classes: *id001
+    allowed_purposes:
+    - fraud-investigation
+    - credit-decision
+    - customer-service
+    - aml-compliance
+    - risk-reporting
+    - fraud-emergency-freeze
+    approval_days: 180
+  bank_local_model_b:
+    provider: ollama-local
+    model_id: llama3.2:3b
+    capabilities:
+    - summarize
+    - propose_action
+    allowed_classes: *id001
+    allowed_purposes:
+    - fraud-investigation
+    - credit-decision
+    - customer-service
+    - aml-compliance
+    - risk-reporting
+    - fraud-emergency-freeze
+    approval_days: 180
+  approved_fin_cloud_model:
+    provider: approved-fin-vendor
+    model_id: fin-cloud-large
+    capabilities:
+    - summarize
+    allowed_classes:
+    - account-activity
+    - aggregate-risk
+    allowed_purposes:
+    - fraud-investigation
+    - risk-reporting
+    approval_days: 90
+review:
+  capacity_per_window: 4
+  window_seconds: 3600
+  queue_limit: 6
+  timeout_seconds: 1800
+  overload_policy: defer_to_manual
+  escalation_role: chief_risk_officer
+delegation:
+  max_depth: 3
+  allow_machine_delegated_consequence: false

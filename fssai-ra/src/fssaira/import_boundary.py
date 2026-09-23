@@ -25,6 +25,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import hmac
+import json
 import re
 from dataclasses import dataclass
 
@@ -58,6 +59,10 @@ class RawInput:
     size: int
     data: str
     signature: str
+    #: Optional client-chosen stable ID. When present, the signature must cover
+    #: it (see :meth:`ImportBoundary.sign_envelope`) and the gateway uses it to
+    #: recognise a retried request.
+    ingest_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -115,10 +120,39 @@ class ImportBoundary:
         """Helper so publishers and tests compute the same digest as the check."""
         return hmac.new(key.encode(), data.encode(), hashlib.sha256).hexdigest()
 
+    @staticmethod
+    def envelope_message(*, source: str, content_type: str, data: str, ingest_id: str) -> str:
+        """The exact text signed when a request carries an ``ingest_id``.
+
+        Covering the ID, source and content type means a party in the middle can
+        neither move a signed document to another ID nor replay its ID with other
+        content.
+        """
+        return json.dumps(
+            {"content_type": content_type, "data": data, "ingest_id": ingest_id,
+             "source": source},
+            sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+        )
+
+    @classmethod
+    def sign_envelope(cls, key: str, *, source: str, content_type: str, data: str,
+                      ingest_id: str) -> str:
+        return cls.sign(key, cls.envelope_message(
+            source=source, content_type=content_type, data=data, ingest_id=ingest_id))
+
     # -- checks ------------------------------------------------------------
-    def _expected_sig(self, source: str, data: str) -> str | None:
-        key = self._keys.get(source)
-        return None if key is None else self.sign(key, data)
+    def _expected_sig(self, raw: RawInput) -> str | None:
+        key = self._keys.get(raw.source)
+        if key is None:
+            return None
+        if raw.ingest_id is None:
+            return self.sign(key, raw.data)
+        return self.sign_envelope(key, source=raw.source, content_type=raw.content_type,
+                                  data=raw.data, ingest_id=raw.ingest_id)
+
+    def rejection(self, raw: RawInput) -> str | None:
+        """Why ``raw`` would be quarantined, or ``None``. Records nothing."""
+        return self._reject_reason(raw)
 
     def _reject_reason(self, raw: RawInput) -> str | None:
         if raw.content_type not in self._allowed_types:
@@ -127,7 +161,7 @@ class ImportBoundary:
             return f"oversize {raw.size}>{self._max_size}"
         if raw.size != len(raw.data.encode()):
             return "declared size does not match payload"
-        expected = self._expected_sig(raw.source, raw.data)
+        expected = self._expected_sig(raw)
         if expected is None:
             return "unknown source"
         if not hmac.compare_digest(expected, raw.signature):
@@ -172,6 +206,8 @@ class ImportBoundary:
             "source": raw.source, "stripped_markers": flags,
             "bytes": report.bytes_out, "content_hash": content_hash,
         }
+        if raw.ingest_id is not None:
+            record["ingest_id"] = raw.ingest_id
         # Record intent before delivery. This ordering is load-bearing: if the
         # inward publisher accepts the item and the process then loses its audit
         # store, there is still a durable record identifying exactly what was
@@ -179,10 +215,13 @@ class ImportBoundary:
         self._evidence.append("ingest_intent", record, token=self._token)
         try:
             # Protocol break: hand a normalized, minimal record to the diode.
-            self._diode.send_inward({
+            item = {
                 "source": raw.source, "text": clean, "stripped": flags,
                 "content_hash": content_hash,
-            })
+            }
+            if raw.ingest_id is not None:
+                item["ingest_id"] = raw.ingest_id
+            self._diode.send_inward(item)
         except Exception as exc:
             # This second append is best effort: the original exception remains
             # authoritative if the evidence store also fails. The unclosed

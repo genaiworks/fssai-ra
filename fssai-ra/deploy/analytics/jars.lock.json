@@ -1,0 +1,32 @@
+[
+  {
+    "name": "iceberg-spark-runtime-3.5_2.12-1.9.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.9.1/iceberg-spark-runtime-3.5_2.12-1.9.1.jar",
+    "sha512": "46a1b541f5a80f96cb8b9d60cd86fd3f93155228a144d4b1658fabf7e45054d677ceac715bbc1d9ee3e00bdc7383e348fd4148c0185441ccf4f00c20ad384147"
+  },
+  {
+    "name": "iceberg-aws-bundle-1.9.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.9.1/iceberg-aws-bundle-1.9.1.jar",
+    "sha512": "f2b779f65b7b802c5bb26cffc7ad382ba1800a1420feedef4f1595cb55cf64db09ce040f21bcd66b8d865e7edd94e376346585cb39652c774719da45c46a2f35"
+  },
+  {
+    "name": "spark-sql-kafka-0-10_2.12-3.5.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.5.1/spark-sql-kafka-0-10_2.12-3.5.1.jar",
+    "sha512": "33a6670b7504b986d3b956e48ddb644320fe8b5d7df8b201c8dd493e3f016ed7c6b42d754ac5e6e229bd6af5776e2ab40eee449b543430e0fec603aa193176b8"
+  },
+  {
+    "name": "spark-token-provider-kafka-0-10_2.12-3.5.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.12/3.5.1/spark-token-provider-kafka-0-10_2.12-3.5.1.jar",
+    "sha512": "6aab483f7047934c2649965f90309a0d50c14f06322799b8f9b5f46b139b8db0f546a5a5ce4b10107b31706efd2d4309b0eb11aa55f027c5490c8ae49aacb602"
+  },
+  {
+    "name": "kafka-clients-3.4.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/kafka/kafka-clients/3.4.1/kafka-clients-3.4.1.jar",
+    "sha512": "b111e1980fd6bf65ca546f6b517fb31a140b19b4dc88646e723b11b54b521e48643f33aa341f47b3111a4556af131200f80c851e1b68d37cb4e747e283eefd7e"
+  },
+  {
+    "name": "commons-pool2-2.11.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/commons/commons-pool2/2.11.1/commons-pool2-2.11.1.jar",
+    "sha512": "7177d8a9e45ae47881ec323150dc7bd3372ce32eff9866029b47a77cb734535d5e987f22e6cb7009104832c3772079fb6322b2919650765b76a4b4aa8eae648e"
+  }
+]

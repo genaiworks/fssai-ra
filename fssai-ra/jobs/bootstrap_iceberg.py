@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import os
 import sys
+import time
+import urllib.error
+import urllib.request
 
 from pyspark.sql import SparkSession
 
@@ -38,12 +41,48 @@ def build_spark(app_name: str = "fssaira-bootstrap") -> SparkSession:
 def main() -> None:
     from fssaira.iceberg_backend import TABLE_DDL
 
+    # The REST process can be started before its HTTP listener is ready.
+    uri = os.getenv("ICEBERG_CATALOG_URI", "http://iceberg-rest:8181")
+    for attempt in range(60):
+        try:
+            with urllib.request.urlopen(uri + "/v1/config", timeout=3):
+                break
+        except (OSError, urllib.error.URLError):
+            if attempt == 59:
+                raise RuntimeError("Iceberg catalog did not become ready") from None
+            time.sleep(1)
     spark = build_spark()
     spark.sql(f"CREATE NAMESPACE IF NOT EXISTS {CATALOG}.{NAMESPACE}")
     for name, ddl in TABLE_DDL.items():
         spark.sql(ddl.format(catalog=CATALOG, namespace=NAMESPACE))
+        migrate(spark, name)
         print(f"ready: {CATALOG}.{NAMESPACE}.{name}")
     spark.stop()
+
+
+def migrate(spark, name: str) -> None:
+    """Add columns introduced after a table was created, then backfill old rows.
+
+    Existing import rows get the configured topic and generation, which is correct
+    because the job has always refused more than one topic per table. Existing
+    evidence rows get ledger ``primary``, the archive's default.
+    """
+    from fssaira.iceberg_backend import TABLE_MIGRATIONS
+
+    table = f"{CATALOG}.{NAMESPACE}.{name}"
+    wanted = TABLE_MIGRATIONS.get(name, {})
+    present = {field.name for field in spark.table(table).schema.fields}
+    values = {"topic": os.getenv("FSSAI_IMPORT_TOPIC", "fssaira.imports"),
+              "generation": os.getenv("FSSAI_IMPORT_TOPIC_GENERATION", "1")}
+    for column, template in wanted.items():
+        if column not in present:
+            spark.sql(f"ALTER TABLE {table} ADD COLUMNS ({column} STRING)")
+            print(f"migrated: {table} + {column}")
+        # An UPDATE commits a snapshot even when it matches nothing; skip it then.
+        if spark.sql(f"SELECT 1 FROM {table} WHERE {column} IS NULL LIMIT 1").count():
+            value = template.format(**values).replace("'", "''")
+            spark.sql(f"UPDATE {table} SET {column} = '{value}' WHERE {column} IS NULL")
+            print(f"backfilled: {table}.{column} = {value!r}")
 
 
 if __name__ == "__main__":

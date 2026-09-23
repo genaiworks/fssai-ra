@@ -398,6 +398,6 @@ and regenerate the evidence.
 - Engineers: [`PLATFORM.md`](PLATFORM.md) → [`SECURITY.md`](SECURITY.md) → [`DIODE_DEPLOYMENT.md`](DIODE_DEPLOYMENT.md) → [`RESILIENCE.md`](RESILIENCE.md) → [`EXTENDING.md`](EXTENDING.md).
 - Reviewers: [`REVIEWERS.md`](REVIEWERS.md) → [`ASSURANCE.md`](ASSURANCE.md).
 - Educators: [`SYSTEM_LITERACY.md`](SYSTEM_LITERACY.md) → [`LAB.md`](LAB.md) → [Authority Boundary Worksheet](worksheet/).
-- Conference readers: [`../paper/form-ready-abstract.md`](../paper/form-ready-abstract.md) → [`../paper/extended-abstract.md`](../paper/extended-abstract.md) → [`presenter-and-submission-guide.md`](presenter-and-submission-guide.md).
+- Conference readers: `../paper/form-ready-abstract.md` (local historical manuscript; see [publication availability](../../publications/README.md#historical-archive-availability)) → `../paper/extended-abstract.md` (local historical manuscript; see [publication availability](../../publications/README.md#historical-archive-availability)) → [`presenter-and-submission-guide.md`](presenter-and-submission-guide.md).
 
 Return to the [documentation map](README.md) at any point.

@@ -93,19 +93,19 @@ MEDIATOR_OF = {
 }
 
 STUDENTS = {
-    "stu-a1f3": {"student_name": "Mei Ling Chan", "student_number": "UNU-2026-0417",
+    "stu-a1f3": {"student_name": "Mei Ling Chan", "student_number": "EDU-2026-0417",
                  "email": "mei.chan.synthetic@example.edu", "attendance_rate": "ATTEND-71-PERCENT",
                  "current_grades": "MATH101 C, HIST140 B+", "academic_history": "HISTORY-A1F3-SYNTH",
                  "support_plan": "SUPPORT-PLAN-A1F3-TUTORING", "disability_accommodation": "ACCOM-A1F3-EXTRA-TIME",
                  "counselling_notes": "COUNSEL-A1F3-CONFIDENTIAL", "household_income": "INCOME-A1F3-24100",
                  "aid_status": "AID-A1F3-PENDING"},
-    "stu-b7c2": {"student_name": "Tomás Ferreira", "student_number": "UNU-2026-0533",
+    "stu-b7c2": {"student_name": "Tomás Ferreira", "student_number": "EDU-2026-0533",
                  "email": "tomas.ferreira.synthetic@example.edu", "attendance_rate": "ATTEND-94-PERCENT",
                  "current_grades": "MATH101 C, PHYS110 A-", "academic_history": "HISTORY-B7C2-SYNTH",
                  "support_plan": "SUPPORT-PLAN-B7C2-NONE", "disability_accommodation": "ACCOM-B7C2-NONE",
                  "counselling_notes": "COUNSEL-B7C2-CONFIDENTIAL", "household_income": "INCOME-B7C2-88000",
                  "aid_status": "AID-B7C2-NONE"},
-    "stu-c9d4": {"student_name": "Amara Okafor", "student_number": "UNU-2026-0689",
+    "stu-c9d4": {"student_name": "Amara Okafor", "student_number": "EDU-2026-0689",
                  "email": "amara.okafor.synthetic@example.edu", "attendance_rate": "ATTEND-88-PERCENT",
                  "current_grades": "MATH101 B, ECON101 B", "academic_history": "HISTORY-C9D4-SYNTH",
                  "support_plan": "SUPPORT-PLAN-C9D4-MENTOR", "disability_accommodation": "ACCOM-C9D4-NONE",

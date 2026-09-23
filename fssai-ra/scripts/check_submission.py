@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the UNU Macau extended-abstract paste fields.
+"""Validate the historical four-field extended-abstract format.
 
 Characters are counted as the browser submits them, not as the file stores
 them. An HTML textarea normalises its value to CRLF on submission, so every

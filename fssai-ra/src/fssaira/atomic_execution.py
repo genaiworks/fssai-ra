@@ -128,6 +128,12 @@ class AtomicExecutor(AccountableExecutor):
                 },
                 token=self._token,
             )
+            # The lifecycle event commits with the change it announces. A relay
+            # publishes it later; see fssaira.event_outbox.
+            event_id = f"action.executed:{result.request_id}"
+            unit.events.enqueue(event_id, result.case_id, {
+                "event_id": event_id, "kind": "action.executed", "payload": asdict(result),
+            })
             return result
 
     def reconcile_pending(self) -> int:

@@ -1,0 +1,393 @@
+# Public Benefits: the government domain pack. Every claimant and value is synthetic.
+#
+# Casework agents gather evidence and draft determinations. The kernel lets them propose;
+# only an eligibility officer changes a benefit level, every adverse decision can be
+# appealed to a human, eligibility data cannot be repurposed for fraud scoring, and
+# disability assessments never reach an intake chatbot. Every control contract cites a
+# pack-derived test in tests/test_contracts.py.
+profile_id: public-benefits-government
+version: '1.0'
+title: Public Benefits (government pack)
+resource_name: benefit_determination
+owner: program_director
+manual_fallback: Leave the benefit unchanged, keep payments flowing at the current level, and route the case to
+  a staffed caseworker.
+governance:
+  domain: public-sector
+  purpose: Let casework agents gather evidence, summarize files, and draft determinations while holding no authority
+    of their own, on synthetic claimants only.
+  applicable_frameworks:
+  - 'Public-sector privacy law: purpose specification and no secondary use'
+  - 'Due process: notice, a human decision-maker, and a right to appeal adverse determinations'
+  - Separation between eligibility determination and fraud investigation
+  prohibited_uses:
+  - An agent reducing or terminating a benefit without an eligibility officer
+  - Using eligibility data for fraud scoring or debt collection without a lawful basis
+  - Disclosing disability assessments or fraud referrals to an intake chatbot
+  - Selling or sharing claimant data with data brokers
+  processing_basis: Eligibility determination, case management, appeals, and program reporting on synthetic claimants.
+  data_minimization_rule: Release only the fields the stated purpose needs, for the named claimants, to the named
+    holder, for a bounded time.
+  retention_rule: Retain decision evidence for the declared appeal and audit period; working copies only for the
+    session that needed them.
+  deletion_rule: Erase a claimant on a valid request by destroying the claimant's data keys; keep digests and surrogate
+    identifiers only.
+  residency_rule: Identity, disability, investigation, and payment data stay on agency infrastructure; eligibility
+    data may use an approved government cloud.
+  incident_response: Freeze automated determinations, keep current payments flowing, preserve evidence, and page
+    the program director and privacy officer.
+  deployment_profile: reference
+  data_classes: &id001
+  - citizen-identity
+  - eligibility-record
+  - disability-health
+  - investigation-restricted
+  - benefit-financial
+  - program-statistics
+  owners:
+    data: program_director
+    privacy: privacy_officer
+    security: privacy_officer
+identity_fields:
+  claimant_name: CLAIMANT_NAME
+  national_id: NATIONAL_ID
+  mailing_address: ADDRESS
+disclosure:
+  subject_kind: claimant
+  purposes:
+  - eligibility-determination
+  - case-management
+  - appeals
+  - fraud-review
+  - program-reporting
+  - welfare-emergency
+  fields:
+    claimant_name:
+      class: citizen-identity
+    national_id:
+      class: citizen-identity
+    mailing_address:
+      class: citizen-identity
+    household_size:
+      class: eligibility-record
+    income_band:
+      class: eligibility-record
+    employment_history:
+      class: eligibility-record
+    disability_assessment:
+      class: disability-health
+    fraud_referral_notes:
+      class: investigation-restricted
+    benefit_payments:
+      class: benefit-financial
+  model_endpoints:
+    agency_local_model: agency-private
+    agency_local_model_b: agency-private
+    approved_gov_cloud_model: approved-gov-cloud
+    public_chat_api: external
+  class_zones:
+    citizen-identity:
+    - agency-private
+    eligibility-record:
+    - agency-private
+    - approved-gov-cloud
+    disability-health:
+    - agency-private
+    investigation-restricted:
+    - agency-private
+    benefit-financial:
+    - agency-private
+    program-statistics:
+    - agency-private
+    - approved-gov-cloud
+  recipients:
+    caseworker:
+      classes:
+      - citizen-identity
+      - eligibility-record
+      - disability-health
+      - benefit-financial
+      purposes:
+      - eligibility-determination
+      - case-management
+      - welfare-emergency
+      zone: agency-private
+    intake_chatbot:
+      classes:
+      - eligibility-record
+      purposes:
+      - eligibility-determination
+      - case-management
+      zone: agency-private
+    appeals_board:
+      classes:
+      - citizen-identity
+      - eligibility-record
+      - disability-health
+      purposes:
+      - appeals
+      zone: agency-private
+    fraud_unit:
+      classes:
+      - citizen-identity
+      - eligibility-record
+      - investigation-restricted
+      - benefit-financial
+      purposes:
+      - fraud-review
+      zone: agency-private
+    claimant_portal:
+      classes:
+      - citizen-identity
+      - eligibility-record
+      - benefit-financial
+      purposes:
+      - case-management
+      zone: agency-private
+      subject_scope: self
+    statistics_office:
+      classes:
+      - program-statistics
+      purposes:
+      - program-reporting
+      zone: approved-gov-cloud
+    external_data_broker:
+      classes: []
+      purposes: []
+      zone: external
+  declassification:
+  - name: publish_program_statistics
+    from_classes:
+    - eligibility-record
+    to_class: program-statistics
+    purposes:
+    - program-reporting
+    approval_role: statistics_officer
+    removes_subject_identity: true
+  break_glass:
+    purposes:
+    - welfare-emergency
+    max_ttl_seconds: 1800
+    max_unreviewed_per_holder: 1
+    review_role: benefits_supervisor
+transitions:
+- operation: set_benefit_level
+  from_status: level:none
+  to_status: level:basic
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:none
+  to_status: level:standard
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:none
+  to_status: level:enhanced
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:basic
+  to_status: level:none
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:basic
+  to_status: level:standard
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:basic
+  to_status: level:enhanced
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:standard
+  to_status: level:none
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:standard
+  to_status: level:basic
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:standard
+  to_status: level:enhanced
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:enhanced
+  to_status: level:none
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:enhanced
+  to_status: level:basic
+  consequential: true
+  approval_role: eligibility_officer
+- operation: set_benefit_level
+  from_status: level:enhanced
+  to_status: level:standard
+  consequential: true
+  approval_role: eligibility_officer
+- operation: file_appeal
+  from_status: decision:final
+  to_status: decision:appealed
+  consequential: false
+  approval_role: intake_clerk
+- operation: uphold_appeal
+  from_status: decision:appealed
+  to_status: decision:reversed
+  consequential: true
+  approval_role: appeals_officer
+- operation: issue_payment
+  from_status: payment:pending
+  to_status: payment:issued
+  consequential: true
+  approval_role: payments_certifier
+- operation: publish_statistics
+  from_status: stats:draft
+  to_status: stats:published
+  consequential: true
+  approval_role: statistics_officer
+- operation: review_break_glass
+  from_status: glass:open
+  to_status: glass:reviewed
+  consequential: true
+  approval_role: benefits_supervisor
+controls:
+  set_benefit_level:
+    protected_asset: A claimant's benefit entitlement
+    permitted_operation: Change one claimant's benefit level at the reviewed case version, signed by an eligibility
+      officer
+    enforcement_point: execution_mediator
+    owner: eligibility_officer
+    failure_test: tests/test_contracts.py::test_consequential_transitions_need_their_declared_human_role
+    evidence_artifact: Signed execution receipt binding proposal digest, approval, and ledger checkpoint
+    failure_response: Deny, record the refusal, and escalate to the named owner
+  uphold_appeal:
+    protected_asset: The reversal of an adverse determination
+    permitted_operation: An appeals officer reverses one appealed decision
+    enforcement_point: execution_mediator
+    owner: appeals_officer
+    failure_test: tests/test_contracts.py::test_consequential_transitions_need_their_declared_human_role
+    evidence_artifact: Signed execution receipt naming the approver and the proposal digest
+    failure_response: Deny and route the request to staffed handling
+  issue_payment:
+    protected_asset: A benefit payment
+    permitted_operation: A payments certifier issues one exact certified payment
+    enforcement_point: execution_mediator
+    owner: payments_certifier
+    failure_test: tests/test_contracts.py::test_consequential_transitions_need_their_declared_human_role
+    evidence_artifact: Signed execution receipt naming the approver and the proposal digest
+    failure_response: Deny and route the request to staffed handling
+  publish_statistics:
+    protected_asset: Program statistics leaving the agency
+    permitted_operation: The statistics officer approves one exact de-identified output
+    enforcement_point: execution_mediator
+    owner: statistics_officer
+    failure_test: tests/test_contracts.py::test_declassification_needs_exact_approval
+    evidence_artifact: Declassification approval bound to the exact output digest
+    failure_response: Deny and keep the output at its original label
+  review_break_glass:
+    protected_asset: Emergency access to disability assessments
+    permitted_operation: The benefits supervisor reviews one emergency access after the fact
+    enforcement_point: context_gate
+    owner: benefits_supervisor
+    failure_test: tests/test_contracts.py::test_break_glass_opens_a_review_obligation
+    evidence_artifact: Break-glass review record naming holder and reviewer
+    failure_response: Refuse further emergency access by the holder until reviewed
+  read_protected_context:
+    protected_asset: Records placed into a model context
+    permitted_operation: A holder reads named fields of named subjects for a declared purpose
+    enforcement_point: context_gate
+    owner: privacy_officer
+    failure_test: tests/test_contracts.py::test_protected_reads_are_granted_minimal_and_purpose_bound
+    evidence_artifact: Disclosure intent and outcome records with digests, never values
+    failure_response: Deny, release nothing, and record the refusal code
+  release_labelled_output:
+    protected_asset: A model output derived from protected records
+    permitted_operation: Release to a recipient whose clearance dominates the output label
+    enforcement_point: release_gate
+    owner: privacy_officer
+    failure_test: tests/test_contracts.py::test_labelled_output_cannot_be_released_or_laundered
+    evidence_artifact: Release receipt with the output label
+    failure_response: Deny the release and keep the output labelled
+  restore_identity:
+    protected_asset: The link between a token and a real person
+    permitted_operation: Restore identity only for a recipient cleared for identity fields
+    enforcement_point: release_gate
+    owner: privacy_officer
+    failure_test: tests/test_contracts.py::test_identity_reaches_models_only_as_tokens
+    evidence_artifact: Identity restoration record naming the release receipt
+    failure_response: Release tokens only and record the refusal
+  delegate_authority:
+    protected_asset: Authority passed from one agent to another
+    permitted_operation: Delegate an equal or narrower slice for the same purpose and a shorter time
+    enforcement_point: delegation_verifier
+    owner: privacy_officer
+    failure_test: tests/test_contracts.py::test_delegated_authority_only_narrows
+    evidence_artifact: Verified grant chain with the effective scope
+    failure_response: Refuse the chain and record the escalation attempt
+  erase_subject:
+    protected_asset: Every governed copy of one subject's data
+    permitted_operation: The data protection owner erases a subject by destroying the subject's keys
+    enforcement_point: key_custody
+    owner: privacy_officer
+    failure_test: tests/test_contracts.py::test_erasure_reaches_every_governed_copy
+    evidence_artifact: Erasure certificate and a read-back verification of every governed copy
+    failure_response: Report every readable location and keep the request open
+model_manifests:
+  agency_local_model:
+    provider: ollama-local
+    model_id: qwen2.5:7b
+    capabilities:
+    - summarize
+    - propose_action
+    allowed_classes: *id001
+    allowed_purposes:
+    - eligibility-determination
+    - case-management
+    - appeals
+    - fraud-review
+    - program-reporting
+    - welfare-emergency
+    approval_days: 180
+  agency_local_model_b:
+    provider: ollama-local
+    model_id: llama3.2:3b
+    capabilities:
+    - summarize
+    - propose_action
+    allowed_classes: *id001
+    allowed_purposes:
+    - eligibility-determination
+    - case-management
+    - appeals
+    - fraud-review
+    - program-reporting
+    - welfare-emergency
+    approval_days: 180
+  approved_gov_cloud_model:
+    provider: approved-gov-vendor
+    model_id: gov-cloud-large
+    capabilities:
+    - summarize
+    allowed_classes:
+    - eligibility-record
+    - program-statistics
+    allowed_purposes:
+    - eligibility-determination
+    - program-reporting
+    approval_days: 90
+review:
+  capacity_per_window: 4
+  window_seconds: 3600
+  queue_limit: 6
+  timeout_seconds: 1800
+  overload_policy: defer_to_manual
+  escalation_role: program_director
+delegation:
+  max_depth: 3
+  allow_machine_delegated_consequence: false

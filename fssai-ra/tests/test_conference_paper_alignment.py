@@ -4,6 +4,7 @@
 Each template below is rendered from it and must appear verbatim in the paper, so a
 regenerated figure forces the sentence quoting it to change.
 """
+
 import json
 from pathlib import Path
 
@@ -63,3 +64,6 @@ def test_conference_figures_are_scoped_and_kept_out_of_the_pack_denominators():
     text = FULL.read_text(encoding="utf-8")
     assert "one synthetic pack in one process" in text
     assert "not included in the six-pack or four-pack denominators" in text
+
+
+pytestmark = pytest.mark.manuscript

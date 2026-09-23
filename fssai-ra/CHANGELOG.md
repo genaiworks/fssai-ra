@@ -746,7 +746,7 @@ completely unreviewed, and nothing in `v1.0.0` could tell the difference.
 ### Conference readiness: the submission surface, guarded
 
 The alignment tests covered the proceedings-style abstract, the deck and the
-READMEs. They did not cover the file that is actually pasted into the UNU form,
+READMEs. They did not cover the file that is actually pasted into the historical submission form,
 or the script that routes the deck on stage. Both had drifted.
 
 - **Fixed: three of the four submission fields were over the form's character

@@ -133,6 +133,20 @@ class IcebergSnapshotStore:
     def current_rows(self) -> list:  # pragma: no cover
         return self._table().scan().to_arrow().to_pylist()
 
+    def archived_head(self, ledger_id: str) -> tuple[int, str] | None:  # pragma: no cover
+        """Highest archived ``(seq, hash)`` for one ledger, or ``None``."""
+        from pyiceberg.expressions import EqualTo
+
+        rows = (
+            self._table().scan(row_filter=EqualTo("ledger_id", ledger_id),
+                               selected_fields=("seq", "hash"))
+            .to_arrow().to_pylist()
+        )
+        if not rows:
+            return None
+        last = max(rows, key=lambda row: row["seq"])
+        return int(last["seq"]), last["hash"]
+
 
 #: DDL for the archive tables, kept beside the code that reads them so a schema
 #: change cannot drift from the reader. Applied by ``jobs/bootstrap_iceberg.py``.
@@ -144,6 +158,8 @@ TABLE_DDL = {
             stripped ARRAY<STRING>,
             content_hash STRING,
             trace_id STRING NOT NULL,
+            kafka_topic STRING,
+            topic_generation STRING,
             kafka_partition INT NOT NULL,
             kafka_offset BIGINT NOT NULL,
             imported_at TIMESTAMP NOT NULL
@@ -153,6 +169,7 @@ TABLE_DDL = {
     """,
     EVIDENCE_TABLE: """
         CREATE TABLE IF NOT EXISTS {catalog}.{namespace}.decision_evidence (
+            ledger_id STRING,
             seq BIGINT NOT NULL,
             ts DOUBLE NOT NULL,
             kind STRING NOT NULL,
@@ -179,38 +196,89 @@ TABLE_DDL = {
 }
 
 
-def archive_evidence(ledger, store: IcebergSnapshotStore) -> dict:  # pragma: no cover
-    """Copy a ledger into the Iceberg archive and pin the resulting snapshot.
+#: Columns added after the first release, with the value that existing rows are
+#: backfilled with. ``jobs/bootstrap_iceberg.py`` applies them to tables created
+#: by an earlier version, so a MERGE on the new key still matches old rows.
+#: ``{topic}`` and ``{generation}`` are filled from the import job's settings.
+TABLE_MIGRATIONS = {
+    IMPORT_TABLE: {"kafka_topic": "{topic}", "topic_generation": "{generation}"},
+    EVIDENCE_TABLE: {"ledger_id": "primary"},
+}
+
+
+def archive_evidence(ledger, store: IcebergSnapshotStore, *, ledger_id: str = "primary") -> dict:
+    """Append the ledger records the archive does not hold yet. Safe to re-run.
 
     The archive is a second copy under different retention and different
     administration. It does not make the chain stronger; it makes silent
     truncation of the primary detectable by comparison.
+
+    Each row carries ``ledger_id`` so several ledgers can share one table, and
+    ``(ledger_id, seq)`` identifies a record. Before appending, the archive's
+    highest ``seq`` for this ledger is compared with the live ledger:
+
+    * same ``seq`` and hash: append only the newer records (none, on a re-run);
+    * the archive is *longer* than the ledger: ``ARCHIVE_AHEAD_OF_LEDGER``;
+    * same ``seq`` but a different hash: ``ARCHIVE_DIVERGED``.
+
+    Both refusals mean the primary ledger was truncated or rewritten after it was
+    archived, which is exactly what the archive exists to reveal.
+
+    Run one archiver per ``ledger_id``. Iceberg appends do not conflict with each
+    other, so two concurrent archivers can still append the same records;
+    ``jobs/verify_evidence_chain.py`` reports such duplicates.
     """
     if store.table.rsplit(".", 1)[-1] != EVIDENCE_TABLE:
         raise ValueError(
             f"evidence archives require an {EVIDENCE_TABLE!r} table, got {store.table!r}"
         )
 
+    records = list(ledger)
+    head = store.archived_head(ledger_id)
+    start = 0
+    if head is not None:
+        archived_seq, archived_hash = head
+        if archived_seq >= len(records):
+            raise ValueError(
+                f"ARCHIVE_AHEAD_OF_LEDGER: archive holds seq {archived_seq} for {ledger_id!r} "
+                f"but the ledger has {len(records)} record(s)"
+            )
+        if records[archived_seq].hash != archived_hash:
+            raise ValueError(
+                f"ARCHIVE_DIVERGED: ledger record {archived_seq} for {ledger_id!r} no longer "
+                "matches the archived hash"
+            )
+        start = archived_seq + 1
+
+    archived_at = datetime.now(timezone.utc)
     rows = [
         {
+            "ledger_id": ledger_id,
             "seq": record.seq, "ts": record.ts, "kind": record.kind,
             "request_id": str(record.payload.get("request_id", "")),
             "payload_json": json.dumps(record.payload, sort_keys=True, default=str),
             "prev_hash": record.prev_hash, "hash": record.hash,
-            "archived_at": datetime.now(timezone.utc),
+            "archived_at": archived_at,
         }
-        for record in ledger
+        for record in records[start:]
     ]
-    snapshot_id = store.commit(rows, note="evidence archive")
-    return {
+    report = {
+        "ledger_id": ledger_id,
         "records": len(rows),
-        "snapshot_id": snapshot_id,
+        "first_seq": rows[0]["seq"] if rows else None,
+        "last_seq": rows[-1]["seq"] if rows else (start - 1 if start else None),
         "chain_valid_at_archive": ledger.verify(),
         "manifest": _manifest(rows),
     }
+    # Nothing new: do not create an empty snapshot.
+    report["snapshot_id"] = (
+        store.commit(rows, note=f"evidence archive {ledger_id} seq {start}+")
+        if rows else store.current_id
+    )
+    return report
 
 
 __all__ = [
     "DEFAULT_NAMESPACE", "EVIDENCE_TABLE", "IMPORT_TABLE", "IcebergSnapshotStore",
-    "TABLE_DDL", "archive_evidence", "load_catalog",
+    "TABLE_DDL", "TABLE_MIGRATIONS", "archive_evidence", "load_catalog",
 ]

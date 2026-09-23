@@ -1,6 +1,7 @@
 """Low-side import API exposing inward transfer only."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import threading
@@ -25,6 +26,11 @@ class ImportRequest(BaseModel):
     content_type: str = Field(min_length=1, max_length=100)
     data: str = Field(max_length=2_000_000)
     signature: str = Field(min_length=64, max_length=128)
+    #: Optional stable ID chosen by the sender. Send the same ID when retrying:
+    #: the gateway then returns the original acceptance instead of publishing
+    #: the document again. The signature must cover it (``sign_envelope``).
+    ingest_id: str | None = Field(default=None, min_length=1, max_length=128,
+                                  pattern=r"^[A-Za-z0-9._:-]+$")
 
 
 class InwardPublisher(Protocol):
@@ -73,6 +79,26 @@ def create_import_app(
     # ingest plus response capture so concurrent callers cannot receive each
     # other's broker acknowledgement.
     ingest_lock = threading.RLock()
+
+    # Accepted ingest IDs. Kept in the audit database when one is configured, so
+    # a retry after a gateway restart is still recognised.
+    accepted_ids: dict[str, dict] = {}
+
+    def id_key(source: str, ingest_id: str) -> str:
+        return f"{source}\x1f{ingest_id}"
+
+    def seen(source: str, ingest_id: str) -> dict | None:
+        if audit_database is None:
+            return accepted_ids.get(id_key(source, ingest_id))
+        with audit_database.transaction() as unit:
+            return unit.objects.get("ingest-id", id_key(source, ingest_id))
+
+    def remember(source: str, ingest_id: str, value: dict) -> None:
+        if audit_database is None:
+            accepted_ids[id_key(source, ingest_id)] = value
+            return
+        with audit_database.transaction() as unit:
+            unit.objects.put_if_absent("ingest-id", id_key(source, ingest_id), value)
 
     def inward_handler(item: dict) -> None:
         last_offset["value"] = publisher.append(item, key=item["source"])
@@ -128,14 +154,38 @@ def create_import_app(
 
     @app.post("/v1/imports", status_code=202)
     def import_item(request: ImportRequest):
+        raw = RawInput(
+            source=request.source,
+            content_type=request.content_type,
+            size=len(request.data.encode()),
+            data=request.data,
+            signature=request.signature,
+            ingest_id=request.ingest_id,
+        )
         with ingest_lock:
-            boundary.ingest(RawInput(
-                source=request.source,
-                content_type=request.content_type,
-                size=len(request.data.encode()),
-                data=request.data,
-                signature=request.signature,
-            ))
+            # Authenticate before looking the ID up, so an unauthenticated caller
+            # cannot probe which IDs exist. A rejected request goes through
+            # ``ingest`` to be quarantined and recorded as usual.
+            if raw.ingest_id is not None and boundary.rejection(raw) is None:
+                fingerprint = hashlib.sha256(
+                    f"{raw.content_type}\x1f{raw.data}".encode()).hexdigest()
+                prior = seen(raw.source, raw.ingest_id)
+                if prior is not None:
+                    if prior["fingerprint"] != fingerprint:
+                        return JSONResponse(status_code=409, content={
+                            "status": "conflict", "ingest_id": raw.ingest_id,
+                            "reason": "ingest_id was already used for different content",
+                        })
+                    return JSONResponse(status_code=200, content={
+                        "status": "duplicate", "broker_offset": prior["broker_offset"],
+                        "ingest_id": raw.ingest_id,
+                    })
+            boundary.ingest(raw)
+            # Remember the ID only after the broker acknowledged, so a failed
+            # publish leaves the sender free to retry.
+            if raw.ingest_id is not None:
+                remember(raw.source, raw.ingest_id,
+                         {"fingerprint": fingerprint, "broker_offset": last_offset["value"]})
             return {"status": "accepted", "broker_offset": last_offset["value"]}
 
     return app

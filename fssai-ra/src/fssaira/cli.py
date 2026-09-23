@@ -1,19 +1,17 @@
 """``fssaira`` -- the command line for running, checking, and extending the platform.
 
-Everything the paper claims can be reproduced from this one binary on a
-disconnected laptop::
+Public component experiments can be exercised from a source checkout::
 
     fssaira doctor                          what is this deployment, really?
     fssaira verify profiles/x.yaml          bounded model check of the authority space
     fssaira evaluate profiles/x.yaml        adversarial + utility + ablation suite
     fssaira conformance                     do the configured backends still conform?
-    fssaira demo                            the five-minute walkthrough
+    python scripts/demo.py --fast           the guided walkthrough
     fssaira init my-domain                  scaffold a new domain from the template
 
-Design rules for this interface: every command prints a human summary and can
-emit machine-readable JSON with ``--output``; every command that makes a
-judgement exits non-zero when the judgement is negative, so it can be a CI gate;
-and no command mutates anything outside the paths it is given.
+Experiment commands support JSON reports with ``--output``; consult each
+subcommand's help for its exact options. A negative experiment judgement exits
+nonzero. Service and database commands have their own side effects and setup.
 """
 from __future__ import annotations
 
@@ -1378,7 +1376,7 @@ def build_parser() -> argparse.ArgumentParser:
     pilot.set_defaults(func=cmd_pilot_report)
 
     conference = sub.add_parser(
-        "conference", help="the UNU Macau demonstration layer: falsify, ablate, trace, lab")
+        "conference", help="the reusable education demonstration layer: falsify, ablate, trace, lab")
     conference_sub = conference.add_subparsers(dest="conference_command", required=True)
     pack_check = conference_sub.add_parser("pack-check", help="check a domain pack against the kernel floor")
     pack_check.add_argument("path", type=Path)

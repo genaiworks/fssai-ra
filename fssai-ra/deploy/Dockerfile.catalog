@@ -1,0 +1,4 @@
+FROM apache/iceberg-rest-fixture:1.9.1@sha256:1cd0b86579b423cf260508bc8bdbb0220268f2447b86ddef71482baf74aca1d7
+USER root
+RUN mkdir -p /var/lib/iceberg && chown iceberg:iceberg /var/lib/iceberg
+USER iceberg

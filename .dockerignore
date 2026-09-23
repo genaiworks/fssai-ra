@@ -1,0 +1,5 @@
+# Only dependency/toolchain files belong in the research build context.
+**
+!docker/
+!docker/Dockerfile
+!docker/research-requirements.txt

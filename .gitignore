@@ -24,5 +24,15 @@ fssai-ra/evaluation/results/local.json
 # OS
 .DS_Store
 
-# Unpublished manuscripts and paper build artifacts
+# All manuscripts and paper build artifacts (local only)
 /fssai-ra/paper/
+
+# Local research and maintenance scratch files
+/work/
+
+# Local-only historical publication and presentation binaries
+/fssai-ra/docs/extended-abstract.docx
+/fssai-ra/docs/trust-by-construction-final.pptx
+
+# Local-only historical manuscript snapshot
+/fssai-ra/audit/review-2/paper.before.md

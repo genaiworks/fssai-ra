@@ -136,7 +136,7 @@ class ControlPlane:
         if not self.register.seed(resource_id, status=status, version=version):
             raise ExecutionDenied("RESOURCE_ALREADY_EXISTS", "resource already exists")
         resource = {"resource_id": resource_id, "status": status, "version": version}
-        self._emit("resource.registered", resource, resource_id)
+        self._emit("resource.registered", resource, resource_id, resource_id)
         return resource
 
     def get_resource(self, resource_id: str) -> dict:
@@ -189,7 +189,7 @@ class ControlPlane:
             raise ExecutionDenied(
                 "REQUEST_ID_CONFLICT", "request ID already belongs to another proposal"
             )
-        self._emit("action.proposed", asdict(proposal), resource_id)
+        self._emit("action.proposed", asdict(proposal), resource_id, proposal.request_id)
         return proposal
 
     def begin_review(self, request_id: str, *, reviewer: str) -> dict:
@@ -346,6 +346,7 @@ class ControlPlane:
              "second_approver": approval.second_approver,
              "second_approver_role": approval.second_approver_role},
             proposal.case_id,
+            approval.approval_id,
         )
         return approval
 
@@ -356,7 +357,7 @@ class ControlPlane:
         if not result.replayed:
             self.metrics.mutations += 1
         self.objects.put("result", request_id, asdict(result))
-        self._emit("action.executed", asdict(result), proposal.case_id)
+        self._emit("action.executed", asdict(result), proposal.case_id, request_id)
         return result
 
     # -- lookups -----------------------------------------------------------
@@ -405,8 +406,21 @@ class ControlPlane:
     def pending_outcomes(self) -> int:
         return getattr(self.executor, "pending_outcome_count", 0)
 
-    def _emit(self, kind: str, payload: dict, key: str) -> None:
-        self.events.append({"kind": kind, "payload": payload}, key=key)
+    def relay_events(self) -> int:
+        """Publish outbox events a broker outage left behind. Zero without an outbox."""
+        relay = getattr(self.events, "relay", None)
+        return relay(force=True) if relay is not None else 0
+
+    @property
+    def unpublished_events(self) -> int:
+        """Events committed to the SQL outbox but not yet acknowledged by the broker."""
+        counter = getattr(self.events, "unpublished_count", None)
+        return counter() if counter is not None else 0
+
+    def _emit(self, kind: str, payload: dict, key: str, identity: str) -> None:
+        # A stable event ID lets consumers drop an event delivered twice.
+        event_id = f"{kind}:{identity}"
+        self.events.append({"event_id": event_id, "kind": kind, "payload": payload}, key=key)
 
 
 __all__ = ["ControlPlane", "MemoryObjectStore", "ObjectStore"]

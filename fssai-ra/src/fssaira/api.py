@@ -318,6 +318,7 @@ def create_app(
             "evidence_valid": plane.evidence.verify(),
             "evidence_records": len(plane.evidence),
             "pending_outcomes": plane.pending_outcomes,
+            "unpublished_events": plane.unpublished_events,
             "model": model.to_dict() if hasattr(model, "to_dict") else None,
             "authentication": {"mode": auth.config.mode, "warnings": auth.warnings},
             # What this deployment has declared about the three things only an
@@ -343,6 +344,7 @@ def create_app(
             evidence=plane.evidence,
             extra={
                 "fssaira_pending_outcomes": plane.pending_outcomes,
+                "fssaira_unpublished_events": plane.unpublished_events,
                 "fssaira_configuration_warnings": len(configuration_warnings()),
                 "fssaira_build_info": 1,
                 **_oversight_samples(plane),
@@ -709,6 +711,8 @@ def create_app(
         return {
             "reconciled": plane.reconcile(),
             "pending_outcomes": plane.pending_outcomes,
+            "events_relayed": plane.relay_events(),
+            "unpublished_events": plane.unpublished_events,
             "durability": plane.durability,
         }
 

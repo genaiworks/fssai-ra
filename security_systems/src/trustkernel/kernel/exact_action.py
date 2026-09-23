@@ -1,0 +1,621 @@
+"""Exact-action approval and idempotent execution for the reference profile.
+
+The model can propose an action, but it never receives the credential that
+changes the case register. A human approval is bound to the canonical proposal
+digest. The executor rechecks the digest, expiry, approval use, and current case
+version before it records intent and attempts the transition.
+
+This is deliberately a small in-memory reference. Production deployments must
+replace its identities, keys, clock, register, and evidence store while keeping
+the same observable contract and tests.
+"""
+from __future__ import annotations
+
+import hashlib
+import hmac
+import json
+import threading
+import time
+import uuid
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from typing import Protocol
+
+from .evidence import EvidenceLedger
+
+REFERENCE_APPROVAL_KEY_ID = "reference-approval-key-1"
+REFERENCE_APPROVAL_SIGNING_KEY = "non-secret-demo-key-replace-in-production"
+
+
+def _canonical_digest(value: dict) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
+class ActionProposal:
+    request_id: str
+    requester: str
+    operation: str
+    case_id: str
+    expected_version: int
+    from_status: str
+    to_status: str
+    evidence_version: str
+
+    @property
+    def resource_id(self) -> str:
+        """Domain-neutral alias for the legacy ``case_id`` wire field."""
+        return self.case_id
+
+    @property
+    def digest(self) -> str:
+        return _canonical_digest(asdict(self))
+
+
+@dataclass(frozen=True)
+class Approval:
+    approval_id: str
+    proposal_digest: str
+    approver: str
+    approver_role: str
+    audience: str
+    expires_at: float
+    key_id: str
+    signature: str
+    second_approver: str = ""
+    second_approver_role: str = ""
+
+
+@dataclass(frozen=True)
+class ExecutionResult:
+    request_id: str
+    case_id: str
+    version: int
+    status: str
+    receipt_hash: str
+    replayed: bool = False
+    proposal_digest: str = ""
+
+    @property
+    def resource_id(self) -> str:
+        """Domain-neutral alias for the legacy ``case_id`` wire field."""
+        return self.case_id
+
+
+class ExecutionDenied(RuntimeError):
+    """A fail-secure denial with a stable, testable reason code."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+
+
+def validate_replay(proposal: ActionProposal, prior: ExecutionResult) -> None:
+    """Never substitute another action's receipt for a reused request ID.
+
+    Legacy receipts without an authenticated proposal binding require explicit
+    reconciliation. Guessing their identity from a subset of fields is unsafe.
+    """
+    if not prior.proposal_digest:
+        raise ExecutionDenied("REPLAY_IDENTITY_UNVERIFIABLE", "stored receipt lacks its proposal digest")
+    if prior.proposal_digest != proposal.digest:
+        raise ExecutionDenied("REQUEST_ID_CONFLICT", "request ID already belongs to another proposal")
+
+
+class ExecutionUncertain(RuntimeError):
+    """The mutation completed but its outcome evidence still needs reconciliation."""
+
+    def __init__(self, result: ExecutionResult) -> None:
+        super().__init__(
+            "OUTCOME_EVIDENCE_PENDING: the authoritative mutation completed; "
+            "do not repeat it blindly"
+        )
+        self.code = "OUTCOME_EVIDENCE_PENDING"
+        self.result = result
+
+
+@dataclass(frozen=True)
+class PendingOutcome:
+    """Durable-outbox-shaped representation of an outcome awaiting evidence append."""
+
+    request_id: str
+    payload: dict
+
+
+class PendingOutcomeStore:
+    """In-memory reference stand-in for a durable transactional outbox."""
+
+    def __init__(self) -> None:
+        self._pending: dict[str, PendingOutcome] = {}
+
+    def put(self, outcome: PendingOutcome) -> None:
+        self._pending[outcome.request_id] = outcome
+
+    def remove(self, request_id: str) -> None:
+        self._pending.pop(request_id, None)
+
+    def get(self, request_id: str) -> PendingOutcome | None:
+        return self._pending.get(request_id)
+
+    def values(self) -> tuple[PendingOutcome, ...]:
+        return tuple(self._pending.values())
+
+    def __len__(self) -> int:
+        return len(self._pending)
+
+
+class ApprovalUseStoreLike(Protocol):
+    def bind(self, approval_id: str, request_id: str) -> tuple[str, bool]: ...
+
+
+class ApprovalUseStore:
+    """In-memory approval replay guard implementing first-writer binding."""
+
+    def __init__(self) -> None:
+        self._uses: dict[str, str] = {}
+        self._lock = threading.Lock()
+
+    def bind(self, approval_id: str, request_id: str) -> tuple[str, bool]:
+        # Check and set are one step: unlocked, two threads can both see "unused".
+        with self._lock:
+            current = self._uses.get(approval_id)
+            if current is not None:
+                return current, False
+            self._uses[approval_id] = request_id
+            return request_id, True
+
+
+class CaseRegister:
+    """Minimal authoritative register with version and idempotency checks."""
+
+    def __init__(self, cases: dict[str, dict]) -> None:
+        self._cases = {key: dict(value) for key, value in cases.items()}
+        self._results: dict[str, ExecutionResult] = {}
+        self.mutation_count = 0
+        self._lock = threading.RLock()
+
+    def get(self, case_id: str) -> dict:
+        return dict(self._cases[case_id])
+
+    def seed(self, case_id: str, *, status: str, version: int = 1) -> bool:
+        """Create a synthetic resource once; return False when it already exists."""
+        if case_id in self._cases:
+            return False
+        self._cases[case_id] = {"status": status, "version": version}
+        return True
+
+    def result_for(self, request_id: str) -> ExecutionResult | None:
+        """Return a prior result without exposing the mutable internal store."""
+        result = self._results.get(request_id)
+        return None if result is None else ExecutionResult(**asdict(result))
+
+    def transition(self, proposal: ActionProposal) -> ExecutionResult:
+        # Version check, state check, and write are one step under concurrency.
+        with self._lock:
+            return self._transition(proposal)
+
+    def _transition(self, proposal: ActionProposal) -> ExecutionResult:
+        if proposal.request_id in self._results:
+            prior = self._results[proposal.request_id]
+            validate_replay(proposal, prior)
+            return ExecutionResult(**{**asdict(prior), "replayed": True})
+
+        case = self._cases.get(proposal.case_id)
+        if case is None:
+            raise ExecutionDenied("CASE_NOT_FOUND", "the target case does not exist")
+        if case["version"] != proposal.expected_version:
+            raise ExecutionDenied("CASE_VERSION_CONFLICT", "the reviewed case version is no longer current")
+        if case["status"] != proposal.from_status:
+            raise ExecutionDenied("CASE_STATE_CONFLICT", "the reviewed starting state is no longer current")
+
+        case["status"] = proposal.to_status
+        case["version"] += 1
+        self.mutation_count += 1
+        receipt = _canonical_digest({
+            "request_id": proposal.request_id,
+            "case_id": proposal.case_id,
+            "version": case["version"],
+            "status": case["status"],
+        })
+        result = ExecutionResult(
+            proposal.request_id, proposal.case_id, case["version"], case["status"], receipt,
+            proposal_digest=proposal.digest,
+        )
+        self._results[proposal.request_id] = result
+        return result
+
+
+# Domain-neutral name for new integrations. ``CaseRegister`` remains the wire-
+# compatible public name so existing adopters do not break.
+ResourceRegister = CaseRegister
+
+
+class ApprovalAuthority:
+    """Reference-profile stand-in for an authenticated human approval service."""
+
+    def __init__(
+        self,
+        audience: str = "case-register-executor",
+        *,
+        key_id: str = REFERENCE_APPROVAL_KEY_ID,
+        signing_key: str = REFERENCE_APPROVAL_SIGNING_KEY,
+        oversight=None,
+    ) -> None:
+        if not key_id:
+            raise ValueError("key_id must be non-empty")
+        if not signing_key:
+            raise ValueError("signing_key must be non-empty")
+        self.audience = audience
+        self.key_id = key_id
+        self._signing_key = signing_key
+        #: Optional :class:`an oversight monitor`. Duck-typed on
+        #: purpose: importing it here would make the approval authority depend on
+        #: the load policy, and the two must stay separately ablatable. ``None``
+        #: means review capacity is unbounded, which is the assumption every
+        #: release before this one made silently.
+        self._oversight = oversight
+
+    def approve(
+        self,
+        proposal: ActionProposal,
+        *,
+        approver: str,
+        approver_role: str = "authorized_reviewer",
+        ttl_seconds: int = 300,
+        now: float | None = None,
+        presented_at: float | None = None,
+        second_approver: str | None = None,
+        second_approver_role: str | None = None,
+    ) -> Approval:
+        if approver == proposal.requester:
+            raise ExecutionDenied("SEPARATION_OF_DUTIES", "requester cannot approve their own proposal")
+        issued_at = time.time() if now is None else now
+        if self._oversight is not None:
+            # Refuse to *issue* rather than flag afterwards: an approval the
+            # reviewer had no capacity to give must not exist to be verified.
+            self._oversight.admit(
+                reviewer=approver,
+                request_id=proposal.request_id,
+                now=issued_at,
+                presented_at=presented_at,
+                second_reviewer=second_approver,
+            )
+        unsigned = Approval(
+            approval_id=str(uuid.uuid4()),
+            proposal_digest=proposal.digest,
+            approver=approver,
+            approver_role=approver_role,
+            audience=self.audience,
+            expires_at=issued_at + ttl_seconds,
+            key_id=self.key_id,
+            signature="",
+            second_approver=second_approver or "",
+            second_approver_role=second_approver_role or "",
+        )
+        return Approval(**{**asdict(unsigned), "signature": self._sign(unsigned)})
+
+    def _sign(self, approval: Approval) -> str:
+        payload = _approval_signing_payload(approval)
+        return hmac.new(
+            self._signing_key.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+
+
+class AsymmetricApprovalAuthority(ApprovalAuthority):
+    """Approvals signed with Ed25519, so the executor holds only a public key.
+
+    With the HMAC authority, the executor must hold the same secret the approval
+    service signs with, which means a compromised executor can mint approvals for
+    itself: the power mediator and the authority it checks collapse into one
+    component. With this authority the executor can verify and cannot sign, which
+    removes the approval key from the executor's trusted base.
+    """
+
+    def __init__(self, audience: str = "case-register-executor", *,
+                 key_id: str = "approval-ed25519-1", seed: bytes | None = None,
+                 oversight=None) -> None:
+        import secrets
+
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+        # The private key must never be derivable from anything public. The former
+        # default derived the seed from ``key_id`` -- a value published with the
+        # verification key -- so anyone who knew the key id could reconstruct the
+        # signing key and mint approvals. A fixture that wants a reproducible key
+        # passes ``seed`` explicitly; every other construction gets a random key
+        # that exists only inside this process, which is what a signing service
+        # provides in deployment.
+        if seed is not None and len(seed) != 32:
+            raise ValueError("an Ed25519 seed is exactly 32 bytes")
+        material = seed if seed is not None else secrets.token_bytes(32)
+        super().__init__(audience, key_id=key_id, signing_key="ed25519", oversight=oversight)
+        self._private = Ed25519PrivateKey.from_private_bytes(material)
+
+    @property
+    def public_key(self) -> bytes:
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+        return self._private.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+
+    @property
+    def verification_keys(self) -> dict[str, bytes]:
+        return {self.key_id: self.public_key}
+
+    def _sign(self, approval: Approval) -> str:
+        return self._private.sign(_approval_signing_payload(approval).encode("utf-8")).hex()
+
+
+def _approval_signature_valid(key: str | bytes, approval: Approval) -> bool:
+    """HMAC for a shared-secret key, Ed25519 for a 32-byte public key."""
+    payload = _approval_signing_payload(approval).encode("utf-8")
+    if isinstance(key, bytes):
+        from cryptography.exceptions import InvalidSignature
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+        try:
+            Ed25519PublicKey.from_public_bytes(key).verify(bytes.fromhex(approval.signature), payload)
+            return True
+        except (InvalidSignature, ValueError):
+            return False
+    expected = hmac.new(key.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    return isinstance(approval.signature, str) and hmac.compare_digest(approval.signature, expected)
+
+
+def _approval_signing_payload(approval: Approval) -> str:
+    """Canonical payload authenticated by the reference approval authority."""
+    return json.dumps(
+        {
+            "approval_id": approval.approval_id,
+            "proposal_digest": approval.proposal_digest,
+            "approver": approval.approver,
+            "approver_role": approval.approver_role,
+            "audience": approval.audience,
+            "expires_at": approval.expires_at,
+            "key_id": approval.key_id,
+            "second_approver": approval.second_approver,
+            "second_approver_role": approval.second_approver_role,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+class AccountableExecutor:
+    """The sole reference-profile write path for consequential transitions."""
+
+    def __init__(
+        self,
+        register: CaseRegister,
+        evidence: EvidenceLedger,
+        evidence_token: str,
+        *,
+        audience: str = "case-register-executor",
+        approval_keys: dict[str, str] | None = None,
+        allowed_operations: set[str] | None = None,
+        transition_rules: dict[str, Iterable[tuple[str, str]]] | None = None,
+        required_approval_roles: dict[tuple[str, str, str], Iterable[str]] | None = None,
+        outcome_store: PendingOutcomeStore | None = None,
+        approval_use_store: ApprovalUseStoreLike | None = None,
+    ) -> None:
+        self._register = register
+        self._evidence = evidence
+        self._token = evidence_token
+        self._audience = audience
+        self._approval_keys = dict(
+            {REFERENCE_APPROVAL_KEY_ID: REFERENCE_APPROVAL_SIGNING_KEY}
+            if approval_keys is None
+            else approval_keys
+        )
+        self._allowed_operations = frozenset(
+            {"prepare_case_for_review"}
+            if allowed_operations is None
+            else allowed_operations
+        )
+        self._transition_rules = {
+            operation: frozenset(transitions)
+            for operation, transitions in (transition_rules or {}).items()
+        }
+        self._required_approval_roles = {
+            transition: frozenset(roles)
+            for transition, roles in (required_approval_roles or {}).items()
+        }
+        self._outcomes = PendingOutcomeStore() if outcome_store is None else outcome_store
+        self._approval_uses = ApprovalUseStore() if approval_use_store is None else approval_use_store
+
+    # -- authorization -----------------------------------------------------
+    def validate_authorization(
+        self,
+        proposal: ActionProposal,
+        approval: Approval,
+        *,
+        now: float | None = None,
+    ) -> None:
+        """Every check that must pass before any state is touched.
+
+        Extracted so that the in-memory executor and the transactional SQL
+        executor apply *identical* rules. A second copy of this logic would be
+        the easiest place for the two profiles to silently diverge, which is
+        exactly the kind of drift the control contract exists to prevent.
+        """
+        checked_at = time.time() if now is None else now
+        if proposal.operation not in self._allowed_operations:
+            raise ExecutionDenied("OPERATION_NOT_ALLOWED", "executor does not permit this operation")
+        signing_key = self._approval_keys.get(approval.key_id)
+        if signing_key is None:
+            raise ExecutionDenied("APPROVAL_KEY_UNTRUSTED", "approval key is not trusted by executor")
+        if not _approval_signature_valid(signing_key, approval):
+            raise ExecutionDenied("APPROVAL_SIGNATURE_INVALID", "approval fields were not authenticated")
+        if approval.audience != self._audience:
+            raise ExecutionDenied("APPROVAL_AUDIENCE_MISMATCH", "approval targets another executor")
+        if approval.proposal_digest != proposal.digest:
+            raise ExecutionDenied("APPROVAL_PAYLOAD_MISMATCH", "proposal changed after review")
+        required_roles = self._required_approval_roles.get(
+            (proposal.operation, proposal.from_status, proposal.to_status)
+        )
+        if required_roles is not None and approval.approver_role not in required_roles:
+            raise ExecutionDenied(
+                "APPROVER_ROLE_NOT_ALLOWED",
+                "the authenticated approver role is not permitted for this transition",
+            )
+
+        # The escalation endorsement, re-checked here rather than trusted.
+        #
+        # The oversight monitor refuses to *issue* an approval whose second
+        # reviewer is missing or is the primary. That is a check made by the
+        # approval service, and in a real deployment the approval service is a
+        # different process with different owners. The executor's whole premise
+        # is that it re-derives every authority question independently instead of
+        # believing the party that answered it — which is why it rechecks the
+        # digest, the audience, the role, the expiry and the version even though
+        # all of them were correct when the approval was signed.
+        #
+        # Until this existed, escalation was the one field the executor carried
+        # into evidence without ever checking: a signed approval naming its own
+        # primary as the second reviewer would execute, and the evidence would
+        # record two names that were one person.
+        if not isinstance(approval.second_approver, str) or not isinstance(
+            approval.second_approver_role, str
+        ):
+            raise ExecutionDenied(
+                "SECOND_APPROVER_FIELDS_INVALID",
+                "escalation reviewer identity and role must be strings",
+            )
+        if approval.second_approver:
+            if approval.second_approver == approval.approver:
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_NOT_DISTINCT",
+                    "the escalation reviewer is the primary reviewer; two signatures "
+                    "from one person are not a second judgement",
+                )
+            if approval.second_approver == proposal.requester:
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_IS_REQUESTER",
+                    "the escalation reviewer requested this action; separation of "
+                    "duties applies to the second signature as much as the first",
+                )
+            if not approval.second_approver_role.strip():
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_ROLE_MISSING",
+                    "an escalation reviewer was named without the role they hold; an "
+                    "unattributed signature is not an endorsement",
+                )
+            if (
+                required_roles is not None
+                and approval.second_approver_role not in required_roles
+            ):
+                raise ExecutionDenied(
+                    "SECOND_APPROVER_ROLE_NOT_ALLOWED",
+                    "the escalation reviewer's role is not permitted for this "
+                    "transition; escalating to someone who could not have approved "
+                    "it alone adds a name, not a control",
+                )
+        elif approval.second_approver_role.strip():
+            raise ExecutionDenied(
+                "SECOND_APPROVER_ROLE_WITHOUT_REVIEWER",
+                "a role was recorded for an escalation reviewer who was never named",
+            )
+        valid_transitions = self._transition_rules.get(proposal.operation)
+        if valid_transitions is not None and (
+            proposal.from_status,
+            proposal.to_status,
+        ) not in valid_transitions:
+            raise ExecutionDenied(
+                "TRANSITION_NOT_ALLOWED",
+                "the domain profile does not permit this state transition",
+            )
+
+        if approval.expires_at <= checked_at:
+            raise ExecutionDenied("APPROVAL_EXPIRED", "approval is no longer valid")
+
+    # -- execution ---------------------------------------------------------
+    def execute(
+        self,
+        proposal: ActionProposal,
+        approval: Approval,
+        *,
+        now: float | None = None,
+    ) -> ExecutionResult:
+        self.validate_authorization(proposal, approval, now=now)
+
+        prior = self._register.result_for(proposal.request_id)
+        if prior is not None:
+            validate_replay(proposal, prior)
+            if self._outcomes.get(proposal.request_id) is not None:
+                raise ExecutionUncertain(prior)
+            return ExecutionResult(**{**asdict(prior), "replayed": True})
+
+        used_by, newly_bound = self._approval_uses.bind(
+            approval.approval_id, proposal.request_id
+        )
+        if used_by != proposal.request_id:
+            raise ExecutionDenied("APPROVAL_REUSED", "approval was already bound to another request")
+        if not newly_bound:
+            prior = self._register.result_for(proposal.request_id)
+            if prior is None:
+                raise ExecutionDenied(
+                    "EXECUTION_STATE_INCONSISTENT",
+                    "approval use exists without a stored execution result",
+                )
+            validate_replay(proposal, prior)
+            if self._outcomes.get(proposal.request_id) is not None:
+                raise ExecutionUncertain(prior)
+            return ExecutionResult(**{**asdict(prior), "replayed": True})
+
+        self._evidence.append(
+            "action_intent",
+            {
+                "request_id": proposal.request_id,
+                "proposal_digest": proposal.digest,
+                "approval_id": approval.approval_id,
+                "approver": approval.approver,
+                "approval_key_id": approval.key_id,
+                "second_approver": approval.second_approver,
+                "second_approver_role": approval.second_approver_role,
+                "evidence_version": proposal.evidence_version,
+            },
+            token=self._token,
+        )
+        result = self._register.transition(proposal)
+        outcome = PendingOutcome(
+            result.request_id,
+            {
+                "request_id": result.request_id,
+                "case_id": result.case_id,
+                "version": result.version,
+                "status": result.status,
+                "receipt_hash": result.receipt_hash,
+                "replayed": result.replayed,
+            },
+        )
+        self._outcomes.put(outcome)
+        try:
+            self._append_outcome(outcome)
+        except Exception as exc:
+            raise ExecutionUncertain(result) from exc
+        return result
+
+    def reconcile_pending(self) -> int:
+        """Append pending outcomes and return the number successfully reconciled.
+
+        A production adapter should back ``PendingOutcomeStore`` with storage that
+        commits atomically with the authoritative mutation. This in-memory version
+        exposes and tests the recovery protocol without claiming that guarantee.
+        """
+        reconciled = 0
+        for outcome in self._outcomes.values():
+            if self._evidence.find("action_outcome", request_id=outcome.request_id):
+                self._outcomes.remove(outcome.request_id)
+                reconciled += 1
+                continue
+            self._append_outcome(outcome)
+            reconciled += 1
+        return reconciled
+
+    @property
+    def pending_outcome_count(self) -> int:
+        return len(self._outcomes)
+
+    def _append_outcome(self, outcome: PendingOutcome) -> None:
+        self._evidence.append("action_outcome", outcome.payload, token=self._token)
+        self._outcomes.remove(outcome.request_id)

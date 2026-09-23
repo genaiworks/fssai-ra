@@ -14,6 +14,8 @@ store until persistent vault/key custody and restoration are qualified. It does
 not enable a production mode, change every existing deployment, or attest a
 remote runtime's honesty.
 
+The [pipeline lab](PIPELINE_WALKTHROUGH.md#5-run-the-protected-data-lab-and-inspect-every-stage) now demonstrates encrypted fields in SQLite/PostgreSQL. It is a separate one-process teaching adapter with ephemeral custody, not a persistent HTTP privacy profile.
+
 ## Configuration and enforcement
 
 The server constructs one `KeyCustody`, grants minimal credentials to its record

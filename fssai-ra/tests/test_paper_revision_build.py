@@ -1,8 +1,11 @@
 """The current Word revision must be rebuildable from its preserved source."""
+
 import hashlib
 import json
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -82,3 +85,6 @@ def test_current_references_are_grouped_resolved_and_each_kind_is_what_it_claims
     assert all(r['title'] in bibliography[r['id'] - 1] for r in groups)
     assert {'Recent research', 'Foundations', 'Standards and policy'} <= set(paragraphs), \
         'the bibliography is grouped so a reader can see which kind of source carries which weight'
+
+
+pytestmark = pytest.mark.manuscript

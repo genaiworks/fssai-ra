@@ -1,6 +1,8 @@
 # Trust by Construction — conference evidence package
 
-**UNU Macau AI Conference 2026 · AI × Education: AI for Learning, Learning for AI**
+This directory retains a historical name for reusable education demonstrations and adversarial experiments. For the platform as a whole, start with the [user guide](../docs/USER_GUIDE.md); for submission status and future papers, use the [publication register](../../publications/README.md).
+
+**Reusable education and adversarial demonstration package**
 Panel: *Agentic AI in the Loop — From Autonomous Tools to Shared Capacity*
 
 > **You do not have to trust the AI to govern what it can do.**

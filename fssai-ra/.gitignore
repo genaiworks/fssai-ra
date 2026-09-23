@@ -10,6 +10,7 @@ build/
 console/dist/
 tsconfig.tsbuildinfo
 deploy/.env
+deploy/certs/
 dist/
 evaluation/results/local.json
 node_modules/

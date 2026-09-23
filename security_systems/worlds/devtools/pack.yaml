@@ -1,0 +1,283 @@
+# Production Estate: the devtools domain pack.
+#
+# Everything here is synthetic. The pack declares what an engineering organisation
+# means by incident triage, code review, a production release, a secret rotation,
+# and a public status update, when coding agents do the legwork. The kernel enforces
+# it; the pack cannot weaken the kernel (trustkernel.kernel.pack_floor rejects any
+# pack that tries, and `trustkernel pack-check worlds/devtools/malicious-pack.yaml`
+# shows how).
+#
+# Sections:
+#   governance       what the domain is for and who owns data, privacy, security
+#   identity_fields  which fields identify a person; they reach a model only as tokens
+#   disclosure       classes, purposes, zones, endpoints, recipients, declassification
+#   transitions      every state change the execution mediator will perform
+#   controls         the seven-field contract for every consequential capability,
+#                    each naming a failure test that must exist in tests/
+#   model_manifests  which models are approved, for which classes and purposes
+#   review           declared human review capacity and the overload policy
+#   delegation       declared bounds on authority passed between agents
+profile_id: production-estate-devtools
+version: "1.0"
+title: Production Estate (devtools pack for coding-agent demonstrations)
+resource_name: production_change
+owner: platform_engineering
+manual_fallback: >-
+  Leave production unchanged, page the on-call engineer, open a ticket in the
+  change-management queue, and tell the requester how to follow it up.
+governance:
+  domain: software-engineering
+  purpose: Let coding agents triage incidents, review code, and prepare releases while holding no authority of their own, on synthetic services only.
+  deployment_profile: reference   # synthetic identifiers only
+  data_classes:
+    - engineer-identity
+    - build-telemetry
+    - source-code
+    - internal-incident
+    - secret-credentials
+    - customer-pii
+    - public-status
+  applicable_frameworks:
+    - Organisation change-management and separation-of-duties policy
+    - Applicable data-protection law on customer data held in production systems
+    - Secret-management and key-rotation standards
+  prohibited_uses:
+    - An agent merging, deploying, or rotating anything without the named human authority
+    - Sending credentials, customer data, or engineer identity to an external model or recipient
+    - Using customer data or source code for model training
+    - Posting internal incident detail to a public or broad channel without declassification
+  processing_basis: Engineering operations approved by platform engineering, using synthetic services only.
+  data_minimization_rule: Release only the fields the stated purpose needs, for the named services, to the named holder, for a bounded time.
+  retention_rule: Retain decision evidence for the declared audit period; retain working copies only for the session that needed them.
+  deletion_rule: Decommission a service by destroying its data keys; keep only digests and surrogate identifiers in evidence.
+  residency_rule: Credentials, customer data, identity, and incident detail stay inside the private network; telemetry and source may use an approved code assistant.
+  incident_response: Freeze automated changes, preserve evidence, page security and the incident commander, and route open work to staffed handling.
+  owners:
+    data: platform_engineering
+    privacy: data_protection_officer
+    security: security_lead
+
+identity_fields:
+  owner_name: OWNER_NAME
+  owner_email: EMAIL
+  oncall_handle: ONCALL_HANDLE
+
+disclosure:
+  subject_kind: service
+  purposes:
+    - incident-triage
+    - code-review
+    - release-deploy
+    - secret-rotation
+    - status-page-update
+    - security-break-glass
+  fields:
+    owner_name: {class: engineer-identity}
+    owner_email: {class: engineer-identity}
+    oncall_handle: {class: engineer-identity}
+    error_rate: {class: build-telemetry}
+    ci_status: {class: build-telemetry}
+    p99_latency: {class: build-telemetry}
+    recent_diff: {class: source-code}
+    incident_notes: {class: internal-incident}
+    db_url: {class: secret-credentials}
+    deploy_token: {class: secret-credentials}
+    customer_record: {class: customer-pii}
+  model_endpoints:
+    vpc_code_model: vpc-private
+    vpc_code_model_b: vpc-private
+    saas_code_assistant: approved-saas
+    public_chat_api: external
+  class_zones:
+    engineer-identity: [vpc-private]
+    build-telemetry: [vpc-private, approved-saas]
+    source-code: [vpc-private, approved-saas]
+    internal-incident: [vpc-private]
+    secret-credentials: [vpc-private]
+    customer-pii: [vpc-private]
+    public-status: [vpc-private, approved-saas]
+  recipients:
+    oncall_pager:
+      classes: [engineer-identity, build-telemetry, source-code, internal-incident]
+      purposes: [incident-triage]
+      zone: vpc-private
+    slack_general:
+      classes: [build-telemetry]
+      purposes: [incident-triage, code-review]
+      zone: vpc-private
+    pr_comment:
+      classes: [build-telemetry, source-code]
+      purposes: [code-review]
+      zone: vpc-private
+    release_channel:
+      classes: [engineer-identity, build-telemetry, source-code]
+      purposes: [release-deploy]
+      zone: vpc-private
+    security_team:
+      classes: [engineer-identity, internal-incident, secret-credentials, customer-pii]
+      purposes: [secret-rotation, security-break-glass]
+      zone: vpc-private
+    status_page:
+      classes: [public-status]
+      purposes: [status-page-update]
+      zone: approved-saas
+    external_webhook:
+      classes: []
+      purposes: []
+      zone: external
+  declassification:
+    - name: publish_status_summary
+      from_classes: [build-telemetry, internal-incident]
+      to_class: public-status
+      purposes: [status-page-update]
+      approval_role: incident_commander
+      removes_subject_identity: true
+  break_glass:
+    purposes: [security-break-glass]
+    max_ttl_seconds: 1800
+    max_unreviewed_per_holder: 1
+    review_role: security_lead
+
+transitions:
+  # Which build runs in production is the state. Promoting a build is one exact,
+  # versioned transition that only a release manager may approve. Every pair is
+  # declared, including downgrades, because rolling back is also a production change.
+  - {operation: promote_build, from_status: "build:v40", to_status: "build:v41", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v40", to_status: "build:v42", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v40", to_status: "build:v43", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v41", to_status: "build:v40", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v41", to_status: "build:v42", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v41", to_status: "build:v43", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v42", to_status: "build:v40", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v42", to_status: "build:v41", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v42", to_status: "build:v43", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v43", to_status: "build:v40", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v43", to_status: "build:v41", consequential: true, approval_role: release_manager}
+  - {operation: promote_build, from_status: "build:v43", to_status: "build:v42", consequential: true, approval_role: release_manager}
+  # Code review: an agent may open a pull request; only a code owner merges it.
+  - {operation: request_review, from_status: "pr:draft", to_status: "pr:open", consequential: false, approval_role: oncall_engineer}
+  - {operation: merge_pr, from_status: "pr:open", to_status: "pr:merged", consequential: true, approval_role: code_owner}
+  # Secrets: an agent may flag a leaked secret; only security rotates it.
+  - {operation: flag_secret, from_status: "secret:active", to_status: "secret:flagged", consequential: false, approval_role: oncall_engineer}
+  - {operation: rotate_secret, from_status: "secret:flagged", to_status: "secret:rotated", consequential: true, approval_role: security_lead}
+  # Public communication: an agent drafts; the incident commander publishes.
+  - {operation: publish_status, from_status: "status:draft", to_status: "status:published", consequential: true, approval_role: incident_commander}
+  # Roles the disclosure policy relies on must be roles something enforces.
+  - {operation: review_break_glass, from_status: "glass:open", to_status: "glass:reviewed", consequential: true, approval_role: security_lead}
+
+controls:
+  promote_build:
+    protected_asset: The build running in production for one service
+    permitted_operation: Promote one reviewed build to one service at the reviewed version
+    enforcement_point: execution_mediator
+    owner: release_manager
+    failure_test: tests/test_devtools_pack.py::test_unreviewed_build_cannot_reach_production
+    evidence_artifact: Signed execution receipt binding proposal digest, approval, and ledger checkpoint
+    failure_response: Deny, record the refusal, and page the release manager
+  merge_pr:
+    protected_asset: The default branch of a service repository
+    permitted_operation: A code owner merges one exact reviewed pull request
+    enforcement_point: execution_mediator
+    owner: code_owner
+    failure_test: tests/test_devtools_pack.py::test_agent_cannot_merge_its_own_pull_request
+    evidence_artifact: Signed execution receipt naming the code owner and the pull-request digest
+    failure_response: Deny the merge and keep the pull request open for review
+  rotate_secret:
+    protected_asset: A production credential
+    permitted_operation: The security lead rotates one flagged secret
+    enforcement_point: execution_mediator
+    owner: security_lead
+    failure_test: tests/test_devtools_pack.py::test_secret_rotation_needs_the_security_lead
+    evidence_artifact: Signed execution receipt linking the flag and the rotation approval
+    failure_response: Deny and keep the secret flagged for staffed rotation
+  publish_status:
+    protected_asset: The public status page
+    permitted_operation: The incident commander publishes one exact declassified update
+    enforcement_point: execution_mediator
+    owner: incident_commander
+    failure_test: tests/test_devtools_pack.py::test_status_update_needs_exact_declassification
+    evidence_artifact: Declassification approval bound to the exact output digest
+    failure_response: Deny and keep the update in draft
+  review_break_glass:
+    protected_asset: Emergency access to credentials and customer data
+    permitted_operation: The security lead reviews one emergency access after the fact
+    enforcement_point: context_gate
+    owner: security_lead
+    failure_test: tests/test_devtools_pack.py::test_break_glass_opens_a_review_obligation
+    evidence_artifact: Break-glass review record naming holder and reviewer
+    failure_response: Refuse further emergency access by the holder until reviewed
+  read_protected_context:
+    protected_asset: Service records placed into a model context
+    permitted_operation: A holder reads named fields of named services for a declared purpose
+    enforcement_point: context_gate
+    owner: data_protection_officer
+    failure_test: tests/test_devtools_pack.py::test_fields_the_grant_did_not_name_are_denied
+    evidence_artifact: Disclosure intent and outcome records with digests, never values
+    failure_response: Deny, release nothing, and record the refusal code
+  release_labelled_output:
+    protected_asset: A model output derived from service records
+    permitted_operation: Release to a recipient whose clearance dominates the output label
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_devtools_pack.py::test_a_credential_cannot_be_laundered_into_general_chat
+    evidence_artifact: Release receipt with the output label
+    failure_response: Deny the release and keep the output labelled
+  restore_identity:
+    protected_asset: The link between a token and a real engineer
+    permitted_operation: Restore identity only for a recipient cleared for identity fields
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_devtools_pack.py::test_identity_is_restored_only_for_entitled_recipients
+    evidence_artifact: Identity restoration record naming the release receipt
+    failure_response: Release tokens only and record the refusal
+  delegate_authority:
+    protected_asset: Authority passed from one agent to another
+    permitted_operation: Delegate an equal or narrower slice for the same purpose and a shorter time
+    enforcement_point: delegation_verifier
+    owner: security_lead
+    failure_test: tests/test_devtools_pack.py::test_a_spawned_worker_cannot_escalate
+    evidence_artifact: Verified grant chain with the effective scope
+    failure_response: Refuse the chain and record the escalation attempt
+  erase_subject:
+    protected_asset: Every governed copy of a decommissioned service's data
+    permitted_operation: The data protection officer erases a service by destroying its keys
+    enforcement_point: key_custody
+    owner: data_protection_officer
+    failure_test: tests/test_devtools_pack.py::test_decommissioning_erases_every_governed_copy
+    evidence_artifact: Erasure certificate and a read-back verification of every governed copy
+    failure_response: Report every readable location and keep the request open
+
+model_manifests:
+  vpc_code_model:
+    provider: ollama-local
+    model_id: "qwen2.5-coder:7b"
+    capabilities: [summarize, propose_action]
+    allowed_classes: [engineer-identity, build-telemetry, source-code, internal-incident, secret-credentials, customer-pii, public-status]
+    allowed_purposes: [incident-triage, code-review, release-deploy, secret-rotation, status-page-update, security-break-glass]
+    approval_days: 180
+  vpc_code_model_b:
+    provider: ollama-local
+    model_id: "llama3.2:3b"
+    capabilities: [summarize, propose_action]
+    allowed_classes: [engineer-identity, build-telemetry, source-code, internal-incident, secret-credentials, customer-pii, public-status]
+    allowed_purposes: [incident-triage, code-review, release-deploy, secret-rotation, status-page-update, security-break-glass]
+    approval_days: 180
+  saas_code_assistant:
+    provider: approved-code-vendor
+    model_id: saas-code-large
+    capabilities: [summarize]
+    allowed_classes: [build-telemetry, source-code, public-status]
+    allowed_purposes: [incident-triage, code-review]
+    approval_days: 90
+
+review:
+  capacity_per_window: 4
+  window_seconds: 3600
+  queue_limit: 6
+  timeout_seconds: 1800
+  overload_policy: defer_to_manual
+  escalation_role: incident_commander
+
+delegation:
+  max_depth: 3
+  allow_machine_delegated_consequence: false

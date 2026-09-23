@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from scripts.check_submission import validate
 
 
@@ -11,3 +12,6 @@ def test_form_ready_abstract_fits_every_form_limit():
 
 def test_checker_rejects_a_missing_section():
     assert not validate("## Introduction\n" + "word " * 210)["valid"]
+
+
+pytestmark = pytest.mark.manuscript
