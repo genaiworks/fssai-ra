@@ -6,9 +6,10 @@
 #
 # PostgreSQL, Redis, Kafka and MinIO then accept only TLS connections, and every
 # client verifies the server certificate and host name against deploy/certs/ca.crt.
-# Still plain HTTP on internal networks: the Iceberg REST catalog API (table
-# metadata pointers, no row data) and the control API and gateway, which are
-# meant to sit behind an institution's TLS-terminating reverse proxy.
+# The control API and import gateway serve HTTPS; the console reaches the API
+# over verified TLS. Still plain HTTP: the console's localhost port and the
+# Iceberg REST catalog API on its internal network (table metadata pointers, no
+# row data).
 # The generated CA is for local development; use the institution's own CA and
 # certificate rotation in a deployment.
 
@@ -24,6 +25,7 @@ services:
         install -m 600 -o 70 -g 70 /src/postgres.key /tls/postgres.key
         install -m 600 -o 999 -g 1000 /src/redis.key /tls/redis.key
         install -m 600 -o 1000 -g 1000 /src/kafka.pem /tls/kafka.pem
+        for s in control-api import-gateway; do install -m 644 /src/$$s.crt /tls/$$s.crt; install -m 600 -o 10001 -g 10001 /src/$$s.key /tls/$$s.key; done
         install -m 644 /src/truststore.p12 /tls/truststore.p12
         mkdir -p /tls/minio/CAs
         install -m 644 /src/minio.crt /tls/minio/public.crt
@@ -85,6 +87,11 @@ services:
       tls-init: {condition: service_completed_successfully}
 
   control-api:
+    command: ["uvicorn", "fssaira.api:create_default_app", "--factory", "--host", "0.0.0.0",
+              "--port", "8080", "--ssl-keyfile", "/tls/control-api.key",
+              "--ssl-certfile", "/tls/control-api.crt"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--cacert", "/tls/ca.crt", "https://localhost:8080/health"]
     environment:
       FSSAI_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=verify-full&sslrootcert=/tls/ca.crt
       FSSAI_REDIS_URL: rediss://:${REDIS_PASSWORD}@redis:6379/0
@@ -95,10 +102,23 @@ services:
       - tls-certs:/tls:ro
 
   import-gateway:
+    command: ["uvicorn", "fssaira.import_api:create_import_app", "--factory", "--host", "0.0.0.0",
+              "--port", "8081", "--ssl-keyfile", "/tls/import-gateway.key",
+              "--ssl-certfile", "/tls/import-gateway.crt"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--cacert", "/tls/ca.crt", "https://localhost:8081/health"]
     environment:
       FSSAI_KAFKA_SECURITY_PROTOCOL: SSL
       FSSAI_KAFKA_SSL_CA_LOCATION: /tls/ca.crt
     volumes:
+      - tls-certs:/tls:ro
+
+  console:
+    # Proxies /api to the control API over TLS and verifies its certificate.
+    # The console's own port stays HTTP on 127.0.0.1; put the institution's
+    # TLS-terminating, authenticating reverse proxy in front of it.
+    volumes:
+      - ./tls/console-nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - tls-certs:/tls:ro
 
   # -- analytics: object storage over TLS ----------------------------------

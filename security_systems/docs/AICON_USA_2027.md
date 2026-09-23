@@ -21,6 +21,17 @@ The method has four parts, each demonstrated live:
 
 Then comes the part most talks skip: what this harness missed. A 203-test suite passed, yet ten new adversarial tests failed against the integration wrapper. The defects included cached replay that skipped approval verification, session handles that could be swapped to drop a data label, and a JSON coercion that let one approval cover a different call. I walk through each defect as a test-design lesson and show the regression that now pins it.
 
+The implementation is concrete rather than conceptual. A request enters as a
+JSON tool name plus arguments. A trusted dispatcher resolves the authenticated
+caller to an issued context, re-derives authority from the root delegation,
+binds Python defaults, canonicalizes the effective arguments, and verifies an
+Ed25519 approval over the principal, tool, resource, request identity and
+SHA-256 argument digest. Only then does the registered callback receive its
+credential. A separate effect oracle snapshots the deployment register and
+release sink before and after the call. This lets the audience see the exact
+failure boundary: a callback can write state and still raise `DENIED`, which
+must be reported as harm.
+
 Attendees get the effect oracle, an ablation worksheet, and a runnable offline example: no model API, no network.
 
 ## Key takeaways
@@ -45,6 +56,46 @@ For QA and test engineers, security engineers, architects and technical leads pu
 | 39–46 | What the harness missed: the wrapper defects and their regressions | Target tests at the integration seams |
 | 46–50 | Porting the harness to a new policy world; the worksheet | Leave with a plan for your own system |
 | 50–60 | Questions | Pressure-test the method against attendees' stacks |
+
+## Technical handout and reproducibility
+
+The audience receives a three-layer implementation map:
+
+1. **Authorization path:** caller binding → root-derived delegation checks →
+   exact-action approval → registered callback.
+2. **Information path:** read metadata → monotone session label → explicit
+   handoff propagation → recipient and purpose release check.
+3. **Evidence path:** independent effect snapshot → target-state diff → signed
+   evidence checkpoint and reproducible JSON result.
+
+The 18-minute demonstration uses only local commands:
+
+```bash
+python examples/effect_oracle.py
+python examples/replay_boundary.py
+trustkernel matrix
+make evidence
+```
+
+`make evidence` regenerates the four domain result files in a temporary
+directory and tests that the checked-in artifacts match. The figures quoted in
+the proposal are synthetic, authored attack cases: 25 falsifiers, 27 single
+ablations plus two paired ablations, and a 300-attempt seeded grammar fuzzer.
+They are not production attack rates. The talk explicitly separates what the
+reference code demonstrates from what a deployed service still has to supply:
+authenticated callers, process or container separation, durable target-side
+idempotency, crash reconciliation, independent attacks and load/failover
+measurements.
+
+The technical handout also gives the failure taxonomy attendees can reuse:
+
+| Failure | Observable test | Required repair |
+|---|---|---|
+| Approval says “approved” for the wrong build | Target register contains the unapproved build | Bind canonical effective arguments to the approval digest |
+| Cached receipt bypasses verification | Forged retry returns the real receipt | Verify signature, audience, payload and expiry before cache lookup |
+| Worker label disappears on exception | Sensitive value reaches a downstream sink after a failed read | Apply the label before entering the tool body |
+| Refusal follows a side effect | State diff is non-empty despite `DENIED` | Observe the target outside the guard and fail the test |
+| Zero attacks with a dead attacker | Positive-control system never permits the effect | Remove the mediator and prove the attacker can win |
 
 ## Speaker biography
 

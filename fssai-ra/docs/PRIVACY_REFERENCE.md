@@ -50,8 +50,9 @@ Evidence records the digest of the bytes returned, not the plaintext identities.
 
 ## Known limits and next qualification gates
 
-- Memory only: process loss discards the vault and custody. No persistent-state
-  profile is silently accepted with ephemeral keys.
+- Custody is in memory unless `SqlCustodyStore` is configured (`custody_from_env`),
+  with key-encryption keys from a master key file or Vault Transit. The token vault
+  stays session-scoped. Durable custody refuses to start without a key source.
 - Consent/revocation ordering is local to the reference store. Distributed
   freshness, network streaming and hardware key protection remain unqualified.
 - Tokenization covers declared identifiers and supported contact patterns. It
