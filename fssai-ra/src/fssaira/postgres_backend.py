@@ -17,8 +17,9 @@ Operational notes for a deployment
   and has no ``UPDATE`` or ``DELETE`` on it. Append-only should be enforced by
   the database grant, not only by application code. :func:`append_only_grants`
   emits the statements.
-* Run the evidence table on storage with point-in-time recovery. Hash chaining
-  detects truncation; it does not undo it.
+* Run the evidence table on storage with point-in-time recovery. An independently retained
+  signed count/head checkpoint is needed to detect tail truncation; a chain
+  alone cannot detect removal of a valid suffix.
 * Separate the database administrator from the service owner. A DBA who can
   rewrite the chain and the application that writes it should not be the same
   person -- see ``docs/SECURITY.md``.

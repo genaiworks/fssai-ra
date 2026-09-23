@@ -1,5 +1,8 @@
 # Build and test bounded agent integrations
 
+Start with the [full data-pipeline walkthrough](docs/PIPELINE_WALKTHROUGH.md) for sample data, actual storage shapes, cryptography, tool handoffs and runnable verification.
+
+
 Start here for reusable integration development. See the [user guide](docs/USER_GUIDE.md), [feature catalogue](docs/FEATURES.md), and [research workflow](docs/RESEARCH_GUIDE.md). The repository is a reference implementation with executable
 failure cases. It is useful for developing control-plane adapters and teaching
 agent security; passing its tests is not production certification.

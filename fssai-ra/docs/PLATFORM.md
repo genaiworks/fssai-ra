@@ -4,6 +4,8 @@
 >
 > **Recommended next:** Continue the engineering route → [`SECURITY.md`](SECURITY.md)
 
+See the [full technical pipeline walkthrough](PIPELINE_WALKTHROUGH.md) for raw test data, SQL ciphertext, Redis keys, Kafka envelopes, Spark/Iceberg rows and output verification.
+
 ## What this platform provides
 
 Trust by Construction is a reference platform for institutions that want AI assistance without
@@ -139,6 +141,8 @@ same receipt without another authoritative mutation.
 
 ## PySpark and Apache Iceberg
 
+Follow [the complete setup and verification sequence](PIPELINE_WALKTHROUGH.md#104-start-analytics-with-compatible-binaries) for bucket provisioning, bootstrap and streaming commands.
+
 The optional `analytics` profile supplies the official Iceberg REST fixture,
 S3-compatible storage, and the Spark-Iceberg quickstart image. Start it with:
 
@@ -147,16 +151,20 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml \
   --profile analytics up -d
 
 docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
-  spark-submit /opt/fssaira/jobs/bootstrap_iceberg.py
-
-docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
-  spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.3 \
-  /opt/fssaira/jobs/kafka_to_iceberg.py
+  spark-submit --version
+# Select a Kafka connector matching the ACTUAL Spark and Scala versions.
+# See PIPELINE_WALKTHROUGH.md section 10.4 before starting the stream.
 ```
 
-The streaming job reads normalized inward events, preserves Kafka partition and
+Create the warehouse bucket and prepare compatible runtime dependencies before
+bootstrapping; Compose does not supply bucket initialization. The walkthrough
+gives the commands.
+
+The streaming job rejects malformed/hash-invalid imports before committing,
+reads normalized inward events, preserves Kafka partition and
 offset, and merges them into an Iceberg v2 table on that stable identity. Replayed
-micro-batches therefore do not create duplicate rows. Production deployments must pin container digests and compatible
+micro-batches therefore do not create duplicate rows within one immutable topic,
+one sink and one writer. Do not reuse the sink for another or recreated topic. Production deployments must pin container digests and compatible
 Spark, Scala, Kafka connector, and Iceberg runtime artifacts after integration
 testing. The unpinned quickstart images in Compose are for evaluation only.
 

@@ -9,6 +9,8 @@ The repository supports experiments, teaching, integration work, and multiple re
 
 [Start learning](fssai-ra/docs/START_HERE.md) · [Complete user guide](fssai-ra/docs/USER_GUIDE.md) · [All features](fssai-ra/docs/FEATURES.md) · [Documentation index](fssai-ra/docs/README.md)
 
+**Technical builders:** [Full data-pipeline walkthrough](fssai-ra/docs/PIPELINE_WALKTHROUGH.md) — sample records, cryptography, PostgreSQL rows, Redis keys, Kafka/Spark/Iceberg, runnable lab and verification.
+
 ## What you can do
 
 | Goal | What to use |

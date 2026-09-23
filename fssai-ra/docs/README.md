@@ -1,6 +1,8 @@
 # FSSAI-RA documentation index
 
 
+[Full technical pipeline walkthrough](PIPELINE_WALKTHROUGH.md) — source data, encryption, PostgreSQL, Redis, Kafka, Spark, Iceberg and independently verifiable output.
+
 ## Begin here
 
 This documentation covers the reusable platform across sectors and publications.

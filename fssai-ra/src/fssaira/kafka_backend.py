@@ -239,6 +239,10 @@ class KafkaEventConsumer:
 class EvidenceProjector:
     """Rebuilds a read model of control-plane events for independent monitoring.
 
+    This in-memory read model is idempotent for ordered partition delivery.
+    After restart, rebuild from the beginning; offsets and projected rows are
+    not persistent here. A durable projection must commit both atomically.
+
     The projector is intentionally separate from the control plane. If the same
     process that decides also reports, an operator has one story and no way to
     check it. Running this against the log gives a second, independently
@@ -252,6 +256,10 @@ class EvidenceProjector:
         self.last_offset: dict[str, int] = {}
 
     def apply(self, event: ConsumedEvent) -> None:
+        # One ordered consumer per partition: ignore broker redelivery/replay.
+        position = f"{event.topic}/{event.partition}"
+        if event.offset <= self.last_offset.get(position, -1):
+            return
         kind = event.value.get("kind", "unknown")
         payload = event.value.get("payload", {})
         resource = (

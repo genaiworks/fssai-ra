@@ -12,9 +12,10 @@ It reports three things:
 ``links_intact``      every record's ``prev_hash`` equals the previous record's hash
 ``sequence_complete`` sequence numbers are 0..n-1 with no gaps
 
-A gap is the interesting result. A hash chain makes an *edit* obvious; a
-truncation is only obvious if someone is counting, which is what
-``sequence_complete`` does.
+Sequence checks detect internal gaps, not removal of a valid tail.
+This job checks internal consistency only. Compare a separately retained signed
+count/head checkpoint to detect truncation or a fully rewritten chain.
+``--since-seq`` also trusts the first row's predecessor and does not anchor it.
 
     spark-submit jobs/verify_evidence_chain.py [--since-seq N]
 """
@@ -83,6 +84,8 @@ def main() -> int:
         "records": len(rows),
         "first_seq": rows[0]["seq"],
         "last_seq": rows[-1]["seq"],
+        "scope": "internal consistency only; no independent checkpoint",
+        "tail_truncation_checked": False,
         "chain_valid": not hash_failures,
         "links_intact": not link_failures,
         "sequence_complete": not gaps,

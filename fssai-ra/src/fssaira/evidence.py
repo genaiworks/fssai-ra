@@ -3,7 +3,9 @@
 This is the durable-evidence property of the control contract. Every
 consequential step in the pipeline writes a record here. Records are linked
 into a hash chain (each record's hash covers the previous hash), so any later
-edit or deletion of a past record is *detectable* by :meth:`EvidenceLedger.verify`.
+edit or internal deletion of a past record is *detectable* by
+:meth:`EvidenceLedger.verify`. Removing a valid suffix requires an independently
+retained count/head checkpoint to detect; this local chain check cannot do that.
 
 Two design choices matter for fail-secure behaviour:
 
@@ -79,7 +81,7 @@ class EvidenceLedger:
             return rec
 
     def verify(self) -> bool:
-        """Recompute the chain; return False if any record was altered/removed."""
+        """Check internal consistency; tail truncation requires an external checkpoint."""
         prev = GENESIS_HASH
         for i, rec in enumerate(self._records):
             if rec.seq != i or rec.prev_hash != prev:

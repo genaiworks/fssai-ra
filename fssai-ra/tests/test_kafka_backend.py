@@ -111,3 +111,29 @@ def test_poison_record_is_committed_only_after_dlq_acknowledgement():
 )
 def test_malformed_envelopes_are_not_returned_as_events(payload):
     assert KafkaEventConsumer._parse(Message(payload)) is None
+
+
+def test_invalid_utf8_reaches_durable_dead_letter_before_commit():
+    dlq = DeadLetter()
+    consumer = built_consumer(dlq)
+    consumer._process_message(Message(b'\xff\xfe'), lambda _event: None)
+    assert consumer.dead_lettered == 1
+    assert len(consumer.consumer.commits) == 1
+
+
+def test_projection_counts_redelivery_once_and_keeps_partitions_independent():
+    from fssaira.kafka_backend import ConsumedEvent, EvidenceProjector
+
+    projector = EvidenceProjector()
+    def event(offset, partition=0, topic="events"):
+        return ConsumedEvent(topic, partition, offset, "case-1",
+                             {"kind": "executed", "payload": {}}, "trace", 123.0)
+    projector.apply(event(7))
+    projector.apply(event(7))
+    projector.apply(event(6))
+    projector.apply(event(8))
+    projector.apply(event(7, partition=1))
+    projector.apply(event(7, topic="another-topic"))
+    assert projector.summary()["events_by_kind"] == {"executed": 4}
+    assert len(projector.timeline("case-1")) == 4
+    assert projector.last_offset["events/0"] == 8

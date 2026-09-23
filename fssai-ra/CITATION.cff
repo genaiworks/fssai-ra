@@ -18,7 +18,7 @@ abstract: >-
   when reviewers are given an AI assistant, and measures whether each contract
   requirement is bound to a check that runs or only to a sentence.
 version: "1.0.0"
-date-released: "2026-09-11"
+date-released: "2026-09-21"
 license: Apache-2.0
 keywords:
   - agentic AI
