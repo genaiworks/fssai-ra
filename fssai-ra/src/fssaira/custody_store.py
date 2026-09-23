@@ -234,4 +234,30 @@ def load_master_key(path: str | os.PathLike) -> bytes:
     return data
 
 
-__all__ = ["SqlCustodyStore", "custody_schema", "load_master_key"]
+def custody_from_env(**options):
+    """Build durable custody from the environment, or ``None`` if not configured.
+
+    ``FSSAI_CUSTODY_STORE_URL`` selects the custody database. Key-encryption keys
+    come from Vault Transit when ``FSSAI_VAULT_ADDR`` is set (see
+    :mod:`fssaira.kms_vault`), otherwise from ``FSSAI_CUSTODY_MASTER_KEY_FILE``.
+    Configuring a store with neither is refused: durable ciphertext protected by a
+    key that dies with the process would be unreadable after the next restart.
+    """
+    from .key_custody import KeyCustody
+    from .kms_vault import VaultTransitKeyWrapper
+
+    url = os.getenv("FSSAI_CUSTODY_STORE_URL")
+    if not url:
+        return None
+    store = SqlCustodyStore.open(url, os.getenv("FSSAI_CUSTODY_SCHEMA", "fssaira_custody"))
+    wrapper = VaultTransitKeyWrapper.from_env()
+    if wrapper is not None:
+        return KeyCustody(key_wrapper=wrapper, store=store, **options), store
+    key_file = os.getenv("FSSAI_CUSTODY_MASTER_KEY_FILE")
+    if not key_file:
+        raise ValueError("FSSAI_CUSTODY_STORE_URL needs FSSAI_VAULT_ADDR or "
+                         "FSSAI_CUSTODY_MASTER_KEY_FILE")
+    return KeyCustody(master_seed=load_master_key(key_file), store=store, **options), store
+
+
+__all__ = ["SqlCustodyStore", "custody_from_env", "custody_schema", "load_master_key"]

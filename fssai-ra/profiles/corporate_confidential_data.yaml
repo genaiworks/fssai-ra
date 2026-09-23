@@ -126,3 +126,100 @@ transitions:
     to_status: classified
     consequential: true
     approval_role: legal_counsel
+
+# Kernel-floor control contracts (pack_floor.check_pack). Reference values for
+# this synthetic profile: an adopting institution replaces the owners, capacity and
+# responses with its own signed-off decisions.
+controls:
+  authorize_internal_use:
+    protected_asset: The governed dataset request status changed by authorize_internal_use
+    permitted_operation: A data_owner approves one exact authorize_internal_use (classified to internal_use_authorized) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: data_owner
+    failure_test: tests/test_profile_floor.py::test_corporate_confidential_data_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the data_owner approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged governed dataset request to manual review
+  authorize_external_release:
+    protected_asset: The governed dataset request status changed by authorize_external_release
+    permitted_operation: A data_protection_officer approves one exact authorize_external_release (internal_use_authorized to external_release_authorized) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: data_protection_officer
+    failure_test: tests/test_profile_floor.py::test_corporate_confidential_data_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the data_protection_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged governed dataset request to manual review
+  revoke_internal_use:
+    protected_asset: The governed dataset request status changed by revoke_internal_use
+    permitted_operation: A security_officer approves one exact revoke_internal_use (internal_use_authorized to access_revoked) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: security_officer
+    failure_test: tests/test_profile_floor.py::test_corporate_confidential_data_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the security_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged governed dataset request to manual review
+  place_legal_hold:
+    protected_asset: The governed dataset request status changed by place_legal_hold
+    permitted_operation: A legal_counsel approves one exact place_legal_hold (classified to legal_hold) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: legal_counsel
+    failure_test: tests/test_profile_floor.py::test_corporate_confidential_data_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the legal_counsel approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged governed dataset request to manual review
+  release_legal_hold:
+    protected_asset: The governed dataset request status changed by release_legal_hold
+    permitted_operation: A legal_counsel approves one exact release_legal_hold (legal_hold to classified) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: legal_counsel
+    failure_test: tests/test_profile_floor.py::test_corporate_confidential_data_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the legal_counsel approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged governed dataset request to manual review
+
+  # Data capabilities the kernel requires of any pack with a disclosure policy.
+  # Their failure tests exercise the shared kernel mediators this profile uses.
+  read_protected_context:
+    protected_asset: Protected records placed into a model context
+    permitted_operation: A holder reads named fields of named subjects for a declared purpose
+    enforcement_point: context_gate
+    owner: data_protection_officer
+    failure_test: tests/test_education_pack.py::test_unnecessary_sensitive_fields_are_denied
+    evidence_artifact: Disclosure intent and outcome records with digests, never values
+    failure_response: Deny, release nothing, and record the refusal code
+  release_labelled_output:
+    protected_asset: A model output derived from protected records
+    permitted_operation: Release to a recipient whose clearance dominates the output label
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_education_pack.py::test_model_cannot_self_declassify_a_summary
+    evidence_artifact: Release receipt with the output label and content digest
+    failure_response: Deny the release and keep the output labelled
+  restore_identity:
+    protected_asset: The link between a token and a real subject
+    permitted_operation: Restore identity only for a recipient cleared for identity fields
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_education_pack.py::test_identity_is_restored_only_for_entitled_recipients
+    evidence_artifact: Identity restoration record naming the release receipt
+    failure_response: Release tokens only and record the refusal
+  delegate_authority:
+    protected_asset: Authority passed from one agent to another
+    permitted_operation: Delegate an equal or narrower slice for the same purpose and a shorter time
+    enforcement_point: delegation_verifier
+    owner: chief_information_security_officer
+    failure_test: tests/test_education_pack.py::test_delegated_agent_cannot_escalate
+    evidence_artifact: Verified grant chain with the effective scope
+    failure_response: Refuse the chain and record the escalation attempt
+  erase_subject:
+    protected_asset: Every governed copy of a subject's data
+    permitted_operation: The privacy owner erases a subject by destroying the subject's keys
+    enforcement_point: key_custody
+    owner: data_protection_officer
+    failure_test: tests/test_privacy_custody.py::test_erasure_reaches_backups_tokens_indexes_and_outputs
+    evidence_artifact: Erasure certificate and a read-back verification of every governed copy
+    failure_response: Report every readable location and keep the request open
+
+# Declared review capacity. Overload defers to the manual route; it never approves.
+review:
+  capacity_per_window: 60
+  window_seconds: 3600
+  queue_limit: 100
+  timeout_seconds: 1800
+  overload_policy: defer_to_manual
+  escalation_role: enterprise_data_governance

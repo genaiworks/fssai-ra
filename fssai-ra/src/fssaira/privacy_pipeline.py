@@ -377,7 +377,7 @@ class ErasureService:
             # Probe a separate custody/record instance. Verification must never
             # replace live keys while investigating whether a backup is readable.
             self.custody._authorize(self._restore_admin(), "backup")
-            probe_custody = KeyCustody(master_seed=self.custody._master)
+            probe_custody = KeyCustody(key_wrapper=self.custody._wrapper)
             admin = probe_custody.register_principal("verification", ["backup", "decrypt"])
             try:
                 probe_custody.restore(admin, backup, journal)

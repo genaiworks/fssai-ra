@@ -137,3 +137,100 @@ transitions:
     to_status: case_closed
     consequential: true
     approval_role: data_protection_officer
+
+# Kernel-floor control contracts (pack_floor.check_pack). Reference values for
+# this synthetic profile: an adopting institution replaces the owners, capacity and
+# responses with its own signed-off decisions.
+controls:
+  assess_eligibility:
+    protected_asset: The benefit eligibility case status changed by assess_eligibility
+    permitted_operation: A eligibility_officer approves one exact assess_eligibility (identity_verified to eligibility_assessed) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: eligibility_officer
+    failure_test: tests/test_profile_floor.py::test_government_benefits_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the eligibility_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged benefit eligibility case to manual review
+  approve_benefit:
+    protected_asset: The benefit eligibility case status changed by approve_benefit
+    permitted_operation: A benefit_approver approves one exact approve_benefit (eligibility_assessed to benefit_approved) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: benefit_approver
+    failure_test: tests/test_profile_floor.py::test_government_benefits_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the benefit_approver approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged benefit eligibility case to manual review
+  deny_benefit:
+    protected_asset: The benefit eligibility case status changed by deny_benefit
+    permitted_operation: A benefit_approver approves one exact deny_benefit (eligibility_assessed to benefit_denied) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: benefit_approver
+    failure_test: tests/test_profile_floor.py::test_government_benefits_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the benefit_approver approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged benefit eligibility case to manual review
+  decide_appeal:
+    protected_asset: The benefit eligibility case status changed by decide_appeal
+    permitted_operation: A independent_appeals_officer approves one exact decide_appeal (under_appeal to eligibility_assessed) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: independent_appeals_officer
+    failure_test: tests/test_profile_floor.py::test_government_benefits_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the independent_appeals_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged benefit eligibility case to manual review
+  close_case_under_retention_rule:
+    protected_asset: The benefit eligibility case status changed by close_case_under_retention_rule
+    permitted_operation: A data_protection_officer approves one exact close_case_under_retention_rule (benefit_approved to case_closed) at the reviewed version
+    enforcement_point: execution_mediator
+    owner: data_protection_officer
+    failure_test: tests/test_profile_floor.py::test_government_benefits_controls_refuse_unauthorized_execution
+    evidence_artifact: Execution receipt binding the proposal digest and the data_protection_officer approval, with intent and outcome evidence
+    failure_response: Deny, record the refusal, and route the unchanged benefit eligibility case to manual review
+
+  # Data capabilities the kernel requires of any pack with a disclosure policy.
+  # Their failure tests exercise the shared kernel mediators this profile uses.
+  read_protected_context:
+    protected_asset: Protected records placed into a model context
+    permitted_operation: A holder reads named fields of named subjects for a declared purpose
+    enforcement_point: context_gate
+    owner: data_protection_officer
+    failure_test: tests/test_education_pack.py::test_unnecessary_sensitive_fields_are_denied
+    evidence_artifact: Disclosure intent and outcome records with digests, never values
+    failure_response: Deny, release nothing, and record the refusal code
+  release_labelled_output:
+    protected_asset: A model output derived from protected records
+    permitted_operation: Release to a recipient whose clearance dominates the output label
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_education_pack.py::test_model_cannot_self_declassify_a_summary
+    evidence_artifact: Release receipt with the output label and content digest
+    failure_response: Deny the release and keep the output labelled
+  restore_identity:
+    protected_asset: The link between a token and a real subject
+    permitted_operation: Restore identity only for a recipient cleared for identity fields
+    enforcement_point: release_gate
+    owner: data_protection_officer
+    failure_test: tests/test_education_pack.py::test_identity_is_restored_only_for_entitled_recipients
+    evidence_artifact: Identity restoration record naming the release receipt
+    failure_response: Release tokens only and record the refusal
+  delegate_authority:
+    protected_asset: Authority passed from one agent to another
+    permitted_operation: Delegate an equal or narrower slice for the same purpose and a shorter time
+    enforcement_point: delegation_verifier
+    owner: agency_security_officer
+    failure_test: tests/test_education_pack.py::test_delegated_agent_cannot_escalate
+    evidence_artifact: Verified grant chain with the effective scope
+    failure_response: Refuse the chain and record the escalation attempt
+  erase_subject:
+    protected_asset: Every governed copy of a subject's data
+    permitted_operation: The privacy owner erases a subject by destroying the subject's keys
+    enforcement_point: key_custody
+    owner: data_protection_officer
+    failure_test: tests/test_privacy_custody.py::test_erasure_reaches_backups_tokens_indexes_and_outputs
+    evidence_artifact: Erasure certificate and a read-back verification of every governed copy
+    failure_response: Report every readable location and keep the request open
+
+# Declared review capacity. Overload defers to the manual route; it never approves.
+review:
+  capacity_per_window: 60
+  window_seconds: 3600
+  queue_limit: 100
+  timeout_seconds: 1800
+  overload_policy: defer_to_manual
+  escalation_role: benefits_service_delivery

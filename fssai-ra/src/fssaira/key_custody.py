@@ -177,6 +177,46 @@ class _Principal:
     operations: frozenset[str]
 
 
+class LocalKeyWrapper:
+    """Key-encryption keys derived in this process from a master key.
+
+    KEK generation ``g`` of a class is derived from the master key, and each data
+    key is wrapped with AES-256-GCM bound to its subject and class. Everything
+    happens in application memory; for keys that never leave a separate service,
+    use :class:`fssaira.kms_vault.VaultTransitKeyWrapper`.
+    """
+
+    name = "local"
+
+    def __init__(self, master_seed: bytes) -> None:
+        self.master_seed = master_seed
+
+    def _kek(self, data_class: str, generation: int) -> bytes:
+        return _hkdf(self.master_seed, f"kek:{data_class}:{generation}")
+
+    def initial_generation(self, data_class: str) -> int:
+        return 1
+
+    def wrap(self, subject: str, data_class: str, generation: int,
+             dek: bytes) -> tuple[bytes, bytes, int]:
+        nonce = secrets.token_bytes(12)
+        body = _aesgcm()(self._kek(data_class, generation)).encrypt(
+            nonce, dek, _wrap_binding(subject, data_class))
+        return nonce, body, generation
+
+    def unwrap(self, subject: str, data_class: str, wrapped: WrappedKey) -> bytes:
+        return _aesgcm()(self._kek(data_class, wrapped.kek_generation)).decrypt(
+            wrapped.nonce, wrapped.body, _wrap_binding(subject, data_class))
+
+    def rotate(self, data_class: str, current: int) -> int:
+        return current + 1
+
+    def rewrap(self, subject: str, data_class: str, wrapped: WrappedKey,
+               generation: int) -> tuple[bytes, bytes, int]:
+        return self.wrap(subject, data_class, generation,
+                         self.unwrap(subject, data_class, wrapped))
+
+
 class KeyCustody:
     """Holds KEKs, wraps DEKs, performs cryptographic operations for credentialed callers.
 
@@ -187,11 +227,18 @@ class KeyCustody:
 
     def __init__(self, *, master_seed: bytes | None = None, clock=None,
                  evidence: Any = None, evidence_token: str | None = None,
-                 store: Any = None) -> None:
-        if store is not None and master_seed is None:
+                 store: Any = None, key_wrapper: Any = None) -> None:
+        if key_wrapper is not None and master_seed is not None:
+            raise ValueError("pass a master seed or a key wrapper, not both")
+        if store is not None and master_seed is None and key_wrapper is None:
             raise ValueError("durable custody needs the master key it was created with "
-                             "(see fssaira.custody_store.load_master_key)")
-        self._master = master_seed if master_seed is not None else secrets.token_bytes(32)
+                             "(see fssaira.custody_store.load_master_key) or a key service")
+        if key_wrapper is None:
+            key_wrapper = LocalKeyWrapper(
+                master_seed if master_seed is not None else secrets.token_bytes(32))
+        #: Who holds the key-encryption keys: this process, or an external service.
+        self._wrapper = key_wrapper
+        self._master = getattr(key_wrapper, "master_seed", None)
         self._clock = clock or time.time
         self._lock = threading.RLock()
         self._kek_generation: dict[str, int] = {}
@@ -244,11 +291,10 @@ class KeyCustody:
                    for token in _credential_candidates(text))
 
     # -- keys ----------------------------------------------------------------
-    def _kek(self, data_class: str, generation: int) -> bytes:
-        return _hkdf(self._master, f"kek:{data_class}:{generation}")
-
     def _current_kek_generation(self, data_class: str) -> int:
-        return self._kek_generation.setdefault(data_class, 1)
+        if data_class not in self._kek_generation:
+            self._kek_generation[data_class] = self._wrapper.initial_generation(data_class)
+        return self._kek_generation[data_class]
 
     def _unwrap(self, subject: str, data_class: str) -> tuple[bytes, int]:
         if subject in self._destroyed:
@@ -259,21 +305,21 @@ class KeyCustody:
             raise CustodyDenied(CustodyCode.KEY_ABSENT,
                                 f"no data key for {subject} in class {data_class}")
         try:
-            dek = _aesgcm()(self._kek(data_class, wrapped.kek_generation)).decrypt(
-                wrapped.nonce, wrapped.body, _wrap_binding(subject, data_class))
-        except Exception as exc:  # cryptography.exceptions.InvalidTag
+            dek = self._wrapper.unwrap(subject, data_class, wrapped)
+        except CustodyDenied:
+            raise
+        except Exception as exc:  # InvalidTag locally; a refusal from a key service
             raise CustodyDenied(CustodyCode.KEY_UNWRAP_FAILED,
-                                "the wrapped data key did not open under this master key") from exc
+                                "the wrapped data key did not open under this key-encryption key"
+                                ) from exc
         return dek, wrapped.key_generation
 
     def _dek(self, subject: str, data_class: str) -> tuple[bytes, int]:
         with self._lock:
             if (subject, data_class) not in self._wrapped and subject not in self._destroyed:
                 dek = secrets.token_bytes(32)
-                generation = self._current_kek_generation(data_class)
-                nonce = secrets.token_bytes(12)
-                body = _aesgcm()(self._kek(data_class, generation)).encrypt(
-                    nonce, dek, _wrap_binding(subject, data_class))
+                nonce, body, generation = self._wrapper.wrap(
+                    subject, data_class, self._current_kek_generation(data_class), dek)
                 wrapped = WrappedKey(data_class, generation, 1, nonce, body)
                 if self._store is not None:
                     self._store.save_new_key(subject, wrapped)
@@ -342,17 +388,16 @@ class KeyCustody:
         """
         self._authorize(credential, "rotate")
         with self._lock:
-            new_generation = self._current_kek_generation(data_class) + 1
+            new_generation = self._wrapper.rotate(data_class,
+                                                  self._current_kek_generation(data_class))
             updated: dict[tuple[str, str], WrappedKey] = {}
             for (subject, cls), wrapped in list(self._wrapped.items()):
                 if cls != data_class:
                     continue
-                dek = _aesgcm()(self._kek(cls, wrapped.kek_generation)).decrypt(
-                    wrapped.nonce, wrapped.body, _wrap_binding(subject, cls))
-                nonce = secrets.token_bytes(12)
-                body = _aesgcm()(self._kek(cls, new_generation)).encrypt(
-                    nonce, dek, _wrap_binding(subject, cls))
-                updated[(subject, cls)] = WrappedKey(cls, new_generation,
+                # A key service re-wraps internally; the data key never leaves it.
+                nonce, body, generation = self._wrapper.rewrap(subject, cls, wrapped,
+                                                               new_generation)
+                updated[(subject, cls)] = WrappedKey(cls, generation,
                                                      wrapped.key_generation, nonce, body)
             if self._store is not None:  # all rewrapped keys commit together
                 self._store.save_rotation(data_class, new_generation, updated)
@@ -440,5 +485,5 @@ def random_master_seed() -> bytes:
 __all__ = [
     "Ciphertext", "CustodyBackup", "CustodyCode", "CustodyDenied", "ErasureCertificate",
     "ErasureEntry", "KeyCustody", "KeyDestroyed", "OPERATIONS", "WrappedKey",
-    "random_master_seed",
+    "LocalKeyWrapper", "random_master_seed",
 ]
