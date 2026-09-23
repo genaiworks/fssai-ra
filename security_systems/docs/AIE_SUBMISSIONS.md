@@ -1,6 +1,8 @@
 # AIE CODE Summit SF 2026 — submission-ready proposals
 
-Select **Brand new session** for each submission. Submit in the order below: each session stands alone and gives the program committee a different format and outcome, so accepting one does not make another redundant. Pick the closest track labels the form offers.
+Select **Brand new session** for each submission. The CFP closes **October 11, 2026** ([Sessionize](https://sessionize.com/aiecode26/)). Submit in the order below. Each session stands alone, with its own format and outcome, so accepting one does not make another redundant. Pick the closest track labels the form offers.
+
+The **Description** is written for attendees. The **Pitch** is written for the program committee and carries the mechanism, evidence and timed outline.
 
 ---
 
@@ -8,19 +10,28 @@ Select **Brand new session** for each submission. Submit in the order below: eac
 
 ## Session Title
 
-Approved for the Build, Used for the Deploy: Where Coding-Agent Authorization Breaks
+Approved for the Build, Used for the Deploy: Binding Coding-Agent Approvals to the Exact Action
 
 ## Description
 
 A reviewer approves one build. Your coding agent deploys a different one, and every log line still says "approved."
 
-In this live demo I follow a single release request from the agent's tool call to the deployment record it changes, then break it three ways. A worker agent borrows the coordinator's authority. The approved build is swapped before execution. A retry pairs a forged approval with a cached receipt. Each attack gets through a dispatcher that looks careful on review.
+In this live demo I take a single `trigger_deploy` call from a coding agent's tool dispatcher to the deployment record it changes, and break it three ways:
 
-Then I close each gap in plain Python: take caller identity from the runtime, never from the model's request; verify the whole delegation chain back to the requester, not just the last hop; and sign approval over the effective arguments, defaults included, so it authorizes exactly one action. On ten scripted delegation chains, trusting the presented scope stops none, per-hop checking stops two, and full-chain verification stops all ten while the legitimate chain still completes.
+- **Borrowed authority.** A worker agent presents its coordinator's scope.
+- **Argument swap.** The approved build is replaced before execution, including through an omitted default argument the reviewer never saw.
+- **Replay with a forged approval.** A forged approval is presented on retry and collects the cached receipt of the real deploy.
 
-I also cover the opposite mistake: a legitimate retry has to return the original result without asking the human again and without deploying twice.
+Each fix happens in the dispatcher, not the prompt:
 
-You'll leave with a small dispatcher to adapt to your own agent stack, adversarial regression tests, and a one-page worksheet covering identity, credentials, approval and recovery. The demo runs offline with scripted requests, so it doesn't depend on conference Wi-Fi or a model API.
+- Caller identity comes from a server-issued context, never from the model's request.
+- Authority is re-derived from the root grant on every call. Each signed delegation hop must narrow its parent's scope, expire no later than its parent, and end at the agent actually making the request.
+- The approval is an Ed25519 signature over the principal, tool, resource and a SHA-256 digest of canonical JSON arguments. The digest is taken after `inspect.Signature.bind()` and `apply_defaults()`, so it covers the call that will actually run.
+- A retry re-verifies the approval before any cached result is returned, and it never runs the side effect twice.
+
+Every refusal has a stable code (`REQUESTER_NOT_CHAIN_LEAF`, `APPROVAL_PAYLOAD_MISMATCH`, `APPROVAL_SIGNATURE_INVALID`), and every result is shown as the deployment record, not a log line.
+
+You'll leave with a dispatcher pattern you can drop in front of your own agent's tools, the adversarial regression tests, and a worksheet for identity, credentials, approval and recovery. The demo runs offline with scripted requests: no model API, no Wi-Fi.
 
 ## Session format
 
@@ -32,11 +43,17 @@ None.
 
 ## Speaker/Session Pitch
 
-Coding agents are getting deploy keys faster than teams are working out what an approval actually authorizes. This talk answers that for one workflow every attendee recognizes — build, approve, deploy, retry — with code they can read on screen and run afterwards.
+**Why this talk, why now.** Coding agents are being handed deploy credentials, and a human approval step is usually the only brake. In most stacks, though, the approval is a boolean or a chat message. It isn't cryptographically bound to the exact call that runs. This talk shows the three concrete ways that gap is exploited, with the patch for each, in code attendees can read on the slide.
 
-I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the reference implementation and the attack harness behind this session, and the most instructive bug in it is mine: the executor verified approval signatures correctly, but a cached-result shortcut in front of it returned a receipt without checking the approval at all. The talk shows that integration mistake live, because it's the kind attendees are most likely to ship.
+**Evidence the fixes matter.** On ten scripted hostile delegation chains, a dispatcher that trusts the presented scope blocks 0. A dispatcher that verifies each hop against its immediate delegator blocks 2. Re-deriving authority from the root on every call blocks all 10, while the legitimate two-hop chain still completes. A 300-attempt grammar fuzzer causes 0 unauthorized effects against the full dispatcher and 105 when the execution mediator is removed, which shows the attacks are real rather than malformed. All figures come from synthetic fixtures and regenerate from a clean checkout.
 
-The session is built for the stage. There's one story, three attacks and three fixes, with every result shown as a changed deployment record rather than a log message. It runs locally, so it works without the network. The repository, recorded run-through and worksheet are ready for reviewers now (links below).
+**The bug that makes it credible.** The most instructive failure is my own. The executor verified approvals correctly, but a cached-result shortcut in front of it returned a receipt without verifying the approval at all. The original 203-test suite passed with that bug in place. The talk shows the bypass and the ordering that fixes it: validate signature, audience, payload, role and expiry first, and only then serve from cache.
+
+**Positioning.** The primitives aren't new: attenuated delegation is familiar from capability tokens such as macaroons and Biscuit, and signing what the approver saw is standard transaction-authorization practice. What's new is where they break when you wire them into an agent's tool dispatcher. The talk also states plainly what the dispatcher can't do: durable exactly-once effects still need an idempotency key honored by the target service.
+
+**Outline (18 min).** 0–2 the wrong build ships; 2–7 borrowed authority and the 0/2/10 comparison; 7–12 argument swap, default-argument binding and the digest; 12–16 forged approval on replay, the cached-receipt bug and the fix; 16–18 what stays your job (caller authentication, key custody, idempotency).
+
+**Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the reference implementation and attack harness behind this session and present in a personal capacity.
 
 ## Possible Tracks
 
@@ -52,20 +69,18 @@ Coding Agents; Security; Agent Infrastructure.
 
 ## Description
 
-The test suite was green: 203 passing. The integration wrapper around the agent guard still let a modified session context drop a secret's data label, and let a forged approval collect a cached receipt. This talk explains why the tests missed both, and how to build evaluations that wouldn't.
+The suite was green: 203 passing tests. Then I wrote new adversarial tests against the integration wrapper around the agent guard, and ten of them failed. A caller could swap in a modified session handle to widen its scope or drop a secret's data label. A forged approval could collect a cached receipt. A Python tuple and a list serialized to the same JSON, so one approval covered a different call. This talk shows why the original suite couldn't see any of it, and how to build agent-security evaluations that would have.
 
-The core problem is that most agent-security tests check the guard's answer, not the world's state. I show a synthetic deployment that writes an unreviewed build and then raises "denied." A test that trusts the refusal passes it. An independent effect oracle, which compares system state before and after, catches the write. It's about 40 lines of standard-library Python, and you can copy it today.
+The root cause is that most agent-security tests assert on what the guard *said*. I show a tool that writes an unreviewed build and then raises "denied." An assertion on the exception passes. An **effect oracle** snapshots system state before and after each attempt, outside the code under test. It judges harm from the diff and catches the write. It's 40 lines of standard-library Python, and you can copy it today.
 
-From those two failures I build a repeatable protocol:
+From there I build the protocol, with an experiment for each step:
 
-1. Define the harmful effect before writing any attack.
-2. Pair every attack with legitimate work that must still succeed.
-3. Remove the control and confirm the attack succeeds; this is your positive control.
-4. Restore the control and confirm the attack fails again.
+1. **Harm is an observable effect**, defined before any attack is written.
+2. **Liveness is part of the result.** Every attack is paired with legitimate work that must still succeed, because a guard that refuses everything contains everything.
+3. **Positive control.** Remove the control and confirm the attacker gets through. With the execution mediator removed, a 300-attempt grammar fuzzer causes 105 unauthorized effects. With it in place, it causes 0. An adaptive bandit attacker goes from 60/60 to 0/60.
+4. **Ablation.** Restore each control and re-run. Across 29 removals, harm returns in 25. The four that stay blocked are two redundant pairs, and removing each pair together brings the harm back. That's a control with a backup, not dead code.
 
-Applied across 29 control-removal experiments, harm returns in 25. The other four aren't wasted checks. They're redundant pairs, and removing both halves of a pair brings the harm back. That's the difference between "this control does nothing" and "this control has a backup."
-
-You'll leave with the effect oracle, an experiment worksheet, and runnable positive and negative controls, all on synthetic fixtures you can replace with your own.
+You'll leave with the effect oracle, an ablation worksheet, and runnable positive and negative controls to point at your own agent's tools.
 
 ## Session format
 
@@ -77,11 +92,26 @@ None.
 
 ## Speaker/Session Pitch
 
-Every team wiring agents into internal tools will be asked "how do you know the guardrails work?" A passing test count and a refusal message are the usual answers, and neither measures what the system actually did. This talk gives attendees a better answer, drawn from defects I found in my own implementation after its suite passed.
+**Why this talk.** Every team shipping tool-using agents will be asked "how do you know the guardrails work?" The usual evidence is a passing test count and a refusal message, and neither measures what the system did. This talk gives the eval track a security method that attendees can apply the same week, drawn from real defects rather than hypotheticals.
 
-I'm Rachna Srivastava, an enterprise architect working independently on authorization and evaluation for AI agents. I built the reference implementation, the falsification harness (25 falsifiers, each paired with a legitimate-work check) and the ablation experiments behind this session. It's a failure story told by the person who made the mistakes. That's what makes it credible and useful, and it's still rare on conference stages.
+**What's technically distinct.** Most eval talks cover model outputs. This one covers system effects: an oracle that sits outside the mediator and diffs state; an attacker positive control that proves the attack could succeed; and single and joint ablations that separate a useless control from a redundant one. The redundant pairs are concrete. Residency and model attestation each independently stop routing sensitive data to a weaker model. Proposal-digest binding and single-use approvals each independently stop replay.
 
-The talk stays focused on two concrete failures and one ablation result; the full experimental tables are in the repository for anyone who wants them. Everything shown can be re-run from a clean checkout with one command.
+**The failure story.** Ten new wrapper tests failed against code whose 203-test suite passed. All six defects they exposed are now fixed and regression-tested:
+
+- mutable session contexts
+- cached replay skipping approval validation
+- lossy JSON coercion in the argument digest
+- high-impact tools registrable without an approver role
+- an inherited, publicly known delegation secret
+- labels attached only after a successful return
+
+I show where the original evaluator stopped looking and what each new test observes.
+
+**Scope, stated once.** All figures come from four synthetic policy worlds that share one kernel and attack grammar. They show the method, not field security rates. Every figure regenerates with `make evidence`, and a test fails if the checked-in evidence drifts.
+
+**Outline (18 min).** 0–2 "203 passed" beside the two bypasses; 2–6 the write-then-deny tool and the effect oracle; 6–10 positive controls (0 vs 105, 0/60 vs 60/60); 10–14 ablations and the redundant pairs; 14–17 the six wrapper defects as a checklist; 17–18 the worksheet.
+
+**Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization and evaluation for AI agents. I built the reference implementation, the 25-case falsification harness and the ablation experiments, and present in a personal capacity.
 
 ## Possible Tracks
 
@@ -93,23 +123,23 @@ Evals; Security; Agent Reliability.
 
 ## Session Title
 
-Stop Your Coding Agent's Summarizer from Leaking Secrets
+Taint Tracking for Multi-Agent Pipelines: Stop Your Summarizer from Leaking Secrets
 
 ## Description
 
-Your summarizer agent has narrow permissions: it can only post to Slack. It never touches the vault. But the worker that fed it did, and now a credential is on its way to #general inside a summary labeled "public."
+Your summarizer agent has narrow permissions: it can only post to a channel, and it never touches the vault. But the worker that fed it did. Now a credential is on its way to #general inside a summary that calls itself "public." Tool permissions track authority. They don't track information.
 
-In this hands-on Python workshop you'll build the fix yourself. Start from a worker-to-summarizer pipeline that leaks a synthetic secret, then repair three functions:
+In this hands-on Python workshop you'll add information-flow control to a worker → summarizer → publisher pipeline. You'll start from code that leaks a synthetic secret and implement three functions:
 
-1. Label what each worker reads.
-2. Carry that label through every handoff.
-3. Check the recipient before anything reaches a channel.
+1. **Label the read.** Record the data class *before* the tool body runs, so a read that raises halfway through still taints the session.
+2. **Propagate on handoff.** The consumer's label becomes the union of its own label and the producer's. Labels only grow, and there is no API to lower one, so a model can't declassify its own output by describing it as public.
+3. **Gate the sink.** Release only if the session's label is a subset of the recipient's clearance and the purpose is one that recipient accepts. Otherwise, fail with a stable denial code (`RECIPIENT_CLASS_NOT_CLEARED`, `RECIPIENT_UNKNOWN`).
 
-Two real workflows must keep working throughout: a public metrics summary, and an authorized disclosure to the security team. A fix that blocks everything fails the exercise.
+Two legitimate flows must survive: a public metrics summary, and an authorized disclosure to the security team. A fix that blocks everything fails the exercise.
 
-Then attack your own repair. Reset the session, throw an exception mid-read, route the secret through a second worker, and watch the actual output sink rather than the log. Seven supplied checks score your pipeline: the starter passes 2 of 7 and a complete repair passes all 7.
+Then attack your own repair: reset the session, raise mid-read, launder the secret through a second worker, and send to an undeclared recipient. You'll judge each result from the actual output sink, not the logs. Seven checks score the pipeline. The starter passes 2 of 7, and a correct repair passes all 7. Finally, delete one handoff call, watch the leak return, and restore it.
 
-You'll leave with working code, regression checks, reference solutions, and a worksheet for finding the same three boundaries in your own tool pipeline. Recovery checkpoints mean nobody gets stuck. Bring a laptop with Python 3.10 or later and install the dependencies beforehand. No model API, GPU or credentials are needed.
+You'll leave with working code, the regression checks, reference solutions, and a worksheet for mapping data classes, handoffs and sinks in your own agent pipeline. Bring Python 3.10+ with dependencies installed beforehand. No model API, GPU or credentials needed.
 
 ## Session format
 
@@ -121,18 +151,32 @@ None.
 
 ## Speaker/Session Pitch
 
-Multi-agent coding systems move information as well as authority, and most permission models only track authority. A summarizer with tightly scoped tools can still leak everything its upstream workers read. Attendees will find that missing connection by watching a leak happen and then fixing it in their own editor.
+**Why this workshop.** Multi-agent coding systems pass context between workers, and permission models almost never follow it. That's how a summarizer with no secret-reading permission ends up publishing a secret. Information-flow control is the textbook answer, but few engineers have implemented it in an agent pipeline. This workshop has them implement it, break it and fix it in 90 minutes.
 
-I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the guard, disclosure fixtures and checks this workshop uses.
+**What attendees do (timed).**
 
-The kit is complete, and every step has been machine-tested end to end:
+| Time | Activity |
+|---|---|
+| 0–10 | Observe the leak; name the harmful effect |
+| 10–25 | Label on read, before exceptions (checkpoint 1) |
+| 25–40 | Propagate labels across handoffs (checkpoint 2) |
+| 40–55 | Gate the sink; reach 7/7 with both legitimate flows intact |
+| 55–75 | Attack reset, exception, two-hop and unknown-recipient paths; remove and restore a handoff |
+| 75–90 | Map one of their own tools |
 
-- editable starter code with three marked TODOs
-- two recovery checkpoints, so late joiners and stuck participants rejoin at the next step
+**Technical honesty built in.** The closing segment covers what this layer can't secure: direct network access, uninstrumented logs, and missing `reads` metadata. A label check is not a network proxy, and attendees leave knowing where their own architecture needs more than a decorator.
+
+**The kit is ready now:**
+
+- starter code with three marked TODOs
+- two recovery checkpoints for anyone who falls behind
 - a reference solution and seven output checks
-- a participant handout, an answer guide and a minute-by-minute instructor plan
+- a participant handout and answer guide
+- a minute-by-minute instructor plan with 60- and 120-minute variants
 
-The exercises deliberately include exception paths and session-reset attacks, and they close with the paths a decorator can't secure, such as direct network access, so attendees leave knowing where their own architecture needs more than code. Everything runs locally, so the room doesn't need to share a network or API quota.
+Every step is machine-tested from a clean install. Everything runs locally, so the room doesn't share a network or API quota.
+
+**Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the guard, the disclosure fixtures and the checks this workshop uses, and present in a personal capacity.
 
 ## Possible Tracks
 
@@ -142,10 +186,20 @@ Multi-Agent Systems; Security; Coding Agents.
 
 ## Before submitting — do not paste this section into the form
 
-These three items do more for an unknown speaker's acceptance odds than any wording change:
+These three items do more for a first-time speaker's acceptance odds than any wording change:
 
-1. **A public repository link** in every pitch. Reviewers who can clone the demo in two minutes stop wondering whether the talk exists.
-2. **A 3–5 minute screen recording** of Proposal 1's demo (unlisted YouTube or Loom). The AIE committee weighs delivery heavily for first-time speakers.
-3. **Replace "(links below)"** in Proposal 1's pitch with those two URLs, and add them to the other two pitches as well.
+1. **Public repository link** in every pitch. A reviewer who can clone the demo in two minutes stops wondering whether the talk exists.
+2. **A 3–5 minute screen recording** of Proposal 1's demo (an unlisted YouTube or Loom link). The committee weighs delivery heavily for unknown speakers.
+3. **A workshop pilot**, even with three colleagues, to record real setup and checkpoint times. Workshop slots are scarce, and a pilot is the strongest evidence the 90-minute plan works.
 
-The quoted figures are reproducible: `evidence/*.json` gives 25/25 falsifiers held and 25/29 ablations with harm in every world, plus the 0/2/10 delegation arms. `python -m workshop.check --implementation starter|solution` gives 2/7 and 7/7. The count of 203 is the historical result recorded in `docs/REVIEW.md`, not a current test count. If a reviewer asks about scope, give them one sentence: all figures are fixture observations on synthetic worlds, not production measurements.
+Every figure above reproduces from this repository:
+
+| Figure | Source |
+|---|---|
+| 0/2/10 delegation arms | `evidence/*.json` → `delegation` |
+| 0/300 fuzzer violations; 105/300 without the mediator | `redteam`, `redteam_without_execution_mediator` (103 in the other three worlds; the talk quotes devtools) |
+| 0/60 bandit; 60/60 positive control | `adaptive` |
+| 25/29 ablations; 25/25 falsifiers | `summary` |
+| 2/7 and 7/7 workshop checks | `python -m workshop.check --implementation starter` and `--implementation solution` |
+| 203 original tests; 10 of 11 new adversarial tests failing (the 11th a concurrency control); six defects | Historical record in `docs/REVIEW.md` and `docs/TECHNICAL_NOTE.md` |
+| 40-line oracle | `src/trustkernel/evaluation.py` |
