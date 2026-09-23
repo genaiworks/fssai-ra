@@ -6,9 +6,114 @@
 
 This guide explains how to build a similar system, starting with actual synthetic inputs and following bytes through encryption, PostgreSQL, Redis, Kafka, Spark, Iceberg, model context, authorization and output verification. It describes the implementation in this repository, with deployment work explicitly separated from runnable examples.
 
-**Start with sections 1–4, run the lab in section 5, then follow the service pipeline in sections 6–12.** Commands below run from the **inner `fssai-ra/` application directory** containing `pyproject.toml`. The repository root contains another directory with the same name. All people and records in the examples are synthetic. The healthcare example exercises access control only; it does not generate clinical advice.
+**If the architecture feels overwhelming, read section 0 first.** Then read sections 1–4, run the lab in section 5, and follow the service pipeline in sections 6–12. Commands below run from the **inner `fssai-ra/` application directory** containing `pyproject.toml`. The repository root contains another directory with the same name. All people and records in the examples are synthetic. The healthcare example exercises access control only; it does not generate clinical advice.
 
 [Documentation index](README.md) · [Architecture](REFERENCE_ARCHITECTURE.md) · [Platform deployment](PLATFORM.md) · [Privacy implementation](PRIVACY_REFERENCE.md)
+
+## 0. Read this first: the whole system in one page
+
+### 0.1 The idea in one sentence
+
+An AI model may help with decisions about sensitive records, but it never holds keys, never sees more than the task needs, and never acts on its own. Every read is checked before it happens. Every change needs a human-approved, exact action. Every step leaves evidence that someone else can check.
+
+Most of the apparent complexity is **breadth, not depth**. The same idea (*check before acting, then record what happened*) is applied in three places, and each place uses infrastructure that could be swapped for something else.
+
+### 0.2 Three rooms and one rule
+
+Think of a records office with three rooms.
+
+| Room | Everyday analogy | What the code does | Main modules |
+|---|---|---|---|
+| **Vault room** (protected read and release) | Files are locked in cabinets. A clerk checks your permission slip *before* opening a drawer, blacks out names before an assistant reads the file, and checks again at the door before anything leaves. | Encrypt fields → check grant → decrypt only allowed fields → replace identities with tokens → model → re-check → restore names only for entitled recipients | `key_custody`, `encrypted_records`, `disclosure`, `privacy_vault`, `privacy_pipeline` |
+| **Change desk** (accountable state change) | Nobody edits a record directly. Someone fills in a form, a supervisor signs *that exact form*, a clerk carries out exactly what was signed, once, and writes it in the ledger. | Proposal → review → approval bound to the proposal digest → executor checks version and replay → state, receipt and evidence committed together | `control_plane`, `exact_action`, `atomic_execution`, `sql_backend` / `redis_backend` |
+| **Mailroom and archive** (external evidence ingestion) | Public letters arrive. Someone checks the sender and removes anything suspicious, puts them on a conveyor belt, and a librarian shelves them in a catalogued archive. | HMAC source check and sanitization → Kafka topic → Spark micro-batches → Iceberg table on MinIO | `import_boundary`, `import_api`, `kafka_backend`, `jobs/kafka_to_iceberg.py` |
+
+**The one rule that ties them together:** model output is always a *suggestion*. It is never a grant, an approval or a release. Every room re-checks authority itself instead of trusting what came before it.
+
+### 0.3 Which tool belongs to which room
+
+| Tool | Room | Role in one line | Running by default in Compose? |
+|---|---|---|---|
+| FastAPI control API (`:8080`) | Change desk, plus the vault room through `/v1/propose-task` | The only HTTP front door for proposals, approvals, execution and evidence | Yes (core) |
+| PostgreSQL | Change desk | Authoritative state; state, receipt and evidence commit in one transaction | Yes (core) |
+| Redis | Change desk (*alternative*) | Backend used only when no database URL is set. **In Compose it runs but holds no control state** (section 8.1) | Runs, but idle for state |
+| Kafka | Mailroom (`fssaira.imports`) and change desk notifications (`fssaira.events`) | Conveyor belt; carries data, does not decide anything | Yes (core) |
+| Import gateway (`:8081`) and its SQLite audit | Mailroom | Front door for external documents | Yes (core) |
+| React console | Change desk | Screens for people; enforces nothing | Yes (core) |
+| Ollama | Model | Local model weights on institution hardware | Only with `--profile model` |
+| Spark, Iceberg REST catalog, MinIO | Mailroom archive | Turns the conveyor into a queryable, versioned table | Only with `--profile analytics` |
+| KeyCustody, TokenVault, DisclosureGate, PrivacyGate | Vault room | Encryption, tokens and permission checks | In-process Python objects; state is **in memory** |
+| Evidence ledger and Ed25519 notary | All three | Hash-chained record plus signed checkpoints that detect truncation | In-process |
+
+If you only remember one table, remember this one. When a section below goes deep into a tool, look up its room here first.
+
+### 0.4 Where the rooms actually connect today
+
+The walkthrough mostly treats the three rooms separately because they *are* mostly separate. There is one real connection in the running API, and a few that people often assume exist but do not.
+
+**Implemented connection: `POST /v1/propose-task` with a `governed_context`** (in `src/fssaira/api.py`):
+
+```mermaid
+sequenceDiagram
+    participant C as Caller
+    participant API as Control API
+    participant D as Disclosure layer (vault room)
+    participant M as Model
+    participant P as Proposal workflow (change desk)
+    C->>API: POST /v1/propose-task {task, governed_context}
+    API->>D: assemble(caller, governed_context)
+    D-->>API: allowed values only, identities tokenized, receipt id
+    API->>API: sanitize task and evidence text (names to tokens)
+    API->>M: propose(task, evidence)
+    M-->>API: tool calls (untrusted)
+    API->>API: replace model's claimed action class with catalogue class<br/>unknown tool = high_impact
+    API-->>C: proposals only + disclosure label + output id
+    Note over C,P: Nothing has executed. To change state, a person submits<br/>POST /v1/proposals → review → approval → execute.
+```
+
+What to notice:
+
+1. The model gets context **only through the disclosure gate**. If the loaded profile has a privacy gate and the caller sends no `governed_context`, the API returns `422`. If the profile has no disclosure policy, a `governed_context` request returns `404`.
+2. The model's *own* claim about how risky its action is gets ignored. The server looks the tool up in its capability catalogue, and anything unknown is treated as `high_impact` and needs a named human.
+3. The proposal list carries the label of everything the session read. Releasing it goes through `/v1/disclosure/outputs/{id}/release`, which re-checks the recipient.
+4. Execution is a separate, human-driven step in the change desk.
+
+**Connections that do *not* exist yet** (each one is listed as a gap in section 14):
+
+| People often assume… | What actually happens |
+|---|---|
+| Imported documents in Iceberg feed the model | No. Nothing reads `imported_evidence` back into the vault room or the model. |
+| A PostgreSQL commit and its Kafka event are one atomic step | No. Kafka publication happens after the commit and can fail on its own. A transactional outbox is needed. |
+| Decision evidence flows into Iceberg automatically | No. `archive_evidence()` has to be called explicitly. |
+| Redis caches PostgreSQL | No. They are alternatives, and Compose uses PostgreSQL. |
+| Vault, keys and grants survive an API restart | No. Custody and token-vault state are in memory unless `FSSAI_DISCLOSURE_STORE` and a real key service are wired in. |
+
+### 0.5 A learning order that keeps it small
+
+Learn one room at a time, from the one with no containers to the one with the most.
+
+| Step | Command (from the inner `fssai-ra/` directory) | Room learned | Needs Docker? |
+|---|---|---|---|
+| 1 | `.venv/bin/python scripts/pipeline_walkthrough.py --output work/pipeline-demo-01`, then open files `01`…`07` in order | Vault room, end to end | No |
+| 2 | `.venv/bin/python scripts/api_walkthrough.py --self-test` | Change desk, on SQLite | No |
+| 3 | Section 9.1: Compose core services plus `smoke_stack.py` | Change desk on PostgreSQL, and the mailroom's front door | Yes |
+| 4 | Section 10.4: `--profile analytics` | Mailroom archive (Spark and Iceberg) | Yes |
+
+You can safely skip these on a first read: Redis internals (8.2–8.5), the DLQ details (9.4), Iceberg's `decision_evidence` and `control_events` tables (10.3), and the Spark evidence verifier (11.3).
+
+### 0.6 Find the section for your question
+
+| Your question | Section |
+|---|---|
+| What exactly is encrypted, and with what? | 4 |
+| What does a ciphertext row look like in SQL? | 5.2 |
+| Why can't the model see Alice's name? | 6, steps 6–7 |
+| What stops the same approval running twice? | 7 and 8.3 |
+| Why is Redis empty? | 8.1 |
+| What does a Kafka message look like? | 9.3 |
+| What if Spark crashes halfway through a batch? | 10.2 |
+| How do I prove an output was not altered? | 11.1 |
+| What is still missing for production? | 14 |
 
 ## 1. The architecture is several connected flows
 
@@ -566,6 +671,8 @@ MERGE rows into sovereign.fssaira.imported_evidence
 Spark records source progress under checkpointLocation
 ```
 
+The default trigger is a 10-second micro-batch that runs until stopped. Setting `FSSAI_AVAILABLE_NOW=true` switches to Spark's `availableNow` trigger instead: it processes every offset available at start-up, then stops. That is useful for tests and one-off catch-up runs.
+
 `startingOffsets=earliest` applies when there is no existing checkpoint. A restart with the same checkpoint resumes its saved progress. `failOnDataLoss=true` prevents quietly skipping unavailable Kafka offsets. The job now fails the batch before writing when required fields/hash checks fail; it does not silently filter malformed JSON away.
 
 The failure policy is deliberately stop-and-investigate. It does not yet have a Spark quarantine sink. A poison record will fail again on restart until an operator uses a reviewed repair/quarantine workflow. Do not “fix” the alert by deleting checkpoints or silently adding a filter.
@@ -619,37 +726,44 @@ A snapshot ID identifies a committed table view, not a wall-clock timestamp or a
 
 ### 10.4 Start analytics with compatible binaries
 
+The analytics profile is built from pinned, checksum-verified inputs. Starting it brings up five services in dependency order, with no manual bucket, bootstrap or `--packages` step:
+
+| Order | Service | What it does | Pinned by |
+|---|---|---|---|
+| 1 | `minio` | Object store for Iceberg data and metadata files | Image digest |
+| 2 | `minio-init` | Creates the `warehouse` bucket (`mc mb --ignore-existing`), then exits | Same image digest |
+| 3 | `iceberg-rest` | REST catalog; its catalog database lives on the `catalog-data` volume | `deploy/Dockerfile.catalog`: `apache/iceberg-rest-fixture:1.9.1` by digest |
+| 4 | `iceberg-bootstrap` | Waits up to 60 s for the catalog's `/v1/config`, creates `sovereign.fssaira` and its three tables, then exits | `deploy/Dockerfile.analytics` |
+| 5 | `spark-iceberg` | Runs `jobs/kafka_to_iceberg.py` as its default command and restarts unless stopped | Same image as step 4 |
+
+`deploy/Dockerfile.analytics` starts from `apache/spark:3.5.1-python3` (Scala 2.12). At **build time** it downloads the jars listed in `deploy/analytics/jars.lock.json` from Maven Central and rejects any whose SHA-512 does not match. The jars are the Iceberg Spark runtime 1.9.1 for Spark 3.5 and Scala 2.12, the Iceberg AWS bundle 1.9.1, `spark-sql-kafka-0-10_2.12` 3.5.1 and its token provider, `kafka-clients` 3.4.1 and `commons-pool2` 2.11.1. The build therefore needs internet access, and the running containers do not: they sit on the internal `data` and `catalog` networks.
+
 ```bash
 docker compose --env-file deploy/.env -f deploy/compose.yaml \
-  --profile analytics up -d minio iceberg-rest spark-iceberg
+  --profile analytics up --build -d
 
+# Confirm the one-shot steps succeeded and the stream is running
+docker compose --env-file deploy/.env -f deploy/compose.yaml ps -a \
+  minio-init iceberg-bootstrap spark-iceberg
+docker compose --env-file deploy/.env -f deploy/compose.yaml logs -f spark-iceberg
+
+# Confirm the runtime versions match the lock file
 docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
-  spark-submit --version
+  /opt/spark/bin/spark-submit --version
 ```
 
-The Compose analytics images are quickstart images, some unpinned. **Inspect the actual Spark and Scala versions before choosing a Kafka connector.** A Spark 3.5/Scala 2.12 image must not use a Spark 4.1/Scala 2.13 Kafka connector. The Python optional dependency range is not proof of what is inside the container. Resolve/pin Spark, Scala, Kafka connector, Iceberg runtime, AWS bundle and Java as a tested set.
+`minio-init` and `iceberg-bootstrap` should show `Exited (0)`. A non-zero exit means `spark-iceberg` never started because it depends on both. If you change the Spark version, you must also change every Scala- and Spark-specific jar in the lock file. Mixing a Spark 3.5/Scala 2.12 runtime with a Spark 4.x/Scala 2.13 connector fails at run time.
 
-Ensure the `warehouse` bucket exists before bootstrapping. The existing Compose file does not supply a bucket-initialization service. With a compatible MinIO client inside the MinIO container, initialize it using the service's environment (credentials are not printed):
+**One-shot catch-up run.** Stop the long-running service first, because two queries must never share one checkpoint directory:
 
 ```bash
-docker compose --env-file deploy/.env -f deploy/compose.yaml exec minio \
-  sh -c 'mc alias set lab http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc mb --ignore-existing lab/warehouse'
-
-docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
-  spark-submit /opt/fssaira/jobs/bootstrap_iceberg.py
+docker compose --env-file deploy/.env -f deploy/compose.yaml stop spark-iceberg
+docker compose --env-file deploy/.env -f deploy/compose.yaml --profile analytics \
+  run --rm -e FSSAI_AVAILABLE_NOW=true spark-iceberg
+docker compose --env-file deploy/.env -f deploy/compose.yaml start spark-iceberg
 ```
 
-If that image lacks `mc`, use an approved MinIO client on the catalog network to perform the same bucket creation. Do not assume a healthy object-store process means the bucket exists.
-
-Set the connector coordinate to match the version just observed. For example, **only for Spark 3.5.1 and Scala 2.12**:
-
-```bash
-export PIPELINE_KAFKA_PACKAGE='org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1'
-docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
-  spark-submit --packages "$PIPELINE_KAFKA_PACKAGE" /opt/fssaira/jobs/kafka_to_iceberg.py
-```
-
-This is a foreground, long-running stream; use another terminal for queries. It also requires compatible Iceberg extensions already in the image or installed explicitly. The internal data/catalog networks may prevent Maven downloads: pre-resolve dependencies in the build, or mount a controlled pre-populated dependency cache. Do not loosen protected-runtime network policy to hide a packaging failure.
+Do not loosen the internal-network policy to fetch dependencies at run time. If a jar is missing, fix the lock file and rebuild.
 
 ### 10.5 Query and verify the actual sink
 
@@ -732,7 +846,7 @@ The helper currently appends a complete ledger. Repeated calls against the same 
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
-  spark-submit /opt/fssaira/jobs/verify_evidence_chain.py
+  /opt/spark/bin/spark-submit /opt/fssaira/jobs/verify_evidence_chain.py
 ```
 
 The job recomputes hashes and links in `decision_evidence` and checks sequence gaps. Its report now explicitly says `tail_truncation_checked: false`. A contiguous shorter ledger can pass internal checks. `--since-seq` trusts the first returned predecessor and therefore does not anchor the omitted prefix. An empty table reports `EMPTY`, not proof of a successful archive. Compare with an independently retained signed count/head to check tail deletion or a full history rewrite.
@@ -811,7 +925,8 @@ Run positive and negative tests for unauthorized fields, wrong tenant/subject, s
 | Sensitive record/vault/key persistence was not wired to default PostgreSQL | Lab demonstrates storage pattern only; durable custody and privacy API integration remain open |
 | PostgreSQL and Kafka are not one commit | Transactional event outbox/relay remains required |
 | Iceberg archives can append duplicate full ledgers | Documented single-archive scope and need for ledger-aware idempotent archival |
-| Quickstart bucket/catalog/dependency provisioning incomplete | Explicit bucket creation, runtime inspection and dependency preparation steps; full analytics deployment qualification remains open |
+| Quickstart bucket/catalog/dependency provisioning incomplete | Compose now pins MinIO and the catalog by digest, builds Spark 3.5.1 with SHA-512-locked jars, creates the bucket and tables automatically, persists the catalog database, and starts the stream (section 10.4). A live end-to-end run of that profile is still not recorded, so full analytics deployment qualification remains open |
+| Walkthrough did not say how the three workflows relate | Added section 0: one mental model, a tool-to-workflow map, the one implemented join (`/v1/propose-task` with governed context) and the joins that do not exist yet |
 | Service transports and stored operational JSON are not fully encrypted | Documented actual exposure and required TLS/storage/application protections |
 
 This is an implementation walkthrough and a bounded set of repairs, not a claim that all production gaps are closed. The broader [gap register](GAPS.md), [privacy reference limits](PRIVACY_REFERENCE.md) and [security guide](SECURITY.md) remain applicable.
@@ -844,7 +959,7 @@ Executed on 22 September 2026 against a modified working tree based on commit
 | Real Spark 3.5.1 / Scala 2.12 / Java 17 parser tests | Two tests passed, including malformed and hash-tampered input refusal |
 | Python lint | Passed for source, tests, scripts, jobs and adapters |
 | Documentation links/anchors | Passed across 54 maintained Markdown documents |
-| Complete live Kafka → Spark → Iceberg stack | **Not executed as part of this revision** |
+| Complete live Kafka → Spark → Iceberg stack | **Not executed as part of this revision**. The pinned analytics profile described in section 10.4 arrived later, in commit `775c53f`, and has not yet been run end to end either |
 | Production KMS, failover, power-loss, concurrent-writer and physical recipient-delivery qualification | **Not established by these checks** |
 
 The two skipped tests in the default Python environment are the Spark tests

@@ -143,22 +143,20 @@ same receipt without another authoritative mutation.
 
 Follow [the complete setup and verification sequence](PIPELINE_WALKTHROUGH.md#104-start-analytics-with-compatible-binaries) for bucket provisioning, bootstrap and streaming commands.
 
-The optional `analytics` profile supplies the official Iceberg REST fixture,
-S3-compatible storage, and the Spark-Iceberg quickstart image. Start it with:
+The optional `analytics` profile supplies a digest-pinned Iceberg REST fixture
+(1.9.1), digest-pinned MinIO, and a locally built Spark 3.5.1 image whose Iceberg
+and Kafka jars are SHA-512-locked in `deploy/analytics/jars.lock.json`. Start it with:
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/compose.yaml \
-  --profile analytics up -d
-
-docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
-  spark-submit --version
-# Select a Kafka connector matching the ACTUAL Spark and Scala versions.
-# See PIPELINE_WALKTHROUGH.md section 10.4 before starting the stream.
+  --profile analytics up --build -d
 ```
 
-Create the warehouse bucket and prepare compatible runtime dependencies before
-bootstrapping; Compose does not supply bucket initialization. The walkthrough
-gives the commands.
+Compose creates the `warehouse` bucket (`minio-init`), creates the Iceberg
+namespace and tables (`iceberg-bootstrap`), and then starts the
+Kafka-to-Iceberg stream (`spark-iceberg`). The build downloads jars; the running
+containers stay on internal networks. The walkthrough explains how to check each
+step and how to run a one-shot catch-up.
 
 The streaming job rejects malformed/hash-invalid imports before committing,
 reads normalized inward events, preserves Kafka partition and
