@@ -2,6 +2,12 @@
 
 Technical handout accompanying the AI Engineer and AI Con proposals. This is a reference-implementation report, not a claim of peer review or a production security certification.
 
+The companion [technical pipeline walkthrough](TECHNICAL_PIPELINE_WALKTHROUGH.md)
+extends the guard analysis into a concrete Kafka, Spark, Iceberg, PostgreSQL and
+Redis data path. It is the implementation appendix for the conference papers:
+the guard protects authority and disclosure decisions, while the pipeline
+details transport integrity, encryption, replay, snapshots and verification.
+
 ## Question and contribution
 
 Can a tool dispatcher contain selected unauthorized actions and disclosures after an agent chooses hostile requests? The artifact combines delegated authority, exact-action approval, and disclosure labels with an evaluation method: observe the harmful effect, remove a control, restore it, and verify that the attacker can succeed in a deliberately weakened system.
