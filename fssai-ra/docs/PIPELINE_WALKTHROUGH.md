@@ -6,7 +6,7 @@
 
 This guide explains how to build a similar system, starting with actual synthetic inputs and following bytes through encryption, PostgreSQL, Redis, Kafka, Spark, Iceberg, model context, authorization and output verification. It describes the implementation in this repository, with deployment work explicitly separated from runnable examples.
 
-**If the architecture feels overwhelming, read section 0 first.** Then read sections 1–4, run the lab in section 5, and follow the service pipeline in sections 6–12. Commands below run from the **inner `fssai-ra/` application directory** containing `pyproject.toml`. The repository root contains another directory with the same name. All people and records in the examples are synthetic. The healthcare example exercises access control only; it does not generate clinical advice.
+**If the architecture feels overwhelming, read the one-page [end-to-end workflow](END_TO_END_WORKFLOW.md) or section 0 first.** Then read sections 1–4, run the lab in section 5, and follow the service pipeline in sections 6–12. Commands below run from the **inner `fssai-ra/` application directory** containing `pyproject.toml`. The repository root contains another directory with the same name. All people and records in the examples are synthetic. The healthcare example exercises access control only; it does not generate clinical advice.
 
 [Documentation index](README.md) · [Architecture](REFERENCE_ARCHITECTURE.md) · [Platform deployment](PLATFORM.md) · [Privacy implementation](PRIVACY_REFERENCE.md)
 
@@ -83,7 +83,7 @@ What to notice:
 | People often assume… | What actually happens |
 |---|---|
 | Imported documents in Iceberg feed the model | No. Nothing reads `imported_evidence` back into the vault room or the model. |
-| A PostgreSQL commit and its Kafka event are one atomic step | No. Kafka publication happens after the commit and can fail on its own. A transactional outbox is needed. |
+| A PostgreSQL commit and its Kafka event are one atomic step | Half true. The event is written to the `event_outbox` table **in the same transaction**; publishing to Kafka happens afterwards through a relay, at least once, with a stable `event_id` for deduplication (section 7). |
 | Decision evidence flows into Iceberg automatically | No. `archive_evidence()` has to be called explicitly. |
 | Redis caches PostgreSQL | No. They are alternatives, and Compose uses PostgreSQL. |
 | Vault, keys and grants survive an API restart | No. Custody and token-vault state are in memory unless `FSSAI_DISCLOSURE_STORE` and a real key service are wired in. |
@@ -437,7 +437,24 @@ A proposal records the exact operation, resource, expected state/version, target
 
 For SQL execution, the authoritative state transition, intent/outcome evidence and execution result share a transaction. A successful first request changes `draft/v1` to `ready_for_officer_review/v2`. Repeating the same request returns the original receipt with replay status and does not increment the resource to v3. PostgreSQL row locking is used; multi-writer serialization/retry qualification remains a separate deployment task.
 
-Kafka publication is outside this database transaction. PostgreSQL success followed by Kafka failure is therefore possible. Do not call the overall flow exactly once. Production should insert a durable outbox record in the same authoritative transaction, publish it with stable event IDs, and deduplicate downstream. That event-outbox relay is an integration gap, not something enabled by installing Kafka.
+**Events use a transactional outbox.** Every lifecycle event carries a stable `event_id` (`resource.registered:<id>`, `action.proposed:<request_id>`, `action.approved:<approval_id>`, `action.executed:<request_id>`). In the SQL profile, `SqlEventOutbox` writes each one to the `event_outbox` table, and `AtomicExecutor` writes `action.executed` inside the same transaction as the state change, receipt and evidence. `OutboxRelay` then publishes pending rows to Kafka in `seq` order, using the `event_id` as the trace ID, and stamps `published_at`.
+
+| Situation | Before | Now |
+|---|---|---|
+| Kafka down during `execute` | State committed but the API returned an error, and the event was lost | Request succeeds; event waits in the outbox |
+| Crash after commit, before publish | Event lost | Event is in the outbox; next relay publishes it |
+| Replay of the same request | Second `action.executed` event | No new event (same `event_id`) |
+
+During a broker outage, the first failed relay pauses inline attempts for `FSSAI_EVENT_RELAY_BACKOFF_SECONDS` (default 30), so requests do not each wait for the producer's delivery timeout. `POST /v1/recovery/reconcile` relays immediately regardless. When a delivery times out, the publisher purges its local queue so the client library does not deliver a stale copy later while the relay also resends it.
+
+Delivery to Kafka is **at least once**: a crash between publishing and stamping, or two relays running together, can send an event twice. `EvidenceProjector` ignores an `event_id` it has already applied. `/health` and `/metrics` report `unpublished_events`, and `POST /v1/recovery/reconcile` relays the backlog.
+
+```sql
+SELECT seq, event_id, published_at IS NOT NULL AS published
+FROM fssaira.event_outbox ORDER BY seq;
+```
+
+The Redis and in-memory profiles still publish directly after their writes; the outbox applies to the SQL profile.
 
 Use the existing API walkthrough:
 
@@ -520,7 +537,7 @@ EXEC
 
 If another writer changes a watched key, `EXEC` fails and the code retries. Case state and replay receipt commit together in this transaction. The separate `RedisEvidenceLedger.append()` watches the evidence list, reads its length/head, constructs the next hash, and appends in another `MULTI/EXEC`. Therefore the entire effect plus intent/outcome ledger is **not** one Redis transaction. Pending-outcome reconciliation is necessary if execution succeeds while evidence recording fails. See Redis [transaction semantics](https://redis.io/docs/latest/develop/using-commands/transactions/).
 
-The adapter's key patterns are not Redis Cluster hash-tagged. Do not switch to clustered Redis and assume multi-key transactions work unchanged; affected keys must share a slot and failover/recovery must be qualified. Retries are currently unbounded under sustained contention, so production needs retry budgets and monitoring.
+The adapter's key patterns are not Redis Cluster hash-tagged. Do not switch to clustered Redis and assume multi-key transactions work unchanged; affected keys must share a slot and failover/recovery must be qualified. Retries are bounded: after `FSSAI_REDIS_MAX_ATTEMPTS` conflicts (default 64, with short jittered backoff) a transition fails closed with `STATE_CONTENTION` and writes nothing, and an evidence append raises `EVIDENCE_CONTENTION`, which the executor turns into a pending outcome for reconciliation. Monitor both codes.
 
 ### 8.4 Memory to disk: AOF and volume
 
@@ -610,7 +627,15 @@ PY
 
 Expected: HTTP `202` and `{"status":"accepted","broker_offset":...}`. The gateway checks declared type, actual UTF-8 byte length and source HMAC. Bad provenance returns a quarantined response; successful validation removes known active-content patterns, computes the SHA-256 of **cleaned** text, writes `ingest_intent` to its low-side SQLite audit, publishes inward, then writes `ingest`.
 
-A broker failure leaves an intent/failure record and no successful acceptance. A timeout can be ambiguous: publication may have succeeded before the response was lost. Repeating an HTTP request is not deduplicated by the gateway. Production needs stable ingest IDs, an authenticated metadata envelope and replay policy. The current source HMAC covers the data string, not a nonce, timestamp or all HTTP metadata.
+A broker failure leaves an intent/failure record and no successful acceptance. A timeout can be ambiguous: publication may have succeeded before the response was lost.
+
+**Use an `ingest_id` to make retries safe.** When a request includes `ingest_id` (1–128 characters of `A–Z a–z 0–9 . _ : -`), the signature must cover the ID, source, content type and data, computed with `ImportBoundary.sign_envelope`. The gateway authenticates first, then:
+
+* first time: publishes and answers `202 accepted`;
+* same ID, same content: answers `200 {"status":"duplicate","broker_offset":<original>}` and publishes nothing;
+* same ID, different content: answers `409 conflict`.
+
+Accepted IDs are stored in the audit SQLite (`FSSAI_IMPORT_AUDIT_PATH`), so they survive a gateway restart. An ID is remembered only after the broker acknowledges, so a failed publish can be retried. Requests without `ingest_id` keep the original data-only signature and are not deduplicated. The ID is also carried in the Kafka value. If the gateway itself loses the broker's acknowledgement, it can still publish twice; the ID lets downstream readers recognise that.
 
 ### 9.3 Kafka envelope and topic roles
 
@@ -689,7 +714,16 @@ ON target.kafka_partition = source.kafka_partition
 WHEN NOT MATCHED THEN INSERT *;
 ```
 
-That protects replay **within one immutable Kafka topic and one sink table**, with a single writer. The current schema does not include topic/cluster epoch. The job rejects comma-separated subscriptions. Never reuse the same table for a different topic or a deleted/recreated topic whose offsets restarted. A generalized production schema should include cluster/topic identity and a topic-generation identity in its key, plus tested concurrency controls. Two independently running writers are not qualified by this example.
+The row identity is now **topic, topic generation, partition and offset**:
+
+```sql
+ON target.kafka_topic = source.kafka_topic
+   AND target.topic_generation = source.topic_generation
+   AND target.kafka_partition = source.kafka_partition
+   AND target.kafka_offset = source.kafka_offset
+```
+
+`topic_generation` comes from `FSSAI_IMPORT_TOPIC_GENERATION` (default `1`). Kafka restarts offsets at zero when a topic is deleted and recreated, so raise the generation when you recreate one; otherwise new records would match old rows and be skipped. The job still subscribes to exactly one topic. Tables created before this change are migrated by `bootstrap_iceberg.py`, which adds the two columns and backfills existing rows with the configured topic and generation. One writer per table is still the supported setup.
 
 Checkpoint directory `/opt/fssaira/checkpoints/imports` is mounted on `spark-checkpoints`. It is Spark progress state, not a backup of source text or encryption keys. Do not share a checkpoint between different queries. Spark explains the `foreachBatch` replay contract in its [streaming guide](https://spark.apache.org/docs/3.5.6/structured-streaming-programming-guide.html).
 
@@ -736,7 +770,7 @@ The analytics profile is built from pinned, checksum-verified inputs. Starting i
 | 4 | `iceberg-bootstrap` | Waits up to 60 s for the catalog's `/v1/config`, creates `sovereign.fssaira` and its three tables, then exits | `deploy/Dockerfile.analytics` |
 | 5 | `spark-iceberg` | Runs `jobs/kafka_to_iceberg.py` as its default command and restarts unless stopped | Same image as step 4 |
 
-`deploy/Dockerfile.analytics` starts from `apache/spark:3.5.1-python3` (Scala 2.12). At **build time** it downloads the jars listed in `deploy/analytics/jars.lock.json` from Maven Central and rejects any whose SHA-512 does not match. The jars are the Iceberg Spark runtime 1.9.1 for Spark 3.5 and Scala 2.12, the Iceberg AWS bundle 1.9.1, `spark-sql-kafka-0-10_2.12` 3.5.1 and its token provider, `kafka-clients` 3.4.1 and `commons-pool2` 2.11.1. The build therefore needs internet access, and the running containers do not: they sit on the internal `data` and `catalog` networks.
+`deploy/Dockerfile.analytics` starts from `apache/spark:3.5.1-scala2.12-java17-python3-ubuntu`, pinned by digest (Spark 3.5.1, Scala 2.12.18, Java 17, **Python 3.10**). The earlier `3.5.1-python3` tag ships Python 3.8, on which the jobs cannot import the `fssaira` package (it requires Python 3.10+), so the bootstrap step always failed there. At **build time** it downloads the jars listed in `deploy/analytics/jars.lock.json` from Maven Central and rejects any whose SHA-512 does not match. The jars are the Iceberg Spark runtime 1.9.1 for Spark 3.5 and Scala 2.12, the Iceberg AWS bundle 1.9.1, `spark-sql-kafka-0-10_2.12` 3.5.1 and its token provider, `kafka-clients` 3.4.1 and `commons-pool2` 2.11.1. The build therefore needs internet access, and the running containers do not: they sit on the internal `data` and `catalog` networks.
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/compose.yaml \
@@ -840,7 +874,16 @@ For teaching, the public key and checkpoint are in the same bundle. In productio
 
 `iceberg_backend.archive_evidence(ledger, store)` converts each ledger record into a `decision_evidence` row and appends it through `IcebergSnapshotStore`. It returns a snapshot ID, record count, a content manifest digest and the ledger's internal verification result. It does not automatically run with the streaming import job.
 
-The helper currently appends a complete ledger. Repeated calls against the same table can duplicate sequence numbers, and `seq` alone cannot distinguish multiple independent ledgers. Use it as a single-archive teaching operation. A continuous production archive needs a `ledger_id`, sequence-based idempotent writes, a consistent source high-water mark, independently retained checkpoints and tested retention. Do not label this helper an exactly-once archive or a retention pin merely because it returns a snapshot ID.
+`archive_evidence(ledger, store, ledger_id="primary")` is incremental and safe to re-run. Rows are keyed by `(ledger_id, seq)`, so several ledgers can share the table. Each call reads the highest archived `seq` for that ledger and then:
+
+| Archive state | Result |
+|---|---|
+| Behind the ledger, hashes agree | Appends only the newer records |
+| Level with the ledger | Appends nothing and creates no snapshot |
+| Ahead of the ledger | Refuses with `ARCHIVE_AHEAD_OF_LEDGER` (the primary was truncated) |
+| Same `seq`, different hash | Refuses with `ARCHIVE_DIVERGED` (the primary was rewritten) |
+
+The report includes `records`, `first_seq`, `last_seq` and the snapshot ID. Run one archiver per `ledger_id`: Iceberg appends do not conflict, so two concurrent archivers could append the same records, which the verifier below reports as duplicates. Existing tables gain the `ledger_id` column through bootstrap, with old rows backfilled as `primary`.
 
 ### 11.3 Spark evidence verification
 
@@ -849,7 +892,17 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg 
   /opt/spark/bin/spark-submit /opt/fssaira/jobs/verify_evidence_chain.py
 ```
 
-The job recomputes hashes and links in `decision_evidence` and checks sequence gaps. Its report now explicitly says `tail_truncation_checked: false`. A contiguous shorter ledger can pass internal checks. `--since-seq` trusts the first returned predecessor and therefore does not anchor the omitted prefix. An empty table reports `EMPTY`, not proof of a successful archive. Compare with an independently retained signed count/head to check tail deletion or a full history rewrite.
+The job reads one ledger (`--ledger-id`, default `primary`), recomputes hashes and links, and reports sequence gaps and **duplicate `seq` values**. On its own it checks internal consistency only, so a contiguous but shorter archive passes and `tail_truncation_checked` is `false`.
+
+Give it a signed checkpoint retained outside the archive and it also detects a deleted tail or a rewritten history:
+
+```bash
+docker compose --env-file deploy/.env -f deploy/compose.yaml exec spark-iceberg \
+  /opt/spark/bin/spark-submit /opt/fssaira/jobs/verify_evidence_chain.py \
+  --checkpoint /path/to/06-checkpoint.json --public-keys /path/to/07-public-keys.json
+```
+
+With a checkpoint the report sets `tail_truncation_checked: true` and adds `checkpoint.code` (`CHECKPOINT_VALID`, `LEDGER_TRUNCATED`, `HISTORY_REWRITTEN` or a signature error). `--since-seq` trusts the first returned predecessor and cannot be combined with `--checkpoint`. An empty table reports `EMPTY`, which is not proof of a successful archive. The checking logic is `verify_rows()`, which is tested without Spark in `tests/test_verify_evidence_chain.py`.
 
 The current verifier collects records to the driver. For large archives, implement distributed verification with partition-boundary checks and authenticated checkpoint comparison; do not assume this teaching verifier scales to an unlimited ledger.
 
@@ -862,7 +915,7 @@ The current verifier collects records to the driver. For large archives, impleme
 | Wrong subject or purpose | Context denied | Verify grant scope; do not broaden automatically |
 | PostgreSQL write interrupted before commit | Transaction rolls back | Retry same logical request and inspect state/result |
 | PostgreSQL commit succeeds, API response lost | Client is uncertain | Retry original request ID; same receipt and one version increment |
-| PostgreSQL commits, Kafka publish fails | State/evidence may exist without event | Reconcile from authoritative DB; durable transactional event outbox still needed |
+| PostgreSQL commits, Kafka publish fails | Request succeeds; `unpublished_events` > 0 | Event waits in `event_outbox`; relay publishes it on the next event or `POST /v1/recovery/reconcile` |
 | Redis process restarts | Recovery depends on AOF/volume/fsync | Verify case, result, approval binding, evidence and pending outcomes together |
 | Redis mutation succeeds, evidence append fails | Pending outcome / incomplete evidence path | Run reconciliation and match receipt; Redis is not SQL's atomic profile |
 | Kafka redelivers an event | Same topic/partition/offset | Idempotent handler; fixed in-memory projector does not double count |
@@ -896,7 +949,7 @@ Persist token mappings encrypted, bind them to sessions/tenants and define expir
 
 Choose PostgreSQL when state and evidence can share a transaction. Use migrations and separate least-privilege roles for state mutation, evidence append, audit read and schema administration. The example DDL creator is not a complete role-provisioning system. Append-only application behavior does not prevent a database superuser rewriting history.
 
-Use Redis only for explicitly chosen responsibilities. If it becomes a cache, design invalidation and avoid treating a stale grant cache as current authority. If it remains the authority backend, preserve replay keys and qualify persistence/recovery. Implement a transactional event outbox and a relay before relying on Kafka notifications for completeness.
+Use Redis only for explicitly chosen responsibilities. If it becomes a cache, design invalidation and avoid treating a stale grant cache as current authority. If it remains the authority backend, preserve replay keys and qualify persistence/recovery. Keep the SQL profile's transactional event outbox and run the relay; remember delivery is at least once and deduplicate on `event_id`.
 
 ### Phase D — Implement analytics and evidence retention
 
@@ -923,9 +976,13 @@ Run positive and negative tests for unauthorized fields, wrong tenant/subject, s
 | `all` optional dependencies omitted explicit privacy package | Added `cryptography` to the `all` extra |
 | Duplicate software citation files disagreed on release date | Aligned application citation metadata with the repository-root citation |
 | Sensitive record/vault/key persistence was not wired to default PostgreSQL | Lab demonstrates storage pattern only; durable custody and privacy API integration remain open |
-| PostgreSQL and Kafka are not one commit | Transactional event outbox/relay remains required |
-| Iceberg archives can append duplicate full ledgers | Documented single-archive scope and need for ledger-aware idempotent archival |
-| Quickstart bucket/catalog/dependency provisioning incomplete | Compose now pins MinIO and the catalog by digest, builds Spark 3.5.1 with SHA-512-locked jars, creates the bucket and tables automatically, persists the catalog database, and starts the stream (section 10.4). A live end-to-end run of that profile is still not recorded, so full analytics deployment qualification remains open |
+| PostgreSQL and Kafka are not one commit | **Fixed in code.** `event_outbox` table written in the state transaction, `OutboxRelay`, stable `event_id`s, projector deduplication, backlog on `/health` and `/metrics` (`tests/test_event_outbox.py`) |
+| Iceberg archives can append duplicate full ledgers | **Fixed in code.** `ledger_id` column, incremental archive from the high-water mark, refusal on truncation or divergence (`tests/test_iceberg_backend.py`) |
+| Spark sink identity omitted topic and topic generation | **Fixed in code.** MERGE key is topic, generation, partition, offset; bootstrap migrates and backfills old tables |
+| Spark evidence verifier could not detect a deleted tail or duplicates | **Fixed in code.** Duplicate `seq` detection and optional signed-checkpoint verification (`tests/test_verify_evidence_chain.py`) |
+| Import gateway could publish a retried request twice | **Fixed in code.** Optional signed `ingest_id`; duplicate and conflict answers; IDs survive restart |
+| Redis retries were unbounded | **Fixed in code.** Bounded retry budget with backoff; fail closed with `STATE_CONTENTION` |
+| Quickstart bucket/catalog/dependency provisioning incomplete | Compose now pins MinIO and the catalog by digest, builds Spark 3.5.1 with SHA-512-locked jars, creates the bucket and tables automatically, persists the catalog database, and starts the stream (section 10.4). It has now been run end to end (section 15), which found and fixed a Python 3.8 base image that made bootstrap fail. Qualification under load and failover remains open |
 | Walkthrough did not say how the three workflows relate | Added section 0: one mental model, a tool-to-workflow map, the one implemented join (`/v1/propose-task` with governed context) and the joins that do not exist yet |
 | Service transports and stored operational JSON are not fully encrypted | Documented actual exposure and required TLS/storage/application protections |
 
@@ -959,7 +1016,7 @@ Executed on 22 September 2026 against a modified working tree based on commit
 | Real Spark 3.5.1 / Scala 2.12 / Java 17 parser tests | Two tests passed, including malformed and hash-tampered input refusal |
 | Python lint | Passed for source, tests, scripts, jobs and adapters |
 | Documentation links/anchors | Passed across 54 maintained Markdown documents |
-| Complete live Kafka → Spark → Iceberg stack | **Not executed as part of this revision**. The pinned analytics profile described in section 10.4 arrived later, in commit `775c53f`, and has not yet been run end to end either |
+| Complete live Kafka → Spark → Iceberg stack | **Not executed as part of this revision**; executed in the gap-closure revision below |
 | Production KMS, failover, power-loss, concurrent-writer and physical recipient-delivery qualification | **Not established by these checks** |
 
 The two skipped tests in the default Python environment are the Spark tests
@@ -968,6 +1025,27 @@ runtime, not a claim that the unpinned analytics Compose images use that version
 Private manuscripts were outside this public-runtime test run. Sample bundles
 contain synthetic data and public verification keys; no private signing/custody
 keys are exported.
+
+### Recorded validation for the gap-closure revision
+
+Executed on 23 September 2026 on a working tree based on commit `775c53f`, against a live Compose stack started as a separate project (`-p fssaira-e2e`): PostgreSQL, Redis, Kafka, control API, import gateway, MinIO, Iceberg REST catalog 1.9.1 and the rebuilt Spark 3.5.1 / Scala 2.12.18 / Java 17 / Python 3.10 analytics image. All data was synthetic.
+
+| Check | Observed result |
+|---|---|
+| Analytics bootstrap on the previous `3.5.1-python3` image | **Failed**: Python 3.8 cannot import `fssaira`. Fixed by the base-image change in section 10.4 |
+| Bootstrap on the new image | Namespace and three tables created |
+| Signed import with `ingest_id`, then identical retry, then same ID with other text | `202 accepted` (offset 0), `200 duplicate` (offset 0), `409 conflict`. Kafka topic held exactly the accepted messages |
+| Kafka → Spark → Iceberg stream | Both accepted documents present with `kafka_topic` and `topic_generation`; 0 bad hashes; 0 duplicate keys |
+| Replay of every committed offset with a fresh checkpoint | Spark re-read both records; row count stayed 2 |
+| Migration of an old-schema `imported_evidence` table | Two columns added; existing row backfilled with topic and generation; second bootstrap run changed nothing |
+| Spark parser tests inside the analytics image | 3 passed |
+| Incremental evidence archive through pyiceberg 0.9.1 | 3 records, then 0 on re-run (same snapshot), then 1; truncated primary refused with `ARCHIVE_AHEAD_OF_LEDGER` |
+| Spark verifier with signed checkpoint | `INTACT` / `CHECKPOINT_VALID`; after deleting the archived tail row: `COMPROMISED` / `LEDGER_TRUNCATED`, exit code 2 |
+| Smoke test and outbox on PostgreSQL | Passed; 4 outbox events, all published; 4 messages on `fssaira.events` despite a replayed request |
+| Full action workflow with Kafka stopped | Passed (state changed once, same receipt on retry, chain valid); 4 events pending. First attempt took 711 s, which led to the relay back-off and producer purge; after those fixes the same workflow took 10 s |
+| Kafka restarted, then `POST /v1/recovery/reconcile` | `events_relayed: 4`, `unpublished_events: 0`. Before the purge fix the topic held 5 extra copies; after it, exactly one copy per event |
+
+Not covered by this run: multi-broker Kafka, PostgreSQL failover, concurrent writers, sustained load, and TLS between services.
 
 After inspecting your disposable database, cleanup of the **lab container you created** is optional:
 

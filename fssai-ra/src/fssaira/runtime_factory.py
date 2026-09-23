@@ -126,9 +126,12 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
     database_url = os.getenv("FSSAI_DATABASE_URL")
     if database_url:
         from .atomic_execution import AtomicExecutor, sql_evidence, sql_object_store, sql_register
+        from .event_outbox import SqlEventOutbox
         from .postgres_backend import database_from_env
 
         database = database_from_env(database_url, evidence_token=evidence_token)
+        # Events are written to the SQL outbox first and relayed to Kafka when it
+        # is configured, so a broker outage never loses or fails a committed change.
         return ControlPlane(
             profile,
             register=sql_register(database),
@@ -136,7 +139,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
             evidence_token=evidence_token,
             authority=authority,
             objects=sql_object_store(database),
-            events=events,
+            events=SqlEventOutbox(database, publisher=events),
             approval_keys=approval_keys,
             metrics=metrics,
             model=model,

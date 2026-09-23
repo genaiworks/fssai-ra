@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import random
 import time
 from dataclasses import asdict
 
@@ -74,11 +76,30 @@ class RedisPendingOutcomeStore:
         return int(self.client.hlen(self.key))
 
 
-class RedisCaseRegister:
-    """Atomic version-checked transitions using WATCH/MULTI/EXEC."""
+def _max_attempts(value: int | None) -> int:
+    """Optimistic-lock retry budget: argument, else ``FSSAI_REDIS_MAX_ATTEMPTS``, else 64."""
+    attempts = value if value is not None else int(os.getenv("FSSAI_REDIS_MAX_ATTEMPTS", "64"))
+    if attempts < 1:
+        raise ValueError("the Redis retry budget must be at least one attempt")
+    return attempts
 
-    def __init__(self, client, prefix: str = "fssaira") -> None:
+
+def _backoff(attempt: int) -> None:
+    """Short jittered pause so contending writers stop colliding in lockstep."""
+    time.sleep(random.uniform(0, min(0.05, 0.001 * (2 ** attempt))))
+
+
+class RedisCaseRegister:
+    """Atomic version-checked transitions using WATCH/MULTI/EXEC.
+
+    A transaction whose watched keys change is retried, at most ``max_attempts``
+    times. After that the transition fails closed with ``STATE_CONTENTION`` and
+    nothing is written, rather than spinning for as long as contention lasts.
+    """
+
+    def __init__(self, client, prefix: str = "fssaira", *, max_attempts: int | None = None) -> None:
         self.client, self.prefix = client, prefix
+        self.max_attempts = _max_attempts(max_attempts)
 
     def _case_key(self, case_id: str) -> str:
         return f"{self.prefix}:case:{case_id}"
@@ -122,7 +143,7 @@ class RedisCaseRegister:
         )
         case_key = self._case_key(proposal.case_id)
         result_key = self._result_key(proposal.request_id)
-        while True:
+        for attempt in range(self.max_attempts):
             try:
                 with self.client.pipeline() as pipe:
                     pipe.watch(case_key, result_key)
@@ -159,23 +180,29 @@ class RedisCaseRegister:
                     pipe.execute()
                     return result
             except redis.WatchError:
-                continue
+                _backoff(attempt)
+        raise ExecutionDenied(
+            "STATE_CONTENTION",
+            f"the resource kept changing during {self.max_attempts} attempt(s); nothing was written",
+        )
 
 
 class RedisEvidenceLedger:
     """Hash-chained evidence persisted as a Redis list with optimistic locking."""
 
-    def __init__(self, client, append_token: str, prefix: str = "fssaira") -> None:
+    def __init__(self, client, append_token: str, prefix: str = "fssaira",
+                 *, max_attempts: int | None = None) -> None:
         if not append_token:
             raise ValueError("append_token must be non-empty")
         self.client, self.token = client, append_token
         self.key = f"{prefix}:evidence"
+        self.max_attempts = _max_attempts(max_attempts)
 
     def append(self, kind: str, payload: dict, *, token: str) -> EvidenceRecord:
         if token != self.token:
             raise PermissionError("no evidence write authority")
         import redis
-        while True:
+        for attempt in range(self.max_attempts):
             try:
                 with self.client.pipeline() as pipe:
                     pipe.watch(self.key)
@@ -189,7 +216,11 @@ class RedisEvidenceLedger:
                     pipe.execute()
                     return record
             except redis.WatchError:
-                continue
+                _backoff(attempt)
+        # The executor turns this into a pending outcome that reconciliation closes.
+        raise RuntimeError(
+            f"EVIDENCE_CONTENTION: the ledger kept changing during {self.max_attempts} attempt(s)"
+        )
 
     def _records(self) -> list[EvidenceRecord]:
         return [EvidenceRecord(**json.loads(value)) for value in self.client.lrange(self.key, 0, -1)]

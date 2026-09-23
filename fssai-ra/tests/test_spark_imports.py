@@ -27,9 +27,11 @@ class SparkImportValidation(unittest.TestCase):
 
     def batch(self, bodies):
         from kafka_to_iceberg import parse_imports
-        rows = [(body, 0, i, datetime(2026, 9, 22)) for i, body in enumerate(bodies)]
+        rows = [(body, "fssaira.imports", 0, i, datetime(2026, 9, 22))
+                for i, body in enumerate(bodies)]
         return parse_imports(self.spark.createDataFrame(
-            rows, "value string, partition int, offset long, timestamp timestamp"))
+            rows, "value string, topic string, partition int, offset long, timestamp timestamp"),
+            generation="2")
 
     def valid_body(self):
         text = "Synthetic public policy"
@@ -44,6 +46,13 @@ class SparkImportValidation(unittest.TestCase):
         validate_batch(batch)
         self.assertEqual(batch.first().kafka_offset, 0)
         self.assertEqual(batch.first().source, "policy-office")
+        self.assertEqual(batch.first().kafka_topic, "fssaira.imports")
+        self.assertEqual(batch.first().topic_generation, "2")
+
+    def test_identity_names_every_parsed_key_column(self):
+        from kafka_to_iceberg import IDENTITY
+        columns = set(self.batch([self.valid_body()]).columns)
+        self.assertTrue(set(IDENTITY) <= columns)
 
     def test_bad_records_are_preserved_and_fail_before_sink(self):
         from kafka_to_iceberg import write_batch

@@ -72,10 +72,20 @@ class KafkaEventPublisher:
         self.producer.produce(self.topic, value=envelope, key=key.encode() or None, callback=callback)
         remaining = self.producer.flush(self.flush_timeout)
         if remaining:
+            # Drop the undelivered copy. Otherwise the client keeps it queued and
+            # delivers it when the broker returns, while the caller (the outbox
+            # relay) also resends it: a needless duplicate.
+            self._purge()
             raise RuntimeError(f"Kafka publish timed out with {remaining} message(s) undelivered")
         if not delivered or not isinstance(delivered[0], int):
             raise RuntimeError(f"Kafka publish failed: {delivered[0] if delivered else 'timeout'}")
         return delivered[0]
+
+    def _purge(self) -> None:
+        purge = getattr(self.producer, "purge", None)
+        if purge is not None:
+            purge(in_queue=True, in_flight=True, blocking=False)
+            self.producer.poll(0)
 
 
 @dataclass(frozen=True)
@@ -239,7 +249,8 @@ class KafkaEventConsumer:
 class EvidenceProjector:
     """Rebuilds a read model of control-plane events for independent monitoring.
 
-    This in-memory read model is idempotent for ordered partition delivery.
+    This in-memory read model is idempotent for ordered partition delivery and
+    for an event republished by the outbox relay (same ``event_id``, new offset).
     After restart, rebuild from the beginning; offsets and projected rows are
     not persistent here. A durable projection must commit both atomically.
 
@@ -254,12 +265,21 @@ class EvidenceProjector:
         self.by_resource: dict[str, list[dict]] = {}
         self.counts: dict[str, int] = {}
         self.last_offset: dict[str, int] = {}
+        #: Stable ``event_id`` values already applied. The SQL outbox relay
+        #: delivers at least once, so one event can reach a *new* offset twice.
+        self.seen_event_ids: set[str] = set()
 
     def apply(self, event: ConsumedEvent) -> None:
         # One ordered consumer per partition: ignore broker redelivery/replay.
         position = f"{event.topic}/{event.partition}"
         if event.offset <= self.last_offset.get(position, -1):
             return
+        event_id = event.value.get("event_id")
+        if event_id is not None and event_id in self.seen_event_ids:
+            self.last_offset[position] = event.offset
+            return
+        if event_id is not None:
+            self.seen_event_ids.add(event_id)
         kind = event.value.get("kind", "unknown")
         payload = event.value.get("payload", {})
         resource = (

@@ -16,6 +16,10 @@ ENVELOPE_SCHEMA = StructType([
 ])
 
 
+#: A row's stable identity in the sink, used for in-batch de-duplication and MERGE.
+IDENTITY = ["kafka_topic", "topic_generation", "kafka_partition", "kafka_offset"]
+
+
 def validate_batch(batch) -> None:
     """Refuse malformed/tampered imports before any sink commit."""
     invalid = batch.where(
@@ -34,30 +38,37 @@ def write_batch(batch, _batch_id: int) -> None:
 
     Delivery from ``foreachBatch`` is at-least-once: a failure between the
     Iceberg commit and checkpoint commit can replay a batch. The sink therefore
-    merges on Kafka's stable ``(partition, offset)`` identity. This makes a
-    replay idempotent at the table boundary instead of merely promising that
-    every future reader will remember to de-duplicate it.
+    merges on the record's stable Kafka identity: topic, topic generation,
+    partition and offset. This makes a replay idempotent at the table boundary
+    instead of merely promising that every future reader will remember to
+    de-duplicate it. The generation distinguishes a deleted and recreated topic,
+    whose offsets restart at zero; raise ``FSSAI_IMPORT_TOPIC_GENERATION`` when
+    you recreate one.
     """
     if batch.rdd.isEmpty():
         return
     validate_batch(batch)
-    prepared = batch.dropDuplicates(["kafka_partition", "kafka_offset"])
+    prepared = batch.dropDuplicates(IDENTITY)
     view = "fssaira_import_microbatch"
     prepared.createOrReplaceTempView(view)
     batch.sparkSession.sql(f"""
         MERGE INTO {CATALOG}.{NAMESPACE}.imported_evidence target
         USING {view} source
-        ON target.kafka_partition = source.kafka_partition
+        ON target.kafka_topic = source.kafka_topic
+           AND target.topic_generation = source.topic_generation
+           AND target.kafka_partition = source.kafka_partition
            AND target.kafka_offset = source.kafka_offset
         WHEN NOT MATCHED THEN INSERT *
     """)
 
 
-def parse_imports(stream):
+def parse_imports(stream, generation: str = "1"):
     """Preserve malformed rows for explicit validation rather than dropping them."""
     return (
         stream.select(
             F.from_json(F.col("value").cast("string"), ENVELOPE_SCHEMA).alias("event"),
+            F.col("topic").alias("kafka_topic"),
+            F.lit(generation).alias("topic_generation"),
             F.col("partition").alias("kafka_partition"),
             F.col("offset").alias("kafka_offset"),
             F.col("timestamp").alias("imported_at"),
@@ -65,6 +76,7 @@ def parse_imports(stream):
         .select(
             "event.value.source", "event.value.text", "event.value.stripped",
             "event.value.content_hash", "event.trace_id",
+            "kafka_topic", "topic_generation",
             "kafka_partition", "kafka_offset", "imported_at",
         )
     )
@@ -85,7 +97,7 @@ def main() -> None:
         .option("failOnDataLoss", "true")
         .load()
     )
-    parsed = parse_imports(stream)
+    parsed = parse_imports(stream, os.getenv("FSSAI_IMPORT_TOPIC_GENERATION", "1"))
     writer = (
         parsed.writeStream.foreachBatch(write_batch)
         .option("checkpointLocation", checkpoint)

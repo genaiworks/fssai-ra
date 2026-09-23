@@ -1,6 +1,8 @@
 # FSSAI-RA documentation index
 
 
+[End-to-end technical workflow](END_TO_END_WORKFLOW.md) — the whole system in four simple flows, step by step. Read this first.
+
 [Full technical pipeline walkthrough](PIPELINE_WALKTHROUGH.md) — source data, encryption, PostgreSQL, Redis, Kafka, Spark, Iceberg and independently verifiable output.
 
 ## Begin here
