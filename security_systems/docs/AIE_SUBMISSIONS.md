@@ -8,6 +8,11 @@ The **Description** is written for attendees. The **Pitch** is written for the p
 
 # Proposal 1 — recommended first submission
 
+Technical companion: [pipeline walkthrough](TECHNICAL_PIPELINE_WALKTHROUGH.md),
+covering the Kafka → Spark → Iceberg path, PostgreSQL encryption/outbox,
+Redis replay boundaries and independent verification used to make the security
+claims concrete.
+
 ## Session Title
 
 Approved for the Build, Used for the Deploy: Binding Coding-Agent Approvals to the Exact Action

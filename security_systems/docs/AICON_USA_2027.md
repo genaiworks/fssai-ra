@@ -59,6 +59,13 @@ For QA and test engineers, security engineers, architects and technical leads pu
 
 ## Technical handout and reproducibility
 
+The accompanying [technical pipeline walkthrough](TECHNICAL_PIPELINE_WALKTHROUGH.md)
+shows the concrete storage and transport path behind the security boundary:
+signed ingress, Kafka envelope identity, Spark validation, Iceberg snapshots,
+PostgreSQL outbox and AES-GCM field encryption, Redis replay/lease semantics,
+and independent verification. It gives reviewers a reproducible implementation
+story without expanding the talk into a product-deployment claim.
+
 The audience receives a three-layer implementation map:
 
 1. **Authorization path:** caller binding → root-derived delegation checks →
