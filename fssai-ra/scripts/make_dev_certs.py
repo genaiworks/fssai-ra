@@ -25,7 +25,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
-SERVICES = ("postgres", "redis", "kafka", "minio", "iceberg-rest")
+SERVICES = ("postgres", "redis", "kafka", "minio", "iceberg-rest", "control-api", "import-gateway")
 TRUSTSTORE_PASSWORD = "changeit"
 
 

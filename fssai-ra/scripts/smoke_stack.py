@@ -23,6 +23,10 @@ def load_env(path: Path) -> dict[str, str]:
     return values
 
 
+#: TLS context for https endpoints (``--ca-file``); None uses the system trust store.
+TLS_CONTEXT = None
+
+
 def request(
     method: str, url: str, body: dict | None = None, *, token: str | None = None,
 ):
@@ -32,7 +36,7 @@ def request(
     encoded = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(url, data=encoded, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=10, context=TLS_CONTEXT) as response:
             return response.status, json.load(response)
     except urllib.error.HTTPError as exc:
         return exc.code, json.load(exc)
@@ -43,7 +47,14 @@ def main() -> None:
     parser.add_argument('--env-file', type=Path, default=ROOT / 'deploy/.env')
     parser.add_argument('--api-url', default='http://127.0.0.1:8080')
     parser.add_argument('--gateway-url', default='http://127.0.0.1:8081')
+    parser.add_argument('--ca-file', type=Path,
+                        help='CA that signed the API and gateway certificates (TLS overlay)')
     args = parser.parse_args()
+    if args.ca_file:
+        import ssl
+
+        global TLS_CONTEXT
+        TLS_CONTEXT = ssl.create_default_context(cafile=str(args.ca_file))
     env = load_env(args.env_file)
     identities = json.loads(env["FSSAI_AUTH_TOKENS_JSON"])
 

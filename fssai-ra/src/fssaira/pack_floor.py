@@ -118,13 +118,27 @@ def _walk_keys(value: Any, path: str = "") -> Iterable[tuple[str, str]]:
             yield from _walk_keys(child, f"{path}[{index}]")
 
 
+def _failure_test_manifest() -> set[str]:
+    """Test IDs recorded when the deployed image was built (``contract/failure-tests.txt``)."""
+    import os
+
+    path = Path(os.getenv("FSSAI_FAILURE_TEST_MANIFEST", "contract/failure-tests.txt"))
+    if not path.is_file():
+        return set()
+    return {line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+
+
 def _test_exists(reference: str, root: Path) -> bool:
     path, _, name = str(reference).partition("::")
-    target = root / path
-    if not name or not target.is_file():
+    if not name:
         return False
-    return re.search(rf"^def {re.escape(name)}\(", target.read_text(encoding="utf-8"),
-                     re.MULTILINE) is not None
+    target = root / path
+    if target.is_file():
+        return re.search(rf"^def {re.escape(name)}\(", target.read_text(encoding="utf-8"),
+                         re.MULTILINE) is not None
+    # A deployed image carries no tests/ directory; it carries the manifest of the
+    # tests that existed in the source it was built from.
+    return f"{path}::{name}" in _failure_test_manifest()
 
 
 def check_pack(raw: Any, *, repo_root: Path | None = None) -> list[FloorFinding]:

@@ -8,6 +8,58 @@ Can a tool dispatcher contain selected unauthorized actions and disclosures afte
 
 The contribution is executable failure analysis and integration guidance. Capability attenuation, reference monitors, and information-flow labels are established ideas. [Macaroons (Birgisson et al., NDSS 2014)](https://research.google/pubs/macaroons-cookies-with-contextual-caveats-for-decentralized-authorization-in-the-cloud/) provides prior art for attenuating delegated authorization. This implementation is not an implementation or empirical comparison of that protocol. [Spotlighting (Hines et al., 2024)](https://www.microsoft.com/en-us/research/publication/defending-against-indirect-prompt-injection-attacks-with-spotlighting/) studies distinguishing untrusted input within model prompts; the present fixtures instead test enforcement after a hostile action has been selected. These approaches address different boundaries and can be complementary.
 
+## Reference request and trust-boundary contract
+
+The proposals use one request shape so the technical story is testable:
+
+```json
+{
+  "request_id": "deploy-2026-0042",
+  "principal": "coordinator",
+  "tool": "trigger_deploy",
+  "resource": "svc-payments",
+  "arguments": {"service": "svc-payments", "build": "v42"},
+  "context_handle": "issued-by-dispatcher",
+  "approval": "ed25519-envelope-or-null"
+}
+```
+
+The model can propose the tool and arguments, but it cannot select the
+principal, authority scope, signing key, callback credential or recipient
+clearance. The dispatcher resolves those values from authenticated server-side
+state. The approval envelope binds `request_id`, effective principal, tool,
+resource, audience, expiry and the digest of canonicalized, signature-bound
+arguments. The callback receives a narrow server-owned capability rather than
+the approval key. This is the minimum separation needed for the examples to
+mean anything beyond a decorator test.
+
+For deployment, place the dispatcher and approval service in a separate trust
+zone from model workers. Keep credentials and the target-side idempotency store
+out of the worker process. A target write should accept `request_id` as an
+idempotency key and return a durable receipt; if the dispatcher crashes between
+the write and receipt persistence, a reconciliation query must determine the
+outcome before retrying. The in-process cache in this artifact intentionally
+does not make arbitrary external effects exactly-once.
+
+## Concrete information-flow contract
+
+The disclosure path is independent of the authority path. A trusted source
+returns a value plus a data-class label; the label is attached before the source
+callback executes and is unioned into every consumer session. A summary cannot
+lower its own label by calling itself “public.” At release, the gate checks:
+
+```text
+session_label ⊆ recipient_clearance
+AND requested_purpose ∈ recipient_allowed_purposes
+AND source_grants_are_still_current
+```
+
+The effect oracle observes the outbound sink separately from the gate's error
+code. This catches the exception-path defect where a tool writes a value and
+then raises a refusal. Direct network access, uninstrumented logs, and
+undeclared `reads` metadata remain outside this reference layer and are
+explicit deployment responsibilities.
+
 ## Threat model and trusted components
 
 The adversary chooses tool calls, arguments, requests, and output text. The dispatcher, configured tool definitions, credential holders, policy loader, approval issuer, and label propagation are trusted. Actors and sensitive records in the recorded runs are synthetic. No empirical claim is made about the probability that a real model follows an injection.

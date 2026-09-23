@@ -300,6 +300,18 @@ records = EncryptedRecordSource(field_classes, custody, writer_credential=w,
 
 The master key is **never** stored in the database. `load_master_key` reads 32 bytes (raw or hex) and refuses a file other users can read. The database alone yields only ciphertext and wrapped keys: opening it with a different master key fails with `CUSTODY_KEY_UNWRAP_FAILED`. Durable custody refuses to start without a master key rather than silently inventing one. `EvidenceNotary.from_key_file(path)` keeps the notary's signing key stable across restarts the same way. Keep the custody database, the master key file and the notary key apart from the application database and from each other where you can. This is software custody, not an HSM: someone holding both the database and the master key can decrypt.
 
+### 4.4 Key-encryption keys in a key service
+
+With a master key file, the process derives key-encryption keys (KEKs) itself. With `VaultTransitKeyWrapper`, it never holds one: HashiCorp Vault's Transit engine wraps and unwraps each data key, and rotation re-wraps inside Vault (`/rewrap`), so a data key never leaves Vault during rotation. Each data class gets its own Transit key, created with `derived: true`, and every wrap is bound to its subject and class through Vault's derivation context.
+
+```bash
+export FSSAI_CUSTODY_STORE_URL=postgresql://…/custody
+export FSSAI_VAULT_ADDR=https://vault.internal:8200 FSSAI_VAULT_TOKEN_FILE=/run/secrets/vault-token
+export FSSAI_VAULT_CA_FILE=/tls/ca.crt            # when Vault serves HTTPS
+```
+
+`custody_from_env()` then builds custody on Vault; without `FSSAI_VAULT_ADDR` it uses `FSSAI_CUSTODY_MASTER_KEY_FILE`, and with neither it refuses to start. Checked against Vault 1.20 (`tests/test_kms_vault.py`, run with `FSSAI_TEST_VAULT_ADDR`): wrapped keys look like `vault:v1:…`, the process holds no KEK, rotation moves every key to `vault:v2:…`, a key moved to another subject does not open, and an invalid token cannot unwrap. Data keys are still unwrapped into the process to encrypt fields, and Vault in development mode is not an HSM: for hardware-backed keys, run Vault with an HSM seal or use a cloud KMS behind the same interface.
+
 ## 5. Run the protected-data lab and inspect every stage
 
 ### 5.1 Local SQL run
@@ -472,6 +484,8 @@ FROM fssaira.event_outbox ORDER BY seq;
 ```
 
 The Redis profile uses `RedisOutboxStore`: `RedisCaseRegister` writes `action.executed` in the same `MULTI/EXEC` as the transition, and the other events are written before publishing. The in-memory profile, when Kafka is configured, uses `MemoryOutboxStore`, which survives an outage but not a restart. With no Kafka configured, events are recorded as published at once, so `unpublished_events` stays 0. Published events older than `FSSAI_EVENT_OUTBOX_RETENTION_SECONDS` (default seven days) are pruned; unpublished ones are never pruned.
+
+**Many writers.** Evidence appends take a PostgreSQL transaction-scoped advisory lock before reading the chain head. Without it, two writers could lock the same head row, compute the same next `seq` and fail on the primary key; `tests/test_postgres_concurrency.py` reproduced exactly that against a real server (`duplicate key … evidence_pkey`) before the fix. With the lock, 64 concurrent executions, 16 racing on one request, and 32 complete workflows in parallel all produce one valid chain and one change per request. Run it with `FSSAI_TEST_POSTGRES_URL` pointing at a disposable database.
 
 Use the existing API walkthrough:
 
@@ -708,8 +722,9 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.t
 | Redis | TLS port only (`--port 0`) | `rediss://` URL plus `FSSAI_REDIS_CA_FILE` |
 | Kafka | `INTERNAL` listener is `SSL` (PEM key and truststore) | `FSSAI_KAFKA_SECURITY_PROTOCOL=SSL`, `FSSAI_KAFKA_SSL_CA_LOCATION`; Spark reads the same variables |
 | MinIO | `--certs-dir` | `https://minio:9000` endpoints; Java clients use the PKCS12 truststore |
+| Control API, import gateway | uvicorn `--ssl-certfile/--ssl-keyfile` | `https://…`; the console's nginx verifies the API certificate (`deploy/tls/console-nginx.conf`); `smoke_stack.py --ca-file` |
 
-What the live check showed (section 15): plain connections to all four are refused, TLS with the CA connects (PostgreSQL negotiated TLSv1.3), and a wrong host name or a missing CA is refused. Python 3.13 verifies strictly, which requires key identifiers in certificates; the generator adds them and `tests/test_service_tls_config.py` performs a real strict handshake.
+The console's own port stays HTTP on `127.0.0.1`, and the Iceberg REST catalog API stays HTTP on its internal network (it carries table metadata pointers, not rows). What the live check showed (section 15): plain connections to every TLS service are refused, TLS with the CA connects (PostgreSQL negotiated TLSv1.3), and a wrong host name or a missing CA is refused. Python 3.13 verifies strictly, which requires key identifiers in certificates; the generator adds them and `tests/test_service_tls_config.py` performs a real strict handshake.
 
 Use the institution's CA and certificate rotation in a deployment. The development CA key sits in `deploy/certs/ca.key`; anyone with it can issue trusted certificates for this stack.
 
@@ -957,6 +972,10 @@ With a checkpoint the report sets `tail_truncation_checked: true` and adds `chec
 
 The current verifier collects records to the driver. For large archives, implement distributed verification with partition-boundary checks and authenticated checkpoint comparison; do not assume this teaching verifier scales to an unlimited ledger.
 
+### 11.4 Signed checkpoints in the running system
+
+Set `FSSAI_NOTARY_KEY_FILE` (an owner-only file with 32 random bytes) and `FSSAI_NOTARY_CHECKPOINT_DIR`. The control plane then signs a checkpoint (record count and head hash, Ed25519) after every executed change and appends it to `checkpoints.jsonl`, fsynced. `GET /v1/evidence/checkpoint` returns the latest checkpoint and the public key for external retention, and `GET /v1/evidence/verify` adds a `checkpoint` verdict: `CHECKPOINT_VALID`, `LEDGER_TRUNCATED`, `HISTORY_REWRITTEN`, or `NO_CHECKPOINT` when nothing has been signed yet. Mount the checkpoint directory on storage the ledger's writer cannot rewrite, and copy checkpoints off the host. The notary signs in the same process as the control plane, so it protects history that was already checkpointed and copied; it does not stop a compromised process from signing a falsified ledger from then on.
+
 ## 12. Failure and recovery walkthrough
 
 | Failure point | Observable result | Safe recovery / what to verify |
@@ -1041,6 +1060,12 @@ Run positive and negative tests for unauthorized fields, wrong tenant/subject, s
 | Monitoring projection lost its view and position on restart | **Fixed in code.** `DurableEvidenceProjector` |
 | Kafka stored its log in the container, not on its volume | **Fixed.** `KAFKA_LOG_DIRS` on the volume, fixed `CLUSTER_ID` |
 | Spark could silently skip records after a topic reset | **Fixed in code.** Start-up continuity check, per-batch position-conflict check, per-generation checkpoints |
+| Every shipped profile failed the kernel's own pack floor, and the server never checked it | **Fixed.** All seven profiles now carry seven-field control contracts and review capacity; each profile has a failure test that drives every consequential transition (`tests/test_profile_floor.py`); `build_control_plane` loads packs through `load_governed_pack` and refuses a weakened pack. Images ship a failure-test manifest because `tests/` is not in the image |
+| Notary existed only in the lab | **Fixed in code.** `CheckpointNotary` signs after every executed change; `/v1/evidence/checkpoint`; checkpoint verdict on `/v1/evidence/verify` |
+| Concurrent PostgreSQL writers collided on the evidence sequence | **Fixed in code.** Advisory lock per chain; real-server multi-writer tests |
+| Key-encryption keys always lived in the application | **Fixed in code.** `VaultTransitKeyWrapper`; `custody_from_env` |
+| Control API and gateway were plain HTTP | **Fixed in the TLS overlay.** HTTPS with verified console proxy |
+| No fault-injection, load or backup/restore evidence | **Added.** `scripts/fault_drill.py`, run live (section 15) |
 
 This is an implementation walkthrough and a bounded set of repairs, not a claim that all production gaps are closed. The broader [gap register](GAPS.md), [privacy reference limits](PRIVACY_REFERENCE.md) and [security guide](SECURITY.md) remain applicable.
 
@@ -1125,6 +1150,22 @@ Executed on 23 September 2026 against a second live stack (`-p fssaira-tls`) sta
 | Start-up continuity check | Generation 1 after a reset: job refused to start, nothing written. Before this check, a restarted stream resumed from a stale checkpoint and lost "Persistence probe one" |
 | Generation raised to 3 | New checkpoint `imports-g3`; both probe documents written, including the one previously lost |
 | Durable custody on PostgreSQL 17 | Data readable after restart; rotation (generation 2) and erasure persisted; other subject unaffected; only custody tables created; plaintext absent from `pg_dump` |
+
+### Recorded validation for the final gap-closure revision
+
+Executed on 23 September 2026 against the TLS stack (`-p fssaira-tls`, rebuilt from this tree), a disposable PostgreSQL 17 and a Vault 1.20 development server. All data was synthetic.
+
+| Check | Observed result |
+|---|---|
+| Kernel floor over shipped profiles, before | **All seven failed** (`PACK_CONTROL_CONTRACT_MISSING`, `PACK_REVIEW_OVERLOAD_FAILS_OPEN`) |
+| Kernel floor, after | All seven pass; 22 floor tests including a weakened pack refused at start-up |
+| API image with floor enforced, first build | **Refused to start**: `tests/` is not in the image, so every `failure_test` looked missing. Fixed with a build-time failure-test manifest; rebuilt image healthy |
+| Real PostgreSQL, concurrent writers, before | `duplicate key … evidence_pkey` |
+| Real PostgreSQL, after advisory lock | 3 tests × repeated runs pass: 64 parallel executions, 16 racing on one request (one change, one receipt), 32 parallel complete workflows with unique outbox sequence numbers |
+| Vault Transit custody | 6 tests pass: `vault:v1:` wrapping, no KEK in process, restart, rotation to `vault:v2:` inside Vault, moved key refused, invalid token refused |
+| API and gateway TLS | Plain HTTP dropped; HTTPS with CA `200`; system trust store refused the development CA; console → API over verified TLS `200`; smoke test over HTTPS passed |
+| Fault drill, first run | Client crashed on non-JSON `5xx` bodies during the PostgreSQL restart (drill bug, fixed); server-side invariants already held |
+| Fault drill, 60 workflows × 2 runs | PostgreSQL restarted and Kafka stopped mid-load; 20 transient `5xx` retried per run; all 60 completed; every resource moved exactly once; one outcome per workflow; chain valid; backlog seen during the outage and drained to 0 (105 and more events relayed); `pg_dump` restore matched chain head, count, receipts and resources. p50 ≈ 1.2 s, p95 ≈ 2.2 s under fault |
 
 The live run used a disposable topic named `fssaira_imports_final` and checkpoint
 directory `/opt/fssaira/checkpoints/final`. The topic name is deliberately paired

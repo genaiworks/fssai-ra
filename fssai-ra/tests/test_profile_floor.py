@@ -130,3 +130,21 @@ def test_the_runtime_refuses_to_start_with_a_weakened_pack(monkeypatch):
     with pytest.raises(PackRejected):
         build_control_plane(profile_path="conference/attacks/malicious-domain-pack.yaml")
     assert build_control_plane(profile_path="profiles/student_support.yaml").profile
+
+
+def test_a_deployed_image_checks_failure_tests_against_its_manifest(tmp_path, monkeypatch):
+    """No tests/ directory at runtime: the build-time manifest is consulted instead."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "failure_test_manifest", Path("scripts/failure_test_manifest.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    manifest = tmp_path / "failure-tests.txt"
+    manifest.write_text("\n".join(module.manifest(Path("tests"))))
+    monkeypatch.setenv("FSSAI_FAILURE_TEST_MANIFEST", str(manifest))
+    raw = read_pack("profiles/student_support.yaml")
+    assert check_pack(raw, repo_root=tmp_path) == []          # found via the manifest
+    manifest.write_text("")
+    codes = {f.code for f in check_pack(raw, repo_root=tmp_path)}
+    assert codes == {"PACK_FAILURE_TEST_MISSING"}              # and refused without it

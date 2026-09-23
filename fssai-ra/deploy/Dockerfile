@@ -16,6 +16,11 @@ COPY src ./src
 RUN python -m pip install --upgrade pip build \
  && python -m pip wheel --no-deps --wheel-dir /wheels . \
  && python -m pip wheel --wheel-dir /wheels ".[platform]"
+# Record which failure tests exist in this source tree. The server checks every
+# pack's failure_test against this list, because tests/ is not shipped.
+COPY tests ./tests
+COPY scripts/failure_test_manifest.py ./
+RUN python failure_test_manifest.py tests > /build/failure-tests.txt
 
 FROM python:3.13-slim
 
@@ -34,6 +39,7 @@ RUN python -m pip install --no-index --find-links=/wheels fssaira[platform] && r
 
 COPY profiles ./profiles
 COPY contract ./contract
+COPY --from=build /build/failure-tests.txt ./contract/failure-tests.txt
 
 RUN useradd --create-home --uid 10001 fssaira \
  && mkdir -p /var/lib/fssaira \

@@ -79,7 +79,7 @@ Run all of it in one process, with no Docker:
 .venv/bin/python scripts/pipeline_walkthrough.py --output work/flow2-demo
 ```
 
-By default custody keys and encrypted rows live in memory. Give `KeyCustody` and `EncryptedRecordSource` a `SqlCustodyStore` and a master key file, and keys, the erasure journal and rows survive restarts (walkthrough 4.3); grants persist with `FSSAI_DISCLOSURE_STORE`. Token-vault mappings are session-scoped by design. A hardware key service is still the production recommendation.
+By default custody keys and encrypted rows live in memory. Give `KeyCustody` and `EncryptedRecordSource` a `SqlCustodyStore` and a master key file, and keys, the erasure journal and rows survive restarts (walkthrough 4.3); grants persist with `FSSAI_DISCLOSURE_STORE`. Token-vault mappings are session-scoped by design. Set `FSSAI_VAULT_ADDR` and the key-encryption keys stay inside HashiCorp Vault instead of this process (walkthrough 4.4).
 
 ## Flow 3 · Change: an approved action changes state exactly once
 
@@ -111,7 +111,7 @@ The outbox works the same way in every profile: PostgreSQL (`event_outbox` table
 | # | What happens | Code | What is saved | How to see it |
 |---|---|---|---|---|
 | 1 | Every decision appends a record whose hash covers its predecessor. | `evidence.py`, SQL/Redis ledgers | `evidence` table or Redis list | `GET /v1/evidence/verify` |
-| 2 | A notary signs the ledger's count and head hash with Ed25519. Keep the signature and public key **outside** the system that writes the ledger. | `evidence_notary.py` | Checkpoint JSON | `06-checkpoint.json`, `07-public-keys.json` |
+| 2 | A notary signs the ledger's count and head hash with Ed25519 after every executed change (`FSSAI_NOTARY_KEY_FILE`). Keep the checkpoints and public key **outside** the system that writes the ledger. | `checkpoint_notary.py` | `checkpoints.jsonl` | `GET /v1/evidence/checkpoint`; `checkpoint` verdict on `/v1/evidence/verify` |
 | 3 | The ledger is copied into Iceberg. Each run appends only records newer than the archive holds, and refuses if the ledger was shortened or rewritten since. | `iceberg_backend.archive_evidence(ledger, store, ledger_id=…)` | `decision_evidence` rows keyed by `(ledger_id, seq)` | Report: `records`, `first_seq`, `last_seq` |
 | 4 | A separate Spark job recomputes every hash and link, reports gaps and duplicates, and with a checkpoint also detects a deleted tail. | `jobs/verify_evidence_chain.py --checkpoint … --public-keys …` | — | JSON verdict `INTACT` / `COMPROMISED` |
 
@@ -142,8 +142,15 @@ Flow 1 is not connected to the model. Imported documents are stored for analysis
 
 ## What code cannot close
 
-These need an institution, hardware or independent people, and are tracked in [GAPS.md](GAPS.md): a hardware-backed key service (KMS/HSM), certificates from the institution's own CA, qualification of specific Postgres/Kafka/Spark deployments under load and failover, storage encryption on the deployed disks, a physical one-way link, human-review studies and independent security assessment.
+These need an institution, hardware or independent people, and are tracked in [GAPS.md](GAPS.md): an HSM behind the key service, certificates from the institution's own CA, multi-node failover and sustained production load for a named deployment (the single-host fault drill is `scripts/fault_drill.py`), storage encryption on the deployed disks, a physical one-way link, human-review and fairness studies, and independent security assessment.
+
+## Safety checks that run at start-up
+
+- **Kernel floor:** the server loads its domain pack through `load_governed_pack` and refuses to start if the pack removes a guarantee (a model approver, fail-open review, a missing control contract or failure test).
+- **Teaching defaults:** a `pilot` or `production` deployment refuses to start with a published teaching key.
+- **Durable custody:** refuses to start without a key source.
+- **Spark import stream:** refuses to start if the topic was reset under the current generation.
 
 ## Encrypting traffic between services
 
-`deploy/compose.tls.yaml` makes PostgreSQL, Redis, Kafka and MinIO accept only TLS, and every client verifies the certificate and host name. Generate development certificates with `scripts/make_dev_certs.py`, then add `-f deploy/compose.tls.yaml` to the Compose command (walkthrough 9.5).
+`deploy/compose.tls.yaml` makes PostgreSQL, Redis, Kafka, MinIO, the control API and the import gateway accept only TLS, and every client verifies the certificate and host name. Generate development certificates with `scripts/make_dev_certs.py`, then add `-f deploy/compose.tls.yaml` to the Compose command (walkthrough 9.5).
