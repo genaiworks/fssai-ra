@@ -200,7 +200,12 @@ def load_capability_contracts(directory: Path, *, root: Path) -> list[Capability
             raise ContractError(f"{path.name}: not valid YAML ({exc})") from exc
         if not isinstance(doc, dict):
             raise ContractError(f"{path.name}: a contract file must be a mapping")
-        domain = str(doc.get("domain") or path.stem).strip()
+        # The adjacent architecture inventory also has a ``capabilities`` mapping,
+        # but it is a traceability catalogue rather than a seven-field executable
+        # contract. A lifecycle capability contract declares its domain explicitly.
+        if "domain" not in doc:
+            continue
+        domain = str(doc["domain"]).strip()
         entries = doc.get("capabilities")
         if not isinstance(entries, list) or not entries:
             raise ContractError(f"{path.name}: declares no capabilities")
