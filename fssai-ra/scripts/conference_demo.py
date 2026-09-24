@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-"""A reusable education demonstration: a malicious AI, given every chance to break the system.
-=======
 """The UNU Macau live demonstration: a malicious AI, given every chance to break the system.
->>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 
     python scripts/conference_demo.py              # narrated, pauses between demos
     python scripts/conference_demo.py --fast       # no pauses (rehearsal, CI)
@@ -21,11 +17,8 @@ mediator's decision in this process; nothing is printed that did not happen.
   7  Remove one control. The attack succeeds. Restore it. The attack fails.
   8  The malicious domain pack.
   9  Same boundary, different model.
-<<<<<<< HEAD
  10  An approval is signed, then the read behind it is revoked; the write is refused.
  11  An authorized but substantively wrong decision, and the appeal that reverses it.
-=======
->>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 """
 from __future__ import annotations
 
@@ -248,70 +241,7 @@ def demo_9(stage: Stage) -> None:
     print(paint("  Utility depends on the model. Safety depends on the mediators.", "1"))
 
 
-<<<<<<< HEAD
-def demo_10(stage: Stage) -> None:
-    stage.title(10, "Approval does not outlive the authority it was built on",
-                "A grade change is approved, then the read behind it is revoked. Does it still execute?")
-    world = EducationWorld()
-    resource = "transcript:stu-a1f3:MATH101"
-    grant = world.grant(holder="support-agent", purpose="academic-support",
-                        subjects=["stu-a1f3"], fields=["current_grades"])
-    world.read(requester="support-agent", grant=grant, purpose="academic-support",
-               subjects=["stu-a1f3"], fields=["current_grades"], session_id="s-10")
-    stage.outcome("ALLOW", "CONTEXT_RELEASED", "context gate", "the model reasons over the granted record")
-    proposal = world.propose(requester="support-agent", operation="correct_transcript_grade",
-                            resource=resource, to_status="grade:B")
-    approval = world.review_and_approve(proposal, reviewer="dr-lin")
-    stage.outcome("ALLOW", "HUMAN_APPROVED", "registrar", "the registrar signs the exact proposal digest")
-    world.data_delegation.revoke(grant.grant_id, by="privacy-officer-ng",
-                                 reason="student withdrew consent before the write")
-    stage.flow("approval signed", "grant revoked", "execution mediator rechecks the read")
-    code, _ = attempt(lambda: world.execute(proposal, approval, context_grant=grant))
-    stage.outcome("DENY", code, "execution mediator",
-                  "the read this proposal relied on is no longer authorized; exact approval is not a standing licence")
-    print(f"  transcript still {world.register.get(resource)['status']}; mutations: {world.register.mutation_count}")
-
-
-def demo_11(stage: Stage) -> None:
-    stage.title(11, "An authorized but substantively wrong decision, and its appeal",
-                "Exact-proposal approval stops substitution. Does it prove the decision was right?")
-    world = EducationWorld()
-    resource = "decision:stu-c9d4:aid"
-    print(f"  a final aid decision stands: {resource} = {world.register.get(resource)['status']}")
-    stage.ai("The committee approved the exact denial that was put to it -- but it was put to them on a")
-    stage.ai("misread of the household-income field. The approval is valid; the decision is wrong.")
-    print(paint("  Exact approval binds WHAT was decided, not whether it was correct. Recovery is a path,"
-                " not a promise.", "2"))
-    # The student's advisor files a challenge; a clerk approves it; the appeals
-    # officer upholds it. Each step is an independent, authorized, evidenced action
-    # with separation of duties -- not a model deciding, and not one person acting.
-    challenge = world.propose(requester="support-agent", operation="file_challenge",
-                             resource=resource, to_status="decision:challenged")
-    filed = world.execute(challenge, _appeal_approval(world, challenge, "clerk-wu"))
-    stage.outcome("ALLOW", "CHALLENGE_FILED", "student services clerk",
-                  f"{resource} → {filed['result'].status}")
-    reversal = world.propose(requester="clerk-wu", operation="uphold_challenge",
-                            resource=resource, to_status="decision:reversed")
-    upheld = world.execute(reversal, _appeal_approval(world, reversal, "appeals-officer-kim"))
-    stage.outcome("ALLOW", "CHALLENGE_UPHELD", "academic appeals officer",
-                  f"{resource} → {upheld['result'].status}; the wrong decision is reversed by an independent authority")
-    print(paint("  Evidence links the original decision, the challenge, and the reversal. The correction "
-                "did not require trusting the model.", "2"))
-
-
-def _appeal_approval(world: EducationWorld, proposal, reviewer: str):
-    """A signed approval from the role the appeal transition requires."""
-    from fssaira.education_world import PEOPLE
-    return world.approvals.approve(proposal, approver=reviewer,
-                                   approver_role=PEOPLE.get(reviewer, "none"),
-                                   now=world.now, ttl_seconds=900)
-
-
-DEMOS = {1: demo_1, 2: demo_2, 3: demo_3, 4: demo_4, 5: demo_5, 6: demo_6, 7: demo_7,
-         8: demo_8, 9: demo_9, 10: demo_10, 11: demo_11}
-=======
 DEMOS = {1: demo_1, 2: demo_2, 3: demo_3, 4: demo_4, 5: demo_5, 6: demo_6, 7: demo_7, 8: demo_8, 9: demo_9}
->>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 
 
 def main() -> int:
@@ -324,11 +254,7 @@ def main() -> int:
         print(__doc__)
         return 0
     stage = Stage(0.0 if args.fast else 1.2)
-<<<<<<< HEAD
-    print(paint("TRUST BY CONSTRUCTION · live demonstration · Governed Agentic AI", "1"))
-=======
     print(paint("TRUST BY CONSTRUCTION · live demonstration · UNU Macau AI Conference 2026", "1"))
->>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
     print(paint("Intelligence is untrusted. Power and data are mediated.", "2"))
     for number in ([args.demo] if args.demo else sorted(DEMOS)):
         DEMOS[number](stage)
