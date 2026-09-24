@@ -1,0 +1,77 @@
+# Healthcare domain pack. Declarative: every value below is cross-checked against the
+# enforced source by fssaira.kernel.packs.load_pack. See packs/template.pack.yaml for
+# what each key means and docs/PACK_AUTHORING.md for the authoring route.
+schema_version: "1.0"
+sector: healthcare
+title: Healthcare record access and secondary use (synthetic)
+sources:
+  profiles:
+    - ../profiles/healthcare_record_access.yaml
+capabilities: [CAP-ACT-1, CAP-ACT-2, CAP-ACT-3, CAP-ACT-4, CAP-ACT-6, CAP-EVI-1, CAP-EVI-2, CAP-EVI-3,
+               CAP-DIS-1, CAP-DIS-2, CAP-DIS-3, CAP-DIS-4]
+purposes: [treatment, research, emergency-treatment, patient-access]
+data_classes:
+  synthetic-health-record: [on-premises, approved-cloud]
+  highly-restricted: [on-premises]
+  research-sensitive: [on-premises]
+  de-identified: [on-premises, approved-cloud]
+recipients:
+  treating_clinician:
+    classes: [synthetic-health-record, highly-restricted]
+    purposes: [treatment, emergency-treatment]
+    zone: on-premises
+  patient_portal:
+    classes: [synthetic-health-record, highly-restricted]
+    purposes: [patient-access]
+    zone: on-premises
+    subject_scope: self
+  pharmacy_system:
+    classes: [synthetic-health-record]
+    purposes: [treatment]
+    zone: approved-cloud
+  research_team:
+    classes: [de-identified]
+    purposes: [research]
+    zone: approved-cloud
+  external_email:
+    classes: []
+    purposes: []
+    zone: external
+transitions:
+  verify_request_identity: {approver_roles: [health_records_specialist], consequential: false}
+  authorize_treatment_access: {approver_roles: [healthcare_privacy_officer], consequential: true}
+  request_secondary_use: {approver_roles: [healthcare_privacy_officer], consequential: true}
+  approve_secondary_use: {approver_roles: [research_review_authority], consequential: true}
+  revoke_treatment_access: {approver_roles: [healthcare_privacy_officer], consequential: true}
+  revoke_research_access: {approver_roles: [healthcare_privacy_officer], consequential: true}
+  declare_break_glass_access: {approver_roles: [emergency_access_clinician], consequential: false}
+  record_break_glass_review: {approver_roles: [emergency_access_reviewer], consequential: true}
+declassification:
+  deidentify_for_research:
+    from_classes: [synthetic-health-record, highly-restricted, research-sensitive]
+    to_class: de-identified
+    purposes: [research]
+    approval_role: research_review_authority
+    removes_subject_identity: true
+emergency_access:
+  - purposes: [emergency-treatment]
+    max_ttl_seconds: 3600
+    max_unreviewed_per_holder: 1
+    review_role: emergency_access_reviewer
+fallback: >-
+  Keep record access unchanged and route the request to Health Information Management
+  and the privacy office through the staffed access, emergency-access, or research-review process.
+tests:
+  - tests/test_domain_packs.py::test_the_same_authority_kernel_holds_outside_education
+  - tests/test_disclosure.py::test_every_hostile_disclosure_scenario_is_contained_in_every_pack
+  - tests/test_disclosure.py::test_declassification_requires_exact_independent_approval
+  - tests/test_disclosure.py::test_break_glass_opens_review_obligation_and_blocks_repeat
+  - tests/test_disclosure.py::test_healthcare_break_glass_review_state_is_reachable
+  - tests/packs/test_kernel_packs.py::test_every_shipped_pack_loads_through_the_kernel
+  - tests/packs/test_pack_transfer.py::test_pack_action_denominators_agree_with_the_committed_matrix
+limits:
+  - Synthetic records, fixtures, and an in-process gate only; no clinical system, model, or recipient channel is exercised.
+  - Governs access and disclosure authorization only; it does not diagnose, triage, prescribe, or alter a clinical record.
+  - De-identification here is a declared label change with independent approval; re-identification risk is not measured.
+  - Not evidence of compliance with any health-information, research-ethics, or clinical-safety obligation.
+  - The action-profile format declares no reviewer capacity, so review load is not governed by this pack.

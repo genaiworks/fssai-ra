@@ -1,0 +1,74 @@
+# Corporate confidential-data domain pack. Declarative: every value below is
+# cross-checked against the enforced source by fssaira.kernel.packs.load_pack.
+# See packs/template.pack.yaml and docs/PACK_AUTHORING.md.
+schema_version: "1.0"
+sector: corporate
+title: Corporate confidential data access and release (synthetic)
+sources:
+  profiles:
+    - ../profiles/corporate_confidential_data.yaml
+capabilities: [CAP-ACT-1, CAP-ACT-2, CAP-ACT-3, CAP-ACT-6, CAP-EVI-1, CAP-EVI-3,
+               CAP-DIS-1, CAP-DIS-2, CAP-DIS-3, CAP-DIS-4]
+purposes: [internal-analysis, external-release, legal-review]
+data_classes:
+  internal: [corporate-private, vendor-contracted]
+  confidential: [corporate-private, vendor-contracted]
+  restricted: [corporate-private]
+  trade-secret: [corporate-private]
+  approved-aggregate: [corporate-private, vendor-contracted, external]
+recipients:
+  finance_analyst:
+    classes: [internal, confidential]
+    purposes: [internal-analysis]
+    zone: corporate-private
+  legal_counsel:
+    classes: [internal, confidential, restricted, trade-secret]
+    purposes: [legal-review]
+    zone: corporate-private
+  external_counsel:
+    classes: [internal, confidential, restricted]
+    purposes: [legal-review]
+    zone: vendor-contracted
+  external_partner:
+    classes: [approved-aggregate]
+    purposes: [external-release]
+    zone: external
+  vendor_analytics:
+    classes: [internal]
+    purposes: [internal-analysis]
+    zone: vendor-contracted
+  personal_email:
+    classes: []
+    purposes: []
+    zone: external
+transitions:
+  classify_dataset: {approver_roles: [data_steward], consequential: false}
+  authorize_internal_use: {approver_roles: [data_owner], consequential: true}
+  authorize_external_release: {approver_roles: [data_protection_officer], consequential: true}
+  revoke_internal_use: {approver_roles: [security_officer], consequential: true}
+  place_legal_hold: {approver_roles: [legal_counsel], consequential: true}
+  release_legal_hold: {approver_roles: [legal_counsel], consequential: true}
+declassification:
+  aggregate_for_external_release:
+    from_classes: [internal, confidential]
+    to_class: approved-aggregate
+    purposes: [external-release]
+    approval_role: data_protection_officer
+    removes_subject_identity: true
+# The corporate exception path is a legal hold (a transition), not break-glass access.
+emergency_access: []
+fallback: >-
+  Keep the dataset's access unchanged and route the request to the data owner, data
+  protection officer, or legal counsel for staffed classification, release, or hold handling.
+tests:
+  - tests/test_domain_packs.py::test_the_same_authority_kernel_holds_outside_education
+  - tests/test_disclosure.py::test_every_hostile_disclosure_scenario_is_contained_in_every_pack
+  - tests/test_disclosure.py::test_declassification_requires_exact_independent_approval
+  - tests/test_disclosure.py::test_every_domain_pack_reaches_every_declared_status_from_its_start
+  - tests/packs/test_kernel_packs.py::test_every_shipped_pack_loads_through_the_kernel
+  - tests/packs/test_pack_transfer.py::test_pack_action_denominators_agree_with_the_committed_matrix
+limits:
+  - Synthetic datasets, fixtures, and an in-process gate only; no DLP, cloud IAM, or records system is exercised.
+  - Aggregation for external release is a declared label change with independent approval; disclosure risk of the aggregate is not measured.
+  - Not evidence of compliance with any records-law, privacy, or contractual confidentiality obligation.
+  - The action-profile format declares no reviewer capacity, so review load is not governed by this pack.
