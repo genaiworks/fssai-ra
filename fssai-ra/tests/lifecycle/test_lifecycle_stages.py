@@ -93,13 +93,14 @@ def test_an_emptied_contract_field_fails_the_contract_stage(tmp_path):
 
 # -- pack ------------------------------------------------------------------
 
-def test_the_repository_pack_stage_passes_and_reports_exemptions():
+def test_the_repository_pack_stage_passes_with_every_profile_on_the_full_floor():
     result = stages.pack(ROOT)
     gate = result.gate("pack_floor_passes")
     assert result.passed, gate.detail
     assert gate.observed["denominator"] == gate.observed["loaded"] == 5
+    # Every shipped profile declares controls and review capacity, so none is exempted.
     exemptions = [e for items in gate.observed["floor_exemptions"].values() for e in items]
-    assert any("REVIEW" in e.upper() for e in exemptions), "review capacity gap must be reported"
+    assert exemptions == []
     assert all(p["limits"] for p in result.artifact["packs"])
 
 

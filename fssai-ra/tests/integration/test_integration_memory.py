@@ -39,13 +39,15 @@ def test_a_new_session_cannot_wash_away_restrictions_by_importing_an_old_summary
     with pytest.raises(DisclosureDenied):
         gate.release(output, recipient=recipient, purpose=purpose, now=NOW + 2)
 
-    # The hazard is real at the gate alone: raw content in a fresh session is unlabelled.
+    # A verbatim copy into a fresh session is caught at the gate itself: cross-session
+    # source detection carries the original label, so the copy is neither releasable
+    # nor treated as laundered by memory.
     washed = gate.derive_output(requester=AGENT, session_id="session-wash",
                                 content=output.content)
-    assert gate.release(washed, recipient=recipient, purpose=purpose, now=NOW + 2)
-    with pytest.raises(MemoryDenied) as denied:
-        memory.screen_output(washed)
-    assert denied.value.code == MemoryCode.LAUNDERED_ARTIFACT
+    assert washed.label.dominates(output.label)
+    with pytest.raises(DisclosureDenied):
+        gate.release(washed, recipient=recipient, purpose=purpose, now=NOW + 2)
+    memory.screen_output(washed)
 
     # The governed path: importing taints the new session before content is handed over.
     imported = memory.import_into_session(summary, requester=AGENT, session_id="session-2",

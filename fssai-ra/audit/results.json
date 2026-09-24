@@ -2522,6 +2522,7 @@
     "contract/9_governed_disclosure.yaml": "593735260aecb25ea20ccf046ae2eb6e2f0920a6980230f2a2a230a6a988ba91",
     "contract/bindings/core.yaml": "6baf040e363bb0a3004a4c5d343901d6dbee2b7313d8de6800fa9500a4af7ccf",
     "contract/capabilities/action.yaml": "8af0278a0576d17800ded006b8023dcfda5432ebe3695e23c1fd1ce09c269f61",
+    "contract/capabilities/architecture.yaml": "b9efbb4beb5ef1817a63c8e4075f5432b4456f83e03268dfc29988a2aa6b0b2a",
     "contract/capabilities/delegation.yaml": "519310e5b62882541c6bba9189c6cda1bca5e2026fa5d07bd88d8ed7086ed214",
     "contract/capabilities/disclosure.yaml": "d81ae71f450835e865bf1d90ce57357904f3cbc38f8d8398cdc8e92d05b9bc73",
     "contract/capabilities/evidence.yaml": "c590e37c1fe605ce7e4cfcde2797c25d7aaac4a954a2623d913358c396c3d2f1",

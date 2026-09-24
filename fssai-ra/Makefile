@@ -108,7 +108,7 @@ doctor:  ## Report what this deployment actually is
 demo:  ## The two-minute hero demonstration (fully offline)
 	$(PYTHON) scripts/demo.py
 
-conference-demo:  ## The UNU Macau live demonstration: a malicious AI, nine demos (offline)
+conference-demo:  ## The UNU Macau live demonstration: a malicious AI, eleven demos (offline)
 	$(PYTHON) scripts/conference_demo.py $(if $(DEMO),--demo $(DEMO),)
 
 security:  ## Kernel floor, education pack failure tests, privacy custody, and conference tests
@@ -155,8 +155,6 @@ lifecycle:  ## Run the lifecycle gates on this repository: contract, bind, falsi
 	$(PYTHON) -m fssaira.cli bind
 	$(PYTHON) -m fssaira.cli falsify
 
-all: lint typecheck test results-check lifecycle check-submission  ## Everything, offline: the definition of done
-
 check: lint reviewer  ## Run the complete local release-readiness suite
 	$(PYTHON) scripts/demo.py --fast > /dev/null
 
@@ -197,3 +195,59 @@ adaptive-q:  ## Offline search and trained tabular-Q evaluation (not LLM RL)
 # Two different attackers once shared the name `adaptive`; the second definition
 # silently replaced the first, so `make adaptive` stopped running the oracle attacker.
 adaptive: adaptive-oracle adaptive-q  ## Both adaptive attackers: independent-oracle search and tabular-Q
+
+.PHONY: tbc-test tbc-demo tbc-check
+tbc-test:  ## Test the public SDK, Guardian, durable memory and agent composition
+	$(PYTHON) -m pytest tests/test_tbc_sdk.py tests/test_sdk_inventory.py
+
+tbc-demo:  ## Run the paper's SDK path (OUTPUT must name a new directory)
+	$(PYTHON) scripts/tbc_demo.py --output $(if $(OUTPUT),$(OUTPUT),audit/tbc-demo-new)
+
+tbc-check:  ## Check the public Passport, SDK and dispatcher inventory
+	$(PYTHON) scripts/check_sdk_inventory.py
+
+.PHONY: architecture-check
+architecture-check:  ## Validate all architecture controls and execute bound capability tests
+	$(PYTHON) scripts/check_sdk_inventory.py
+	$(PYTHON) scripts/verify_architecture.py --output work/architecture
+
+.PHONY: all
+all: lint typecheck test results-check lifecycle check-submission  ## Everything, offline: the definition of done
+	$(PYTHON) scripts/check_sdk_inventory.py
+	$(PYTHON) scripts/verify_architecture.py --output work/architecture
+	$(PYTHON) scripts/measure_covert_channels.py --check
+	$(PYTHON) scripts/qualify_deployment.py --operator release-check
+
+.PHONY: security-review
+security-review:  ## Reproduce current monitor, destination and blocked-attempt regressions
+	$(PYTHON) -m pytest tests/test_frontier_controls.py tests/test_integration_contract.py \
+	  tests/test_qualified_transport.py tests/test_tool_supply_chain.py
+
+.PHONY: qualify deployment-gaps
+qualify:  ## Measure this host and decide from evidence what it is allowed to be
+	$(PYTHON) scripts/qualify_deployment.py --operator "$${OPERATOR:-local-operator}" \
+	  $${CONTROL_STORE:+--control-store $$CONTROL_STORE} \
+	  $${AGENT_UID:+--agent-uid $$AGENT_UID} \
+	  $${EGRESS_CANARY:+--egress-canary $$EGRESS_CANARY}
+
+deployment-gaps:  ## The six previously open gaps, each exercised against real behaviour
+	$(PYTHON) -m pytest tests/test_isolation.py tests/test_qualified_transport.py \
+	  tests/test_monitor_evaluation.py tests/test_remote_effects.py \
+	  tests/test_federation.py tests/test_institutional_evaluation.py \
+	  tests/test_tool_supply_chain.py tests/test_covert_channels.py
+
+.PHONY: developer-demo
+developer-demo:  ## Offline v14 artifact integrity and remote recovery example
+	$(PYTHON) scripts/developer_security_demo.py
+
+.PHONY: covert-channels
+covert-channels:  ## What an authorised release path leaks, and what closes it
+	$(PYTHON) scripts/measure_covert_channels.py
+
+.PHONY: manuscript-check reproduce
+manuscript-check:  ## Optional private manuscript validation; fails clearly if archives are missing
+	$(PYTHON) -m pytest --include-manuscripts -m manuscript
+	$(PYTHON) scripts/check_paper_revision.py
+
+reproduce:  ## Reproduce the public beginner/research workflows into a fresh evidence bundle
+	$(PYTHON) scripts/reproduce.py

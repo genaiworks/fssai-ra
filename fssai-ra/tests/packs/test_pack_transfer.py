@@ -108,6 +108,39 @@ def _municipal_profile() -> dict:
         {"operation": "refuse_permit", "from_status": "under_review", "to_status": "refused",
          "consequential": True, "approval_role": "chief_building_official"},
     ]
+    # The template carries full-floor control contracts, so the new sector must name
+    # its own: one per consequential transition and one per kernel data capability.
+    this_test = "tests/packs/test_pack_transfer.py::test_a_new_sector_transfers_without_changing_the_kernel"
+    profile["controls"] = {
+        operation: {
+            "protected_asset": f"The permit application status changed by {operation}",
+            "permitted_operation": f"A chief_building_official approves one exact {operation} at the reviewed version",
+            "enforcement_point": "execution_mediator",
+            "owner": "chief_building_official",
+            "failure_test": this_test,
+            "evidence_artifact": "Execution receipt binding the proposal digest and the approval",
+            "failure_response": "Deny, record the refusal, and route the unchanged application to the permits counter",
+        }
+        for operation in ("approve_permit", "refuse_permit")
+    }
+    data_controls = {
+        "read_protected_context": ("context_gate", "tests/test_education_pack.py::test_unnecessary_sensitive_fields_are_denied"),
+        "release_labelled_output": ("release_gate", "tests/test_education_pack.py::test_model_cannot_self_declassify_a_summary"),
+        "restore_identity": ("release_gate", "tests/test_education_pack.py::test_identity_is_restored_only_for_entitled_recipients"),
+        "delegate_authority": ("delegation_verifier", "tests/test_education_pack.py::test_delegated_agent_cannot_escalate"),
+        "erase_subject": ("key_custody", "tests/test_privacy_custody.py::test_erasure_reaches_backups_tokens_indexes_and_outputs"),
+    }
+    for capability, (enforcement_point, failure_test) in data_controls.items():
+        profile["controls"][capability] = {
+            "protected_asset": f"Applicant data governed by {capability}",
+            "permitted_operation": f"{capability} only within the declared disclosure policy",
+            "enforcement_point": enforcement_point,
+            "owner": "permits_service_owner",
+            "failure_test": failure_test,
+            "evidence_artifact": "Disclosure intent and outcome records with digests, never values",
+            "failure_response": "Deny, release nothing, and record the refusal code",
+        }
+    profile["review"]["escalation_role"] = "chief_building_official"
     return profile
 
 
