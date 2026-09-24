@@ -161,6 +161,114 @@ against the floor at load time but is not evaluated. It is listed in
 A transfer test proves a new sector built only in a temporary directory loads,
 passes the floor and evaluates, with kernel and mediator source hashes unchanged.
 
+## D14 — Server-derived security fields in model JSON are rejected, not stripped
+
+**Decision.** `integration.typed` refuses a proposal or context request that
+carries principal, tenant, policy version, label or classification, role,
+authority or approval. The name can be in any case, full-width form or
+Unicode normalization, and at any depth. Each such refusal gets its own code.
+These values come only from the authenticated `CallerContext`.
+
+**Why.** Silently dropping an attempted self-authorization hides both attacks
+and integration bugs. Refusal makes the attempt visible in evidence.
+
+## D15 — Importing a memory artifact is a new disclosure
+
+**Decision.** `integration.memory` makes a summary, cache entry, vector entry
+or agent handoff usable in a new session only after two things. The artifact's
+sources are re-read through the real `DisclosureGate`, under the importing
+session's own grant. And the gate labels the session with them before the
+content is handed over. Invalidation follows the derivation graph when a source
+version, grant or consent changes. An artifact with no recorded lineage is
+quarantined.
+
+**Residual (stated in RECONCILIATION R7).** The gate has no lineage for content
+that bypasses governed memory. Text pasted into a fresh session is labelled at
+the bottom. Output screening catches verbatim reuse, not paraphrase. Rule 2's
+"cannot launder what it saw" holds only for content that flows through the
+gate and governed memory.
+
+## D16 — Model evidence must come from outside the model
+
+**Decision.** `integration.bundle` digests eight components: weights, adapter,
+tokenizer, runtime, system template, decoding configuration, tool catalogue and
+retrieval configuration. It signs the bundle manifest. A change to any component
+suspends the bundle until two things exist: a new signed manifest, and a fresh
+measurement taken by a callable independent of the runtime. Reverting the bytes
+does not restore trust. A runtime's self-reported digest is refused even when it
+matches.
+
+The older `ModelRegistry.attest` still accepts a runtime-reported digest. It is
+left unchanged for compatibility and recorded as RECONCILIATION R8.
+
+## D17 — Backend assurance is bound to the code on disk; enforced in pilot/production only
+
+**Decision.** A `ConformanceRecord` binds a backend name, a digest of that
+backend's module sources, and a suite id that includes the conformance suite's
+own digest. `runtime_factory.build_control_plane` refuses to start a pilot or
+production deployment unless every backend in use has a current passing record
+(`FSSAI_CONFORMANCE_RECORDS`). The teaching profile records the status
+(`NOT_REQUIRED_TEACHING`) and never refuses.
+
+**Why.** Enforcing it in teaching would break every demonstration. A
+consequential profile is where "a backend inherits no assurance" matters.
+
+**Residual.** A record is a local JSON file, not a notarized attestation. An
+attacker who can replace both code and record defeats it, which is the same
+trusted-host limit as the evidence manifest.
+
+## D18 — `strict_json` rejects overflowing float literals
+
+**Decision.** `joined_workflow.strict_json` adds a `parse_float` hook that
+rejects non-finite results. `tests/test_joined_strict_json.py` pins `1e999`,
+`-1e999`, `1E400`, nested cases and finite controls.
+
+**Why.** `parse_constant` sees only the `NaN` and `Infinity` literals. `1e999`
+reached `float()` and became `inf`, contradicting §6.1's "reject non-finite
+numbers". Found by the M4 integration work.
+
+## D19 — Only three values in audit/results.json are derived at collection time
+
+**Decision.** Every other leaf is read verbatim from a committed
+machine-written file. The three derived values:
+
+- the claims register, a pure function of the contract files;
+- Table 5 counts, taken from raw per-episode records and refused if they
+  disagree with the committed summary;
+- denominators that exist only as key names in their source.
+
+Each carries a `derivation` field, and tests re-run it. Because the collector
+hashes `contract/**/*.yaml`, adding a capability contract requires re-running
+`collect_results.py`, or `--check` fails as intended.
+
+## D20 — The binder reads word numbers and binds quotes, not bare numbers
+
+**Decision.** The binder extracts both digit tokens and spelled-out cardinals,
+from "zero" up. It skips "one", which works as an article in this prose, and
+ordinals.
+
+A binding quotes an exact paper substring and covers only the tokens its bound
+values match. A number inserted into an already-bound sentence is therefore
+still reported.
+
+## D21 — figures/ reuses the paper renderer; PNG is never faked
+
+**Decision.** `figures/fig1..fig7.svg` come from the renderer in
+`generate_paper_figures.py` and are byte-identical to `paper/figures/`.
+
+PNGs are headless-Chrome screenshots. They are excluded from the byte check,
+because rasters vary across Chrome versions. When Chrome is absent, the manifest
+records `png: "NOT RUN: <reason>"` rather than a placeholder file.
+
+## D22 — An unrecognised FSSAI_DEPLOYMENT_PROFILE refuses to start
+
+**Decision.** `runtime_factory` accepts exactly `teaching`, `pilot` and
+`production`.
+
+**Why.** Previously any other value, such as `prod` or `staging`, fell through
+to teaching behaviour. It skipped both the teaching-defaults refusal and the
+backend-assurance refusal: a fail-open found while reviewing the M4 wiring.
+
 ## D7 — Backend assurance is a signed-off record, checked at construction
 
 **Decision.** `kernel/assurance.py` refuses to hand out a backend unless a

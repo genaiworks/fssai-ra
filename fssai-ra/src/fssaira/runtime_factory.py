@@ -43,6 +43,8 @@ from .metrics import Metrics
 from .oversight import OversightMonitor, ReviewLoadPolicy
 
 TEACHING_KEY_PREFIX = "non-secret"
+#: The only accepted values of FSSAI_DEPLOYMENT_PROFILE. Anything else refuses to start.
+DEPLOYMENT_PROFILES = frozenset({"teaching", "pilot", "production"})
 
 
 @dataclass(frozen=True)
@@ -63,6 +65,13 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
     # production system does not start while a blocking teaching default is
     # active: a warning on /health is read after the forgeable key was used.
     declared = os.getenv("FSSAI_DEPLOYMENT_PROFILE", "teaching").strip().lower()
+    # An unrecognised value (a typo such as "prod", or "staging") must not fall
+    # through to teaching behaviour and skip every consequential refusal below.
+    if declared not in DEPLOYMENT_PROFILES:
+        raise RuntimeError(
+            f"refusing to start: FSSAI_DEPLOYMENT_PROFILE={declared!r} is not one of "
+            f"{', '.join(sorted(DEPLOYMENT_PROFILES))}"
+        )
     if declared in {"pilot", "production"}:
         blocking = [item for item in configuration_warnings() if item.severity == "blocking"]
         if blocking:
@@ -70,12 +79,19 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
                 f"refusing to start a {declared} deployment with teaching defaults active: "
                 + "; ".join(item.code for item in blocking)
             )
+<<<<<<< HEAD
     # The kernel floor is enforced where the deployment starts, not only in tests:
     # a pack that weakens a guarantee (a model approver, a fail-open review, a
     # missing control contract) raises PackRejected and the server does not start.
     from .pack_floor import load_governed_pack
 
     pack = load_governed_pack(
+=======
+    # A backend inherits no assurance until the conformance suite has passed on
+    # exactly its code. Enforced for pilot/production; recorded for teaching.
+    assurance = _backend_assurance(declared)
+    profile = ApplicationProfile.load(
+>>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
         Path(profile_path or os.getenv("FSSAI_PROFILE", "profiles/student_support.yaml"))
     )
     profile = pack.profile
@@ -146,9 +162,13 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         from .postgres_backend import database_from_env
 
         database = database_from_env(database_url, evidence_token=evidence_token)
+<<<<<<< HEAD
         # Events are written to the SQL outbox first and relayed to Kafka when it
         # is configured, so a broker outage never loses or fails a committed change.
         return ControlPlane(
+=======
+        plane = ControlPlane(
+>>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
             profile,
             register=sql_register(database),
             evidence=sql_evidence(database),
@@ -171,6 +191,7 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
                 required_approval_roles=profile.required_approval_roles,
             ),
         )
+        return _attach_assurance(plane, assurance)
 
     # 2. Redis profile: durable across restarts, two stores, reconciliation needed.
     redis_url = os.getenv("FSSAI_REDIS_URL")
@@ -187,8 +208,12 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
 
         client = connect_redis(redis_url)
         prefix = os.getenv("FSSAI_REDIS_PREFIX", "fssaira")
+<<<<<<< HEAD
         outbox = RedisOutboxStore(client, prefix)
         return ControlPlane(
+=======
+        plane = ControlPlane(
+>>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
             profile,
             register=RedisCaseRegister(client, prefix, outbox=outbox),
             evidence=RedisEvidenceLedger(client, evidence_token, prefix),
@@ -205,14 +230,19 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
             review_queue=review_queue,
             durability="best-effort",
         )
+        return _attach_assurance(plane, assurance)
 
     # 3. Teaching profile: everything in memory, nothing survives a restart.
+<<<<<<< HEAD
     if events is not None:
         from .event_outbox import EventOutbox, MemoryOutboxStore
 
         # A broker outage must not fail a change that has already happened.
         events = EventOutbox(MemoryOutboxStore(), publisher=events)
     return ControlPlane(
+=======
+    plane = ControlPlane(
+>>>>>>> 1423e13 (M4: GenAI integration contract, backend assurance, and two fail-open fixes)
         profile,
         evidence_token=evidence_token,
         authority=authority,
@@ -224,6 +254,72 @@ def build_control_plane(*, profile_path: str | Path | None = None) -> ControlPla
         review_queue=review_queue,
         durability="volatile",
     )
+    return _attach_assurance(plane, assurance)
+
+
+def _backends_in_use() -> tuple[str, ...]:
+    """The backend names (see ``fssaira.kernel.assurance.BACKEND_MODULES``) this env selects."""
+    database_url = os.getenv("FSSAI_DATABASE_URL", "").strip()
+    if database_url:
+        state = "sqlite" if database_url.lower().startswith("sqlite") else "postgres"
+    elif os.getenv("FSSAI_REDIS_URL"):
+        state = "redis"
+    else:
+        state = "memory"
+    return (state, "kafka") if os.getenv("FSSAI_KAFKA_BOOTSTRAP") else (state,)
+
+
+def _backend_assurance(declared: str) -> dict[str, dict]:
+    """Require (pilot/production) or record (teaching) backend conformance assurance.
+
+    Records are read from ``FSSAI_CONFORMANCE_RECORDS`` (JSON: one record or a list),
+    produced by :func:`fssaira.kernel.assurance.run_and_record` on the target stack.
+    """
+    from .kernel.assurance import (
+        AssuranceRefused,
+        AssuranceStatus,
+        assurance_status,
+        load_records,
+        require_assurance,
+    )
+
+    enforce = declared in {"pilot", "production"}
+    path = os.getenv("FSSAI_CONFORMANCE_RECORDS", "").strip()
+    records: dict = {}
+    if path:
+        try:
+            records = load_records(path)
+        except (OSError, ValueError, AssuranceRefused) as exc:
+            if enforce:
+                raise RuntimeError(
+                    f"refusing to start a {declared} deployment: conformance records at "
+                    f"FSSAI_CONFORMANCE_RECORDS are unreadable ({type(exc).__name__})"
+                ) from exc
+    statuses: dict[str, dict] = {}
+    for backend in _backends_in_use():
+        if enforce:
+            try:
+                status = require_assurance(backend, records.get(backend))
+            except AssuranceRefused as refused:
+                raise RuntimeError(
+                    f"refusing to start a {declared} deployment: backend {backend!r} has no "
+                    f"current passing conformance record ({refused.code}); run "
+                    "fssaira.kernel.assurance.run_and_record on this stack and set "
+                    "FSSAI_CONFORMANCE_RECORDS"
+                ) from refused
+        elif path:
+            status = assurance_status(backend, records.get(backend))
+        else:
+            status = AssuranceStatus(backend, False, "NOT_REQUIRED_TEACHING", notes=(
+                "teaching profile: backend assurance is recorded, not enforced",))
+        statuses[backend] = status.to_dict()
+    return statuses
+
+
+def _attach_assurance(plane: ControlPlane, assurance: dict[str, dict]) -> ControlPlane:
+    """Expose the backend assurance status on the assembled plane."""
+    plane.backend_assurance = assurance  # type: ignore[attr-defined]
+    return plane
 
 
 def _build_model():
