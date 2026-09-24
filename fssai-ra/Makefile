@@ -103,7 +103,11 @@ doctor:  ## Report what this deployment actually is
 demo:  ## The two-minute hero demonstration (fully offline)
 	$(PYTHON) scripts/demo.py
 
+<<<<<<< HEAD
 conference-demo:  ## Reusable education demonstration: a malicious AI, nine demos (offline)
+=======
+conference-demo:  ## The UNU Macau live demonstration: a malicious AI, nine demos (offline)
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 	$(PYTHON) scripts/conference_demo.py $(if $(DEMO),--demo $(DEMO),)
 
 security:  ## Kernel floor, education pack failure tests, privacy custody, and conference tests
@@ -113,9 +117,12 @@ security:  ## Kernel floor, education pack failure tests, privacy custody, and c
 falsify:  ## Run every falsifier, or one: make falsify F=F19
 	$(PYTHON) -m fssaira.cli conference falsify $(F)
 
+<<<<<<< HEAD
 adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
 	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
 
+=======
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 ablation:  ## Enabled / disabled / restored for every control, or one falsifier: make ablation F=F10
 	$(PYTHON) -m fssaira.cli conference ablation $(F)
 

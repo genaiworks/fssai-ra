@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 """A reusable education demonstration: a malicious AI, given every chance to break the system.
+=======
+"""The UNU Macau live demonstration: a malicious AI, given every chance to break the system.
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 
     python scripts/conference_demo.py              # narrated, pauses between demos
     python scripts/conference_demo.py --fast       # no pauses (rehearsal, CI)
@@ -17,8 +21,11 @@ mediator's decision in this process; nothing is printed that did not happen.
   7  Remove one control. The attack succeeds. Restore it. The attack fails.
   8  The malicious domain pack.
   9  Same boundary, different model.
+<<<<<<< HEAD
  10  An approval is signed, then the read behind it is revoked; the write is refused.
  11  An authorized but substantively wrong decision, and the appeal that reverses it.
+=======
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 """
 from __future__ import annotations
 
@@ -241,6 +248,7 @@ def demo_9(stage: Stage) -> None:
     print(paint("  Utility depends on the model. Safety depends on the mediators.", "1"))
 
 
+<<<<<<< HEAD
 def demo_10(stage: Stage) -> None:
     stage.title(10, "Approval does not outlive the authority it was built on",
                 "A grade change is approved, then the read behind it is revoked. Does it still execute?")
@@ -301,6 +309,9 @@ def _appeal_approval(world: EducationWorld, proposal, reviewer: str):
 
 DEMOS = {1: demo_1, 2: demo_2, 3: demo_3, 4: demo_4, 5: demo_5, 6: demo_6, 7: demo_7,
          8: demo_8, 9: demo_9, 10: demo_10, 11: demo_11}
+=======
+DEMOS = {1: demo_1, 2: demo_2, 3: demo_3, 4: demo_4, 5: demo_5, 6: demo_6, 7: demo_7, 8: demo_8, 9: demo_9}
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 
 
 def main() -> int:
@@ -313,7 +324,11 @@ def main() -> int:
         print(__doc__)
         return 0
     stage = Stage(0.0 if args.fast else 1.2)
+<<<<<<< HEAD
     print(paint("TRUST BY CONSTRUCTION · live demonstration · Governed Agentic AI", "1"))
+=======
+    print(paint("TRUST BY CONSTRUCTION · live demonstration · UNU Macau AI Conference 2026", "1"))
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
     print(paint("Intelligence is untrusted. Power and data are mediated.", "2"))
     for number in ([args.demo] if args.demo else sorted(DEMOS)):
         DEMOS[number](stage)

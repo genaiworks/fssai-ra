@@ -38,10 +38,10 @@ results: check-env  ## Regenerate paper figures and the conference evidence pack
 	$(MAKE) -C $(APP_DIR) results PYTHON="$(PYTHON)"
 	$(MAKE) -C $(APP_DIR) conference PYTHON="$(PYTHON)"
 
-conference-demo: check-env  ## Reusable education demonstration (historical target; DEMO=7 for one)
+conference-demo: check-env  ## The UNU Macau live demonstration (DEMO=7 for one)
 	$(MAKE) -C $(APP_DIR) conference-demo PYTHON="$(PYTHON)" DEMO="$(DEMO)"
 
-reviewer: check-env  ## Public runtime and research assurance checks
+reviewer: check-env  ## Reproduce every review and assurance check
 	$(MAKE) -C $(APP_DIR) reviewer PYTHON="$(PYTHON)"
 
 test: check-env  ## Run the deterministic Python suite

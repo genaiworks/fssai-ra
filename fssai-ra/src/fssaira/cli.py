@@ -1027,6 +1027,7 @@ def cmd_conference_trace(args) -> int:
     return 0
 
 
+<<<<<<< HEAD
 def cmd_conference_adaptive(args) -> int:
     """An offline adaptive attacker vs static and random, scored by an independent oracle."""
     import json as _json
@@ -1058,6 +1059,8 @@ def cmd_conference_adaptive(args) -> int:
     return 1 if (report.total_forbidden and not report.controls_removed) else 0
 
 
+=======
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 def cmd_conference_stateful(args) -> int:
     """Seeded random authority sequences, eight properties checked after every step."""
     from .authority_stateful import run_stateful
@@ -1376,7 +1379,11 @@ def build_parser() -> argparse.ArgumentParser:
     pilot.set_defaults(func=cmd_pilot_report)
 
     conference = sub.add_parser(
+<<<<<<< HEAD
         "conference", help="the reusable education demonstration layer: falsify, ablate, trace, lab")
+=======
+        "conference", help="the UNU Macau demonstration layer: falsify, ablate, trace, lab")
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
     conference_sub = conference.add_subparsers(dest="conference_command", required=True)
     pack_check = conference_sub.add_parser("pack-check", help="check a domain pack against the kernel floor")
     pack_check.add_argument("path", type=Path)
@@ -1393,6 +1400,7 @@ def build_parser() -> argparse.ArgumentParser:
     trace.add_argument("--model", choices=("honest", "malicious", "ollama"), default="honest")
     trace.add_argument("--json", action="store_true")
     trace.set_defaults(func=cmd_conference_trace)
+<<<<<<< HEAD
     adaptive = conference_sub.add_parser(
         "adaptive", help="an offline adaptive attacker vs static/random, independent oracle")
     adaptive.add_argument("--budget", type=int, default=200, help="queries per attacker track")
@@ -1404,6 +1412,8 @@ def build_parser() -> argparse.ArgumentParser:
                           help="positive control: remove a mediator and show the attacker wins")
     adaptive.add_argument("--json", action="store_true")
     adaptive.set_defaults(func=cmd_conference_adaptive)
+=======
+>>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
     stateful = conference_sub.add_parser("stateful", help="random authority sequences checked after every step")
     stateful.add_argument("--sequences", type=int, default=120)
     stateful.add_argument("--remove", action="append", default=[])
