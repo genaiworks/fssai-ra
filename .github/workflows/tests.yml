@@ -50,7 +50,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
+        with:
+          {
+            python-version: "3.13",
+            cache: pip,
+            cache-dependency-path: fssai-ra/pyproject.toml,
+          }
 
       - name: Install
         working-directory: fssai-ra
@@ -91,22 +96,21 @@ jobs:
           python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
           python -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
 
-      - name: Public Passport and SDK inventory remain aligned
+      # The lifecycle gates, run against the repository itself. Each exits
+      # non-zero when a gate fails: an empty contract field or a missing named
+      # test, a credential reachable from the untrusted side, or a falsifier
+      # counterexample (or a positive control that finds nothing).
+      - name: "Lifecycle 2: contract complete, named tests exist, no unverified claim"
         working-directory: fssai-ra
-        run: python scripts/check_sdk_inventory.py
+        run: python -m fssaira.cli contract contract --gate
 
-      - name: Architecture traceability and executed capability contracts
+      - name: "Lifecycle 4: no model holds a key or credential"
         working-directory: fssai-ra
-        run: |
-          python scripts/verify_architecture.py --output work/architecture
+        run: python -m fssaira.cli bind
 
-      - name: TBC SDK joined demonstration
+      - name: "Lifecycle 5: falsifiers find zero counterexamples; ablations restore harm"
         working-directory: fssai-ra
-        run: python scripts/tbc_demo.py --output /tmp/tbc-ci-demo
-
-      - name: Reproduce the beginner workflows from the public checkout
-        working-directory: fssai-ra
-        run: python scripts/reproduce.py
+        run: python -m fssaira.cli falsify
 
       - name: Committed results have not drifted
         working-directory: fssai-ra
@@ -153,7 +157,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
-        with: { python-version: "3.14", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
+        with:
+          {
+            python-version: "3.14",
+            cache: pip,
+            cache-dependency-path: fssai-ra/pyproject.toml,
+          }
       - run: python -m pip install build
       - name: Build source and wheel distributions
         working-directory: fssai-ra
@@ -171,7 +180,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
-        with: { python-version: "3.14", cache: pip, cache-dependency-path: fssai-ra/pyproject.toml }
+        with:
+          {
+            python-version: "3.14",
+            cache: pip,
+            cache-dependency-path: fssai-ra/pyproject.toml,
+          }
       - name: Install the tested dependency surface
         working-directory: fssai-ra
         run: python -m pip install -e ".[dev,privacy,api]" pip-audit
@@ -185,7 +199,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
-        with: { node-version: "22", cache: npm, cache-dependency-path: fssai-ra/console/package-lock.json }
+        with:
+          {
+            node-version: "22",
+            cache: npm,
+            cache-dependency-path: fssai-ra/console/package-lock.json,
+          }
       - name: Install
         working-directory: fssai-ra/console
         run: npm ci --no-audit --no-fund

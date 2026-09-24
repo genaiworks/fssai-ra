@@ -165,6 +165,40 @@ def bind(root: Path = ROOT) -> StageResult:
     return result
 
 
+# -- governed configuration digest ------------------------------------------
+
+#: What a falsification run is evidence *about*. If any of it changes, the
+#: capability returns to stage 5 (paper §6, stage 7).
+GOVERNED_GLOBS: tuple[str, ...] = (
+    "src/fssaira/kernel/**/*.py",
+    "src/fssaira/mediators/**/*.py",
+    "src/fssaira/planes/**/*.py",
+    "contract/**/*.yaml",
+    "packs/*.yaml",
+    "profiles/*.yaml",
+    "conference/education/*.yaml",
+)
+
+
+def governed_digest(root: Path = ROOT) -> dict:
+    """Digest the governed configuration: kernel, mediators, planes, contracts, packs.
+
+    Paths are included, so a renamed or deleted file changes the digest as well
+    as an edited one.
+    """
+    root = Path(root)
+    files = sorted({
+        path for pattern in GOVERNED_GLOBS for path in root.glob(pattern)
+        if path.is_file() and "__pycache__" not in path.parts
+    })
+    digest = hashlib.sha256()
+    for path in files:
+        relative = path.relative_to(root).as_posix()
+        digest.update(relative.encode("utf-8") + b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).hexdigest().encode("ascii") + b"\n")
+    return {"sha256": digest.hexdigest(), "files": len(files), "globs": list(GOVERNED_GLOBS)}
+
+
 # -- 5. falsify ------------------------------------------------------------
 
 def falsify(root: Path = ROOT, *, include_ablation: bool = True,
@@ -218,5 +252,65 @@ def falsify(root: Path = ROOT, *, include_ablation: bool = True,
              f"falsifiers with no load-bearing group: {unbacked}"),
             {"rows": len(rows), "load_bearing": sum(r.load_bearing for r in rows),
              "defence_in_depth_rows": redundant}))
-    result.artifact = {"thesis": thesis.to_dict()["summary"]}
+    result.artifact = {"thesis": thesis.to_dict()["summary"], "governed_digest": governed_digest(Path(root))}
+    return result
+
+
+# -- 7. operate ------------------------------------------------------------
+
+def operate(root: Path = ROOT, *, falsify_artifact: Path | None = None,
+            executor: object | None = None, monitor: object | None = None) -> StageResult:
+    """Keep what was falsified the thing that runs; reconcile; stay inside review capacity.
+
+    ``executor`` and ``monitor`` are live objects in a running deployment. When
+    either is absent its gate is reported under ``not_run``, never as passed.
+    """
+    root = Path(root)
+    result = StageResult("operate")
+    current = governed_digest(root)
+    not_run: list[dict] = []
+
+    if falsify_artifact is None or not Path(falsify_artifact).is_file():
+        result.gates.append(GateOutcome(
+            "change_returns_to_falsify", False,
+            "no falsification artifact; run `fssaira falsify --out <file>` and pass it here",
+            {"current_digest": current["sha256"]}))
+    else:
+        recorded = json.loads(Path(falsify_artifact).read_text(encoding="utf-8"))
+        recorded_digest = ((recorded.get("artifact") or {}).get("governed_digest") or {}).get("sha256")
+        passed_before = recorded.get("passed") is True
+        unchanged = recorded_digest == current["sha256"]
+        detail = ("governed configuration unchanged since a passing falsification run"
+                  if passed_before and unchanged else
+                  "the recorded falsification run did not pass; return to stage 5" if not passed_before else
+                  "governed configuration changed since falsification; return to stage 5")
+        result.gates.append(GateOutcome(
+            "change_returns_to_falsify", passed_before and unchanged, detail,
+            {"recorded_digest": recorded_digest, "current_digest": current["sha256"],
+             "recorded_passed": passed_before}))
+
+    if executor is None:
+        not_run.append({"gate": "reconciliation_clear", "reason": "no live executor supplied"})
+    else:
+        pending = executor.pending_outcome_count  # type: ignore[attr-defined]
+        count = int(pending() if callable(pending) else pending)
+        result.gates.append(GateOutcome(
+            "reconciliation_clear", count == 0,
+            "no uncertain effect awaits reconciliation" if count == 0 else
+            f"{count} uncertain effect(s) await reconciliation; do not retry, reconcile",
+            {"pending_outcomes": count}))
+
+    if monitor is None:
+        not_run.append({"gate": "review_capacity_not_breached", "reason": "no live oversight monitor supplied"})
+    else:
+        report = monitor.report()  # type: ignore[attr-defined]
+        headroom = float(report.headroom)
+        result.gates.append(GateOutcome(
+            "review_capacity_not_breached", headroom > 0.0,
+            f"worst-reviewer headroom {headroom:.2%} of the declared per-window ceiling" if headroom > 0.0
+            else "a reviewer is saturated; new consequential work takes the manual fallback",
+            {"headroom": headroom, "approvals": report.approvals,
+             "declared_consistency": monitor.policy.declared_consistency()}))  # type: ignore[attr-defined]
+
+    result.artifact = {"governed_digest": current, "not_run": not_run}
     return result

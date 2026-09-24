@@ -57,6 +57,22 @@ def test_bind_passes_on_the_repository(capsys):
     assert payload["gates"][0]["gate"] == "no_model_holds_a_key"
 
 
+def test_operate_needs_a_passing_falsification_of_the_current_configuration(tmp_path, capsys):
+    first = falsification.FALSIFIERS[0].id
+    artifact = tmp_path / "falsify.json"
+    assert main(["falsify", "--root", str(ROOT), "--only", first, "--no-ablation",
+                 "--out", str(artifact)]) == 0
+    capsys.readouterr()
+
+    assert main(["operate", "--root", str(ROOT)]) == 1
+    assert "fssaira falsify" in capsys.readouterr().out
+
+    assert main(["operate", "--root", str(ROOT), "--falsify-artifact", str(artifact)]) == 0
+    out = capsys.readouterr().out
+    assert "stage operate: PASS" in out
+    assert "[NOT RUN] reconciliation_clear" in out
+
+
 def test_falsify_reports_attempts_and_a_positive_control(capsys):
     first = falsification.FALSIFIERS[0].id
     assert main(["falsify", "--root", str(ROOT), "--only", first, "--no-ablation", "--json"]) == 0

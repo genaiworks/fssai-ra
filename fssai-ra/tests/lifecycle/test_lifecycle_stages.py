@@ -1,6 +1,7 @@
 """Lifecycle gates run real checks and fail when their precondition is broken."""
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -118,6 +119,40 @@ def test_positive_control_a_model_component_taking_a_key_fails_bind():
     assert "signing_key" in outcome.detail
 
 
+# -- governed digest -------------------------------------------------------
+
+def test_the_governed_digest_is_stable_and_detects_edits_renames_and_deletions(tmp_path):
+    root = tmp_path / "repo"
+    for relative in ("src/fssaira/kernel", "src/fssaira/mediators", "src/fssaira/planes",
+                     "contract", "profiles"):
+        shutil.copytree(ROOT / relative, root / relative, ignore=shutil.ignore_patterns("__pycache__"))
+    first = stages.governed_digest(root)
+    assert first == stages.governed_digest(root)
+    assert first["files"] > 10
+
+    contract = root / "contract" / "capabilities" / "action.yaml"
+    original = contract.read_text()
+    contract.write_text(original.replace("Program registrar", "Program registrar (acting)"))
+    edited = stages.governed_digest(root)
+    assert edited["sha256"] != first["sha256"]
+
+    contract.write_text(original)
+    assert stages.governed_digest(root) == first
+    contract.rename(contract.with_name("action-renamed.yaml"))
+    assert stages.governed_digest(root)["sha256"] != first["sha256"]
+
+
+def test_pycache_does_not_change_the_governed_digest(tmp_path):
+    root = tmp_path / "repo"
+    shutil.copytree(ROOT / "src/fssaira/kernel", root / "src/fssaira/kernel",
+                    ignore=shutil.ignore_patterns("__pycache__"))
+    before = stages.governed_digest(root)
+    cache = root / "src/fssaira/kernel/__pycache__"
+    cache.mkdir(exist_ok=True)
+    (cache / "contract.cpython-314.pyc").write_bytes(b"\x00junk")
+    assert stages.governed_digest(root) == before
+
+
 # -- falsify ---------------------------------------------------------------
 
 def test_the_falsify_stage_holds_with_a_live_positive_control():
@@ -130,3 +165,83 @@ def test_the_falsify_stage_holds_with_a_live_positive_control():
     assert gate.observed["thesis_counterexamples"] == 0
     assert gate.observed["positive_control_violations"] > 0
     assert result.gate("ablations_restore_harm").passed
+    assert result.artifact["governed_digest"] == stages.governed_digest(ROOT)
+
+
+# -- operate ---------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def falsify_artifact(tmp_path_factory):
+    from fssaira import falsification
+
+    result = stages.falsify(ROOT, include_ablation=False,
+                            conference_only=[falsification.FALSIFIERS[0].id])
+    path = tmp_path_factory.mktemp("falsify") / "falsify.json"
+    path.write_text(json.dumps(result.to_dict()))
+    return path
+
+
+def test_operate_without_a_falsification_artifact_fails():
+    result = stages.operate(ROOT)
+    assert not result.passed
+    assert "fssaira falsify" in result.gate("change_returns_to_falsify").detail
+
+
+def test_operate_passes_when_nothing_changed_and_names_what_it_did_not_run(falsify_artifact):
+    result = stages.operate(ROOT, falsify_artifact=falsify_artifact)
+    assert result.passed, result.to_dict()
+    assert {item["gate"] for item in result.artifact["not_run"]} == {
+        "reconciliation_clear", "review_capacity_not_breached"}
+
+
+def test_a_changed_configuration_returns_to_falsify(tmp_path, falsify_artifact):
+    recorded = json.loads(falsify_artifact.read_text())
+    recorded["artifact"]["governed_digest"]["sha256"] = "0" * 64
+    stale = tmp_path / "stale.json"
+    stale.write_text(json.dumps(recorded))
+    result = stages.operate(ROOT, falsify_artifact=stale)
+    assert not result.passed
+    assert "return to stage 5" in result.gate("change_returns_to_falsify").detail
+
+
+def test_a_failed_falsification_run_cannot_authorize_operation(tmp_path, falsify_artifact):
+    recorded = json.loads(falsify_artifact.read_text())
+    recorded["passed"] = False
+    failed = tmp_path / "failed.json"
+    failed.write_text(json.dumps(recorded))
+    assert not stages.operate(ROOT, falsify_artifact=failed).passed
+
+
+def test_pending_reconciliation_blocks_operation(falsify_artifact):
+    class Executor:
+        def __init__(self, pending: int) -> None:
+            self._pending = pending
+
+        def pending_outcome_count(self) -> int:
+            return self._pending
+
+    assert stages.operate(ROOT, falsify_artifact=falsify_artifact, executor=Executor(0)).passed
+    blocked = stages.operate(ROOT, falsify_artifact=falsify_artifact, executor=Executor(2))
+    assert not blocked.passed
+    assert blocked.gate("reconciliation_clear").observed["pending_outcomes"] == 2
+
+
+def test_a_real_fresh_executor_has_nothing_to_reconcile(falsify_artifact):
+    from fssaira import AccountableExecutor, CaseRegister, EvidenceLedger
+
+    executor = AccountableExecutor(CaseRegister({}), EvidenceLedger("t"), "t")
+    assert stages.operate(ROOT, falsify_artifact=falsify_artifact, executor=executor).passed
+
+
+def test_a_saturated_reviewer_blocks_operation(falsify_artifact):
+    from fssaira.oversight import OversightMonitor, ReviewLoadPolicy
+
+    idle = OversightMonitor(ReviewLoadPolicy(max_approvals_per_window=2, second_reviewer_after=None))
+    assert stages.operate(ROOT, falsify_artifact=falsify_artifact, monitor=idle).passed
+
+    busy = OversightMonitor(ReviewLoadPolicy(max_approvals_per_window=2, second_reviewer_after=None))
+    for n in range(2):
+        busy.admit(reviewer="officer-1", request_id=f"r-{n}", now=1_000.0 + n, presented_at=0.0)
+    result = stages.operate(ROOT, falsify_artifact=falsify_artifact, monitor=busy)
+    assert not result.passed
+    assert result.gate("review_capacity_not_breached").observed["headroom"] == 0.0
