@@ -1,7 +1,7 @@
 PYTHON ?= python3
 
 .PHONY: help install test lint results figures demo check api gateway console dev-env \
-        stack-up stack-down verify evaluate conformance doctor openapi clean \
+        stack-up stack-down verify evaluate conformance doctor openapi clean adaptive \
         reviewer oversight challenge second-domain domain-packs disclosure threats thesis lab
 
 help:  ## Show this help
@@ -118,11 +118,17 @@ falsify:  ## Run every falsifier, or one: make falsify F=F19
 	$(PYTHON) -m fssaira.cli conference falsify $(F)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
 	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
 
 =======
 >>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
+=======
+adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
+	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
+
+>>>>>>> b7a6182 (Add offline adaptive attacker with an independent success oracle)
 ablation:  ## Enabled / disabled / restored for every control, or one falsifier: make ablation F=F10
 	$(PYTHON) -m fssaira.cli conference ablation $(F)
 
