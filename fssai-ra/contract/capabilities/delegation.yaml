@@ -1,0 +1,22 @@
+# Seven-field capability contracts for delegated authority (authority only narrows).
+domain: delegation
+capabilities:
+  - id: CAP-DEL-1
+    rule: "1"
+    protected_asset: Institutional authority passed along an agent chain
+    permitted_operation: A hop may pass on only authority it holds; the chain confers the intersection
+    enforcement_point: fssaira.delegation.verify_chain over every hop
+    accountable_owner: Identity owner
+    failure_test: tests/test_delegation.py::test_a_hop_cannot_pass_on_authority_it_does_not_hold
+    evidence_artifact: Chain verification result naming the first widening axis
+    failure_response: Refuse the chain; the delegator's own authority is unchanged
+
+  - id: CAP-DEL-2
+    rule: "1"
+    protected_asset: Authority reached through composition of individually valid hops
+    permitted_operation: Authorize against the full rooted chain, not the immediate caller
+    enforcement_point: fssaira.delegation.verify_chain (full-chain check)
+    accountable_owner: Identity owner
+    failure_test: tests/test_delegation.py::test_checking_each_hop_against_its_delegator_is_not_checking_the_chain
+    evidence_artifact: Delegation comparison arm results
+    failure_response: Refuse; treat per-hop-only validation as a blocking design defect

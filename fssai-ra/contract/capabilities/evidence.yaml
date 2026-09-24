@@ -1,0 +1,29 @@
+# Seven-field capability contracts for the evidence plane.
+domain: evidence
+capabilities:
+  - id: CAP-EVI-1
+    protected_asset: The decision and evidence record
+    permitted_operation: Append only; any edit to a past record is detectable
+    enforcement_point: EvidenceLedger hash chain with a guarded append credential
+    accountable_owner: Audit and assurance
+    failure_test: tests/test_attacks.py::test_insider_record_tampering_is_detected
+    evidence_artifact: Chain verification result recomputed from the records
+    failure_response: Flag the inconsistency for investigation; do not trust the altered history
+
+  - id: CAP-EVI-2
+    protected_asset: History an insider rewrote and re-chained
+    permitted_operation: A checkpoint signed by a key the writer does not hold detects rewrite, truncation and forgery
+    enforcement_point: EvidenceNotary checkpoint and verify_against_checkpoint
+    accountable_owner: Audit and assurance
+    failure_test: tests/test_conference_falsification.py::test_notary_detects_rewrite_truncation_and_forged_checkpoints
+    evidence_artifact: Signed checkpoint (record count, head hash) retained outside the writer's boundary
+    failure_response: Treat the history as untrusted; compare with the externally retained checkpoint
+
+  - id: CAP-EVI-3
+    protected_asset: Atomicity of mutation and evidence
+    permitted_operation: A governed mutation and its intent and outcome records commit together or not at all
+    enforcement_point: Transactional store holding the evidence write credential
+    accountable_owner: Service owner
+    failure_test: tests/test_atomic_execution.py::test_mutation_and_both_evidence_records_commit_together
+    evidence_artifact: Intent and outcome pair per mutation in the same transaction
+    failure_response: Abort the mutation if evidence cannot be written

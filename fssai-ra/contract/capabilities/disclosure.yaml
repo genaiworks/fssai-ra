@@ -1,0 +1,42 @@
+# Seven-field capability contracts for Rule 2 (governed disclosure).
+domain: disclosure
+capabilities:
+  - id: CAP-DIS-1
+    rule: "2"
+    protected_asset: Restricted content summarized by a model
+    permitted_operation: An output inherits the join of every label its session touched
+    enforcement_point: DisclosureGate derives the output label; a model-claimed label is ignored
+    accountable_owner: Data protection officer
+    failure_test: tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary
+    evidence_artifact: Output label record derived from session receipts
+    failure_response: Refuse release to any recipient who does not dominate the derived label
+
+  - id: CAP-DIS-2
+    rule: "2"
+    protected_asset: Label lowering
+    permitted_operation: Declassify one exact output for one recipient and purpose, approved by an independent role
+    enforcement_point: DisclosureGate.declassify, which binds the output digest and refuses self-approval
+    accountable_owner: Privacy owner
+    failure_test: tests/test_disclosure.py::test_declassification_requires_exact_independent_approval
+    evidence_artifact: Declassification record with output digest, approver, purpose, policy version and expiry
+    failure_response: Refuse; the output keeps its derived label
+
+  - id: CAP-DIS-3
+    rule: "2"
+    protected_asset: Data whose consent or grant changed after it was read
+    permitted_operation: Release only if consent, revocation and expiry still permit it at release time
+    enforcement_point: DisclosureGate.release recheck
+    accountable_owner: Data protection officer
+    failure_test: tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read
+    evidence_artifact: Release denial with a stable code
+    failure_response: Refuse release; previously released bytes are reported as disclosed
+
+  - id: CAP-DIS-4
+    rule: "2"
+    protected_asset: Accumulated restriction on derived outputs
+    permitted_operation: Combining labels only tightens restriction
+    enforcement_point: DataLabel.join
+    accountable_owner: Data owner
+    failure_test: tests/test_disclosure.py::test_label_join_only_tightens
+    evidence_artifact: Label lattice property results
+    failure_response: Treat any widening join as a defect that blocks promotion
