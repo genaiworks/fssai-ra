@@ -1,7 +1,8 @@
 PYTHON ?= python3
 
-.PHONY: help install test lint results figures demo check api gateway console dev-env \
-        stack-up stack-down verify evaluate conformance doctor openapi clean adaptive \
+.PHONY: help install test lint results results-check figures check-submission lifecycle all \
+        demo check api gateway console dev-env \
+        stack-up stack-down verify evaluate conformance doctor openapi clean \
         reviewer oversight challenge second-domain domain-packs disclosure threats thesis lab
 
 help:  ## Show this help
@@ -103,11 +104,7 @@ doctor:  ## Report what this deployment actually is
 demo:  ## The two-minute hero demonstration (fully offline)
 	$(PYTHON) scripts/demo.py
 
-<<<<<<< HEAD
-conference-demo:  ## Reusable education demonstration: a malicious AI, nine demos (offline)
-=======
 conference-demo:  ## The UNU Macau live demonstration: a malicious AI, nine demos (offline)
->>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
 	$(PYTHON) scripts/conference_demo.py $(if $(DEMO),--demo $(DEMO),)
 
 security:  ## Kernel floor, education pack failure tests, privacy custody, and conference tests
@@ -117,14 +114,11 @@ security:  ## Kernel floor, education pack failure tests, privacy custody, and c
 falsify:  ## Run every falsifier, or one: make falsify F=F19
 	$(PYTHON) -m fssaira.cli conference falsify $(F)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
 	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
 
-=======
->>>>>>> d3bd81d (Snapshot: uncommitted conference layer from main working tree (pre-hardening baseline))
-=======
+
 adaptive:  ## Offline adaptive attacker vs static/random, independent oracle (add PROVE=1)
 	$(PYTHON) -m fssaira.cli conference adaptive $(if $(PROVE),--prove-attacker,)
 
@@ -138,11 +132,32 @@ conference:  ## Regenerate conference/evidence from a real run
 conference-check:  ## Do the committed conference figures match a fresh run?
 	$(PYTHON) scripts/conference_evidence.py --check
 
-results:  ## Regenerate every figure the paper and the deck quote
+results:  ## Regenerate every result the paper quotes, then audit/results.json and fig1-fig7
 	$(PYTHON) scripts/generate_results.py
+	$(PYTHON) scripts/conference_evidence.py
+	$(PYTHON) scripts/collect_results.py
+	$(PYTHON) scripts/build_figures.py
 
-figures:  ## Regenerate the deck's charts from the experiment results
+results-check:  ## Do committed results, audit/results.json and figures match a fresh run?
+	$(PYTHON) scripts/generate_results.py --check
+	$(PYTHON) scripts/conference_evidence.py --check
+	$(PYTHON) scripts/collect_results.py --check
+	$(PYTHON) scripts/build_figures.py --check
+
+figures:  ## Regenerate the deck's charts and the paper's fig1-fig7 from the experiment results
 	$(PYTHON) scripts/generate_figures.py
+	$(PYTHON) scripts/build_figures.py
+
+check-submission:  ## Form-field caps, and every quoted metric in the full paper bound to audit/results.json
+	$(PYTHON) scripts/check_submission.py
+	$(PYTHON) scripts/check_submission.py --full-paper
+
+lifecycle:  ## Run the lifecycle gates on this repository: contract, bind, falsify
+	$(PYTHON) -m fssaira.cli contract contract --gate --register-out paper/claims_register.yaml
+	$(PYTHON) -m fssaira.cli bind
+	$(PYTHON) -m fssaira.cli falsify
+
+all: lint test results-check lifecycle check-submission  ## Everything, offline: the definition of done
 
 check: lint reviewer  ## Run the complete local release-readiness suite
 	$(PYTHON) scripts/demo.py --fast > /dev/null

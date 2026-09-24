@@ -1,0 +1,99 @@
+{
+  "generated_by": "scripts/build_figures.py",
+  "renderer": "scripts/generate_paper_figures.py",
+  "note": "SVGs are byte-identical to the paper generator's output; PNGs are Chrome screenshots and excluded from byte comparison",
+  "figures": [
+    {
+      "id": "fig1",
+      "generator_stem": "architecture",
+      "svg": "fig1-architecture.svg",
+      "svg_sha256": "7391583de8b329b1f7a00ad3d6a1a40f62e7e639775e9363e26864c3010e2f32",
+      "png": "fig1-architecture.png",
+      "png_sha256": "3acaf3822be1eedf8c53b1ac2b683d413ccf9d666f7df8c164b257bc33f3ebc2",
+      "caption": "Target deployment architecture, conditional on trusted-service isolation. Intelligence works on vault tokens and can only propose actions and request data. Every request crosses the 7-field control contract to one of two mediators, each the sole holder of what the model lacks: the execution plane holds the write credential (Rule 1); the context gate holds record access and data keys (Rule 2). The semantic router advises which attested model to use; the gate decides where data may go. Logical planes do not prove process isolation or full API integration.",
+      "data_sources": {
+        "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02"
+      }
+    },
+    {
+      "id": "fig2",
+      "generator_stem": "request-steps",
+      "svg": "fig2-request-steps.svg",
+      "svg_sha256": "c96d0b36e048954e5b6623e72c141c67fe18368f806230300744bae82813df67",
+      "png": "fig2-request-steps.png",
+      "png_sha256": "e60cebf7e9871817ac8ab52f3a6600fca81ca8dcb9a113190312e36354d38ec6",
+      "caption": "Target lifecycle in ten steps, requiring end-to-end integration evidence; only the domain pack changes what each step checks. Steps outlined in dark blue require independently enforced boundaries, qualified on the deployed stack. The grey step is the only one performed by untrusted intelligence, and it produces a proposal or a draft, never an effect or a disclosure.",
+      "data_sources": {
+        "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02"
+      }
+    },
+    {
+      "id": "fig3",
+      "generator_stem": "lifecycle",
+      "svg": "fig3-lifecycle.svg",
+      "svg_sha256": "4ccabaeded09fbd4653078c9f75bfd19dbb2e6c0f29bd3823ecd1b0b7e6d86f4",
+      "png": "fig3-lifecycle.png",
+      "png_sha256": "1a7f84723b1030de6cfbf8c621f1f553c838979eb6ae2d5c7506dae541bf5c20",
+      "caption": "Building any new AI capability. Each stage produces an artifact and must pass a gate before the next begins. Falsification happens on synthetic data before real records or keys are connected, and any later change to a model, vendor, pack, or backend returns to stage 5, so assurance is regenerated rather than inherited.",
+      "data_sources": {
+        "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02"
+      }
+    },
+    {
+      "id": "fig4",
+      "generator_stem": "containment",
+      "svg": "fig4-containment.svg",
+      "svg_sha256": "b8e645edd724a8dd258685deef99cbac461c8afc05f5b33f6db24572cf7e2f64",
+      "png": "fig4-containment.png",
+      "png_sha256": "b3bd9456218b9f55f11827998475ddae42db043f9f6ef2ca908f4cdcdddbe043",
+      "caption": "Containment across three independent suites. Each panel sends identical hostile inputs to no mediation, a conventional control, and this architecture. (a) Actions: the conventional arm is a safety prompt with a per-agent tool allowlist; 28, 8, and 0 harmful actions reached the protected asset, and every arm completed 2 of 2 benign tasks. (b) Data flows: the conventional arm uses signed class-cleared grants and checks the model's claimed output label; 15 of 15 legitimate flows completed under the context gate. (c) Delegation: the conventional arm validates each hop against its immediate caller; a benign two-hop chain completes in every arm.",
+      "data_sources": {
+        "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02",
+        "evaluation/results/v1.0.0-architecture-comparison.json": "597ffa3d5ee90aa2d7853711ba9b14c54100c4efa27d8537f5ec40829e714e71",
+        "evaluation/results/v1.0.0-governed-disclosure.json": "cd5a7177bc4a6b0d57538aeebcbb96617974eff92288de64cfed9316ac98cae2",
+        "evaluation/results/v1.0.0-delegation.json": "20aabfe831576ccf5d90e9a0455ab378f8259893d726ec2331ab9b6d18bd66ef"
+      }
+    },
+    {
+      "id": "fig5",
+      "generator_stem": "oversight",
+      "svg": "fig5-review-capacity.svg",
+      "svg_sha256": "62d580a471578bf82cafdad45f631b94b8ecf2b28ba0ae4252e1ff64b5046843",
+      "png": "fig5-review-capacity.png",
+      "png_sha256": "5f6250f587cbd1940970ff6a8dab24a87a36b2f2c6be5d69d98ca71802a99202",
+      "caption": "Human review as a bounded resource. In the queue trial, 40 arrivals reach one reviewer with a declared attentive capacity of 8; 5 proposals are valid in form but wrong on merit. Declared load control stops 4 merit failures from executing at the cost of 32 deferrals. Adding a review assistant and lowering the floor to 10 s restores throughput; a dependent assistant lets 5 failures through and an independent one 1, so the dependent configuration is refused before it starts. Reviewer behaviour is modelled by declared, adjustable parameters.",
+      "data_sources": {
+        "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02",
+        "evaluation/results/v1.0.0-oversight.json": "d87a68a39c862511a7530de0cd65311929c951c15c5dfd7801a4987212d5e813",
+        "evaluation/results/v1.0.0-assisted-review.json": "f2f81b88b9a0cd3e711deb9d8973e36ae67061ff330a4927fd7cffbdbec4d34e"
+      }
+    },
+    {
+      "id": "fig6",
+      "generator_stem": "domain-packs",
+      "svg": "fig6-transfer.svg",
+      "svg_sha256": "c8d22791b44ff9b484fe87219ef563416ed20309cf23da3fa06d98ad93e40238",
+      "png": "fig6-transfer.png",
+      "png_sha256": "ee8c7512f0a450d80ea1a74a5317b62072ac08323b5b69d58ca339c4cd87d794",
+      "caption": "One kernel, 6 domain packs. Each pack is verified independently against its own denominators: bounded configurations explored with zero invariant violations (a), and hostile scenarios contained, benign tasks completed, and unauthorized mutations (b). Across all packs: 55,440 configurations, 180 of 180 hostile scenarios contained, and 58 of 58 benign tasks completed. A new sector replaces the pack and regenerates its own evidence; the kernel is unchanged.",
+      "data_sources": {
+        "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02",
+        "evaluation/results/v1.0.0-domain-pack-matrix.json": "8a51cd8e685580e042d0dc2127ba9fa3813af1b58d9ba553de46d1123968606d"
+      }
+    },
+    {
+      "id": "fig7",
+      "generator_stem": "evidence",
+      "svg": "fig7-evidence.svg",
+      "svg_sha256": "21f9b45203f5bef6db5bd214b7d49504d54e419b55518994167b9a9fea79d6b5",
+      "png": "fig7-evidence.png",
+      "png_sha256": "d0d87092c95626f63ba7eafeee7052b8b9337f693b0789e038fc9cfc1469a21e",
+      "caption": "The safety case does not rest on alignment. (a) Of 36 failure classes, including 12 alignment failures, 21 are contained, 10 bounded, and 5 assigned to the research agenda; every evidence locator is checked to exist. (b) Six falsifiers made 104,997 bounded attempts to produce a governed effect or disclosure from model output alone and found none; removing a single mediator check produces counterexamples.",
+      "data_sources": {
+        "evaluation/results/v1.0.0-summary.json": "cca5d058b191b903edc98be6f3e6b88234596707f83b72179fea2becae11db02",
+        "evaluation/results/v1.0.0-threat-catalogue.json": "136bae328403258763df1672d50a3f070721e4f773964307109c32ab0ab87255",
+        "evaluation/results/v1.0.0-mediation-thesis.json": "d155da83b1e58ca344e7289c880742576b74a1c952f860dbcbb599458e523b75"
+      }
+    }
+  ]
+}
