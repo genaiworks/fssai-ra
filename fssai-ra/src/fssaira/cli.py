@@ -866,6 +866,39 @@ def cmd_small_run(args) -> int:
     return 0 if ok else 2
 
 
+def cmd_witness_cosign(args) -> int:
+    """Co-sign one notary checkpoint, in this separate process, under the witness's own key."""
+    from .evidence_notary import Checkpoint
+    from .witness import CheckpointWitness, WitnessRefused
+
+    keys = {k: bytes.fromhex(v) for k, v in json.loads(args.notary_keys.read_text()).items()}
+    witness = CheckpointWitness.from_key_file(args.key_file, args.dir, notary_keys=keys,
+                                              key_id=args.key_id)
+    checkpoint = Checkpoint(**json.loads(args.checkpoint.read_text()))
+    extension = None
+    if args.archive is not None:
+        from .small_data import SqliteArchiveStore
+
+        start = (witness.state() or {"count": 0})["count"]
+        archive = SqliteArchiveStore(args.archive)
+        try:
+            extension = [row for row in archive.evidence_rows(args.ledger_id, start)
+                         if row["seq"] < checkpoint.count]
+        finally:
+            archive.close()
+    try:
+        cosignature = witness.cosign(checkpoint, extension)
+    except WitnessRefused as refused:
+        print(red(f"refused: {refused.code}: {refused.detail}"))
+        emit({"cosigned": False, "code": refused.code, "detail": refused.detail}, args.output)
+        return 2
+    print(green(f"co-signed {cosignature.count} record(s) ({cosignature.first_seen})"))
+    emit({"cosigned": True, "cosignature": cosignature.to_dict(),
+          "witness_public_keys": {k: v.hex() for k, v in witness.public_keys.items()}},
+         args.output)
+    return 0
+
+
 def cmd_diode_inventory(args) -> int:
     from .diode_transport import InterfaceInventory
 
@@ -1476,6 +1509,21 @@ def build_parser() -> argparse.ArgumentParser:
         "measure", help="measure durable SQLite evidence appends on this host"))
     measure.add_argument("--records", type=int, default=500)
     measure.set_defaults(func=cmd_scale_measure)
+
+    witness = sub.add_parser("witness", help="out-of-process witness for evidence checkpoints")
+    witness_sub = witness.add_subparsers(dest="witness_command", required=True)
+    cosign = add_output(witness_sub.add_parser(
+        "cosign", help="co-sign a checkpoint that extends everything already witnessed"))
+    cosign.add_argument("--dir", type=Path, required=True, help="the witness's own state directory")
+    cosign.add_argument("--key-file", type=Path, required=True, help="the witness's owner-only key")
+    cosign.add_argument("--key-id", default="evidence-witness-1")
+    cosign.add_argument("--notary-keys", type=Path, required=True,
+                        help="trusted notary public keys, {key_id: hex}")
+    cosign.add_argument("--checkpoint", type=Path, required=True, help="notary checkpoint JSON")
+    cosign.add_argument("--archive", type=Path,
+                        help="archive holding the new records (proves the head extends)")
+    cosign.add_argument("--ledger-id", default="primary")
+    cosign.set_defaults(func=cmd_witness_cosign)
 
     small = sub.add_parser(
         "small", help="small-data evidence plane: SQLite log, archive and verifier, no cluster")

@@ -60,11 +60,14 @@ TOKEN = "evaluation-evidence-writer"
 #: to locate the risk class, not a claim of coverage of those catalogues.
 TAXONOMY = {
     "approval_binding": ("OWASP-ACS: authorization", "NIST AI 600-1: CBRN/Info Integrity governance"),
-    "prompt_injection": ("OWASP LLM01", "MITRE ATLAS AML.T0051"),
-    "excessive_agency": ("OWASP LLM06", "OWASP Agentic: tool misuse"),
-    "data_exfiltration": ("OWASP LLM02", "MITRE ATLAS AML.T0057"),
-    "supply_chain": ("OWASP LLM05", "MITRE ATLAS AML.T0010"),
-    "data_poisoning": ("OWASP LLM03", "MITRE ATLAS AML.T0020"),
+    # OWASP Top 10 for LLM Applications, 2025 numbering, named as in
+    # threats/catalogue.yaml so the two cannot drift. (The 2023 list numbered
+    # supply chain LLM05 and poisoning LLM03; the 2025 list moved both.)
+    "prompt_injection": ("OWASP LLM01 Prompt Injection", "MITRE ATLAS AML.T0051"),
+    "excessive_agency": ("OWASP LLM06 Excessive Agency", "OWASP Agentic: tool misuse"),
+    "data_exfiltration": ("OWASP LLM02 Sensitive Information Disclosure", "MITRE ATLAS AML.T0057"),
+    "supply_chain": ("OWASP LLM03 Supply Chain", "MITRE ATLAS AML.T0010"),
+    "data_poisoning": ("OWASP LLM04 Data and Model Poisoning", "MITRE ATLAS AML.T0020"),
     "record_integrity": ("NIST SP 800-207: monitoring", "ISO/IEC 42001: records"),
     "availability": ("NIST AI 600-1: availability", ""),
     "directionality": ("NIST SP 800-207: segmentation", ""),

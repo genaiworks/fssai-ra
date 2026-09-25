@@ -382,7 +382,7 @@
       "evidence_valid": true,
       "category": "supply_chain",
       "references": [
-        "OWASP LLM05",
+        "OWASP LLM03 Supply Chain",
         "MITRE ATLAS AML.T0010"
       ],
       "detail": "an unregistered publisher has no key and no entry"
@@ -396,7 +396,7 @@
       "evidence_valid": true,
       "category": "supply_chain",
       "references": [
-        "OWASP LLM05",
+        "OWASP LLM03 Supply Chain",
         "MITRE ATLAS AML.T0010"
       ],
       "detail": "a tampered or unsigned artifact never crosses"
@@ -410,7 +410,7 @@
       "evidence_valid": true,
       "category": "supply_chain",
       "references": [
-        "OWASP LLM05",
+        "OWASP LLM03 Supply Chain",
         "MITRE ATLAS AML.T0010"
       ],
       "detail": "content type is an allowlist, not a hint"
@@ -438,7 +438,7 @@
       "evidence_valid": true,
       "category": "supply_chain",
       "references": [
-        "OWASP LLM05",
+        "OWASP LLM03 Supply Chain",
         "MITRE ATLAS AML.T0010"
       ],
       "detail": "the declared envelope must match the payload"
@@ -452,7 +452,7 @@
       "evidence_valid": true,
       "category": "prompt_injection",
       "references": [
-        "OWASP LLM01",
+        "OWASP LLM01 Prompt Injection",
         "MITRE ATLAS AML.T0051"
       ],
       "detail": "mechanical markers only; ordinary-language instructions are not claimed to be detectable"
@@ -466,7 +466,7 @@
       "evidence_valid": true,
       "category": "excessive_agency",
       "references": [
-        "OWASP LLM06",
+        "OWASP LLM06 Excessive Agency",
         "OWASP Agentic: tool misuse"
       ],
       "detail": "4 hostile proposals, all denied by the enforcement point"
@@ -480,7 +480,7 @@
       "evidence_valid": true,
       "category": "excessive_agency",
       "references": [
-        "OWASP LLM06",
+        "OWASP LLM06 Excessive Agency",
         "OWASP Agentic: tool misuse"
       ],
       "detail": "3 attempted downgrades reclassified from the catalogue"
@@ -494,7 +494,7 @@
       "evidence_valid": true,
       "category": "data_exfiltration",
       "references": [
-        "OWASP LLM02",
+        "OWASP LLM02 Sensitive Information Disclosure",
         "MITRE ATLAS AML.T0057"
       ],
       "detail": "an outward destination is denied even on a tool not classed as egress"
@@ -536,7 +536,7 @@
       "evidence_valid": true,
       "category": "data_poisoning",
       "references": [
-        "OWASP LLM03",
+        "OWASP LLM04 Data and Model Poisoning",
         "MITRE ATLAS AML.T0020"
       ],
       "detail": "lineage input_hash=7118c8039c82 identifies the affected job"
@@ -578,7 +578,7 @@
       "evidence_valid": true,
       "category": "supply_chain",
       "references": [
-        "OWASP LLM05",
+        "OWASP LLM03 Supply Chain",
         "MITRE ATLAS AML.T0010"
       ],
       "detail": "a diode receiver accepts bytes from anything that can reach the port; the key is the control"

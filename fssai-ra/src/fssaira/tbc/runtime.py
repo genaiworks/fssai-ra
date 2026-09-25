@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import secrets
 import sqlite3
 import time
@@ -915,6 +916,81 @@ class TrustRuntime:
                     "INTEGRITY_FAILURE")
             receipts.append({"sequence": row["seq"], **json.loads(row["body"])})
         return receipts
+
+    # -- Visibility: the five questions -------------------------------------
+    # Any observer with operator or monitor authority can answer, for any
+    # agent: who is it, what may it do, what did it do, what stopped it, and
+    # what could it still leak. Every answer comes from mediated state -- the
+    # agent registry, the effective scope, the receipt chain and the declared
+    # channel capacity -- never from the agent's own account, and never from
+    # protected content: receipts hold digests and codes, not record text.
+
+    def agent_dossier(self, token, agent_id, *, channel_capacity_bits=None, limit=256):
+        self._admin_any(token, {"operator", "monitor"})
+        integer(limit, 1)
+        require(limit <= 4096, "RECEIPT_LIMIT")
+        row = self.db.execute("SELECT id,task,parent,scope,model,zone,expires,revoked,sources "
+                              "FROM tbc_agents WHERE id=?", (agent_id,)).fetchone()
+        require(row is not None, "UNKNOWN_AGENT")
+        lineage, current, seen = [], row["parent"], {row["id"]}
+        while current and current not in seen and len(seen) <= self.passport.max_depth + 1:
+            seen.add(current)
+            lineage.append(current)
+            parent = self.db.execute("SELECT parent FROM tbc_agents WHERE id=?", (current,)).fetchone()
+            current = parent[0] if parent else None
+        try:
+            _agent, task, effective = self._agent(agent_id)
+            active, scope, why_inactive = True, effective.to_dict(), None
+        except AuthorityDenied as denied:
+            task = self._task(row["task"])
+            active, scope = False, json.loads(row["scope"])
+            why_inactive = denied.args[0] if denied.args else "DENIED"
+        # The whole chain is checked before any receipt is believed.
+        chain = self._verify_receipt_chain()
+        did, stopped, codes = [], [], {}
+        for record in self.db.execute("SELECT seq,body FROM tbc_receipts WHERE task=? ORDER BY seq",
+                                      (row["task"],)):
+            body = json.loads(record["body"])
+            if body.get("agent") != agent_id:
+                continue
+            entry = {"sequence": record["seq"], "operation": body.get("operation"),
+                     "epoch": body.get("epoch"), "issued": body.get("issued")}
+            if body.get("outcome") in {"ALLOWED", "ACCEPTED"}:
+                did.append({**entry, "artifact_digest": body.get("artifact_digest"),
+                            "recipient": body.get("recipient")})
+            else:
+                code = body.get("code") or body.get("outcome")
+                codes[code] = codes.get(code, 0) + 1
+                stopped.append({**entry, "outcome": body.get("outcome"), "code": code})
+        destinations = sorted(scope.get("destinations", []))
+        if channel_capacity_bits is None:
+            leak = {"declared": False,
+                    "destination_choice_bits_per_release": (
+                        round(math.log2(len(destinations)), 3) if len(destinations) > 1 else 0.0),
+                    "note": "no channel policy declared: release count, timing and size channels "
+                            "are unbounded; only the destination choice is bounded by scope"}
+        else:
+            require(isinstance(channel_capacity_bits, (int, float))
+                    and not isinstance(channel_capacity_bits, bool)
+                    and math.isfinite(channel_capacity_bits) and channel_capacity_bits >= 0,
+                    "INVALID_CHANNEL_CAPACITY")
+            leak = {"declared": True, "bits_per_release": channel_capacity_bits,
+                    "note": "declared capacity of every choice left open to the agent"}
+        return {
+            "who": {"agent": row["id"], "task": row["task"], "parent": row["parent"],
+                    "lineage": lineage, "model": row["model"], "zone": row["zone"],
+                    "expires": row["expires"], "active": active, "inactive_because": why_inactive},
+            "may": {"effective_scope": scope, "task_state": task["state"], "epoch": task["epoch"],
+                    "task_budget_remaining": json.loads(task["remaining"])
+                    if isinstance(task["remaining"], str) else task["remaining"],
+                    "source_lineage": sorted(json.loads(row["sources"] or "[]"))},
+            "did": did[-limit:],
+            "stopped": {"by_code": dict(sorted(codes.items())), "recent": stopped[-limit:]},
+            "could_leak": leak,
+            "integrity": {"receipt_chain_verified": True, "receipts": chain["receipts"],
+                          "head": chain["head"]},
+            "source": "mediated state only: agent registry, effective scope, receipt chain",
+        }
 
     def prune_receipts(self, token, *, older_than=None):
         """Apply the retention limit so the trail is not another store of student data.
