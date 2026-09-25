@@ -243,7 +243,8 @@ class ToolRegistry:
         qualified = self.qualified_name(manifest)
         _require(qualified not in self._quarantined, "TOOL_QUARANTINED")
         approval = self._approvals.get(qualified)
-        _require(approval is not None, "TOOL_NOT_APPROVED")
+        if approval is None:
+            raise ToolSupplyDenied("TOOL_NOT_APPROVED")
         _require(
             hashlib.sha256(description.encode()).hexdigest() == manifest.description_hash,
             "DESCRIPTION_DOES_NOT_MATCH_ITS_HASH")
@@ -276,7 +277,8 @@ class ToolRegistry:
                  "QUALIFIED_NAME_REQUIRED")
         _require(requested not in self._quarantined, "TOOL_QUARANTINED")
         manifest = self._manifests.get(requested)
-        _require(manifest is not None, "TOOL_NOT_APPROVED")
+        if manifest is None:
+            raise ToolSupplyDenied("TOOL_NOT_APPROVED")
         return manifest
 
     def catalogue(self) -> tuple[str, ...]:

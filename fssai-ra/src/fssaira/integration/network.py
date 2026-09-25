@@ -10,8 +10,11 @@ socket, TLS and byte-ceiling paths against a loopback server. A destination
 authorized under that flag is marked, the marking propagates into transport
 evidence, and the promotion gate refuses to treat it as production evidence.
 """
+from __future__ import annotations
+
 import ipaddress
 import re
+from collections.abc import Iterable, Set
 from dataclasses import dataclass
 from urllib.parse import unquote, urlsplit
 
@@ -35,7 +38,7 @@ class DestinationPolicy:
     port: int = 443
     qualification_only: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if (not isinstance(self.hostname, str) or not re.fullmatch(
                 r'[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?', self.hostname)
                 or type(self.max_bytes) is not int or self.max_bytes <= 0):
@@ -53,7 +56,7 @@ class DestinationPolicy:
                        for p in self.path_prefixes)):
             raise ValueError('explicit path prefixes required')
 
-    def _authorize_address(self, address):
+    def _authorize_address(self, address: str) -> str:
         parsed = ipaddress.ip_address(address)
         if self.qualification_only:
             # The harness pins a loopback server. Nothing else is permitted even
@@ -66,7 +69,8 @@ class DestinationPolicy:
             raise ValueError('nonpublic address')
         return str(parsed)
 
-    def authorize(self, url, addresses, *, classifications):
+    def authorize(self, url: str, addresses: Iterable[str], *,
+                  classifications: Set[str]) -> AuthorizedDestination:
         if not isinstance(url, str) or any(ord(c) <= 32 or ord(c) >= 127 for c in url) or '\\' in url:
             raise ValueError('invalid URL')
         parsed = urlsplit(url)

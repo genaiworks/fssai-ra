@@ -22,6 +22,7 @@ import ssl
 import threading
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from .network import DestinationPolicy
 from .transport import QualifiedTransport, TransportQualification, spki_pin
@@ -150,7 +151,7 @@ class LoopbackTLSServer:
     def __enter__(self) -> LoopbackTLSServer:
         return self
 
-    def __exit__(self, *_exc) -> None:
+    def __exit__(self, *_exc: object) -> None:
         self.close()
 
     def close(self) -> None:
@@ -239,7 +240,7 @@ class LoopbackTLSServer:
             qualification_only=True,
         )
 
-    def transport(self, **kwargs) -> QualifiedTransport:
+    def transport(self, **kwargs: Any) -> QualifiedTransport:
         return QualifiedTransport(
             self.policy(**{k: v for k, v in kwargs.items()
                            if k in ("path_prefixes", "max_bytes")}),

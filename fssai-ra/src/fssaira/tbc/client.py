@@ -57,3 +57,13 @@ class SDKClient:
 
     def release_artifact(self, artifact, destination, escrow):
         return self.request("release_artifact", artifact=artifact, destination=destination, escrow=escrow)
+
+    def spawn_agent(self, scope, *, model, zone, ttl):
+        """Propose a narrower child; the service mediates it like any request."""
+        return self.request("spawn_agent", scope=scope.to_dict(), model=model, zone=zone, ttl=ttl)
+
+    def send_message(self, recipient, channel, artifact):
+        return self.request("send_message", recipient=recipient, channel=channel, artifact=artifact)
+
+    def receive_message(self, message):
+        return self.request("receive_message", message=message)

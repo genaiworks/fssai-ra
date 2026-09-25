@@ -1,11 +1,15 @@
 """Versioned proposal messages; authority always comes from the server."""
+from __future__ import annotations
+
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Any
 
 from ..joined_workflow import strict_json
 
 
-def parse_sdk_request(raw):
+def parse_sdk_request(raw: object) -> dict[str, Any]:
     if not isinstance(raw, str) or len(raw.encode()) > 262144:
         raise ValueError('request size or type')
     value = strict_json(raw)
@@ -19,19 +23,19 @@ def parse_sdk_request(raw):
     return value
 
 
-def _id(value):
+def _id(value: object) -> str:
     if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9_:.@-]{1,160}', value):
         raise ValueError('invalid identifier')
     return value
 
 
-def _list(value):
+def _list(value: object) -> tuple[str, ...]:
     if not isinstance(value, list) or not 1 <= len(value) <= 128:
         raise ValueError('bounded nonempty list required')
     return tuple(_id(v) for v in value)
 
 
-def _fields(value, names):
+def _fields(value: object, names: Iterable[str]) -> None:
     if not isinstance(value, dict) or set(value) != set(names) | {'schema_version'}:
         raise ValueError('unexpected fields')
     if type(value['schema_version']) is not int or value['schema_version'] != 1:
@@ -46,7 +50,7 @@ class ContextRequest:
     endpoint: str
 
     @classmethod
-    def parse(cls, value):
+    def parse(cls, value: Any) -> ContextRequest:
         _fields(value, ('subjects', 'fields', 'purpose', 'endpoint'))
         return cls(_list(value['subjects']), _list(value['fields']),
                    _id(value['purpose']), _id(value['endpoint']))
@@ -62,7 +66,7 @@ class EffectRequest:
     desired_state: str
 
     @classmethod
-    def parse(cls, value):
+    def parse(cls, value: Any) -> EffectRequest:
         _fields(value, ('operation', 'resource', 'expected_version', 'destination', 'context_refs', 'desired_state'))
         version = value['expected_version']
         if type(version) is not int or not 0 <= version <= 2**53:

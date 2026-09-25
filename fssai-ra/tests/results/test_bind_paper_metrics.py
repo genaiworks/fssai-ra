@@ -162,6 +162,7 @@ def _copy_real(tmp_path: Path) -> tuple[Path, Path, Path]:
     return paper, bindings, results
 
 
+@pytest.mark.manuscript
 def test_real_bindings_quote_the_paper_and_resolve(tmp_path: Path) -> None:
     report = binder.run()
     assert not [m for m in report.mismatches if m["problem"] == "quote not found in the paper"]
@@ -169,6 +170,7 @@ def test_real_bindings_quote_the_paper_and_resolve(tmp_path: Path) -> None:
     assert report.result_bindings > 40
 
 
+@pytest.mark.manuscript
 def test_real_paper_planted_unbound_and_mismatch_are_caught(tmp_path: Path) -> None:
     paper, bindings, results = _copy_real(tmp_path)
     baseline = binder.run(paper, bindings, results)
@@ -190,6 +192,7 @@ def test_real_paper_planted_unbound_and_mismatch_are_caught(tmp_path: Path) -> N
     assert "9,876" in completed.stdout
 
 
+@pytest.mark.manuscript
 def test_check_submission_default_is_unchanged_and_full_paper_runs_the_binder() -> None:
     default = subprocess.run([PYTHON, "scripts/check_submission.py"], cwd=ROOT,
                              capture_output=True, text=True, timeout=120)

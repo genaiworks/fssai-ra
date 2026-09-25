@@ -31,6 +31,7 @@ import re
 import socket
 import ssl
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -183,7 +184,7 @@ class QualifiedTransport:
         qualification: TransportQualification,
         *,
         environ: dict[str, str] | None = None,
-        clock=time.monotonic,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         if policy.qualification_only != qualification.qualification_only:
             raise ValueError("policy and qualification disagree about production status")
@@ -217,7 +218,8 @@ class QualifiedTransport:
             raise TransportDenied("ARTIFACT_DIGEST_MISMATCH")
         return artifact
 
-    def _transfer(self, url, addresses, *, classifications) -> VerifiedArtifact:
+    def _transfer(self, url: str, addresses: tuple[str, ...], *,
+                  classifications: frozenset[str] | set[str]) -> VerifiedArtifact:
         self._refuse_proxies()
         destination = self.policy.authorize(
             url, addresses, classifications=classifications)

@@ -50,6 +50,7 @@ def test_committed_figures_pass_check() -> None:
     assert figures_script.check() == []
 
 
+@pytest.mark.manuscript
 def test_svgs_are_the_paper_generators_bytes_and_leave_paper_figures_alone(svgs: dict[str, str]) -> None:
     for stem, content in svgs.items():
         assert (ROOT / "paper" / "figures" / f"{stem}.svg").read_text(encoding="utf-8") == content
