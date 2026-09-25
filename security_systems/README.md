@@ -129,7 +129,7 @@ A control that has never been removed and re-tested is an assumption. The harnes
 
 ```bash
 pip install -e '.[dev]'
-trustkernel matrix                     # every suite, every domain, one table
+trustkernel matrix --attempts 300      # every suite, every domain, the published figures
 trustkernel demo --scene 3             # a hijacked worker tries five ways to ship to prod
 trustkernel falsify --world healthcare # 25 attacks against a synthetic hospital
 trustkernel ablate --world finance     # remove each control; watch the harm return

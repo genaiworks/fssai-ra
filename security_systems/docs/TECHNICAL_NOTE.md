@@ -124,7 +124,7 @@ python -m pytest
 python -m ruff check src tests demo.py examples
 python demo.py --no-color
 python examples/guarded_agent_loop.py
-trustkernel matrix
+trustkernel matrix --attempts 300   # the attempt count the published figures use
 ```
 
 The suite regenerates all four evidence files in temporary paths and checks exact equality. Dependency ranges are not a reproducible lockfile; record the environment with a release. No live-model or production service evaluation was performed in this review.
