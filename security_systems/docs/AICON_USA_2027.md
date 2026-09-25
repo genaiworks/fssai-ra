@@ -69,7 +69,9 @@ The demonstrations use only local commands:
 ```bash
 python examples/effect_oracle.py       # write-then-deny caught by the state diff
 python examples/replay_boundary.py     # forged retry refused before the cache
-trustkernel matrix --attempts 300      # every suite against every world (~35 s)
+trustkernel redteam --attempts 300     # 0 unauthorized effects (~4 s)
+trustkernel redteam --attempts 300 --remove execution_mediator   # 105: the attacker can win
+trustkernel ablate --only F11 --only F13                          # the two redundant pairs
 make evidence                          # regenerate and byte-compare all figures
 ```
 
@@ -92,7 +94,7 @@ Rachna Srivastava is an enterprise architect who designs and evaluates authoriza
 
 ## Committee note
 
-This is a technical experience report built on a working, public reference implementation. The enforcement primitives are established: attenuated capability delegation, signed exact-action approval and information-flow labels. The session doesn't claim to have invented them. Its contribution is bringing the tester's own toolkit to agent security, with effect oracles, liveness pairs, attacker positive controls and ablation as mutation testing, plus a candid analysis of integration failures that a passing suite missed. That makes it a session a QA audience can apply directly, rather than a security talk they have to translate. Figures come from four synthetic policy worlds sharing one kernel and attack grammar. They are reproducible demonstrations of method, not production measurements or a compliance claim.
+This is a technical experience report built on a working, public reference implementation. The enforcement primitives are established: attenuated capability delegation, signed exact-action approval and information-flow labels. The session doesn't claim to have invented them. Its contribution is bringing the tester's own toolkit to agent security, with effect oracles, liveness pairs, attacker positive controls and ablation as mutation testing, plus a candid analysis of integration failures that a passing suite missed. That makes it a session a QA audience can apply directly, rather than a security talk they have to translate. Figures come from four synthetic policy worlds sharing one kernel and attack grammar. They are reproducible demonstrations of method, not production measurements or a compliance claim. The code is public, with hosted CI green on Python 3.10 and 3.14 and a five-minute reviewer path in the README: https://github.com/genaiworks/fssai-ra/tree/main/security_systems
 
 ---
 
@@ -150,8 +152,8 @@ Use the session biography above.
 
 ## Submission preparation — exclude this section from the form
 
-- Add the **public repository URL** and a **3–5 minute demo recording**. TechWell reviewers favor speakers they can see presenting. The code is public at `https://github.com/genaiworks/fssai-ra/tree/main/security_systems`. A dedicated repository containing only `security_systems/` would be clearer for reviewers.
-- **Pilot the tutorial's Module 1 and Module 3** with two or three colleagues before the program is announced. Module 2 is machine-tested, but only a pilot shows whether the 45-minute oracle exercise fits. Don't claim the timing has been validated until then.
+- Add the **4-minute demo recording** (script `docs/RECORDING_SCRIPT.md`, terminal driven by `bash scripts/record_demo.sh`). TechWell reviewers favor speakers they can see presenting. The repository link is already in the committee note; if you publish the dedicated repository with `scripts/publish_standalone.sh`, swap the link.
+- **Pilot the tutorial's Module 1 and Module 3** with two or three colleagues before the program is announced, using `workshop/PILOT.md`. Module 2 is machine-tested, but only a pilot shows whether the 45-minute oracle exercise fits. Don't claim the timing has been validated until then.
 - The incident in the abstract is the July 2025 Replit/SaaStr database deletion ([AI Incident Database #1152](https://incidentdatabase.ai/cite/1152/)). It's described, not named, in the attendee text; name it on the slide with the citation.
 - Attach `docs/TECHNICAL_NOTE.md` as the technical handout if the form accepts supporting material. Don't attach `docs/TECHNICAL_PIPELINE_WALKTHROUGH.md`: it describes a Kafka/Spark/Iceberg reference architecture that isn't implemented in this repository, and it pulls the session away from testing.
 - **If the form caps the abstract length** (the form page couldn't be checked from here), paste this 180-word version for Submission 1 and keep the full text for the notes-to-reviewers field:
@@ -159,7 +161,7 @@ Use the session biography above.
   > Your agent security test attacks the deployment tool and gets back "denied." The test passes. But did the control stop the action, or did the tool write the unreviewed build first and then raise the refusal? An assertion on the exception can't tell the difference, and neither can the agent's own report. This session applies the discipline testers already trust to AI agent authorization. **Effect oracles** judge harm by diffing the system of record, never the guard's log. **Liveness pairs** make sure a guard that refuses everything fails. **Positive controls** prove the attacker can win before a zero is trusted: 0 unauthorized effects against the full system, 105 with the mediator removed. **Ablation is mutation testing for security controls:** across 29 removals harm returns in 25, and the other four turn out to be redundant pairs, not dead code. Then comes what the harness missed: 203 tests passed while ten new adversarial tests found real bypasses in the integration wrapper. Attendees leave with the oracle, an ablation worksheet and a runnable offline example.
 
 - Confirm the biography. If you're willing to state prior speaking, publications or years of architecture experience, add one sentence; it is the biggest remaining lever for a first-time TechWell speaker.
-- On stage, run the matrix with `--attempts 300`. The default of 150 attempts prints 60 (devtools) and 57, not the 105 and 103 on the slides. Pre-run it: it takes about 35 seconds.
+- On stage, show 0 vs 105 with the two `trustkernel redteam` commands (about 4 s each). If you show the four-world matrix, run `trustkernel matrix --attempts 300`: the default of 150 attempts prints 60 and 57, not 105 and 103.
 - Figure sources:
   - `evidence/devtools.json`: fuzzer 0/300 and 105/300 without the mediator (103 in the other worlds); bandit 0/60 and positive control 60/60; ablations 25/29, with residency + model attestation and proposal-digest binding + single-use approval as the redundant pairs.
   - `docs/REVIEW.md`: 203 original tests, and 10 adversarial tests failing against the original wrapper.

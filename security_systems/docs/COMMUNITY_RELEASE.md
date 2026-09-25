@@ -11,7 +11,7 @@ This package turns the three AIE proposals into reusable engineering material. I
 - **Measured evidence:** a 36-case benign grid and descriptive read-call timings with environment and scope recorded in JSON.
 - **Speaker materials:** two 20-minute stage plans, a two-minute recording script, reviewer questions, and an explicit claim-to-evidence map.
 - **Offline reviewer capture:** four actual terminal runs, full readable transcript, and a self-contained HTML player. No model service is required to view or rerun them.
-- **Release tooling:** pinned rehearsal constraints, source archive generation, SHA-256 manifest verification, and dedicated CI configuration for Python 3.10 and 3.14. CI execution is not claimed merely because the configuration exists.
+- **Release tooling:** pinned rehearsal constraints, source archive generation, SHA-256 manifest verification, and hosted CI on Python 3.10 and 3.14. The [security-systems workflow](https://github.com/genaiworks/fssai-ra/actions/workflows/security-systems.yml) runs lint, the full suite, the community checks and the rehearsal capture on every change; its first eight completed runs (to September 25, 2026) all passed.
 
 ## Validation
 
@@ -26,13 +26,13 @@ A source archive was extracted into a separate directory, installed with `--no-c
 - **Offline viewer:** browser-checked selection and replay of the captured output, with a readable transcript fallback.
 - **Archive:** file hashes verified after extraction; modification detection was also exercised.
 
-No live model, Windows/Linux run, hosted CI run, external security audit, or participant workshop pilot was performed. The clean install required network access for dependencies; the examples run locally after installation.
+Hosted Linux CI now runs on every change (above). No live model, Windows run, external security audit, or participant workshop pilot was performed. The clean install required network access for dependencies; the examples run locally after installation.
 
 ## What is still external work
 
-1. **Public artifact access:** publish the reviewed source release to a destination controlled by the author and verify anonymous download. The configured repository remote is not evidence that these new files are published.
-2. **Speaker confirmation and recording:** confirm the biography and record the supplied two-minute script in the speaker's own voice. The automated terminal capture is supporting material, not a substitute for a human delivery sample.
-3. **Participant pilot:** run the workshop with fresh participants, measure checkpoint times and setup failures, and adjust the 90-minute plan. Machine execution cannot validate learner pacing.
+1. **Public artifact access:** the source is public at `github.com/genaiworks/fssai-ra/tree/main/security_systems`, and anonymous access was checked on September 24, 2026. `scripts/publish_standalone.sh` publishes it, with history, as its own repository once an empty one is created.
+2. **Speaker confirmation and recording:** confirm the biography and record `docs/RECORDING_SCRIPT.md` in the speaker's own voice; `scripts/record_demo.sh` drives the terminal. The automated terminal capture is supporting material, not a substitute for a human delivery sample.
+3. **Participant pilot:** run the workshop with fresh participants using `workshop/PILOT.md`, measure checkpoint times and setup failures, and adjust the 90-minute plan. Machine execution cannot validate learner pacing.
 4. **Independent empirical validation:** invite held-out attacks and test a real authenticated deployment before making broader security or research-paper claims. The current proposals explicitly stay within the reference evidence.
 
 ## Judge's reassessment

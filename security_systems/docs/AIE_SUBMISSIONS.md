@@ -61,6 +61,8 @@ None.
 
 **Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the reference implementation and attack harness behind this session, published the bypasses I found in my own code, and present in a personal capacity.
 
+**Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
+
 ## Possible Tracks
 
 Coding Agents; Security; Agent Infrastructure.
@@ -126,6 +128,8 @@ I show where the original evaluator stopped looking and what each new test obser
 **Outline (18 min).** 0–2 "203 passed" beside the two bypasses; 2–6 the write-then-deny tool and the effect oracle; 6–10 positive controls (0 vs 105, 0/60 vs 60/60); 10–14 ablations, with the room voting on which controls to delete before the joint removal; 14–17 the six wrapper defects as a checklist; 17–18 the worksheet.
 
 **Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization and evaluation for AI agents. I built the reference implementation, the 25-case falsification harness and the ablation experiments, and present in a personal capacity.
+
+**Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
 
 ## Possible Tracks
 
@@ -206,6 +210,8 @@ Every step is machine-tested from a clean install. Everything runs locally, so t
 
 **Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the guard, the disclosure fixtures and the checks this workshop uses, and present in a personal capacity.
 
+**Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
+
 ## Possible Tracks
 
 Multi-Agent Systems; Security; Coding Agents.
@@ -216,9 +222,9 @@ Multi-Agent Systems; Security; Coding Agents.
 
 These items do more for a first-time speaker's acceptance odds than any wording change:
 
-1. **A repository link reviewers can use in two minutes.** The code is public at `https://github.com/genaiworks/fssai-ra/tree/main/security_systems`. A reviewer landing on a repository named `fssai-ra`, with the talk in a subfolder beside unrelated papers, has to work out what they're looking at. A dedicated public repository (for example `genaiworks/trustkernel`) containing only `security_systems/`, with the README's first screen showing the three demo commands, is worth more than any sentence in these forms. Put the link in every pitch.
-2. **A 3–5 minute screen recording** of Proposal 1's demo, in your own voice (an unlisted YouTube or Loom link). The committee weighs delivery heavily for unknown speakers. `docs/SPEAKER_PACKAGE.md` has a two-minute script, and `evidence/rehearsal/` has captured terminal runs to follow.
-3. **A workshop pilot**, even with three colleagues, to record real setup and checkpoint times. Workshop slots are scarce, and a pilot is the strongest evidence the 90-minute plan works. Until then, don't claim the timing has been validated with a live audience.
+1. **A repository reviewers can use in two minutes.** Each pitch already links https://github.com/genaiworks/fssai-ra/tree/main/security_systems, whose README opens with a CI badge and a five-minute reviewer path. Better still is a dedicated repository: create an empty public one (for example `genaiworks/trustkernel`, with no README or licence), run `bash security_systems/scripts/publish_standalone.sh https://github.com/genaiworks/trustkernel.git`, confirm its Actions tab is green, then replace the link in the three **Code** lines.
+2. **A 4-minute screen recording** in your own voice (an unlisted YouTube or Loom link), added to each **Code** line. `docs/RECORDING_SCRIPT.md` is the script, and `bash scripts/record_demo.sh` drives the terminal one beat per Enter. Budget 30 minutes including one retake.
+3. **A workshop pilot** with two to four people, run with `workshop/PILOT.md`. It ends with the one factual sentence you may then add to Proposal 3. Until then, don't claim the timing has been validated with a live audience.
 4. **A fourth submission: Proposal 2 as an Online Talk** (prerecorded, 5–55 minutes). The CFP says online acceptances get a free ticket and priority as a backup speaker, which is a second route onto the stage.
 
 If Sessionize rejects a pitch for length, trim in this order: Proposal 1's "What's on the slides" paragraph, then the "Positioning" paragraph; Proposal 2's "evaluation contract"; Proposal 3's three-line code block. The evidence, the failure story and the outline carry the acceptance case, so keep them.

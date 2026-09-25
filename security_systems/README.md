@@ -1,5 +1,7 @@
 # trustkernel
 
+[![tests](https://github.com/genaiworks/fssai-ra/actions/workflows/security-systems.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/security-systems.yml)
+
 **Test agent authority at the tool dispatcher, then attack the controls.**
 
 On ten constructed hostile chains, the supplied scope-and-signature baseline blocks two and the full verifier blocks ten. This compares specified fixture implementations, not RBAC or commercial frameworks in general.
@@ -14,6 +16,21 @@ pip install pyyaml cryptography && python demo.py
 ```
 
 That runs seven scripted scenes with no API key, no GPU and no network after installation. Runtime depends on the machine.
+
+## Reviewing a talk proposal? Five minutes
+
+Install with `python -m pip install -e .`, then run the command for the session you're reviewing. Everything is offline and deterministic.
+
+| Session | Command | You should see |
+|---|---|---|
+| Binding approvals to the exact action | `python examples/guarded_agent_loop.py` | `APPROVAL_PAYLOAD_MISMATCH`, then one approved deploy and `1 deploy executed` |
+| | `python examples/replay_boundary.py` | a forged retry refused with `APPROVAL_SIGNATURE_INVALID` before the cache, `deploy_effects: 1` |
+| 203 tests passed; evals by effect | `python examples/effect_oracle.py` | the `write_then_reject` row: `refused: true` **and** `harmful_effect: true` |
+| | `trustkernel redteam --attempts 300 --remove execution_mediator` | `105 violations` (and `0` without `--remove`) |
+| | `trustkernel ablate --only F11 --only F13` | two single removals with no harm, then the joint removal with harm |
+| Taint-tracking workshop | `python -m workshop.check --implementation starter`, then `--implementation solution` | `2/7`, then `7/7` |
+
+`bash scripts/record_demo.sh` plays all of it as a six-beat walkthrough. Every published figure comes from `evidence/*.json`, which `make evidence` regenerates and the tests compare byte for byte.
 
 ## General-purpose dispatcher
 

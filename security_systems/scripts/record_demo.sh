@@ -26,9 +26,10 @@ beat "3  Replay with a forged approval"
 beat "4  'Denied' is not a test result"
 "$PY" examples/effect_oracle.py | "$PY" -c '
 import json, sys
-names = ("rejects before writing", "writes, then says denied", "control removed", "legitimate deploy")
-for name, row in zip(names, json.load(sys.stdin)):
-    print("%-26s refused=%-5s  harmful effect=%s" % (name, row["refused"], row["harmful_effect"]))'
+names = {"reject_before_write": "rejects before writing", "write_then_reject": "writes, then says denied",
+         "control_removed": "control removed", "legitimate_write": "legitimate deploy"}
+for row in json.load(sys.stdin):
+    print("%-26s refused=%-5s  harmful effect=%s" % (names[row["case"]], row["refused"], row["harmful_effect"]))'
 
 beat "5  Prove the attacker can win"
 "${TK[@]}" redteam --attempts 300 | tail -1
