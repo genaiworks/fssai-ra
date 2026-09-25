@@ -1,0 +1,24 @@
+{
+  "correction": {
+    "description": "Correct one subject's record from its source evidence and deliver the result to the named recipient",
+    "operations": ["request_capability", "request_context", "invoke_tool", "derive_artifact",
+                   "persist_memory", "read_memory", "propose_effect", "execute_effect",
+                   "release_artifact"],
+    "destinations": ["recipient"],
+    "tools": ["summarize", "classify"],
+    "max_duration_seconds": 604800,
+    "budget_ceiling": {"calls": 200, "context_bytes": 50000, "memory_bytes": 50000,
+                       "traffic_bytes": 50000, "compute_units": 50000, "cost_microunits": 0}
+  },
+  "correction-swarm": {
+    "description": "A correction split across delegated workers under one shared envelope",
+    "operations": ["request_capability", "request_context", "invoke_tool", "derive_artifact",
+                   "persist_memory", "read_memory", "propose_effect", "execute_effect",
+                   "release_artifact", "spawn_agent", "send_message", "receive_message"],
+    "destinations": ["recipient"],
+    "tools": ["summarize", "classify"],
+    "max_duration_seconds": 604800,
+    "budget_ceiling": {"calls": 200, "context_bytes": 50000, "memory_bytes": 50000,
+                       "traffic_bytes": 50000, "compute_units": 50000, "cost_microunits": 0}
+  }
+}

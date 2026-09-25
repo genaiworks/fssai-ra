@@ -75,12 +75,19 @@ class TrustRuntime:
     """
 
     def __init__(self, path, passport: Passport, *, authorities, clock=None, pack="education",
-                 min_deliberation_seconds=0, receipt_retention_seconds=None):
+                 min_deliberation_seconds=0, receipt_retention_seconds=None,
+                 effect_delay_seconds=0, mandate_purposes=None):
         self.clock = clock or (lambda: int(time.time()))
         self.passport = passport
         # Agent whose request is being mediated; its bound reservation meters charges.
         self._active_agent = None
         self.min_deliberation_seconds = integer(min_deliberation_seconds)
+        #: Delayed commitment: an approved effect waits this long, cancellable by
+        #: objection or revocation, before it reaches the system of record.
+        self.effect_delay_seconds = integer(effect_delay_seconds)
+        #: Mandate linting: when purposes are declared, a task whose contract grants
+        #: more than its purpose needs does not start (see fssaira.tbc.mandate).
+        self.mandate_purposes = mandate_purposes
         self.receipt_retention_seconds = (None if receipt_retention_seconds is None
                                           else integer(receipt_retention_seconds, 1))
         self.authorities = {}
@@ -97,6 +104,8 @@ class TrustRuntime:
         INSERT OR IGNORE INTO tbc_supervision VALUES(1,0);
         CREATE TABLE IF NOT EXISTS tbc_delivery(id TEXT PRIMARY KEY, binding TEXT, position INTEGER, mode TEXT);
         CREATE TABLE IF NOT EXISTS tbc_invalid_sources(binding TEXT PRIMARY KEY, reason TEXT, operator TEXT);
+        CREATE TABLE IF NOT EXISTS tbc_scheduled(id TEXT PRIMARY KEY, task TEXT, agent TEXT, epoch INTEGER,
+          proposal TEXT UNIQUE, approval TEXT, not_before INTEGER, state TEXT, reason TEXT);
         CREATE TABLE IF NOT EXISTS tbc_usage(id INTEGER PRIMARY KEY CHECK(id=1), remaining TEXT);
         CREATE TABLE IF NOT EXISTS tbc_config(id INTEGER PRIMARY KEY CHECK(id=1), body TEXT);
         CREATE TABLE IF NOT EXISTS tbc_tasks(id TEXT PRIMARY KEY, body TEXT, remaining TEXT,
@@ -271,6 +280,15 @@ class TrustRuntime:
         require(contract.purpose == "correction" and contract.tenant == "campus" and contract.subject == "s1"
                 and contract.scope.resources == {"campus/s1"}, "UNSUPPORTED_DOMAIN_BINDING")
         require(contract.scope.tools <= {"summarize", "classify"}, "UNREGISTERED_TOOL")
+        if self.mandate_purposes is not None:
+            from .mandate import lint_mandate
+
+            findings = lint_mandate(contract, self.mandate_purposes, now=self._now())
+            if findings:
+                self.world.event("tbc_mandate_refused", {
+                    "task": contract.task, "owner": owner,
+                    "codes": sorted({finding.code for finding in findings})})
+                raise AuthorityDenied(findings[0].code)
         root_scope = contract.scope.intersect(identity_scope)
         require(model in root_scope.models and zone in root_scope.zones, "MODEL_OR_ZONE_DENIED")
         with self.transaction():
@@ -528,19 +546,9 @@ class TrustRuntime:
                     "AI_IR_SCOPE_DENIED")
             approval = self._get(q["approval"], "approval")
             require(approval["proposal"] == q["proposal"], "EXACT_APPROVAL_REQUIRED")
-            result = self.world.handle("advisor", "advisor", {"op": "execute", "proposal": p["joined"],
-                                                               "approval": approval["joined"]})
-            # Fixed renderer, not model output: bind the committed version to fresh
-            # authority while retaining the original proposal in the evidence chain.
-            binding = {**underlying["binding"], "version": result["version"]}
-            source = self.world.put("context", binding)
-            text = canonical({"resource": f'{binding["tenant"]}/{binding["subject"]}',
-                              "value": underlying["value"], "version": result["version"]})
-            artifact = self._put("artifact", {"task": task["id"], "audience": [agent["id"]],
-                       "text": text, "labels": ["synthetic-academic"], "sources": [source],
-                       "kind": "executed_effect", "reference": q["proposal"],
-                       "digest": hashlib.sha256(text.encode()).hexdigest()})
-            return {**result, "artifact": artifact}
+            if self.effect_delay_seconds:
+                return self._schedule_effect(task, agent, q["proposal"], q["approval"])
+            return self._commit_effect(task, agent, q["proposal"], p, underlying, approval)
         if op == "spawn_agent":
             child_scope = Scope.parse(q["scope"])
             require(child_scope.subset(scope), "DELEGATION_AMPLIFICATION")
@@ -611,6 +619,104 @@ class TrustRuntime:
             # Model gets a receipt; recipient delivery revalidates current authority.
             return {"receipt": sid, "digest": a["digest"]}
         raise AuthorityDenied("UNIMPLEMENTED_PRIMITIVE")
+
+    # -- Effects: commit now, or hold for a window --------------------------
+
+    def _commit_effect(self, task, agent, proposal_id, p, underlying, approval):
+        result = self.world.handle("advisor", "advisor", {"op": "execute", "proposal": p["joined"],
+                                                           "approval": approval["joined"]})
+        # Fixed renderer, not model output: bind the committed version to fresh
+        # authority while retaining the original proposal in the evidence chain.
+        binding = {**underlying["binding"], "version": result["version"]}
+        source = self.world.put("context", binding)
+        text = canonical({"resource": f'{binding["tenant"]}/{binding["subject"]}',
+                          "value": underlying["value"], "version": result["version"]})
+        artifact = self._put("artifact", {"task": task["id"], "audience": [agent["id"]],
+                   "text": text, "labels": ["synthetic-academic"], "sources": [source],
+                   "kind": "executed_effect", "reference": proposal_id,
+                   "digest": hashlib.sha256(text.encode()).hexdigest()})
+        return {**result, "artifact": artifact}
+
+    def _schedule_effect(self, task, agent, proposal_id, approval_id):
+        """Hold an approved effect for the declared window instead of committing it now."""
+        existing = self.db.execute("SELECT id,not_before,state FROM tbc_scheduled WHERE proposal=?",
+                                   (proposal_id,)).fetchone()
+        if existing is not None:
+            return {"scheduled": existing["id"], "not_before": existing["not_before"],
+                    "state": existing["state"], "replayed": True}
+        sid = secrets.token_hex(16)
+        not_before = self._now() + self.effect_delay_seconds
+        self.db.execute("INSERT INTO tbc_scheduled VALUES(?,?,?,?,?,?,?,?,?)",
+                        (sid, task["id"], agent["id"], task["epoch"], proposal_id, approval_id,
+                         not_before, "pending", None))
+        self.world.event("tbc_effect_scheduled", {"scheduled": sid, "task": task["id"],
+                                                  "not_before": not_before})
+        return {"scheduled": sid, "not_before": not_before, "state": "pending", "replayed": False}
+
+    def object_effect(self, token, scheduled, *, reason):
+        """Cancel a held effect before its window closes. Source, reviewer or operator."""
+        name = self._admin_any(token, {"source", "reviewer", "operator"})
+        require(isinstance(reason, str) and 0 < len(reason.strip()) <= 512, "REASON_REQUIRED")
+        with self.transaction():
+            row = self.db.execute("SELECT * FROM tbc_scheduled WHERE id=?", (scheduled,)).fetchone()
+            require(row is not None, "UNKNOWN_SCHEDULED_EFFECT")
+            require(row["state"] == "pending", "EFFECT_NOT_PENDING")
+            require(self._now() < row["not_before"], "OBJECTION_WINDOW_CLOSED")
+            self.db.execute("UPDATE tbc_scheduled SET state='cancelled', reason=? WHERE id=?",
+                            ("objection", scheduled))
+            self.world.event("tbc_effect_objected", {"scheduled": scheduled, "by": name,
+                                                     "reason_digest": digest(reason)})
+            return {"scheduled": scheduled, "state": "cancelled"}
+
+    def commit_due(self, token):
+        """Commit held effects whose window has passed, rechecking everything first.
+
+        A revoked or expired agent, a changed task epoch, a quarantined source or a
+        scope that no longer covers the effect cancels it instead: the window is
+        exactly the time in which authority is allowed to change its mind.
+        """
+        self._admin(token, "operator")
+        outcomes = []
+        with self.transaction():
+            due = self.db.execute("SELECT * FROM tbc_scheduled WHERE state='pending' AND not_before<=? "
+                                  "ORDER BY not_before", (self._now(),)).fetchall()
+            for row in due:
+                p = self._get(row["proposal"], "proposal")
+                try:
+                    agent, task, scope = self._agent(row["agent"])
+                    require(task["epoch"] == row["epoch"] == p["epoch"], "STALE_PROPOSAL")
+                    require("execute_effect" in scope.operations, "ENVELOPE_DENIED")
+                    underlying = self.world.get(p["joined"], "proposal")
+                    require(underlying["recipient"] in scope.destinations
+                            and f'{underlying["binding"]["tenant"]}/{underlying["binding"]["subject"]}'
+                            in scope.resources, "AI_IR_SCOPE_DENIED")
+                    approval = self._get(row["approval"], "approval")
+                    require(approval["proposal"] == row["proposal"], "EXACT_APPROVAL_REQUIRED")
+                    self.db.execute("SAVEPOINT tbc_commit")
+                    try:
+                        result = self._commit_effect(task, agent, row["proposal"], p, underlying, approval)
+                    except (AuthorityDenied, Denied):
+                        self.db.execute("ROLLBACK TO tbc_commit")
+                        self.db.execute("RELEASE tbc_commit")
+                        raise
+                    self.db.execute("RELEASE tbc_commit")
+                    self.db.execute("UPDATE tbc_scheduled SET state='committed' WHERE id=?", (row["id"],))
+                    self._record_receipt(task, agent, {"op": "execute_effect"}, result, "ALLOWED")
+                    outcomes.append({"scheduled": row["id"], "state": "committed"})
+                except (AuthorityDenied, Denied) as refused:
+                    code = refused.args[0] if refused.args else "DENIED"
+                    self.db.execute("UPDATE tbc_scheduled SET state='cancelled', reason=? WHERE id=?",
+                                    (str(code), row["id"]))
+                    self._receipt_for_agent(row["agent"], row["task"], {"op": "execute_effect"},
+                                            "DENIED", refused)
+                    outcomes.append({"scheduled": row["id"], "state": "cancelled", "code": code})
+        return outcomes
+
+    def scheduled_effects(self, token, task_id):
+        self._admin_any(token, {"operator", "monitor", "reviewer", "source"})
+        return [dict(row) for row in self.db.execute(
+            "SELECT id,agent,epoch,not_before,state,reason FROM tbc_scheduled WHERE task=? "
+            "ORDER BY not_before", (task_id,))]
 
     def confirm_effect(self, token, proposal):
         name = self._admin(token, "source")

@@ -1,0 +1,60 @@
+{
+  "why": "A correction that may publish: the leak the composition controls would otherwise enforce faithfully.",
+  "expect": [
+    "MANDATE_UNNEEDED_DESTINATION"
+  ],
+  "contract": {
+    "task": "correction-1",
+    "purpose": "correction",
+    "subject": "s1",
+    "tenant": "campus",
+    "scope": {
+      "models": [
+        "offline-scripted"
+      ],
+      "data_classes": [
+        "synthetic-academic"
+      ],
+      "zones": [
+        "local"
+      ],
+      "tools": [
+        "summarize",
+        "classify"
+      ],
+      "resources": [
+        "campus/s1"
+      ],
+      "destinations": [
+        "recipient",
+        "public"
+      ],
+      "operations": [
+        "request_capability",
+        "request_context",
+        "invoke_tool",
+        "derive_artifact",
+        "persist_memory",
+        "read_memory",
+        "propose_effect",
+        "execute_effect",
+        "release_artifact"
+      ],
+      "channels": [
+        "internal"
+      ],
+      "memory": [
+        "task-notes"
+      ]
+    },
+    "budget": {
+      "calls": 200,
+      "context_bytes": 50000,
+      "memory_bytes": 50000,
+      "traffic_bytes": 50000,
+      "compute_units": 50000,
+      "cost_microunits": 0
+    },
+    "expires": 87400
+  }
+}
