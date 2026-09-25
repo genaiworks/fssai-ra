@@ -1,11 +1,21 @@
-# Technical pipeline walkthrough for the conference papers
+# Evidence-plane reference pipeline (companion deployment)
 
-This companion paper turns the security method into a concrete data pipeline.
-It is implementation-oriented: a reviewer can trace one record from an
-authenticated producer through Kafka, Spark and Iceberg, while seeing where
-PostgreSQL, Redis, encryption keys and the security guard belong. It is a
-reference architecture for a technical demonstration, not a claim that this
-repository has qualified a production cluster.
+This walkthrough traces one record through the evidence plane of the companion deployment (`fssai-ra`): an authenticated producer, Kafka, Spark, Iceberg on object storage, PostgreSQL, Redis and an independent verifier. It is a reference architecture for a technical demonstration, not a claim that a production cluster has been qualified.
+
+## Why this stack
+
+The authorization decision happens in the decision plane: the `trustkernel` guard in the dispatcher, plus a PostgreSQL transaction whose primary keys enforce single-use approvals and idempotent receipts. This pipeline is the **evidence plane**. It makes every decision durable, replayable, retained for years and verifiable by a party that doesn't trust the system that wrote it. It runs strictly downstream of the decision and is never consulted to authorize an action, because a stream or lake view can lag. [Why this stack](TOOLING_RATIONALE.md) ties each tool to its requirement, the alternative a reviewer might propose, and the code. In short:
+
+| Tool | Requirement it meets |
+|---|---|
+| PostgreSQL | Strongly consistent decisions; a transactional outbox so the log carries only committed truth |
+| Kafka | Ordered, retained, replayable evidence shared by many consumers without database credentials |
+| Spark | Verification independent of the writer (different process, credentials and engine), from per-event checks to full-history re-verification |
+| Iceberg on MinIO/S3 | Evidence reproducible as of decision time through snapshots and time travel; open format; affordable multi-year retention |
+| Redis | Fast leases and lookups, never authority |
+| Ollama | Local models on an internal-only network, so sensitive data never leaves the boundary |
+
+The conference demonstrations run the decision plane alone as an offline library, so every attendee can reproduce them. This walkthrough shows how the same design carries into an enterprise deployment.
 
 ## 1. The pipeline in one view
 
@@ -126,6 +136,13 @@ process dies after an Iceberg commit and before the checkpoint commit, Spark may
 replay the batch. The `MERGE` identity makes that replay idempotent at the table
 boundary.
 
+Why Spark rather than a lighter consumer: the same contract runs as a stream
+and as a batch over the entire history, for example re-verifying every hash in
+years of evidence after a key rotation, an incident or an audit request, and it
+scales out as history grows. Its verifier jobs also run in a different engine,
+process and credential set from the Python control plane that wrote the
+evidence, which is what makes their result independent.
+
 ## 5. Iceberg and object storage
 
 The REST catalog owns namespace and table metadata. MinIO stores the warehouse
@@ -157,6 +174,14 @@ the Kafka offset and must be recorded with any decision that depends on it.
 Retention is a policy control. Expiring snapshots or deleting orphan files
 before the appeal and audit windows close can destroy the ability to reproduce a
 decision. A manifest identifies files but does not preserve a deleted file.
+
+Two limits matter for security. First, snapshot immutability is not tamper
+evidence: anyone with write access to the bucket or catalog can commit a new
+snapshot. Tamper evidence comes from the hash-chained ledger and signed
+checkpoints held outside the lake, and the verifier checks the table against
+them. Second, immutable storage conflicts with erasure. Keep secrets and personal
+data out of lake tables in plaintext: store ciphertext under per-subject keys, or
+hashes, so destroying the key erases the data without rewriting history.
 
 ## 6. PostgreSQL state and encryption
 
@@ -209,7 +234,7 @@ controls as the source of record.
 The model can propose:
 
 ```json
-{"tool":"trigger_deploy","arguments":{"service":"site-17","build":"v42"}}
+{"tool":"trigger_deploy","arguments":{"service":"svc-payments","build":"v42"}}
 ```
 
 The dispatcher, not the model, resolves the authenticated principal and
@@ -247,12 +272,12 @@ Spark restart; the same trace must remain one row. For a stronger demonstration,
 replay a committed Kafka offset with a fresh checkpoint and verify that the
 Iceberg row count does not increase.
 
-## 10. What this paper can and cannot claim
+## 10. What this walkthrough can and cannot claim
 
 The pipeline demonstrates ordering, authenticated envelopes, content-integrity
 checks, snapshot references, replay-safe sink identity and independent output
 verification. It does not establish multi-broker failover, sustained-load
 capacity, KMS/HSM qualification, hardware one-way transfer, production identity
 provider integration or regulatory compliance. Those require deployment-specific
-evidence and should be listed as open work in the conference paper rather than
+evidence and should be listed as open work in any write-up that cites this pipeline rather than
 hidden behind a green unit-test count.

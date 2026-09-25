@@ -2,11 +2,17 @@
 
 Technical handout accompanying the AI Engineer and AI Con proposals. This is a reference-implementation report, not a claim of peer review or a production security certification.
 
-The companion [technical pipeline walkthrough](TECHNICAL_PIPELINE_WALKTHROUGH.md)
-extends the guard analysis into a concrete Kafka, Spark, Iceberg, PostgreSQL and
-Redis data path. It is the implementation appendix for the conference papers:
-the guard protects authority and disclosure decisions, while the pipeline
-details transport integrity, encryption, replay, snapshots and verification.
+Everything in this note runs as a Python library with in-memory or SQLite state,
+offline, so any reader can reproduce it. In the companion deployment the same
+design has two planes. The decision plane is the dispatcher plus PostgreSQL,
+where primary keys enforce single-use approvals and idempotent receipts in the
+same transaction as the effect. The evidence plane is Kafka, Spark and Iceberg
+on object storage: an ordered, replayable record shared by many consumers,
+verified independently of its writer, and reproducible as of decision time for
+years. [Why this stack](TOOLING_RATIONALE.md) justifies each tool against its
+requirement and the alternatives, and the
+[pipeline walkthrough](TECHNICAL_PIPELINE_WALKTHROUGH.md) traces one record
+through it.
 
 ## Question and contribution
 

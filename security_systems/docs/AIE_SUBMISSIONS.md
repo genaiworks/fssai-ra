@@ -53,7 +53,7 @@ None.
 
 **The bug that makes it credible.** The most instructive failure is my own. The executor verified approvals correctly, but a cached-result shortcut in front of it returned a receipt without verifying the approval at all. The original 203-test suite passed with that bug in place. The talk shows the bypass and the ordering that fixes it: validate signature, audience, payload, role and expiry first, and only then serve from cache.
 
-**Positioning.** The primitives aren't new. Attenuated delegation is familiar from capability tokens such as macaroons and Biscuit, and signing what the approver saw is standard transaction-authorization practice. What's new is where they break inside an agent's tool dispatcher: default arguments the reviewer never saw, JSON coercion that makes two calls hash alike, and caches that answer before the verifier runs. The talk also says plainly what the dispatcher can't do: durable exactly-once effects still need an idempotency key honored by the target service.
+**Positioning.** The primitives aren't new. Attenuated delegation is familiar from capability tokens such as macaroons and Biscuit, and signing what the approver saw is standard transaction-authorization practice. What's new is where they break inside an agent's tool dispatcher: default arguments the reviewer never saw, JSON coercion that makes two calls hash alike, and caches that answer before the verifier runs. The talk also says plainly what the dispatcher can't do: durable exactly-once effects still need an idempotency key honored by the target service. In the companion deployment, every approved decision commits to PostgreSQL together with a transactional outbox that feeds a Kafka → Spark → Iceberg evidence plane. That lets any approval be replayed and independently re-verified, as of decision time, years later.
 
 **What's on the slides.** Model request (tool name plus JSON arguments) → the dispatcher resolves the authenticated caller to an issued context → the delegation chain is re-verified from the root (holder, expiry, scope, depth, hop signatures) → arguments are bound with Python defaults and canonicalized (sorted keys, compact separators, finite numbers only; a tuple is not silently a list) → the Ed25519 approval is checked against principal, tool, resource, request identity, audience, expiry and argument digest → only then does the registered callback receive its credential. An independent observer reads the deployment register before and after. Every refusal carries a stable code (`REQUESTER_NOT_CHAIN_LEAF`, `APPROVAL_PAYLOAD_MISMATCH`, `APPROVAL_SIGNATURE_INVALID`). The demo runs offline with scripted requests, so there's no model API or Wi-Fi to fail on stage.
 
@@ -62,6 +62,8 @@ None.
 **Speaker.** I'm Rachna Srivastava, an enterprise architect with more than twenty years of experience designing enterprise systems, now working independently on authorization for AI agents. I built the reference implementation and attack harness behind this session, published the bypasses I found in my own code, and present in a personal capacity.
 
 **Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
+
+**Companion deployment** (PostgreSQL decisions; Kafka → Spark → Iceberg evidence plane with an independent Spark verifier; local models on Ollama): https://github.com/genaiworks/fssai-ra/tree/main/fssai-ra
 
 ## Possible Tracks
 
@@ -108,7 +110,7 @@ None.
 - **A positive control** that proves the attack could have succeeded.
 - **Single and joint ablations** that separate a useless control from a redundant one.
 
-The redundant pairs are concrete. Residency and model attestation each independently stop routing sensitive data to a weaker model. Proposal-digest binding and single-use approvals each independently stop replay. A single-removal study would have told us to delete all four.
+The redundant pairs are concrete. Residency and model attestation each independently stop routing sensitive data to a weaker model. Proposal-digest binding and single-use approvals each independently stop replay. A single-removal study would have told us to delete all four. The positive control earned its place in my own runs: a small local model used as the attacker caused no effects even against the weakened system, a zero that would have looked like security. The same principle scales up. In the companion deployment, a Spark job re-verifies the whole evidence chain from an Iceberg archive, in a different engine, process and credential set from the code that wrote it, so the judge is never the component being judged.
 
 **The failure story.** Ten new wrapper tests failed against code whose 203-test suite passed. All six defects they exposed are now fixed and regression-tested:
 
@@ -130,6 +132,8 @@ I show where the original evaluator stopped looking and what each new test obser
 **Speaker.** I'm Rachna Srivastava, an enterprise architect with more than twenty years of experience designing enterprise systems, now working independently on authorization and evaluation for AI agents. I built the reference implementation, the 25-case falsification harness and the ablation experiments, and present in a personal capacity.
 
 **Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
+
+**Companion deployment** (PostgreSQL decisions; Kafka → Spark → Iceberg evidence plane with an independent Spark verifier; local models on Ollama): https://github.com/genaiworks/fssai-ra/tree/main/fssai-ra
 
 ## Possible Tracks
 
@@ -229,7 +233,7 @@ These items do more for a first-time speaker's acceptance odds than any wording 
 
 If Sessionize rejects a pitch for length, trim in this order: Proposal 1's "What's on the slides" paragraph, then the "Positioning" paragraph; Proposal 2's "evaluation contract"; Proposal 3's three-line code block. The evidence, the failure story and the outline carry the acceptance case, so keep them.
 
-Keep the companion material out of the form fields. `docs/TECHNICAL_NOTE.md` backs these talks. `docs/TECHNICAL_PIPELINE_WALKTHROUGH.md` describes a Kafka → Spark → Iceberg reference architecture that isn't implemented in this repository, and linking it from a dispatcher talk invites a reviewer to look for code that isn't there.
+The companion material strengthens the Q&A. `docs/TECHNICAL_NOTE.md` backs the talks. `docs/TECHNICAL_PIPELINE_WALKTHROUGH.md` traces a record through the evidence plane (Kafka → Spark → Iceberg on MinIO, PostgreSQL outbox, Redis, local models on Ollama), all implemented in `fssai-ra/deploy/compose.yaml` and `fssai-ra/jobs/`. `docs/TOOLING_RATIONALE.md` justifies each tool against its requirement and the alternatives, and ends with one-line answers to the questions a critic will ask ("isn't this over-engineered?", "why Spark?", "single broker?"). Read it before any Q&A.
 
 The incidents and prior art in the pitches are cited so a committee member can check them:
 
@@ -253,3 +257,4 @@ Every figure above reproduces from this repository:
 | 2/7 and 7/7 workshop checks | `python -m workshop.check --implementation starter` and `--implementation solution` |
 | 203 original tests; 10 of 11 new adversarial tests failing (the 11th a concurrency control); six defects | Historical record in `docs/REVIEW.md` and `docs/TECHNICAL_NOTE.md` |
 | 40-line oracle | `src/trustkernel/evaluation.py` |
+| Small local model as attacker: 0 effects even without the mediator | Dated observation, not an evidence file: two runs of `trustkernel redteam --live --attempts 20 --remove execution_mediator` with `llama3.2:3b` on September 24, 2026; see `docs/TOOLING_RATIONALE.md` |

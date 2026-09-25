@@ -59,6 +59,7 @@ python benchmarks/guard_workloads.py --samples 1000
 - [Claim-to-evidence map](docs/CLAIMS.md): reproduce each assertion and understand its limits.
 - [Speaker package](docs/SPEAKER_PACKAGE.md): recording script and focused stage plans.
 - [Community release status](docs/COMMUNITY_RELEASE.md): tested scope and remaining external work.
+- [Why this stack](docs/TOOLING_RATIONALE.md): the decision plane and the Kafka, Spark and Iceberg evidence plane, each tool justified against its requirement.
 
 The source bundle includes a SHA-256 manifest. After extracting it, run `python scripts/verify_bundle.py .` to check file integrity. Keep the source tree: the worlds and workshop fixtures are part of the exercises.
 
