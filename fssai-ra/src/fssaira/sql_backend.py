@@ -499,6 +499,23 @@ class _TxEvidence:
             for r in rows
         ]
 
+    def records_from(self, seq: int, limit: int | None = None) -> list[EvidenceRecord]:
+        """Records with ``seq >= seq`` in order, at most ``limit``: an archiver's read."""
+        sql = (f"SELECT seq, ts, kind, payload, prev_hash, hash FROM {self._u.table('evidence')} "
+               "WHERE seq >= ? ORDER BY seq")
+        params: tuple = (seq,)
+        if limit is not None:
+            sql += " LIMIT ?"
+            params += (limit,)
+        return [
+            EvidenceRecord(int(r[0]), float(r[1]), r[2], self._u.database.loads(r[3]), r[4], r[5])
+            for r in self._u.all(sql, params)
+        ]
+
+    def count(self) -> int:
+        row = self._u.one(f"SELECT COUNT(*) FROM {self._u.table('evidence')}")
+        return int(row[0]) if row else 0
+
     def verify(self) -> bool:
         prev = GENESIS_HASH
         for index, record in enumerate(self.records()):

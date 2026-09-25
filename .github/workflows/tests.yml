@@ -96,6 +96,22 @@ jobs:
           python -m fssaira.cli conformance --backend memory --profile profiles/student_support.yaml
           python -m fssaira.cli conformance --backend sql --profile profiles/student_support.yaml
 
+      # The small-data tier (SQLite, no cluster) must reach the same evidence
+      # verdicts as the big-data tier on the same attacks. The Iceberg half runs
+      # against a real Iceberg table in a local SQL catalog, so it needs pyiceberg.
+      - name: Small and big data tiers give identical evidence verdicts
+        working-directory: fssai-ra
+        run: |
+          python -m pip install "pyiceberg[sql-sqlite,pyarrow]"
+          python -m pytest tests/test_tier_equivalence.py tests/test_small_data.py -rs
+          ! python -m pytest tests/test_tier_equivalence.py -rs -q | grep -q SKIPPED
+
+      - name: Both deployment tiers have valid Compose files
+        working-directory: fssai-ra
+        run: |
+          docker compose --env-file deploy/.env.example -f deploy/compose.small.yaml config --quiet
+          docker compose --env-file deploy/.env.example -f deploy/compose.yaml --profile analytics config --quiet
+
       # The lifecycle gates, run against the repository itself. Each exits
       # non-zero when a gate fails: an empty contract field or a missing named
       # test, a credential reachable from the untrusted side, or a falsifier

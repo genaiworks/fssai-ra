@@ -1,7 +1,8 @@
 # FSSAI-RA reference deployment.
 #
 #   docker compose --env-file deploy/.env -f deploy/compose.yaml up -d
-#       core:      postgres, redis, kafka, control-api, import-gateway, console
+#       core:      postgres, redis, kafka (+ one-shot kafka-topics), control-api,
+#                  import-gateway, console
 #   … --profile model       adds Ollama for local inference
 #   … --profile analytics   adds MinIO, the Iceberg REST catalog, and Spark
 #
@@ -125,6 +126,24 @@ services:
       - kafka-data:/var/lib/kafka/data
     networks: [data]
     restart: unless-stopped
+
+  # Create the topics before anything consumes them. The Spark import job reads
+  # the import topic at start-up to check continuity; on a fresh broker the topic
+  # does not exist until the first import, and the job would crash-loop until
+  # then. Idempotent: `--if-not-exists` makes a restart a no-op.
+  kafka-topics:
+    image: apache/kafka@sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837
+    depends_on:
+      kafka: {condition: service_healthy}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        for topic in ${FSSAI_IMPORT_TOPIC:-fssaira.imports} ${FSSAI_KAFKA_TOPIC:-fssaira.events}; do
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create
+        --if-not-exists --topic "$$topic" --partitions 1 --replication-factor 1 || exit 1;
+        done
+    networks: [data]
+    restart: "no"
 
   # -------------------------------------------------------------- local model
   ollama:
@@ -301,6 +320,7 @@ services:
       - spark-checkpoints:/opt/fssaira/checkpoints
     depends_on:
       kafka: {condition: service_healthy}
+      kafka-topics: {condition: service_completed_successfully}
       iceberg-bootstrap: {condition: service_completed_successfully}
     networks: [data, catalog]
     restart: unless-stopped

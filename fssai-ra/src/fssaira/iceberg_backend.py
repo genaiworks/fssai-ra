@@ -222,7 +222,23 @@ TABLE_MIGRATIONS = {
 }
 
 
-def archive_evidence(ledger, store: IcebergSnapshotStore, *, ledger_id: str = "primary") -> dict:
+def _segment_valid(records, previous_hash: str, first_seq: int) -> bool:
+    """New records are contiguous, chain from ``previous_hash``, and recompute."""
+    from .evidence import _digest
+
+    expected = first_seq
+    for record in records:
+        if record.seq != expected or record.prev_hash != previous_hash:
+            return False
+        if _digest(record.seq, record.ts, record.kind, record.payload,
+                   record.prev_hash) != record.hash:
+            return False
+        previous_hash, expected = record.hash, expected + 1
+    return True
+
+
+def archive_evidence(ledger, store: IcebergSnapshotStore, *, ledger_id: str = "primary",
+                     batch: int | None = None) -> dict:
     """Append the ledger records the archive does not hold yet. Safe to re-run.
 
     The archive is a second copy under different retention and different
@@ -240,6 +256,14 @@ def archive_evidence(ledger, store: IcebergSnapshotStore, *, ledger_id: str = "p
     Both refusals mean the primary ledger was truncated or rewritten after it was
     archived, which is exactly what the archive exists to reveal.
 
+    A ledger that offers ``records_from(seq, limit)`` (the SQL ledger does) is
+    read incrementally: only the archived head and the records after it, at most
+    ``batch`` of them per call. ``chain_valid_at_archive`` then covers what this
+    call archives -- contiguous, chained from the archived head, and recomputed --
+    since everything before the head is already in the archive for the
+    independent verifier. ``verified_scope`` names which of the two was checked.
+    A ledger without it (the in-memory one) is read and verified in full.
+
     Run one archiver per ``ledger_id``. Iceberg appends do not conflict with each
     other, so two concurrent archivers can still append the same records;
     ``jobs/verify_evidence_chain.py`` reports such duplicates.
@@ -249,22 +273,46 @@ def archive_evidence(ledger, store: IcebergSnapshotStore, *, ledger_id: str = "p
             f"evidence archives require an {EVIDENCE_TABLE!r} table, got {store.table!r}"
         )
 
-    records = list(ledger)
+    from .evidence import GENESIS_HASH
+
     head = store.archived_head(ledger_id)
-    start = 0
+    incremental = hasattr(ledger, "records_from")
+    if incremental:
+        count = len(ledger)
+        read_from = 0 if head is None else head[0]
+        extra = 0 if head is None else 1
+        window = ledger.records_from(read_from, None if batch is None else batch + extra)
+        anchor = window[0] if head is not None and window and window[0].seq == head[0] else None
+        new_records = window[extra:] if head is not None else window
+    else:
+        records = list(ledger)
+        count = len(records)
+        anchor = records[head[0]] if head is not None and head[0] < count else None
+        new_records = records[head[0] + 1:] if head is not None else records
+        if batch is not None:
+            new_records = new_records[:batch]
+
+    start, previous_hash = 0, GENESIS_HASH
     if head is not None:
         archived_seq, archived_hash = head
-        if archived_seq >= len(records):
+        if archived_seq >= count:
             raise ValueError(
                 f"ARCHIVE_AHEAD_OF_LEDGER: archive holds seq {archived_seq} for {ledger_id!r} "
-                f"but the ledger has {len(records)} record(s)"
+                f"but the ledger has {count} record(s)"
             )
-        if records[archived_seq].hash != archived_hash:
+        if anchor is None or anchor.hash != archived_hash:
             raise ValueError(
                 f"ARCHIVE_DIVERGED: ledger record {archived_seq} for {ledger_id!r} no longer "
                 "matches the archived hash"
             )
-        start = archived_seq + 1
+        start, previous_hash = archived_seq + 1, archived_hash
+
+    if incremental:
+        chain_valid = _segment_valid(new_records, previous_hash, start)
+        scope = "records archived by this call, chained from the archived head"
+    else:
+        chain_valid = ledger.verify()
+        scope = "full ledger"
 
     archived_at = datetime.now(timezone.utc)
     rows = [
@@ -276,14 +324,16 @@ def archive_evidence(ledger, store: IcebergSnapshotStore, *, ledger_id: str = "p
             "prev_hash": record.prev_hash, "hash": record.hash,
             "archived_at": archived_at,
         }
-        for record in records[start:]
+        for record in new_records
     ]
     report = {
         "ledger_id": ledger_id,
         "records": len(rows),
         "first_seq": rows[0]["seq"] if rows else None,
         "last_seq": rows[-1]["seq"] if rows else (start - 1 if start else None),
-        "chain_valid_at_archive": ledger.verify(),
+        "chain_valid_at_archive": chain_valid,
+        "verified_scope": scope,
+        "more": rows[-1]["seq"] + 1 < count if rows else False,
         "manifest": _manifest(rows),
     }
     # Nothing new: do not create an empty snapshot.

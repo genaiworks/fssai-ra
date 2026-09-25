@@ -8,7 +8,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from fssaira.atomic_execution import sql_evidence
+from fssaira.chain_verification import verify_rows
 from fssaira.cli import main
+from fssaira.evidence import EvidenceLedger
 from fssaira.evidence_notary import EvidenceNotary
 from fssaira.import_api import create_import_app
 from fssaira.runtime_factory import configuration_warnings
@@ -248,3 +250,116 @@ def test_declared_tier_contradictions_are_reported(clean_env):
     assert {"BIG_TIER_WITHOUT_BROKER", "BIG_TIER_ON_SQLITE"} <= codes()
     clean_env.setenv("FSSAI_SCALE", "medium")
     assert "UNKNOWN_SCALE_TIER" in codes("blocking")
+
+
+# ---------------------------------------------------------- growth and data loss
+
+
+def test_a_record_deleted_before_import_stops_the_sink(tmp_path):
+    log = SqliteImportLog(tmp_path / "log.sqlite3", mac_key=ENVELOPE_KEY.encode())
+    for text in ("a", "b", "c"):
+        log.append({"source": "s", "text": text, "stripped": [],
+                    "content_hash": hashlib.sha256(text.encode()).hexdigest()})
+    with sqlite3.connect(tmp_path / "log.sqlite3") as raw:
+        raw.execute("DELETE FROM import_log WHERE log_offset = 1")
+    archive = SqliteArchiveStore(tmp_path / "archive.sqlite3")
+    with pytest.raises(RuntimeError, match="no record at offset 1"):
+        ingest_imports(log, archive, mac_key=ENVELOPE_KEY.encode())
+    assert archive.imports() == []
+
+
+def test_an_envelope_that_is_not_an_object_is_quarantined(tmp_path):
+    log = SqliteImportLog(tmp_path / "log.sqlite3")
+    with sqlite3.connect(tmp_path / "log.sqlite3") as raw:
+        raw.execute("INSERT INTO import_log VALUES (0, 'k', '[1, 2]', 0)")
+    archive = SqliteArchiveStore(tmp_path / "archive.sqlite3")
+    report = ingest_imports(log, archive, mac_key=ENVELOPE_KEY.encode())
+    assert (report["imported"], report["quarantined"]) == (0, 1)
+
+
+def test_ledger_is_archived_in_batches_from_the_archived_head(tmp_path):
+    database, ledger = ledger_with(tmp_path / "control.sqlite3", 5)
+    url = f"sqlite:///{tmp_path / 'control.sqlite3'}"
+    archive = SqliteArchiveStore(tmp_path / "archive.sqlite3")
+    report = archive_ledger(url, archive, evidence_token=TOKEN, batch=2)
+    assert (report["records"], report["batches"], report["last_seq"]) == (5, 3, 4)
+    assert report["chain_valid_at_archive"] is True
+    assert report["verified_scope"].startswith("records archived by this call")
+    assert len(ledger) == 5  # COUNT(*), not a full read
+    assert verify_archive(archive)["verdict"] == "INTACT"
+    database.close()
+
+
+def test_a_new_ledger_record_that_does_not_recompute_is_reported_at_archive(tmp_path):
+    database, ledger = ledger_with(tmp_path / "control.sqlite3", 2)
+    url = f"sqlite:///{tmp_path / 'control.sqlite3'}"
+    archive = SqliteArchiveStore(tmp_path / "archive.sqlite3")
+    archive_ledger(url, archive, evidence_token=TOKEN)
+    ledger.append("decision", {"request_id": "r-2"}, token=TOKEN)
+    with sqlite3.connect(tmp_path / "control.sqlite3") as raw:
+        raw.execute("UPDATE evidence SET payload = '{\"request_id\": \"x\"}' WHERE seq = 2")
+    assert archive_ledger(url, archive, evidence_token=TOKEN)["chain_valid_at_archive"] is False
+    assert verify_archive(archive)["verdict"] == "COMPROMISED"
+    database.close()
+
+
+def incremental_archive(tmp_path, count):
+    database, ledger = ledger_with(tmp_path / "control.sqlite3", count)
+    archive = SqliteArchiveStore(tmp_path / "archive.sqlite3")
+    archive_ledger(f"sqlite:///{tmp_path / 'control.sqlite3'}", archive, evidence_token=TOKEN)
+    return database, ledger, archive
+
+
+def test_verification_is_incremental_after_the_first_full_pass(tmp_path):
+    database, ledger, archive = incremental_archive(tmp_path, 3)
+    first = verify_archive(archive, full_below=0)
+    assert (first["mode"], first["verdict"]) == ("full", "INTACT")
+    for index in (3, 4):
+        ledger.append("decision", {"request_id": f"r-{index}"}, token=TOKEN)
+    archive_ledger(f"sqlite:///{tmp_path / 'control.sqlite3'}", archive, evidence_token=TOKEN)
+    second = verify_archive(archive, full_below=0)
+    assert (second["mode"], second["verdict"], second["records"]) == ("incremental", "INTACT", 2)
+    assert second["verified_from_seq"] == 3
+    quiet = verify_archive(archive, full_below=0)
+    assert (quiet["verdict"], quiet["records"]) == ("INTACT", 0)
+    database.close()
+
+
+def test_incremental_pass_catches_a_bad_new_record_and_a_changed_head(tmp_path):
+    database, ledger, archive = incremental_archive(tmp_path, 3)
+    verify_archive(archive, full_below=0)
+    ledger.append("decision", {"request_id": "r-3"}, token=TOKEN)
+    archive_ledger(f"sqlite:///{tmp_path / 'control.sqlite3'}", archive, evidence_token=TOKEN)
+    with sqlite3.connect(tmp_path / "archive.sqlite3") as raw:
+        raw.execute("UPDATE decision_evidence SET kind = 'forged' WHERE seq = 3")
+    assert verify_archive(archive, full_below=0)["verdict"] == "COMPROMISED"
+
+    with sqlite3.connect(tmp_path / "archive.sqlite3") as raw:
+        raw.execute("DELETE FROM decision_evidence WHERE seq >= 2")
+    changed = verify_archive(archive, full_below=0)
+    assert (changed["verdict"], changed["code"]) == ("COMPROMISED", "VERIFIED_HEAD_CHANGED")
+    database.close()
+
+
+def test_what_only_the_full_pass_sees(tmp_path):
+    """An already-verified record rewritten in place, with its hash: the documented blind spot."""
+    database, _ledger, archive = incremental_archive(tmp_path, 3)
+    verify_archive(archive, full_below=0)
+    with sqlite3.connect(tmp_path / "archive.sqlite3") as raw:
+        raw.execute("UPDATE decision_evidence SET kind = 'forged' WHERE seq = 0")
+    assert verify_archive(archive, full_below=0)["verdict"] == "INTACT"
+    assert verify_archive(archive, mode="full")["verdict"] == "COMPROMISED"
+    assert verify_archive(archive)["verdict"] == "COMPROMISED"  # auto: small archive, full pass
+    database.close()
+
+
+def test_an_anchor_hash_must_match_the_first_rows_link():
+    ledger = EvidenceLedger(TOKEN)
+    for index in range(3):
+        ledger.append("decision", {"request_id": f"r-{index}"}, token=TOKEN)
+    rows = [{"seq": r.seq, "ts": r.ts, "kind": r.kind, "payload_json": json.dumps(r.payload),
+             "prev_hash": r.prev_hash, "hash": r.hash} for r in ledger][1:]
+    good = verify_rows(rows, since_seq=1, anchor_hash=list(ledger)[0].hash)
+    assert good["verdict"] == "INTACT"
+    bad = verify_rows(rows, since_seq=1, anchor_hash="f" * 64)
+    assert bad["verdict"] == "COMPROMISED" and bad["broken_links"] == [1]

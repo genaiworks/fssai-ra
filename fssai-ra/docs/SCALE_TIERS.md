@@ -54,6 +54,31 @@ durable throughput; the command prints that caveat. Measure your own host.
 | Compose file | `deploy/compose.yaml --profile analytics` | `deploy/compose.small.yaml` |
 | Services (without the model) | 11, two of them one-shot setup | 4: API, gateway, evidence worker, console |
 
+## Measured cost of each tier
+
+`scripts/measure_tiers.py` starts each stack as a throwaway Compose project, runs
+the same complete workflows through the HTTP API (register, propose, review,
+wait out the enforced 45-second deliberation floor, approve, execute), checks
+the same invariants, then samples the footprint. One run on the development
+laptop (Apple silicon, 14 CPUs, Docker 28.4), ten workflows per tier, recorded in
+`audit/tier-footprint.json`:
+
+| | Small | Big (with analytics) |
+|---|---:|---:|
+| Seconds from `up` to a healthy API | 6.1 | 16.9 |
+| Running containers | 3 | 8 |
+| Resident memory after the workload | 86 MiB | 1,087 MiB |
+| Images on disk | 283 MiB | 3.0 GiB |
+| Median workflow time beyond the review floor | 0.53 s | 0.70 s |
+| Every workflow completed, moved once, one outcome each, chain valid | yes | yes |
+
+The big stack uses about 12.6 times the memory and 10.6 times the image
+storage for the same workload and the same invariants. The small tier's
+evidence worker also archived and independently verified all 20 ledger records
+(`INTACT`). The big tier's Spark archive job was running but not driven. These
+figures are relative cost on one machine, not capacity; rerun the script on
+your own host.
+
 ## What stays the same
 
 These are not reimplemented in the small tier. They are the same code or the
@@ -65,13 +90,45 @@ same rule:
 - A record whose `content_hash` does not match its text fails the batch, and
   nothing is committed.
 - Re-running the sink is idempotent. A different record at a stored position is
-  refused, a truncated log is refused, and a recreated log is a new generation.
+  refused, a truncated log or a record deleted before import stops the sink
+  (as Spark's `failOnDataLoss` does), and a recreated log is a new generation.
 - Archiving goes through `fssaira.iceberg_backend.archive_evidence`, with its
   `ARCHIVE_AHEAD_OF_LEDGER` and `ARCHIVE_DIVERGED` refusals.
 - Verification goes through `fssaira.chain_verification.verify_rows`, including
   the signed-checkpoint check that detects a deleted tail.
 
 `tests/test_small_data.py` checks each of these on the small tier.
+`tests/test_tier_equivalence.py` runs the same attacks against a real Iceberg
+table and the SQLite archive and requires identical verdicts; CI runs it with
+pyiceberg installed and fails if the Iceberg half is skipped. The one
+difference it records: two archivers racing on one ledger can both append in
+Iceberg, where the verifier reports the duplicate, while SQLite's primary key
+refuses the second copy at write time.
+
+## How a pass scales with history
+
+A pass does work in proportion to what is new, not to the whole history:
+
+- **Archiving** reads only the records after the archived head, 50,000 at a
+  time, and checks that they chain from that head and recompute. The records
+  before the head are already in the archive, where the verifier checks them.
+- **Verification** (`--mode auto`, the default) recomputes the whole archive on
+  every pass while it holds at most 1,000,000 records, so tampering anywhere is
+  caught on the next pass. Above that, a pass first confirms that the last
+  verified record is still archived with the same hash, then checks only the
+  records after it. A full recomputation still runs at least once a day.
+
+Measured on the development laptop with `scripts/measure_verification.py`
+(recorded in `audit/verification-throughput.json`): a full pass recomputes about
+195,000 records a second (1,000,000 in about five seconds), and an incremental
+pass over 100 new records takes under a millisecond.
+
+An incremental pass cannot see an already-verified record rewritten in place
+together with every later hash. The daily full pass sees it, and so does a
+signed checkpoint. `tests/test_small_data.py::test_what_only_the_full_pass_sees`
+pins that boundary. Someone able to do that can equally rewrite the whole
+archive consistently, which in either tier only a checkpoint held elsewhere
+detects.
 
 ## What the small tier gives up
 

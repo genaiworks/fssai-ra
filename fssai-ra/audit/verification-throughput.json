@@ -1,0 +1,21 @@
+{
+  "measured_at": "2026-09-25T12:01:18Z",
+  "host": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "cpus": 14,
+    "python": "3.14.6"
+  },
+  "records": 200000,
+  "full_pass": {
+    "verdict": "INTACT",
+    "seconds": 1.024,
+    "records_per_second": 195231
+  },
+  "incremental_pass": {
+    "verdict": "INTACT",
+    "new_records": 100,
+    "seconds": 0.0007
+  },
+  "scope": "one run on one host; sizes a verification cadence, does not promise one"
+}

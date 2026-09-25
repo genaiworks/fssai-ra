@@ -208,11 +208,16 @@ class _DatabaseEvidenceView:
         with self._db.transaction() as unit:
             return unit.evidence.records()
 
+    def records_from(self, seq: int, limit: int | None = None) -> list:
+        with self._db.transaction() as unit:
+            return unit.evidence.records_from(seq, limit)
+
     def __iter__(self):
         return iter(self.records())
 
     def __len__(self) -> int:
-        return len(self.records())
+        with self._db.transaction() as unit:
+            return unit.evidence.count()
 
 
 class _DatabaseObjectStoreView:

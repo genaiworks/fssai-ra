@@ -27,8 +27,14 @@ def recompute(seq: int, ts: float, kind: str, payload_json: str, prev_hash: str)
 
 
 def verify_rows(rows: list[dict], *, since_seq: int = 0, checkpoint: dict | None = None,
-                public_keys: dict[str, str] | None = None) -> dict:
-    """Pure verification over archived rows sorted by ``seq``. No Spark needed."""
+                public_keys: dict[str, str] | None = None,
+                anchor_hash: str | None = None) -> dict:
+    """Pure verification over archived rows sorted by ``seq``. No Spark needed.
+
+    With ``since_seq`` the first row's predecessor is trusted, unless
+    ``anchor_hash`` gives the hash of record ``since_seq - 1`` as already
+    verified; then the first row must link to it.
+    """
     if checkpoint is not None and since_seq:
         raise ValueError("--checkpoint verifies the whole chain; drop --since-seq")
     if not rows:
@@ -50,7 +56,10 @@ def verify_rows(rows: list[dict], *, since_seq: int = 0, checkpoint: dict | None
             taken.add(row["seq"])
             unique.append(row)
 
-    previous = GENESIS_HASH if since_seq == 0 else unique[0]["prev_hash"]
+    if since_seq == 0:
+        previous = GENESIS_HASH
+    else:
+        previous = anchor_hash if anchor_hash is not None else unique[0]["prev_hash"]
     expected_seq = since_seq
     hash_failures, link_failures, gaps = [], [], []
     for row in unique:

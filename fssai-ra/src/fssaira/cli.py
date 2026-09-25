@@ -800,14 +800,21 @@ def _small_verify(args) -> dict:
         return verify_archive(
             archive, ledger_id=args.ledger_id, since_seq=args.since_seq,
             checkpoint=json.loads(args.checkpoint.read_text()) if args.checkpoint else None,
-            public_keys=json.loads(args.public_keys.read_text()) if args.public_keys else None)
+            public_keys=json.loads(args.public_keys.read_text()) if args.public_keys else None,
+            mode=args.mode)
     finally:
         archive.close()
 
 
 def _print_verification(report: dict) -> bool:
     ok = report["verdict"] in {"INTACT", "EMPTY"}
-    heading(f"Archived evidence chain — {report['records']} record(s)")
+    mode = report.get("mode", "full")
+    scope = (f"{report['records']} record(s) from seq {report['verified_from_seq']}"
+             if mode == "incremental" and "verified_from_seq" in report
+             else f"{report['records']} record(s)")
+    heading(f"Archived evidence chain — {mode}, {scope}")
+    if report.get("code"):
+        print(red(f"  {report['code']}: {report.get('detail', '')}"))
     for check in ("chain_valid", "links_intact", "sequence_complete", "no_duplicates"):
         if check in report:
             print("  " + verdict(report[check], check, check))
@@ -1493,6 +1500,10 @@ def build_parser() -> argparse.ArgumentParser:
                                 help="signed checkpoint JSON retained outside the archive")
             target.add_argument("--public-keys", type=Path,
                                 help="trusted notary public keys, {key_id: hex}")
+            target.add_argument("--mode", choices=["auto", "full", "incremental"],
+                                default="auto",
+                                help="auto: full while the archive is small or once a day, "
+                                     "otherwise from the last verified head")
         return target
 
     small_parser("ingest", "move gateway imports from the log into the archive",

@@ -1,0 +1,111 @@
+{
+  "measured_at": "2026-09-25T11:55:07Z",
+  "host": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "cpus": 14,
+    "docker": "28.4.0"
+  },
+  "tiers": {
+    "small": {
+      "tier": "small",
+      "project": "fssaira-tier-small",
+      "services": [
+        "control-api",
+        "import-gateway",
+        "evidence-worker"
+      ],
+      "startup_seconds_until_api_healthy": 6.1,
+      "workload": {
+        "workflows": 10,
+        "deliberation_floor_seconds": 45.0,
+        "wall_seconds": 46.0,
+        "latency_seconds_p50": 45.53,
+        "latency_overhead_p50_seconds": 0.53,
+        "errors": [],
+        "ledger_records": 20,
+        "invariants": {
+          "every_workflow_completed": true,
+          "every_resource_moved_exactly_once": true,
+          "one_outcome_per_workflow": true,
+          "evidence_chain_valid": true
+        }
+      },
+      "evidence_plane": {
+        "exit_code": 0,
+        "verdict": "INTACT",
+        "archived_records": 20
+      },
+      "footprint": {
+        "running_containers": 3,
+        "memory_mib_total": 86.3,
+        "memory_mib_by_container": {
+          "fssaira-tier-small-control-api-1": 44.2,
+          "fssaira-tier-small-evidence-worker-1": 1.2,
+          "fssaira-tier-small-import-gateway-1": 40.9
+        },
+        "distinct_images": 1,
+        "image_mib_total": 283.0
+      }
+    },
+    "big": {
+      "tier": "big",
+      "project": "fssaira-tier-big",
+      "services": [
+        "postgres",
+        "redis",
+        "kafka",
+        "kafka-topics",
+        "control-api",
+        "import-gateway",
+        "minio",
+        "minio-init",
+        "iceberg-rest",
+        "iceberg-bootstrap",
+        "spark-iceberg"
+      ],
+      "startup_seconds_until_api_healthy": 16.9,
+      "workload": {
+        "workflows": 10,
+        "deliberation_floor_seconds": 45.0,
+        "wall_seconds": 46.2,
+        "latency_seconds_p50": 45.7,
+        "latency_overhead_p50_seconds": 0.7,
+        "errors": [],
+        "ledger_records": 20,
+        "invariants": {
+          "every_workflow_completed": true,
+          "every_resource_moved_exactly_once": true,
+          "one_outcome_per_workflow": true,
+          "evidence_chain_valid": true
+        }
+      },
+      "footprint": {
+        "running_containers": 8,
+        "memory_mib_total": 1086.6,
+        "memory_mib_by_container": {
+          "fssaira-tier-big-control-api-1": 52.0,
+          "fssaira-tier-big-iceberg-rest-1": 163.5,
+          "fssaira-tier-big-import-gateway-1": 42.6,
+          "fssaira-tier-big-kafka-1": 293.0,
+          "fssaira-tier-big-minio-1": 66.0,
+          "fssaira-tier-big-postgres-1": 24.8,
+          "fssaira-tier-big-redis-1": 5.1,
+          "fssaira-tier-big-spark-iceberg-1": 439.6
+        },
+        "distinct_images": 8,
+        "image_mib_total": 2999.7
+      }
+    }
+  },
+  "scope": "one host, one run; relative cost on this machine, not capacity",
+  "comparison": {
+    "containers": [
+      3,
+      8
+    ],
+    "memory_ratio_big_over_small": 12.6,
+    "image_ratio_big_over_small": 10.6,
+    "same_invariants_hold": true
+  }
+}

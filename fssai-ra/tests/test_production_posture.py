@@ -53,3 +53,33 @@ def test_these_block_a_production_deployment_but_only_warn_elsewhere(env):
 def test_sqlite_is_local_and_not_a_transport_finding(env):
     env.setenv("FSSAI_DATABASE_URL", "sqlite:///var/lib/fssaira/state.sqlite")
     assert "PLAINTEXT_DATABASE_TRANSPORT" not in codes(transport_findings())
+
+
+def test_a_pilot_with_teaching_defaults_refuses_to_start(env):
+    """Fail secure: the refusal happens at start-up, not as a warning read afterwards."""
+    from fssaira.runtime_factory import build_control_plane
+
+    env.setenv("FSSAI_MODEL", "deterministic")
+    env.setenv("FSSAI_DEPLOYMENT_PROFILE", "pilot")
+    with pytest.raises(RuntimeError, match="refusing to start a pilot deployment.*"
+                                           "TEACHING_APPROVAL_KEY"):
+        build_control_plane(profile_path="profiles/student_support.yaml")
+
+
+def test_a_mistyped_deployment_profile_refuses_instead_of_falling_back_to_teaching(env):
+    from fssaira.runtime_factory import build_control_plane
+
+    env.setenv("FSSAI_MODEL", "deterministic")
+    env.setenv("FSSAI_DEPLOYMENT_PROFILE", "prod")
+    with pytest.raises(RuntimeError, match="'prod' is not one of"):
+        build_control_plane(profile_path="profiles/student_support.yaml")
+
+
+def test_an_unknown_scale_tier_blocks_a_pilot(env):
+    from fssaira.runtime_factory import build_control_plane
+
+    env.setenv("FSSAI_MODEL", "deterministic")
+    env.setenv("FSSAI_DEPLOYMENT_PROFILE", "pilot")
+    env.setenv("FSSAI_SCALE", "medium")
+    with pytest.raises(RuntimeError, match="UNKNOWN_SCALE_TIER"):
+        build_control_plane(profile_path="profiles/student_support.yaml")

@@ -222,6 +222,12 @@ class SqliteArchiveStore:
                                raw_sha256     TEXT    NOT NULL,
                                quarantined_at REAL    NOT NULL,
                                PRIMARY KEY (log_generation, log_offset))""")
+            db.execute("""CREATE TABLE IF NOT EXISTS verified_heads (
+                              ledger_id        TEXT PRIMARY KEY,
+                              seq              INTEGER NOT NULL,
+                              hash             TEXT    NOT NULL,
+                              verified_at      REAL    NOT NULL,
+                              full_verified_at REAL    NOT NULL)""")
             db.execute("""CREATE TABLE IF NOT EXISTS archive_snapshots (
                               seq          INTEGER PRIMARY KEY,
                               snapshot_id  TEXT NOT NULL UNIQUE,
@@ -265,6 +271,32 @@ class SqliteArchiveStore:
         return [dict(row) for row in self._db.execute(
             f"SELECT seq, ts, kind, payload_json, prev_hash, hash FROM {EVIDENCE_TABLE} "
             "WHERE ledger_id = ? AND seq >= ? ORDER BY seq", (ledger_id, since_seq))]
+
+    def evidence_count(self, ledger_id: str = "primary") -> int:
+        return int(self._db.execute(
+            f"SELECT COUNT(*) FROM {EVIDENCE_TABLE} WHERE ledger_id = ?", (ledger_id,)
+        ).fetchone()[0])
+
+    def evidence_hash(self, ledger_id: str, seq: int) -> str | None:
+        row = self._db.execute(
+            f"SELECT hash FROM {EVIDENCE_TABLE} WHERE ledger_id = ? AND seq = ?",
+            (ledger_id, seq)).fetchone()
+        return row[0] if row else None
+
+    def verified_head(self, ledger_id: str = "primary") -> dict | None:
+        row = self._db.execute(
+            "SELECT seq, hash, verified_at, full_verified_at FROM verified_heads "
+            "WHERE ledger_id = ?", (ledger_id,)).fetchone()
+        return dict(row) if row else None
+
+    def record_verified_head(self, ledger_id: str, seq: int, hash_: str, *, full: bool) -> None:
+        now = time.time()
+        with self._lock, _immediate(self._db) as db:
+            prior = db.execute("SELECT full_verified_at FROM verified_heads WHERE ledger_id = ?",
+                               (ledger_id,)).fetchone()
+            full_at = now if full or prior is None else prior[0]
+            db.execute("INSERT OR REPLACE INTO verified_heads VALUES (?, ?, ?, ?, ?)",
+                       (ledger_id, seq, hash_, now, full_at))
 
     def history(self) -> list[dict]:
         return [dict(row) for row in self._db.execute(
@@ -333,7 +365,17 @@ def ingest_imports(log: SqliteImportLog, archive: SqliteArchiveStore,
             f"the archive holds offset {done} for generation {generation} but the log has "
             f"{len(log)} record(s): the log was truncated. Nothing was written")
     # Resume after the highest position already imported or quarantined.
-    entries = log.read(0 if done is None else int(done) + 1, limit=batch_size)
+    first = 0 if done is None else int(done) + 1
+    entries = log.read(first, limit=batch_size)
+    # Offsets have no gaps, like one Kafka partition. A missing position means a
+    # record was deleted before it was read; skipping it would lose it silently
+    # (Spark's failOnDataLoss refuses for the same reason).
+    missing = [expected for expected, entry in enumerate(entries, start=first)
+               if entry["log_offset"] != expected]
+    if missing:
+        raise RuntimeError(
+            f"the import log has no record at offset {missing[0]} (generation {generation}): "
+            "a record was deleted before it was imported. Nothing was written")
 
     accepted, rejected = [], []
     for entry in entries:
@@ -341,6 +383,8 @@ def ingest_imports(log: SqliteImportLog, archive: SqliteArchiveStore,
         try:
             envelope = json.loads(raw)
         except json.JSONDecodeError:
+            envelope = {}
+        if not isinstance(envelope, dict):
             envelope = {}
         if mac_key is not None and not _authentic(mac_key, envelope):
             rejected.append((generation, entry["log_offset"], str(envelope.get("trace_id", "")),
@@ -402,27 +446,111 @@ def ingest_imports(log: SqliteImportLog, archive: SqliteArchiveStore,
 
 
 def archive_ledger(database_url: str, archive: SqliteArchiveStore, *,
-                   ledger_id: str = "primary", evidence_token: str | None = None) -> dict:
-    """Archive the control plane's SQL ledger, through the big-data tier's archiver."""
+                   ledger_id: str = "primary", evidence_token: str | None = None,
+                   batch: int = 50_000) -> dict:
+    """Archive the control plane's SQL ledger, through the big-data tier's archiver.
+
+    Reads only the records after the archived head, ``batch`` at a time, so the
+    cost of a pass follows what is new rather than the ledger's whole history.
+    """
     from .atomic_execution import sql_evidence
     from .iceberg_backend import archive_evidence
     from .postgres_backend import database_from_env
 
     database = database_from_env(database_url, evidence_token=evidence_token)
     try:
-        return archive_evidence(sql_evidence(database), archive, ledger_id=ledger_id)
+        ledger = sql_evidence(database)
+        reports = [archive_evidence(ledger, archive, ledger_id=ledger_id, batch=batch)]
+        while reports[-1]["more"]:
+            reports.append(archive_evidence(ledger, archive, ledger_id=ledger_id, batch=batch))
     finally:
         close = getattr(database, "close", None)
         if close is not None:
             close()
+    archived = [r for r in reports if r["records"]]
+    return {
+        "ledger_id": ledger_id,
+        "records": sum(r["records"] for r in reports),
+        "first_seq": archived[0]["first_seq"] if archived else None,
+        "last_seq": reports[-1]["last_seq"],
+        "chain_valid_at_archive": all(r["chain_valid_at_archive"] for r in reports),
+        "verified_scope": reports[-1]["verified_scope"],
+        "batches": len(archived),
+        "snapshot_ids": [r["snapshot_id"] for r in archived],
+    }
+
+
+#: Recompute the whole archive on every pass while it holds at most this many
+#: records for the ledger (a few seconds of hashing), so tampering anywhere is
+#: caught on the next pass. Above it, passes are incremental from the verified
+#: head, and a full recomputation still runs at least every FULL_EVERY_SECONDS.
+FULL_BELOW_RECORDS = 1_000_000
+FULL_EVERY_SECONDS = 24 * 3600
 
 
 def verify_archive(archive: SqliteArchiveStore, *, ledger_id: str = "primary",
                    since_seq: int = 0, checkpoint: dict | None = None,
-                   public_keys: dict[str, str] | None = None) -> dict:
-    """Recompute the archived chain; the Spark verifier's checks on the SQLite archive."""
-    verdict = verify_rows(archive.evidence_rows(ledger_id, since_seq), since_seq=since_seq,
-                          checkpoint=checkpoint, public_keys=public_keys)
+                   public_keys: dict[str, str] | None = None, mode: str = "auto",
+                   full_below: int = FULL_BELOW_RECORDS,
+                   full_every: float = FULL_EVERY_SECONDS) -> dict:
+    """Recompute the archived chain; the Spark verifier's checks on the SQLite archive.
+
+    ``mode`` is ``full``, ``incremental`` or ``auto``. A full pass recomputes every
+    archived record from genesis. An incremental pass first confirms that the
+    previously verified head is still archived with the same hash, then checks
+    only the records after it, which must chain from that head. ``auto`` runs a
+    full pass when there is no verified head, when the archive is at most
+    ``full_below`` records, or when the last full pass is older than
+    ``full_every`` seconds; otherwise incremental.
+
+    What an incremental pass cannot see: an already-verified record rewritten
+    in place, together with every later hash. The next full pass sees it, and
+    so does a signed checkpoint. An attacker who can do that can equally
+    rewrite the whole archive consistently, which only a checkpoint detects in
+    either tier. ``since_seq`` or a ``checkpoint`` selects the Spark job's exact
+    behaviour and leaves the verified head alone unless the pass was full.
+    """
+    if mode not in {"auto", "full", "incremental"}:
+        raise ValueError("mode must be auto, full or incremental")
+    explicit = since_seq or checkpoint is not None
+    head = archive.verified_head(ledger_id)
+    if explicit or mode == "full":
+        full = not since_seq
+    elif mode == "incremental":
+        full = head is None
+    else:
+        full = (head is None or archive.evidence_count(ledger_id) <= full_below
+                or time.time() - head["full_verified_at"] >= full_every)
+
+    if full or explicit:
+        rows = archive.evidence_rows(ledger_id, since_seq)
+        verdict = verify_rows(rows, since_seq=since_seq, checkpoint=checkpoint,
+                              public_keys=public_keys)
+        verdict["mode"] = "full" if full else "range"
+    else:
+        start = head["seq"] + 1
+        if archive.evidence_hash(ledger_id, head["seq"]) != head["hash"]:
+            verdict = {"records": 0, "verdict": "COMPROMISED", "mode": "incremental",
+                       "code": "VERIFIED_HEAD_CHANGED",
+                       "detail": f"record {head['seq']} was verified earlier and is now "
+                                 "missing or different"}
+            return {"archive": archive.path, "ledger_id": ledger_id, **verdict}
+        rows = archive.evidence_rows(ledger_id, start)
+        if rows:
+            verdict = verify_rows(rows, since_seq=start, anchor_hash=head["hash"])
+        else:
+            verdict = {"records": 0, "verdict": "INTACT", "chain_valid": True,
+                       "links_intact": True, "sequence_complete": True, "no_duplicates": True}
+        verdict["mode"] = "incremental"
+        verdict["verified_from_seq"] = start
+
+    if verdict["verdict"] == "INTACT" and verdict["mode"] != "range":
+        last = rows[-1] if rows else None
+        if last is not None:
+            archive.record_verified_head(ledger_id, last["seq"], last["hash"],
+                                         full=verdict["mode"] == "full")
+        elif verdict["mode"] == "full" and head is not None:
+            archive.record_verified_head(ledger_id, head["seq"], head["hash"], full=True)
     return {"archive": archive.path, "ledger_id": ledger_id, **verdict}
 
 
