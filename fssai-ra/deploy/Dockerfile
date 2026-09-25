@@ -48,7 +48,7 @@ COPY contract ./contract
 COPY --from=build /build/failure-tests.txt ./contract/failure-tests.txt
 
 RUN useradd --create-home --uid 10001 fssaira \
- && mkdir -p /var/lib/fssaira \
+ && mkdir -p /var/lib/fssaira/control /var/lib/fssaira/low-side /var/lib/fssaira/archive \
  && chown -R 10001 /app /var/lib/fssaira
 USER 10001
 

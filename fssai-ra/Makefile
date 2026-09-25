@@ -176,6 +176,18 @@ stack-up: dev-env  ## Bring up the reference deployment
 stack-down:  ## Tear it down
 	docker compose --env-file deploy/.env -f deploy/compose.yaml down
 
+scale-advise:  ## Small-data or big-data tier? e.g. make scale-advise ARGS="--records-per-day 5000"
+	$(PYTHON) -m fssaira.cli scale advise $(ARGS)
+
+small-up: dev-env  ## Small-data deployment: SQLite, no Kafka/Spark/Iceberg/Postgres/Redis
+	docker compose --env-file deploy/.env -f deploy/compose.small.yaml up --build -d
+
+small-down:  ## Tear the small-data deployment down
+	docker compose --env-file deploy/.env -f deploy/compose.small.yaml down
+
+big-up: dev-env  ## Big-data deployment: Postgres, Kafka, and the Iceberg/Spark analytics profile
+	docker compose --env-file deploy/.env -f deploy/compose.yaml --profile analytics up --build -d
+
 openapi:  ## Export the OpenAPI schema
 	$(PYTHON) scripts/export_openapi.py
 

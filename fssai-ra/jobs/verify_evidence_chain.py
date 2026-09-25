@@ -26,7 +26,6 @@ cannot be combined with ``--checkpoint``.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import sys
@@ -34,90 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-GENESIS_HASH = "0" * 64
-
-
-def recompute(seq: int, ts: float, kind: str, payload_json: str, prev_hash: str) -> str:
-    body = json.dumps(
-        {"seq": seq, "ts": ts, "kind": kind,
-         "payload": json.loads(payload_json), "prev": prev_hash},
-        sort_keys=True, default=str,
-    )
-    return hashlib.sha256(body.encode("utf-8")).hexdigest()
-
-
-def verify_rows(rows: list[dict], *, since_seq: int = 0, checkpoint: dict | None = None,
-                public_keys: dict[str, str] | None = None) -> dict:
-    """Pure verification over archived rows sorted by ``seq``. No Spark needed."""
-    if checkpoint is not None and since_seq:
-        raise ValueError("--checkpoint verifies the whole chain; drop --since-seq")
-    if not rows:
-        verdict = {"records": 0, "verdict": "EMPTY"}
-        if checkpoint is not None:
-            verdict["checkpoint"] = {"valid": checkpoint["count"] == 0,
-                                     "code": "LEDGER_TRUNCATED" if checkpoint["count"] else "EMPTY"}
-            verdict["verdict"] = "EMPTY" if checkpoint["count"] == 0 else "COMPROMISED"
-        return verdict
-
-    seen: dict[int, int] = {}
-    for row in rows:
-        seen[row["seq"]] = seen.get(row["seq"], 0) + 1
-    duplicates = sorted(seq for seq, count in seen.items() if count > 1)
-    # Check the chain over one copy of each record; duplicates are reported separately.
-    unique, taken = [], set()
-    for row in rows:
-        if row["seq"] not in taken:
-            taken.add(row["seq"])
-            unique.append(row)
-
-    previous = GENESIS_HASH if since_seq == 0 else unique[0]["prev_hash"]
-    expected_seq = since_seq
-    hash_failures, link_failures, gaps = [], [], []
-    for row in unique:
-        if row["seq"] != expected_seq:
-            gaps.append({"expected": expected_seq, "found": row["seq"]})
-            expected_seq = row["seq"]
-        if row["prev_hash"] != previous:
-            link_failures.append(row["seq"])
-        if recompute(row["seq"], row["ts"], row["kind"], row["payload_json"],
-                     row["prev_hash"]) != row["hash"]:
-            hash_failures.append(row["seq"])
-        previous = row["hash"]
-        expected_seq += 1
-
-    verdict = {
-        "records": len(rows),
-        "first_seq": unique[0]["seq"],
-        "last_seq": unique[-1]["seq"],
-        "scope": ("internal consistency plus signed checkpoint" if checkpoint is not None
-                  else "internal consistency only; no independent checkpoint"),
-        "tail_truncation_checked": checkpoint is not None,
-        "chain_valid": not hash_failures,
-        "links_intact": not link_failures,
-        "sequence_complete": not gaps,
-        "no_duplicates": not duplicates,
-        "altered_records": hash_failures[:50],
-        "broken_links": link_failures[:50],
-        "sequence_gaps": gaps[:50],
-        "duplicate_seqs": duplicates[:50],
-    }
-    failed = bool(hash_failures or link_failures or gaps or duplicates)
-    if checkpoint is not None:
-        from fssaira.evidence import EvidenceRecord
-        from fssaira.evidence_notary import Checkpoint, verify_against_checkpoint
-
-        records = [
-            EvidenceRecord(row["seq"], row["ts"], row["kind"], json.loads(row["payload_json"]),
-                           row["prev_hash"], row["hash"])
-            for row in unique
-        ]
-        keys = {key_id: bytes.fromhex(value) for key_id, value in (public_keys or {}).items()}
-        result = verify_against_checkpoint(records, Checkpoint(**checkpoint), keys)
-        verdict["checkpoint"] = {"valid": result.valid, "code": result.code,
-                                 "detail": result.detail}
-        failed = failed or not result.valid
-    verdict["verdict"] = "COMPROMISED" if failed else "INTACT"
-    return verdict
+from fssaira.chain_verification import GENESIS_HASH, recompute, verify_rows  # noqa: E402,F401
 
 
 def main() -> int:

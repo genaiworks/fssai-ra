@@ -1,0 +1,179 @@
+# FSSAI-RA small-data deployment: no Kafka, no Spark, no Iceberg, no Postgres, no Redis.
+#
+#   docker compose --env-file deploy/.env -f deploy/compose.small.yaml up -d
+#       control-api, import-gateway, evidence-worker, console
+#   … --profile model       adds Ollama for local inference
+#
+# Use this when `fssaira scale advise` says "small": one host, a few thousand
+# records a day, one system reading the evidence. The big-data stack
+# (deploy/compose.yaml --profile analytics) runs the same code with Kafka,
+# Iceberg and Spark in the evidence plane; the decision plane is identical.
+#
+#   big-data tier                    small-data tier (this file)
+#   Postgres                         SQLite, single-transaction durability
+#   Kafka imports topic              SQLite import log on the low-side volume
+#   Kafka lifecycle events           SQL event outbox in the control database
+#   Spark streaming import sink      `fssaira small ingest`
+#   Iceberg archive on MinIO         SQLite archive on its own volume
+#   Spark evidence verifier          `fssaira small verify` (same verify_rows)
+#
+# The evidence worker has no network at all. It reads the control database and
+# the import log from their volumes, and writes only the archive. Move the
+# archive volume to storage administered by someone other than the operator of
+# the control plane: an archive the same account can rewrite detects accidents,
+# not an administrator. As in the big stack, containers on one host demonstrate
+# logical separation, not independent administrative trust.
+
+name: fssaira-small
+
+x-control-env: &control-env
+  FSSAI_SCALE: small
+  FSSAI_PROFILE: profiles/student_support.yaml
+  FSSAI_DATABASE_URL: sqlite:////var/lib/fssaira/control/control.sqlite3
+  FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
+  FSSAI_APPROVAL_SIGNING_KEY: ${FSSAI_APPROVAL_SIGNING_KEY}
+  FSSAI_APPROVAL_KEY_ID: ${FSSAI_APPROVAL_KEY_ID:-pilot-approval-key-1}
+  FSSAI_AUTH_MODE: ${FSSAI_AUTH_MODE:-token}
+  FSSAI_AUTH_TOKENS_JSON: ${FSSAI_AUTH_TOKENS_JSON}
+  FSSAI_MODEL: ${FSSAI_MODEL:-ollama}
+  FSSAI_OLLAMA_HOST: http://ollama:11434
+  FSSAI_OLLAMA_MODEL: ${FSSAI_OLLAMA_MODEL:-llama3.2}
+  FSSAI_MODEL_FALLBACK: ${FSSAI_MODEL_FALLBACK:-allow}
+  FSSAI_CORS_ORIGINS: http://localhost:8088,http://127.0.0.1:8088,http://localhost:5173
+  # Institution-owned declarations; see deploy/compose.yaml and deploy/.env.example.
+  FSSAI_REVIEW_MAX_PER_WINDOW: ${FSSAI_REVIEW_MAX_PER_WINDOW:-}
+  FSSAI_REVIEW_WINDOW_SECONDS: ${FSSAI_REVIEW_WINDOW_SECONDS:-}
+  FSSAI_REVIEW_DELIBERATION_FLOOR: ${FSSAI_REVIEW_DELIBERATION_FLOOR:-}
+  FSSAI_REVIEW_SECOND_REVIEWER_AFTER: ${FSSAI_REVIEW_SECOND_REVIEWER_AFTER:-}
+  FSSAI_REVIEW_SECONDS_PER_DAY: ${FSSAI_REVIEW_SECONDS_PER_DAY:-}
+  FSSAI_REVIEW_ASSISTANCE_MODE: ${FSSAI_REVIEW_ASSISTANCE_MODE:-}
+  FSSAI_REVIEW_ASSISTANCE_DECLARED_BY: ${FSSAI_REVIEW_ASSISTANCE_DECLARED_BY:-}
+  FSSAI_REVIEW_ASSISTANT_NAME: ${FSSAI_REVIEW_ASSISTANT_NAME:-}
+  FSSAI_REVIEW_ASSISTANT_INDEPENDENT_MODEL: ${FSSAI_REVIEW_ASSISTANT_INDEPENDENT_MODEL:-}
+  FSSAI_REVIEW_ASSISTANT_INDEPENDENT_EVIDENCE: ${FSSAI_REVIEW_ASSISTANT_INDEPENDENT_EVIDENCE:-}
+  FSSAI_REVIEW_ASSISTANT_ADVERSARIAL: ${FSSAI_REVIEW_ASSISTANT_ADVERSARIAL:-}
+  FSSAI_MAX_DELEGATION_DEPTH: ${FSSAI_MAX_DELEGATION_DEPTH:-}
+  FSSAI_HUMAN_APPROVAL_BELOW_DEPTH: ${FSSAI_HUMAN_APPROVAL_BELOW_DEPTH:-}
+  FSSAI_ALLOW_MACHINE_DELEGATED_CONSEQUENCE: ${FSSAI_ALLOW_MACHINE_DELEGATED_CONSEQUENCE:-}
+
+x-hardening: &hardening
+  read_only: true
+  tmpfs: [/tmp]
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  restart: unless-stopped
+
+services:
+  # ------------------------------------------------------------ control plane
+  control-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: fssaira-platform:local
+    environment: *control-env
+    ports: ["127.0.0.1:${FSSAI_API_PORT:-8080}:8080"]
+    networks: [operator-side, control]
+    volumes:
+      - control-data:/var/lib/fssaira/control
+    <<: *hardening
+
+  import-gateway:
+    image: fssaira-platform:local
+    depends_on:
+      control-api: {condition: service_started}
+    command: ["uvicorn", "fssaira.import_api:create_import_app", "--factory",
+              "--host", "0.0.0.0", "--port", "8081"]
+    environment:
+      FSSAI_SCALE: small
+      FSSAI_IMPORT_LOG_PATH: /var/lib/fssaira/low-side/import-log.sqlite3
+      FSSAI_IMPORT_ENVELOPE_KEY: ${FSSAI_IMPORT_ENVELOPE_KEY:-}
+      FSSAI_IMPORT_SOURCE_KEYS_JSON: ${FSSAI_IMPORT_SOURCE_KEYS_JSON}
+      FSSAI_EVIDENCE_TOKEN: ${FSSAI_EVIDENCE_TOKEN}
+      FSSAI_IMPORT_AUDIT_PATH: /var/lib/fssaira/low-side/import-audit.sqlite3
+    ports: ["127.0.0.1:${FSSAI_GATEWAY_PORT:-8081}:8081"]
+    # Not on the `control` network: the gateway cannot reach the control plane.
+    networks: [low-side]
+    volumes:
+      - low-side-data:/var/lib/fssaira/low-side
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/health"]
+      interval: 15s
+      timeout: 4s
+      retries: 5
+    <<: *hardening
+
+  # ------------------------------------------------ evidence plane (no cluster)
+  evidence-worker:
+    image: fssaira-platform:local
+    depends_on:
+      control-api: {condition: service_healthy}
+      import-gateway: {condition: service_healthy}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        while true; do
+        fssaira small run
+        --archive /var/lib/fssaira/archive/evidence-archive.sqlite3
+        --log /var/lib/fssaira/low-side/import-log.sqlite3
+        --database sqlite:////var/lib/fssaira/control/control.sqlite3
+        || echo "EVIDENCE VERIFICATION FAILED: see the report above" >&2;
+        sleep $${FSSAI_SMALL_INTERVAL_SECONDS};
+        done
+    environment:
+      FSSAI_SCALE: small
+      FSSAI_IMPORT_ENVELOPE_KEY: ${FSSAI_IMPORT_ENVELOPE_KEY:-}
+      FSSAI_SMALL_INTERVAL_SECONDS: ${FSSAI_SMALL_INTERVAL_SECONDS:-60}
+    network_mode: none
+    volumes:
+      - control-data:/var/lib/fssaira/control
+      - low-side-data:/var/lib/fssaira/low-side
+      - evidence-archive:/var/lib/fssaira/archive
+    healthcheck:
+      disable: true
+    <<: *hardening
+
+  console:
+    build:
+      context: ../console
+      dockerfile: Dockerfile
+    depends_on:
+      control-api: {condition: service_healthy}
+    ports: ["127.0.0.1:${FSSAI_CONSOLE_PORT:-8088}:8088"]
+    networks: [operator-side]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------- local model
+  ollama:
+    image: ollama/ollama@sha256:e790300fb6494a09b0c493954b1aa39c560bb900043a8a3b77f38a42a160bfc2
+    profiles: [model]
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    networks: [control]
+    restart: unless-stopped
+
+  ollama-pull:
+    image: ollama/ollama@sha256:e790300fb6494a09b0c493954b1aa39c560bb900043a8a3b77f38a42a160bfc2
+    profiles: [model]
+    depends_on:
+      ollama: {condition: service_started}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["sleep 5 && OLLAMA_HOST=http://ollama:11434 ollama pull ${FSSAI_OLLAMA_MODEL:-llama3.2}"]
+    networks: [control]
+    restart: "no"
+
+networks:
+  operator-side: {}
+  low-side: {}
+  control: {internal: true}
+
+volumes:
+  control-data: {}
+  low-side-data: {}
+  evidence-archive: {}
+  ollama-models: {}

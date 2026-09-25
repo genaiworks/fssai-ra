@@ -17,6 +17,11 @@ backend inherits no assurance until the conformance suite passes on its exact
 implementation (`fssaira.kernel.assurance`), so a reference stack cannot become a
 vendor dependency presented as sovereignty.
 
+Two ready-made sizes exist. `deploy/compose.small.yaml` runs the complete platform
+on SQLite with no Kafka, Spark, Iceberg, Postgres or Redis; `deploy/compose.yaml`
+with `--profile analytics` runs the big-data evidence plane. `fssaira scale advise`
+picks one from your workload. See [Scale tiers](SCALE_TIERS.md).
+
 ## Deployment profiles
 
 Profiles live in `deploy/profiles/` and are validated by

@@ -5,6 +5,8 @@
 
 [Full technical pipeline walkthrough](PIPELINE_WALKTHROUGH.md) — source data, encryption, PostgreSQL, Redis, Kafka, Spark, Iceberg and independently verifiable output.
 
+[Scale tiers](SCALE_TIERS.md) — the small-data deployment (SQLite, no cluster) and the big-data one (Kafka, Spark, Iceberg), and how to choose.
+
 ## Begin here
 
 This documentation covers the reusable platform across sectors and publications.

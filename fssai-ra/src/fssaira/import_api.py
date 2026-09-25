@@ -47,13 +47,24 @@ def create_import_app(
     """
     topic = os.getenv("FSSAI_IMPORT_TOPIC", "fssaira.imports")
     if publisher is None:
-        bootstrap = os.environ["FSSAI_KAFKA_BOOTSTRAP"]
         from .envelope_mac import key_from_env
 
-        # Spark rejects imports without this MAC, so a record written to Kafka by
-        # anything other than this gateway never reaches the table.
-        publisher = KafkaEventPublisher(bootstrap, topic,
-                                        mac_key=key_from_env("FSSAI_IMPORT_ENVELOPE_KEY"))
+        # The sink rejects imports without this MAC, so a record written to the
+        # log by anything other than this gateway never reaches the table.
+        mac_key = key_from_env("FSSAI_IMPORT_ENVELOPE_KEY")
+        bootstrap = os.getenv("FSSAI_KAFKA_BOOTSTRAP", "").strip()
+        log_path = os.getenv("FSSAI_IMPORT_LOG_PATH", "").strip()
+        if bootstrap:
+            publisher = KafkaEventPublisher(bootstrap, topic, mac_key=mac_key)
+        elif log_path:
+            # Small-data tier: a durable SQLite log, drained by `fssaira small ingest`.
+            from .small_data import SqliteImportLog
+
+            publisher = SqliteImportLog(log_path, mac_key=mac_key, topic=topic)
+        else:
+            raise ValueError(
+                "no inward log configured: set FSSAI_KAFKA_BOOTSTRAP (big-data tier) or "
+                "FSSAI_IMPORT_LOG_PATH (small-data tier)")
     keys = trusted_keys
     if keys is None:
         try:
@@ -155,6 +166,7 @@ def create_import_app(
             "status": "ok",
             "direction": "inward-only-api",
             "audit_durable": audit_database is not None,
+            "inward_log": getattr(publisher, "name", type(publisher).__name__),
         }
 
     @app.post("/v1/imports", status_code=202)

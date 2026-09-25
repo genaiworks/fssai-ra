@@ -39,6 +39,7 @@ Alternatively, use `make setup` from the parent repository root. Installation re
 | Network and remote effects | [Developer guide](DEVELOPER_GUIDE.md) | `src/fssaira/integration/`, `remote_effects.py` |
 | Evaluation | [Research guide](docs/RESEARCH_GUIDE.md) | `tests/`, `evaluation/results/`, `scripts/generate_results.py` |
 | Services and operator tools | [Platform](docs/PLATFORM.md), [Console](console/README.md) | `deploy/`, `console/`, `src/fssaira/api.py` |
+| Small-data or big-data deployment | [Scale tiers](docs/SCALE_TIERS.md) | `deploy/compose.small.yaml`, `deploy/compose.yaml`, `src/fssaira/scale.py`, `small_data.py` |
 
 The [feature catalogue](docs/FEATURES.md) explains the purpose, usage, and limitations of each area. The [command reference](docs/COMMANDS.md) covers all top-level CLI commands and the major Make targets.
 

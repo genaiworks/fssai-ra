@@ -21,6 +21,8 @@ Configuration
                                       single-transaction durability)
 ``FSSAI_REDIS_URL``                   Redis state, when no database is configured
 ``FSSAI_KAFKA_BOOTSTRAP``             Kafka event publication
+``FSSAI_SCALE``                       declared data tier, ``small`` or ``big``
+                                      (see :mod:`fssaira.scale`)
 ``FSSAI_MODEL``                       model backend name (default ``ollama``)
 ``FSSAI_MODEL_FALLBACK``              ``allow`` (default) or ``deny``
 ``FSSAI_AUTH_MODE``                   ``token`` (default), ``header``, or ``oidc``
@@ -418,11 +420,25 @@ def configuration_warnings() -> list[Warning_]:
             "remove FSSAI_REDIS_URL, or run a separate Redis-profile conformance deployment",
         ))
     if not os.getenv("FSSAI_KAFKA_BOOTSTRAP"):
-        warnings.append(Warning_(
-            "info", "IN_MEMORY_EVENTS",
-            "in-memory event transport is active; events are not replayable across processes",
-            "set FSSAI_KAFKA_BOOTSTRAP",
-        ))
+        if os.getenv("FSSAI_DATABASE_URL"):
+            # The small-data tier: events are durable in the SQL outbox, but no
+            # other process can subscribe to them.
+            warnings.append(Warning_(
+                "info", "LOCAL_EVENTS",
+                "events are kept in the SQL outbox and not fanned out to a broker; "
+                "other systems cannot replay them",
+                "fine for FSSAI_SCALE=small; set FSSAI_KAFKA_BOOTSTRAP when other systems "
+                "must consume the event stream",
+            ))
+        else:
+            warnings.append(Warning_(
+                "info", "IN_MEMORY_EVENTS",
+                "in-memory event transport is active; events are not replayable across processes",
+                "set FSSAI_KAFKA_BOOTSTRAP",
+            ))
+    from .scale import tier_findings
+
+    warnings.extend(Warning_(*finding) for finding in tier_findings())
     try:
         auth_issues = AuthConfig.from_env().warnings()
     except ValueError as exc:
@@ -580,8 +596,11 @@ def readiness() -> dict:
     """A single verdict an operator or a CI gate can act on."""
     warnings = configuration_warnings()
     blocking = [item for item in warnings if item.severity == "blocking"]
+    from .scale import declared_tier
+
     return {
         "ready_for_pilot": not blocking,
+        "scale_tier": declared_tier() or "undeclared",
         "blocking": [item.to_dict() for item in blocking],
         "warnings": [item.to_dict() for item in warnings if item.severity != "blocking"],
         "note": (

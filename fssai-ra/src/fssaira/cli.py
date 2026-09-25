@@ -6,6 +6,8 @@ Public component experiments can be exercised from a source checkout::
     fssaira verify profiles/x.yaml          bounded model check of the authority space
     fssaira evaluate profiles/x.yaml        adversarial + utility + ablation suite
     fssaira conformance                     do the configured backends still conform?
+    fssaira scale advise --records-per-day N  small-data or big-data tier?
+    fssaira small run --archive a.sqlite3   small-data evidence plane, one pass
     python scripts/demo.py --fast           the guided walkthrough
     fssaira init my-domain                  scaffold a new domain from the template
 
@@ -718,6 +720,145 @@ def cmd_evidence_verify(args) -> int:
     return 0 if not problems else 2
 
 
+def cmd_scale_advise(args) -> int:
+    from .scale import Workload, recommend
+
+    report = recommend(Workload(
+        peak_writes_per_second=args.peak_writes_per_second,
+        records_per_day=args.records_per_day,
+        archive_gb=args.archive_gb,
+        independent_consumers=args.consumers,
+        writer_hosts=args.writer_hosts,
+        high_availability=args.high_availability,
+    ))
+    heading(f"Data tier — {report['tier']}")
+    for reason in report["reasons"]:
+        mark = red("✗ exceeds") if reason["exceeded"] else green("✓ within ")
+        print(f"  {mark} {reason['criterion']:<24} {reason['workload']!s:>10}  "
+              f"(small-tier limit {reason['small_tier_limit']})")
+        if reason["exceeded"]:
+            print(dim(f"      {reason['why_big_data_helps']}"))
+    print(f"\n  run: {report['run']}")
+    print(dim(f"  {report['note']}"))
+    emit(report, args.output)
+    return 0
+
+
+def cmd_scale_measure(args) -> int:
+    from .scale import measure_sqlite
+
+    report = measure_sqlite(args.records)
+    heading("SQLite evidence-append throughput on this host")
+    print(f"  {report['appends_per_second']} durable appends/s "
+          f"({report['records']} in {report['seconds']} s)")
+    print(f"  {report['headroom_over_default_limit']}x the small tier's default peak limit")
+    print("  " + verdict(report["chain_intact"], "chain intact", "chain broken"))
+    if report["platform_caveat"]:
+        print(yellow(f"  {report['platform_caveat']}"))
+    emit(report, args.output)
+    return 0 if report["chain_intact"] else 2
+
+
+def _small_archive(args):
+    from .small_data import SqliteArchiveStore
+
+    return SqliteArchiveStore(args.archive)
+
+
+def _small_ingest(args) -> dict:
+    from .envelope_mac import key_from_env
+    from .small_data import SqliteImportLog, ingest_imports
+
+    log = SqliteImportLog(args.log)
+    archive = _small_archive(args)
+    try:
+        return ingest_imports(log, archive, mac_key=key_from_env("FSSAI_IMPORT_ENVELOPE_KEY"),
+                              allow_unsigned=args.allow_unsigned)
+    finally:
+        log.close()
+        archive.close()
+
+
+def _small_archive_ledger(args) -> dict:
+    from .small_data import archive_ledger
+
+    archive = _small_archive(args)
+    try:
+        return archive_ledger(args.database or os.environ["FSSAI_DATABASE_URL"], archive,
+                              ledger_id=args.ledger_id)
+    finally:
+        archive.close()
+
+
+def _small_verify(args) -> dict:
+    from .small_data import verify_archive
+
+    if (args.checkpoint is None) != (args.public_keys is None):
+        raise SystemExit("--checkpoint and --public-keys must be given together")
+    archive = _small_archive(args)
+    try:
+        return verify_archive(
+            archive, ledger_id=args.ledger_id, since_seq=args.since_seq,
+            checkpoint=json.loads(args.checkpoint.read_text()) if args.checkpoint else None,
+            public_keys=json.loads(args.public_keys.read_text()) if args.public_keys else None)
+    finally:
+        archive.close()
+
+
+def _print_verification(report: dict) -> bool:
+    ok = report["verdict"] in {"INTACT", "EMPTY"}
+    heading(f"Archived evidence chain — {report['records']} record(s)")
+    for check in ("chain_valid", "links_intact", "sequence_complete", "no_duplicates"):
+        if check in report:
+            print("  " + verdict(report[check], check, check))
+    if "checkpoint" in report:
+        print("  " + verdict(report["checkpoint"]["valid"], "signed checkpoint holds",
+                             f"checkpoint: {report['checkpoint']['code']}"))
+    print("  " + verdict(ok, report["verdict"], report["verdict"]))
+    return ok
+
+
+def cmd_small_ingest(args) -> int:
+    report = _small_ingest(args)
+    heading("Imports: log → archive")
+    print(f"  imported {report['imported']}, quarantined {report['quarantined']}")
+    emit(report, args.output)
+    return 0
+
+
+def cmd_small_archive(args) -> int:
+    report = _small_archive_ledger(args)
+    heading("Evidence: ledger → archive")
+    print(f"  archived {report['records']} new record(s) for {report['ledger_id']!r}")
+    emit(report, args.output)
+    return 0
+
+
+def cmd_small_verify(args) -> int:
+    report = _small_verify(args)
+    ok = _print_verification(report)
+    emit(report, args.output)
+    return 0 if ok else 2
+
+
+def cmd_small_run(args) -> int:
+    """One pass of the small-data evidence plane: ingest, archive, verify."""
+    report: dict = {}
+    if args.log:
+        report["ingest"] = _small_ingest(args)
+    if args.database or os.getenv("FSSAI_DATABASE_URL"):
+        report["archive"] = _small_archive_ledger(args)
+    report["verify"] = _small_verify(args)
+    ok = _print_verification(report["verify"])
+    if "ingest" in report:
+        print(f"  imports: {report['ingest']['imported']} imported, "
+              f"{report['ingest']['quarantined']} quarantined")
+    if "archive" in report:
+        print(f"  ledger: {report['archive']['records']} new record(s) archived")
+    emit(report, args.output)
+    return 0 if ok else 2
+
+
 def cmd_diode_inventory(args) -> int:
     from .diode_transport import InterfaceInventory
 
@@ -1310,6 +1451,58 @@ def build_parser() -> argparse.ArgumentParser:
         "verify", help="re-verify an exported hash chain"))
     evidence_verify.add_argument("path", type=Path)
     evidence_verify.set_defaults(func=cmd_evidence_verify)
+
+    scale = sub.add_parser("scale", help="choose the small-data or big-data tier")
+    scale_sub = scale.add_subparsers(dest="scale_command", required=True)
+    advise = add_output(scale_sub.add_parser(
+        "advise", help="recommend a tier from the expected workload"))
+    advise.add_argument("--peak-writes-per-second", type=float, default=1.0)
+    advise.add_argument("--records-per-day", type=int, default=1_000)
+    advise.add_argument("--archive-gb", type=float, default=1.0)
+    advise.add_argument("--consumers", type=int, default=1,
+                        help="systems that must read the event stream independently")
+    advise.add_argument("--writer-hosts", type=int, default=1)
+    advise.add_argument("--high-availability", action="store_true",
+                        help="the evidence plane must survive losing one host")
+    advise.set_defaults(func=cmd_scale_advise)
+    measure = add_output(scale_sub.add_parser(
+        "measure", help="measure durable SQLite evidence appends on this host"))
+    measure.add_argument("--records", type=int, default=500)
+    measure.set_defaults(func=cmd_scale_measure)
+
+    small = sub.add_parser(
+        "small", help="small-data evidence plane: SQLite log, archive and verifier, no cluster")
+    small_sub = small.add_subparsers(dest="small_command", required=True)
+
+    def small_parser(name: str, help_text: str, *, log: bool, database: bool, verify: bool):
+        target = add_output(small_sub.add_parser(name, help=help_text))
+        target.add_argument("--archive", type=Path, required=True,
+                            help="archive SQLite file; keep it on separate storage")
+        if log:
+            target.add_argument("--log", type=Path, required=(name == "ingest"),
+                                help="the gateway's FSSAI_IMPORT_LOG_PATH")
+            target.add_argument("--allow-unsigned", action="store_true",
+                                help="accept envelopes without a MAC (no FSSAI_IMPORT_ENVELOPE_KEY)")
+        if database:
+            target.add_argument("--database", help="ledger URL (default FSSAI_DATABASE_URL)")
+        if database or verify:
+            target.add_argument("--ledger-id", default="primary")
+        if verify:
+            target.add_argument("--since-seq", type=int, default=0)
+            target.add_argument("--checkpoint", type=Path,
+                                help="signed checkpoint JSON retained outside the archive")
+            target.add_argument("--public-keys", type=Path,
+                                help="trusted notary public keys, {key_id: hex}")
+        return target
+
+    small_parser("ingest", "move gateway imports from the log into the archive",
+                 log=True, database=False, verify=False).set_defaults(func=cmd_small_ingest)
+    small_parser("archive", "append new ledger records to the archive",
+                 log=False, database=True, verify=False).set_defaults(func=cmd_small_archive)
+    small_parser("verify", "independently recompute the archived chain",
+                 log=False, database=False, verify=True).set_defaults(func=cmd_small_verify)
+    small_parser("run", "ingest, archive and verify in one pass (for cron or a loop)",
+                 log=True, database=True, verify=True).set_defaults(func=cmd_small_run)
 
     packet = sub.add_parser("packet-check", help="inspect a private decision packet offline; missing anchor exits 2")
     packet.add_argument("path", type=Path)
