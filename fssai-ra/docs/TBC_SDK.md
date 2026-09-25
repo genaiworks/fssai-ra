@@ -59,6 +59,25 @@ The existing `joined_workflow.Workflow` performs the actual domain mutation and 
 
 The controls above the SDK row implement the composition contract in the V27 paper. None adds a model primitive, so the Passport inventory and dispatcher schemas are unchanged; all are trusted-side calls under operator, reviewer or monitor authority. Reservations, admission, fan-in acceptance and freshness proofs are issued by the control service, never by agent output. Agreement among agents is not an input to any of them. Distributed enforcement across separate control services, remote exactly-once effects and the manual-route outcome itself remain outside what these local tests show; `tests/test_tbc_composition_controls.py` exercises each refusal.
 
+## Visibility and swarm agreement
+
+`TrustRuntime.agent_dossier(token, agent_id)` answers five questions about any agent from
+mediated state alone: who it is (identity and lineage), what it may do (the effective scope,
+intersected with every ancestor's), what it did and what stopped it (both read from the
+integrity-checked receipt chain), and what it could still leak (the declared channel
+capacity, or a statement that none is declared). Only operator or monitor authority may ask.
+A tampered receipt chain is refused rather than reported, a revoked agent stays visible,
+and the dossier holds digests and refusal codes, never record content
+(`tests/test_agent_dossier.py`).
+
+`TrustRuntime.independent_agreement(token, task_id, artifact_digest, required=2)` counts
+agreement the way it should be counted in a swarm. Which agents produced an artifact comes
+from receipts, not from the agents' own claims. Agents are then grouped into classes that
+can fail together: same model, same underlying source record, or a direct delegation. Five
+agents on one model that read one record count as one confirmation. The result is evidence
+for a named reviewer; no code path accepts it as approval
+(`tests/test_independent_agreement.py`).
+
 ## Model-side client
 
 ```python

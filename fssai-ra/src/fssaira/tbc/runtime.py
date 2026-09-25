@@ -992,6 +992,82 @@ class TrustRuntime:
             "source": "mediated state only: agent registry, effective scope, receipt chain",
         }
 
+    # -- Agreement is evidence, never a credential ---------------------------
+    # "Five agents agree" is worth one confirmation when the five share a model,
+    # read the same source, or delegated to one another: they fail together.
+    # Agreement is computed from the receipt chain (which agents actually
+    # produced this artifact digest), not from what agents say, and agents are
+    # grouped into correlation classes. The result goes to a named reviewer; no
+    # code path accepts it as approval.
+
+    def independent_agreement(self, token, task_id, artifact_digest, *, required=2):
+        self._admin_any(token, {"operator", "monitor", "reviewer"})
+        integer(required, 1)
+        require(isinstance(artifact_digest, str) and artifact_digest, "INVALID_DIGEST")
+        self._task(task_id)
+        self._verify_receipt_chain()
+        producers = []
+        for record in self.db.execute("SELECT body FROM tbc_receipts WHERE task=? ORDER BY seq",
+                                      (task_id,)):
+            body = json.loads(record["body"])
+            if (body.get("outcome") in {"ALLOWED", "ACCEPTED"}
+                    and body.get("artifact_digest") == artifact_digest
+                    and body.get("agent") not in producers):
+                producers.append(body["agent"])
+        def underlying(source):
+            # Each read mints a new context object; two agents that read the same
+            # record hold different context ids. What fails together is the record.
+            with suppress(Denied, AuthorityDenied, ValueError, KeyError, TypeError):
+                context = self.world.get(source, "context")
+                return f'{context["tenant"]}/{context["subject"]}'
+            return source
+
+        agents = {}
+        for agent_id in producers:
+            row = self.db.execute("SELECT id,parent,model,sources FROM tbc_agents WHERE id=?",
+                                  (agent_id,)).fetchone()
+            if row is not None:
+                agents[agent_id] = {"model": row["model"], "parent": row["parent"],
+                                    "sources": {underlying(s)
+                                                for s in json.loads(row["sources"] or "[]")}}
+        # Union-find over "these two can fail together".
+        parent = {agent_id: agent_id for agent_id in agents}
+
+        def find(node):
+            while parent[node] != node:
+                parent[node] = parent[parent[node]]
+                node = parent[node]
+            return node
+
+        reasons = []
+        ids = sorted(agents)
+        for i, a in enumerate(ids):
+            for b in ids[i + 1:]:
+                why = []
+                if agents[a]["model"] == agents[b]["model"]:
+                    why.append("same model")
+                if agents[a]["sources"] & agents[b]["sources"]:
+                    why.append("shared source")
+                if agents[a]["parent"] == b or agents[b]["parent"] == a:
+                    why.append("direct delegation")
+                if why:
+                    parent[find(a)] = find(b)
+                    reasons.append({"agents": [a, b], "correlated_by": why})
+        groups = {}
+        for agent_id in ids:
+            groups.setdefault(find(agent_id), []).append(agent_id)
+        independent = len(groups)
+        return {
+            "artifact_digest": artifact_digest,
+            "producers": len(ids),
+            "independent": independent,
+            "required": required,
+            "meets_required": independent >= required,
+            "groups": sorted(groups.values()),
+            "correlations": reasons,
+            "authority": "none: evidence for a named reviewer, never an approval",
+        }
+
     def prune_receipts(self, token, *, older_than=None):
         """Apply the retention limit so the trail is not another store of student data.
 

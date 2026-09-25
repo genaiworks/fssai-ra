@@ -130,6 +130,26 @@ pins that boundary. Someone able to do that can equally rewrite the whole
 archive consistently, which in either tier only a checkpoint held elsewhere
 detects.
 
+## An independent witness for checkpoints
+
+The notary signs checkpoints in the control plane's own process, so whoever controls that
+process holds its key. `fssaira witness cosign` runs as a separate process, under its own
+key and state, ideally on a host someone else administers. It co-signs a notary checkpoint
+only when the count never goes backwards (`WITNESS_ROLLBACK`), the same count never arrives
+with a different head (`WITNESS_FORK`), and growth comes with the new records, read from the
+archive, chaining from the head it already signed (`WITNESS_EXTENSION_REQUIRED`,
+`WITNESS_INCONSISTENT`):
+
+```bash
+fssaira witness cosign --dir /srv/witness --key-file /srv/witness/witness.key \
+    --notary-keys notary-keys.json --checkpoint checkpoint.json \
+    --archive /srv/archive/evidence.sqlite3
+```
+
+A compromised enforcer can still sign new falsehoods from the moment of compromise, but it
+cannot get a rewritten or forked past co-signed. `tests/test_witness.py` runs the attack,
+including an enforcer that holds the notary key.
+
 ## What the small tier gives up
 
 - **One writer host, no replication.** Back up the SQLite files (for example with
