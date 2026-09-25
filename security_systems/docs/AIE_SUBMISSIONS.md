@@ -59,7 +59,7 @@ None.
 
 **Outline (18 min).** 0–2 the wrong build ships; 2–7 borrowed authority and the 0/2/10 comparison; 7–12 argument swap, default-argument binding and the digest; 12–16 forged approval on replay, the cached-receipt bug and the fix; 16–18 what stays your job (caller authentication, key custody, idempotency).
 
-**Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the reference implementation and attack harness behind this session, published the bypasses I found in my own code, and present in a personal capacity.
+**Speaker.** I'm Rachna Srivastava, an enterprise architect with more than twenty years of experience designing enterprise systems, now working independently on authorization for AI agents. I built the reference implementation and attack harness behind this session, published the bypasses I found in my own code, and present in a personal capacity.
 
 **Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
 
@@ -127,7 +127,7 @@ I show where the original evaluator stopped looking and what each new test obser
 
 **Outline (18 min).** 0–2 "203 passed" beside the two bypasses; 2–6 the write-then-deny tool and the effect oracle; 6–10 positive controls (0 vs 105, 0/60 vs 60/60); 10–14 ablations, with the room voting on which controls to delete before the joint removal; 14–17 the six wrapper defects as a checklist; 17–18 the worksheet.
 
-**Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization and evaluation for AI agents. I built the reference implementation, the 25-case falsification harness and the ablation experiments, and present in a personal capacity.
+**Speaker.** I'm Rachna Srivastava, an enterprise architect with more than twenty years of experience designing enterprise systems, now working independently on authorization and evaluation for AI agents. I built the reference implementation, the 25-case falsification harness and the ablation experiments, and present in a personal capacity.
 
 **Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
 
@@ -208,7 +208,7 @@ The exercise itself uses typed records, purpose checks and stable denial codes r
 
 Every step is machine-tested from a clean install. Everything runs locally, so the room doesn't share a network or API quota.
 
-**Speaker.** I'm Rachna Srivastava, an enterprise architect working independently on authorization for AI agents. I built the guard, the disclosure fixtures and the checks this workshop uses, and present in a personal capacity.
+**Speaker.** I'm Rachna Srivastava, an enterprise architect with more than twenty years of experience designing enterprise systems, now working independently on authorization for AI agents. I built the guard, the disclosure fixtures and the checks this workshop uses, and present in a personal capacity.
 
 **Code** (public, runs offline, hosted CI green on Python 3.10 and 3.14; the README has a five-minute reviewer path with one command per session): https://github.com/genaiworks/fssai-ra/tree/main/security_systems
 

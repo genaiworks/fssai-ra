@@ -90,7 +90,7 @@ The handout also gives a reusable failure taxonomy:
 
 ## Speaker biography
 
-Rachna Srivastava is an enterprise architect who designs and evaluates authorization for AI agent systems. She built the open reference implementation, attack harness and ablation experiments presented in this session, including the regression tests for integration defects she found in her own code. Her focus is making agent security claims testable: every figure she presents regenerates from a clean checkout, and a test fails if the published evidence drifts. She speaks in a personal capacity; this work does not represent any employer or institution.
+Rachna Srivastava is an enterprise architect with more than twenty years of experience designing enterprise systems, and now designs and evaluates authorization for AI agent systems. She built the open reference implementation, attack harness and ablation experiments presented in this session, including the regression tests for integration defects she found in her own code. Her focus is making agent security claims testable: every figure she presents regenerates from a clean checkout, and a test fails if the published evidence drifts. She speaks in a personal capacity; this work does not represent any employer or institution.
 
 ## Committee note
 
@@ -160,7 +160,7 @@ Use the session biography above.
 
   > Your agent security test attacks the deployment tool and gets back "denied." The test passes. But did the control stop the action, or did the tool write the unreviewed build first and then raise the refusal? An assertion on the exception can't tell the difference, and neither can the agent's own report. This session applies the discipline testers already trust to AI agent authorization. **Effect oracles** judge harm by diffing the system of record, never the guard's log. **Liveness pairs** make sure a guard that refuses everything fails. **Positive controls** prove the attacker can win before a zero is trusted: 0 unauthorized effects against the full system, 105 with the mediator removed. **Ablation is mutation testing for security controls:** across 29 removals harm returns in 25, and the other four turn out to be redundant pairs, not dead code. Then comes what the harness missed: 203 tests passed while ten new adversarial tests found real bypasses in the integration wrapper. Attendees leave with the oracle, an ablation worksheet and a runnable offline example.
 
-- Confirm the biography. If you're willing to state prior speaking, publications or years of architecture experience, add one sentence; it is the biggest remaining lever for a first-time TechWell speaker.
+- The biography now states more than twenty years of experience. If you later speak or publish anywhere, add one line; it is the biggest remaining lever for a first-time TechWell speaker.
 - On stage, show 0 vs 105 with the two `trustkernel redteam` commands (about 4 s each). If you show the four-world matrix, run `trustkernel matrix --attempts 300`: the default of 150 attempts prints 60 and 57, not 105 and 103.
 - Figure sources:
   - `evidence/devtools.json`: fuzzer 0/300 and 105/300 without the mediator (103 in the other worlds); bandit 0/60 and positive control 60/60; ablations 25/29, with residency + model attestation and proposal-digest binding + single-use approval as the redundant pairs.
