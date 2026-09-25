@@ -524,11 +524,21 @@ FALSIFIERS: tuple[Falsifier, ...] = (
 )
 
 
+class UnknownFalsifier(KeyError):
+    def __str__(self) -> str:
+        return f"unknown falsifier {self.args[0]!r}; choose from {', '.join(f.id for f in FALSIFIERS)}"
+
+
 def falsifier(identifier: str) -> Falsifier:
+    # "1", "f1" and "F01" all name F01: attendees type whichever they see first.
+    wanted = identifier.strip()
+    digits = wanted[1:] if wanted[:1] in ("F", "f") else wanted
+    if digits.isdigit():
+        wanted = f"F{int(digits):02d}"
     for item in FALSIFIERS:
-        if identifier in (item.id, item.name, item.name.replace(" ", "_"), item.run.__name__[2:]):
+        if wanted in (item.id, item.name, item.name.replace(" ", "_"), item.run.__name__[2:]):
             return item
-    raise KeyError(identifier)
+    raise UnknownFalsifier(identifier)
 
 
 def run_one(item: Falsifier, controls: Iterable[str] = ALL_CONTROLS,
@@ -588,4 +598,4 @@ def run_ablation(only: Iterable[str] | None = None,
 
 
 __all__ = ["AblationRow", "Attempt", "DEFAULT_WORLD", "FALSIFIERS", "Falsifier", "FalsifierResult",
-           "falsifier", "run_ablation", "run_falsifiers", "run_one"]
+           "UnknownFalsifier", "falsifier", "run_ablation", "run_falsifiers", "run_one"]

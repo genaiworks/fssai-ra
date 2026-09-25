@@ -57,3 +57,11 @@ def test_committed_evidence_is_what_the_code_produces(world, tmp_path, capsys):
     fresh = tmp_path / f"{world}.json"
     assert main(["evidence", "--world", world, "--out", str(fresh)]) == 0
     assert fresh.read_text() == (ROOT / "evidence" / f"{world}.json").read_text()
+
+
+def test_falsifier_ids_are_forgiving_and_unknown_ids_fail_cleanly(capsys):
+    from trustkernel.falsification import falsifier
+    assert falsifier("1").id == falsifier("f1").id == falsifier("F01").id == "F01"
+    assert main(["falsify", "--only", "F99"]) == 2
+    err = capsys.readouterr().err
+    assert "unknown falsifier 'F99'" in err and "F01" in err and "Traceback" not in err

@@ -274,10 +274,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from .falsification import UnknownFalsifier
+
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except WorldSpecError as exc:
+    except (WorldSpecError, UnknownFalsifier) as exc:
         print(f"trustkernel: {exc}", file=sys.stderr)
         return 2
 
