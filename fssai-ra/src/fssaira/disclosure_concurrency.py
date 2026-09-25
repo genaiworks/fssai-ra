@@ -164,12 +164,14 @@ def _open(profile_path: str, db_path: str):
     return policy, fx, store, _gate(policy, store, fx)
 
 
-def _release_worker(profile_path, db_path, output_id, start, revoked, results) -> None:
+def _release_worker(profile_path, db_path, output_id, start, revoked, results, ready,
+                    released) -> None:
     from .disclosure import DisclosureDenied
     from .disclosure_eval import NOW
 
     _policy, fx, _store, gate = _open(profile_path, db_path)
     output = gate.output(output_id)
+    ready.release()
     start.wait(30)
     attempts = succeeded = after = 0
     deadline = time.time() + 30
@@ -177,6 +179,7 @@ def _release_worker(profile_path, db_path, output_id, start, revoked, results) -
         try:
             gate.release(output, recipient=fx.cleared_recipient, purpose=fx.purpose, now=NOW + 2)
             succeeded += 1
+            released.set()
         except DisclosureDenied:
             pass
         attempts += 1
@@ -187,11 +190,12 @@ def _release_worker(profile_path, db_path, output_id, start, revoked, results) -
     results.put({"role": "release", "attempts": attempts, "succeeded": succeeded})
 
 
-def _break_glass_worker(profile_path, db_path, index, start, results) -> None:
+def _break_glass_worker(profile_path, db_path, index, start, results, ready) -> None:
     from .disclosure import DisclosureDenied
 
     _policy, fx, _store, gate = _open(profile_path, db_path)
     emergency = fx.break_glass_grant(f"proc-bg-{index}")
+    ready.release()
     start.wait(30)
     try:
         fx.read(gate, emergency, purpose=emergency.purpose, session_id=f"proc-bg-{index}")
@@ -216,17 +220,27 @@ def run_process_race(profile_path: str, *, processes: int = 4, db_path: str | No
         output = gate.derive_output(requester=AGENT, session_id="session-1",
                                     content="summary for the process race")
         start, revoked, results = context.Event(), context.Event(), context.Queue()
+        ready, released = context.Semaphore(0), context.Event()
         workers = [context.Process(target=_release_worker,
-                                   args=(profile_path, path, output.output_id, start, revoked, results))
+                                   args=(profile_path, path, output.output_id, start, revoked,
+                                         results, ready, released))
                    for _ in range(processes)]
         if policy.break_glass is not None:
             workers += [context.Process(target=_break_glass_worker,
-                                        args=(profile_path, path, index, start, results))
+                                        args=(profile_path, path, index, start, results, ready))
                         for index in range(processes)]
         for worker in workers:
             worker.start()
+        # Spawned workers import and open the store before they can race; on a
+        # slow runner that exceeds any fixed sleep, and revoking first would leave
+        # nothing to race against. Start only once every worker is ready, and
+        # revoke only once a release has committed under the live grant.
+        ready_deadline = time.time() + 60
+        for _ in workers:
+            ready.acquire(timeout=max(0.0, ready_deadline - time.time()))
         start.set()
         time.sleep(1.0)
+        released.wait(30)
         gate.revoke_grant(grant.grant_id, by="data-owner", reason="process race")
         revoked.set()
         collected = []

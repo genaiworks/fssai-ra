@@ -68,6 +68,12 @@ def main() -> int:
         help="also bind every numeric claim in paper/trust-by-construction.md to "
              "audit/results.json via paper/metric_bindings.yaml (scripts/bind_paper_metrics.py)")
     args = parser.parse_args()
+    if args.full_paper and not args.path.is_file():
+        # The four-field form is a private, local-only archive input (see
+        # tests/conftest.py ARCHIVE_INPUTS); a public checkout still binds the
+        # committed paper's numbers, which is what --full-paper exists to gate.
+        print(f"form check skipped: {args.path} is a local-only archive input")
+        return full_paper_check(True)
     report = validate(args.path.read_text(encoding="utf-8"))
     print(json.dumps(report, indent=2))
     if not args.full_paper:

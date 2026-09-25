@@ -12,6 +12,7 @@ import json
 import math
 import secrets
 import sqlite3
+import time
 
 
 def canonical(value):
@@ -68,6 +69,19 @@ PACKS = {
                  "wrong": "ineligible"},
 }
 
+SCHEMA = '''
+CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS records(tenant TEXT, subject TEXT, value TEXT, version INTEGER,
+  source_value TEXT, source_version INTEGER, consent INTEGER, PRIMARY KEY(tenant,subject));
+CREATE TABLE IF NOT EXISTS grants(id TEXT PRIMARY KEY, holder TEXT, parent TEXT, root TEXT,
+  tenant TEXT, subject TEXT, beneficiary TEXT, purpose TEXT, operations TEXT, remaining INTEGER,
+  revoked INTEGER DEFAULT 0);
+CREATE TABLE IF NOT EXISTS objects(id TEXT PRIMARY KEY, kind TEXT, body TEXT);
+CREATE TABLE IF NOT EXISTS effects(id TEXT PRIMARY KEY, proposal TEXT, value TEXT, version INTEGER);
+CREATE TABLE IF NOT EXISTS sinks(id INTEGER PRIMARY KEY, recipient TEXT, bytes BLOB, proposal TEXT);
+CREATE TABLE IF NOT EXISTS evidence(seq INTEGER PRIMARY KEY, previous TEXT, body TEXT, head TEXT);
+'''
+
 
 class Workflow:
     def __init__(self, path, *, pack="education", profile="teaching", control=True, mediator="legacy"):
@@ -80,21 +94,26 @@ class Workflow:
         self.path, self.control, self.pack = str(path), control, PACKS[pack]
         self.db = sqlite3.connect(self.path, isolation_level=None, timeout=10)
         self.db.row_factory = sqlite3.Row
-        self.db.executescript('''
-        PRAGMA journal_mode=WAL;
-        PRAGMA synchronous=FULL;
-        CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT NOT NULL);
-        CREATE TABLE IF NOT EXISTS records(tenant TEXT, subject TEXT, value TEXT, version INTEGER,
-          source_value TEXT, source_version INTEGER, consent INTEGER, PRIMARY KEY(tenant,subject));
-        CREATE TABLE IF NOT EXISTS grants(id TEXT PRIMARY KEY, holder TEXT, parent TEXT, root TEXT,
-          tenant TEXT, subject TEXT, beneficiary TEXT, purpose TEXT, operations TEXT, remaining INTEGER,
-          revoked INTEGER DEFAULT 0);
-        CREATE TABLE IF NOT EXISTS objects(id TEXT PRIMARY KEY, kind TEXT, body TEXT);
-        CREATE TABLE IF NOT EXISTS effects(id TEXT PRIMARY KEY, proposal TEXT, value TEXT, version INTEGER);
-        CREATE TABLE IF NOT EXISTS sinks(id INTEGER PRIMARY KEY, recipient TEXT, bytes BLOB, proposal TEXT);
-        CREATE TABLE IF NOT EXISTS evidence(seq INTEGER PRIMARY KEY, previous TEXT, body TEXT, head TEXT);
-        ''')
+        # Converting a fresh file to WAL can return SQLITE_BUSY without consulting
+        # the busy handler when several connections race to open it, so the switch
+        # is retried against the same deadline the connection timeout promises.
+        deadline = time.monotonic() + 10
+        while True:
+            try:
+                self.db.execute("PRAGMA journal_mode=WAL")
+                break
+            except sqlite3.OperationalError as exc:
+                if "locked" not in str(exc) or time.monotonic() > deadline:
+                    self.db.close()
+                    raise
+                time.sleep(0.01)
+        self.db.execute("PRAGMA synchronous=FULL")
+        # Schema creation runs inside the writer lock, so concurrent openers queue
+        # on the busy timeout instead of racing each other's DDL.
         self.db.execute("BEGIN IMMEDIATE")
+        for statement in SCHEMA.split(";"):
+            if statement.strip():
+                self.db.execute(statement)
         if not self.db.execute("SELECT 1 FROM meta WHERE k='pack'").fetchone():
             for k, v in {"pack": pack, "policy": "1", "recipient_version": "1", "clock": "0",
                          "key": secrets.token_hex(32)}.items():
