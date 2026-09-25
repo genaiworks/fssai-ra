@@ -67,11 +67,19 @@ class TrustRuntime:
     operator, reviewer, source, recipient. Do not pass this object to model code;
     give the model only an authenticated dispatch transport (or SDKClient).
     ``clock`` is a trusted service clock, injectable for deterministic tests.
+    ``min_deliberation_seconds`` is the minimum review time: an approval issued
+    sooner after its proposal is deferred to the manual route (0 disables it).
+    ``receipt_retention_seconds`` bounds how long decision receipts are kept
+    (None keeps them until an operator prunes with an explicit horizon).
     """
 
-    def __init__(self, path, passport: Passport, *, authorities, clock=None, pack="education"):
+    def __init__(self, path, passport: Passport, *, authorities, clock=None, pack="education",
+                 min_deliberation_seconds=0, receipt_retention_seconds=None):
         self.clock = clock or (lambda: int(time.time()))
         self.passport = passport
+        self.min_deliberation_seconds = integer(min_deliberation_seconds)
+        self.receipt_retention_seconds = (None if receipt_retention_seconds is None
+                                          else integer(receipt_retention_seconds, 1))
         self.authorities = {}
         for token, (name, role) in authorities.items():
             identifier(name)
@@ -98,6 +106,16 @@ class TrustRuntime:
           PRIMARY KEY(task,source,target,channel));
         CREATE TABLE IF NOT EXISTS tbc_used(id TEXT PRIMARY KEY);
         CREATE TABLE IF NOT EXISTS tbc_sinks(id TEXT PRIMARY KEY, destination TEXT, bytes BLOB);
+        CREATE TABLE IF NOT EXISTS tbc_receipts(seq INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT,
+          issued INTEGER, body TEXT, mac TEXT);
+        CREATE TABLE IF NOT EXISTS tbc_reservations(id TEXT PRIMARY KEY, task TEXT, amounts TEXT,
+          state TEXT, operator TEXT);
+        CREATE TABLE IF NOT EXISTS tbc_graph_mode(task TEXT PRIMARY KEY);
+        CREATE TABLE IF NOT EXISTS tbc_graph_nodes(task TEXT, agent TEXT, PRIMARY KEY(task,agent));
+        CREATE TABLE IF NOT EXISTS tbc_graph_edges(task TEXT, source TEXT, target TEXT, channel TEXT,
+          PRIMARY KEY(task,source,target,channel));
+        CREATE TABLE IF NOT EXISTS tbc_manual_queue(proposal TEXT PRIMARY KEY, task TEXT,
+          reviewer TEXT, queued INTEGER, reason TEXT);
         ''')
         try:
             with self.transaction():
@@ -130,6 +148,11 @@ class TrustRuntime:
     def _admin(self, token, role):
         identity = self.authorities.get(_token_hash(token))
         require(identity is not None and identity[1] == role, "INDEPENDENT_AUTHORITY_REQUIRED")
+        return identity[0]
+
+    def _admin_any(self, token, roles):
+        identity = self.authorities.get(_token_hash(token))
+        require(identity is not None and identity[1] in roles, "INDEPENDENT_AUTHORITY_REQUIRED")
         return identity[0]
 
     def _now(self):
@@ -272,6 +295,7 @@ class TrustRuntime:
                                           "code": "ASSURANCE_LOSS"})
                     return {"ok": False, "code": "DENIED"}
                 self._charge(task, calls=1)
+                q = {}
                 self.db.execute("SAVEPOINT tbc_request")
                 try:
                     q = parse_sdk_request(raw)
@@ -279,6 +303,7 @@ class TrustRuntime:
                     op = q["op"]
                     require(op in SCHEMAS and not set(q) - SCHEMAS[op], "UNDECLARED_INTERFACE")
                     require(op in scope.operations and op in self.passport.inventory, "ENVELOPE_DENIED")
+                    self._require_admitted_node(task["id"], agent["id"])
                     if op != "request_capability":
                         lease = self._get(q["capability"], "capability")
                         require(lease["agent"] == agent["id"] and lease["task"] == task["id"]
@@ -289,12 +314,14 @@ class TrustRuntime:
                     result = self._handle(op, q, agent, task, scope)
                     self.world.event("tbc_" + op, {"agent": agent["id"], "task": task["id"],
                                                    "request_digest": digest(q), "epoch": task["epoch"]})
-                except failures:
+                except failures as denial:
                     self.db.execute("ROLLBACK TO tbc_request")
                     self.db.execute("RELEASE tbc_request")
                     self.world.event("tbc_denied", {"agent": agent["id"], "task": task["id"]})
+                    self._record_receipt(task, agent, q if isinstance(q, dict) else {}, {}, "DENIED", denial)
                     return {"ok": False, "code": "DENIED"}
                 self.db.execute("RELEASE tbc_request")
+                self._record_receipt(task, agent, q, result, "ALLOWED")
                 return {"ok": True, **result}
         except failures as error:
             # A revoked agent, a stopped workload or an assurance failure is
@@ -376,9 +403,11 @@ class TrustRuntime:
         require(isinstance(text, str) and len(text.encode()) <= 12000, "ARTIFACT_SIZE")
         self._not_invalidated(sources)
         labels, sources = self._taint(agent, labels, sources)
+        # producer and epoch give the fan-in gate provenance and freshness to check.
         return self._put("artifact", {"task": task["id"], "audience": [agent["id"]], "text": text,
                                       "labels": labels, "sources": sources, "kind": kind,
-                                      "reference": reference, "digest": hashlib.sha256(text.encode()).hexdigest()})
+                                      "reference": reference, "digest": hashlib.sha256(text.encode()).hexdigest(),
+                                      "producer": agent["id"], "epoch": task["epoch"]})
 
     def _handle(self, op, q, agent, task, scope):
         if op == "request_capability":
@@ -441,7 +470,8 @@ class TrustRuntime:
             result = self.world.handle("advisor", "advisor", {"op": "propose", "context": a["reference"],
                                "operation": q["operation"], "value": q["value"], "recipient": q["recipient"]})
             pid = self._put("proposal", {"task": task["id"], "agent": agent["id"],
-                                         "epoch": task["epoch"], "joined": result["proposal"]})
+                                         "epoch": task["epoch"], "joined": result["proposal"],
+                                         "created": self._now()})
             joined = self.world.get(result["proposal"], "proposal")
             ir = {"resource": q["context"], "canonical_resource": f'{task["contract"].tenant}/{task["contract"].subject}',
                   "operation": joined["operation"], "expected_version": joined["binding"]["version"],
@@ -492,6 +522,7 @@ class TrustRuntime:
             require(target_task["id"] == task["id"] and q["channel"] in scope.channels
                     and q["channel"] in target_scope.channels and "receive_message" in target_scope.operations,
                     "AIRLOCK_CHANNEL_DENIED")
+            self._require_admitted_edge(task["id"], agent["id"], target["id"], q["channel"])
             a = self._artifact(q["artifact"], agent, task, scope)
             # Prevent composition with a public-capable recipient, even before it reads data.
             require(set(a["labels"]) <= target_scope.data_classes
@@ -551,11 +582,24 @@ class TrustRuntime:
             require(c["proposal"] == proposal and c["name"] != name, "INDEPENDENT_CONFIRMATION_REQUIRED")
             _, task, _ = self._agent(p["agent"])
             require(task["epoch"] == p["epoch"], "STALE_PROPOSAL")
-            result = self.world.handle("registrar", "registrar", {"op": "approve", "proposal": p["joined"],
-                                                                  "confirmation": c["joined"]})
-            aid = self._put("approval", {"proposal": proposal, "name": name, "joined": result["approval"]})
-            self.world.event("tbc_named_approval", {"approval": aid, "reviewer": name, "source": c["name"]})
-            return aid
+            # Minimum review time: an approval faster than the floor is a
+            # signature, not oversight, so the work goes to the manual route.
+            # Proposals stored before this field existed carry no timestamp.
+            deferred = (self.min_deliberation_seconds and p.get("created") is not None
+                        and self._now() - p["created"] < self.min_deliberation_seconds)
+            if deferred:
+                self.db.execute("INSERT OR IGNORE INTO tbc_manual_queue VALUES(?,?,?,?,?)",
+                                (proposal, task["id"], name, self._now(), "below_minimum_review_time"))
+                self.world.event("tbc_review_deferred", {"task": task["id"], "reviewer": name,
+                                                         "route": "manual"})
+            else:
+                result = self.world.handle("registrar", "registrar", {"op": "approve", "proposal": p["joined"],
+                                                                      "confirmation": c["joined"]})
+                aid = self._put("approval", {"proposal": proposal, "name": name, "joined": result["approval"]})
+                self.world.event("tbc_named_approval", {"approval": aid, "reviewer": name, "source": c["name"]})
+                return aid
+        # Raised after commit so the manual-route record survives the refusal.
+        raise AuthorityDenied("REVIEW_DEFERRED_TO_MANUAL")
 
     def authorize_release(self, token, artifact, destination, *, declassify=False, ttl=60):
         name = self._admin(token, "reviewer")
@@ -742,6 +786,245 @@ class TrustRuntime:
         return {"task": task_id, "state": task["state"], "epoch": task["epoch"],
                 "remaining": json.loads(task["remaining"]), "agents": agents}
 
+    # -- Decision receipts ---------------------------------------------------
+    # A receipt binds policy version, task epoch, source lineage, artifact
+    # digest, recipient and outcome, so review never has to treat model
+    # reasoning as proof. Receipts hold identifiers and digests, not record
+    # text, and are readable only by operator or monitor authority.
+
+    def _receipt_mac(self, body):
+        return hmac.new(bytes.fromhex(self.world.meta("key")),
+                        ("receipt" + body).encode(), hashlib.sha256).hexdigest()
+
+    def _artifact_digest(self, result):
+        if isinstance(result.get("digest"), str):
+            return result["digest"]
+        if isinstance(result.get("artifact"), str):
+            with suppress(AuthorityDenied, ValueError, KeyError):
+                return self._get(result["artifact"], "artifact")["digest"]
+        return None
+
+    def _record_receipt(self, task, agent, q, result, outcome, error=None):
+        code = None
+        if error is not None:
+            code = error.args[0] if isinstance(error, AuthorityDenied) and error.args else type(error).__name__
+            if not isinstance(code, str) or not code.isidentifier() or len(code) > 64:
+                code = "DENIED"
+        row = self.db.execute("SELECT sources FROM tbc_agents WHERE id=?", (agent["id"],)).fetchone()
+        recipient = next((q[k] for k in ("destination", "recipient") if isinstance(q.get(k), str)), None)
+        body = canonical({
+            "policy_version": self.passport.policy_version,
+            "passport_digest": digest(self.passport.to_dict()),
+            "task": task["id"], "epoch": task["epoch"], "agent": agent["id"],
+            "operation": q.get("op") if q.get("op") in {*SCHEMAS, "fan_in"} else None,
+            "request_digest": digest(q) if q else None,
+            "source_lineage": sorted(json.loads(row[0])) if row else [],
+            "artifact_digest": self._artifact_digest(result),
+            "recipient": recipient, "outcome": outcome, "code": code, "issued": self._now()})
+        self.db.execute("INSERT INTO tbc_receipts(task,issued,body,mac) VALUES(?,?,?,?)",
+                        (task["id"], self._now(), body, self._receipt_mac(body)))
+
+    def decision_receipts(self, token, task_id, *, limit=64):
+        """Integrity-checked receipts for one task, newest last."""
+        self._admin_any(token, {"operator", "monitor"})
+        integer(limit, 1)
+        require(limit <= 1024, "RECEIPT_LIMIT")
+        rows = self.db.execute("SELECT seq,body,mac FROM tbc_receipts WHERE task=? ORDER BY seq DESC LIMIT ?",
+                               (task_id, limit)).fetchall()
+        receipts = []
+        for row in reversed(rows):
+            require(hmac.compare_digest(self._receipt_mac(row["body"]), row["mac"]), "INTEGRITY_FAILURE")
+            receipts.append({"sequence": row["seq"], **json.loads(row["body"])})
+        return receipts
+
+    def prune_receipts(self, token, *, older_than=None):
+        """Apply the retention limit so the trail is not another store of student data."""
+        name = self._admin(token, "operator")
+        horizon = older_than if older_than is not None else self.receipt_retention_seconds
+        require(horizon is not None, "RETENTION_NOT_CONFIGURED")
+        integer(horizon, 1)
+        with self.transaction():
+            removed = self.db.execute("DELETE FROM tbc_receipts WHERE issued <= ?",
+                                      (self._now() - horizon,)).rowcount
+            self.world.event("tbc_receipts_pruned", {"operator": name, "removed": removed,
+                                                     "horizon": horizon})
+        return {"removed": removed}
+
+    # -- Shared budget reservations -------------------------------------------
+    # Parallel workers must not multiply resources. A trusted scheduler reserves
+    # from the one task and workload balance before dispatch; completion settles
+    # the actual use and returns the rest, cancellation returns everything, and
+    # a reservation settles at most once.
+
+    def reserve_budget(self, token, task_id, **amounts):
+        name = self._admin(token, "operator")
+        require(amounts and set(amounts) <= set(BUDGETS), "UNKNOWN_BUDGET")
+        with self.transaction():
+            task = self._task(task_id)
+            require(task["state"] == "NORMAL", "RESERVATION_RESTRICTED")
+            self._charge(task, **amounts)
+            rid = secrets.token_hex(16)
+            self.db.execute("INSERT INTO tbc_reservations VALUES(?,?,?,'held',?)",
+                            (rid, task_id, canonical(amounts), name))
+            self.world.event("tbc_reservation", {"task": task_id, "reservation": rid, "operator": name})
+            return {"reservation": rid, "amounts": dict(amounts)}
+
+    def _refund(self, task_id, amounts):
+        current = json.loads(self.db.execute("SELECT remaining FROM tbc_tasks WHERE id=?", (task_id,)).fetchone()[0])
+        workload = json.loads(self.db.execute("SELECT remaining FROM tbc_usage WHERE id=1").fetchone()[0])
+        for key, amount in amounts.items():
+            current[key] += amount
+            workload[key] += amount
+        self.db.execute("UPDATE tbc_usage SET remaining=? WHERE id=1", (canonical(workload),))
+        self.db.execute("UPDATE tbc_tasks SET remaining=? WHERE id=?", (canonical(current), task_id))
+
+    def _close_reservation(self, token, reservation, used, state):
+        name = self._admin(token, "operator")
+        with self.transaction():
+            row = self.db.execute("SELECT * FROM tbc_reservations WHERE id=?", (reservation,)).fetchone()
+            require(row is not None, "UNKNOWN_RESERVATION")
+            require(row["state"] == "held", "RESERVATION_ALREADY_SETTLED")
+            held = json.loads(row["amounts"])
+            require(set(used) <= set(held), "UNKNOWN_BUDGET")
+            for key, amount in used.items():
+                require(integer(amount) <= held[key], "SETTLEMENT_EXCEEDS_RESERVATION")
+            self._refund(row["task"], {key: held[key] - used.get(key, 0) for key in held})
+            self.db.execute("UPDATE tbc_reservations SET state=? WHERE id=?", (state, reservation))
+            self.world.event("tbc_reservation_" + state, {"task": row["task"], "reservation": reservation,
+                                                          "operator": name})
+            return {"reservation": reservation, "state": state,
+                    "used": {key: used.get(key, 0) for key in held}}
+
+    def settle_reservation(self, token, reservation, **used):
+        return self._close_reservation(token, reservation, used, "settled")
+
+    def cancel_reservation(self, token, reservation):
+        return self._close_reservation(token, reservation, {}, "cancelled")
+
+    # -- Declared task graph (P10) --------------------------------------------
+    # Opt-in per task. Once declared, an agent may act only after a trusted gate
+    # admits it as a node, and a message may cross only an admitted edge.
+    # Replanning is another admission; nothing the model sends admits anything.
+
+    def _graph_declared(self, task_id):
+        return self.db.execute("SELECT 1 FROM tbc_graph_mode WHERE task=?", (task_id,)).fetchone() is not None
+
+    def _require_admitted_node(self, task_id, agent_id):
+        if self._graph_declared(task_id):
+            require(self.db.execute("SELECT 1 FROM tbc_graph_nodes WHERE task=? AND agent=?",
+                                    (task_id, agent_id)).fetchone() is not None, "NODE_NOT_ADMITTED")
+
+    def _require_admitted_edge(self, task_id, source, target, channel):
+        if self._graph_declared(task_id):
+            require(self.db.execute("SELECT 1 FROM tbc_graph_edges WHERE task=? AND source=? AND target=? "
+                                    "AND channel=?", (task_id, source, target, channel)).fetchone() is not None,
+                    "AIRLOCK_CHANNEL_DENIED")
+
+    def admit_graph(self, token, task_id, *, nodes=(), edges=()):
+        """Declare the task graph, or admit a replanned change to it.
+
+        ``edges`` are (source, target, channel) triples. Both endpoints must be
+        admitted nodes of this task and the channel must be in both scopes.
+        Admission never widens any agent's scope.
+        """
+        name = self._admin(token, "operator")
+        nodes = [identifier(node) for node in nodes]
+        edges = [tuple(identifier(part) for part in edge) for edge in edges]
+        require(all(len(edge) == 3 for edge in edges), "INVALID_EDGE")
+        with self.transaction():
+            task = self._task(task_id)
+            self.db.execute("INSERT OR IGNORE INTO tbc_graph_mode VALUES(?)", (task_id,))
+            for node in nodes:
+                agent, agent_task, _ = self._agent(node)
+                require(agent_task["id"] == task["id"], "CROSS_TASK_ANCESTRY")
+                self.db.execute("INSERT OR IGNORE INTO tbc_graph_nodes VALUES(?,?)", (task_id, node))
+            for source, target, channel in edges:
+                for endpoint in (source, target):
+                    require(self.db.execute("SELECT 1 FROM tbc_graph_nodes WHERE task=? AND agent=?",
+                                            (task_id, endpoint)).fetchone() is not None, "NODE_NOT_ADMITTED")
+                require(channel in self._agent(source)[2].channels and channel in self._agent(target)[2].channels,
+                        "AIRLOCK_CHANNEL_DENIED")
+                self.db.execute("INSERT OR IGNORE INTO tbc_graph_edges VALUES(?,?,?,?)",
+                                (task_id, source, target, channel))
+            self.world.event("tbc_graph_admitted", {"task": task_id, "operator": name,
+                                                    "nodes": len(nodes), "edges": len(edges)})
+            return self.task_graph(token, task_id)
+
+    def task_graph(self, token, task_id):
+        self._admin_any(token, {"operator", "monitor"})
+        return {"task": task_id, "declared": self._graph_declared(task_id),
+                "nodes": [r[0] for r in self.db.execute(
+                    "SELECT agent FROM tbc_graph_nodes WHERE task=? ORDER BY agent", (task_id,))],
+                "edges": [list(r) for r in self.db.execute(
+                    "SELECT source,target,channel FROM tbc_graph_edges WHERE task=? ORDER BY 1,2,3", (task_id,))]}
+
+    # -- Fan-in gate -------------------------------------------------------------
+    # Before a coordinator accepts a worker's result, a trusted gate checks
+    # provenance (who produced it, under a valid authority), artifact identity
+    # (MAC and the exact expected digest), the current epoch, inherited labels
+    # and the intended destination. Agreement among agents is not a credential.
+
+    def accept_result(self, token, artifact, *, coordinator, expected_digest, destination):
+        name = self._admin(token, "operator")
+        with self.transaction():
+            a = self._get(artifact, "artifact")
+            require(isinstance(expected_digest, str) and hmac.compare_digest(a["digest"], expected_digest),
+                    "ARTIFACT_IDENTITY_MISMATCH")
+            target, task, scope = self._agent(coordinator)
+            require(a["task"] == task["id"], "ARTIFACT_SCOPE_DENIED")
+            producer = a.get("producer")
+            require(isinstance(producer, str) and producer in a["audience"], "PROVENANCE_REQUIRED")
+            _, producer_task, _ = self._agent(producer)
+            require(producer_task["id"] == task["id"], "CROSS_TASK_ANCESTRY")
+            require(a.get("epoch") == task["epoch"], "STALE_RESULT")
+            if self._graph_declared(task["id"]):
+                require(self.db.execute("SELECT 1 FROM tbc_graph_edges WHERE task=? AND source=? AND target=?",
+                                        (task["id"], producer, target["id"])).fetchone() is not None,
+                        "AIRLOCK_CHANNEL_DENIED")
+            require(set(a["labels"]) <= scope.data_classes, "DATA_RIGHTS_DENIED")
+            self._source_valid(a["sources"], scope)
+            require(destination in scope.destinations, "DESTINATION_DENIED")
+            require(not (a["labels"] and destination == "public"), "PROHIBITED_FLOW")
+            accepted = self._put("artifact", {**a, "audience": [target["id"]]})
+            self._taint(target, a["labels"], a["sources"])
+            self._record_receipt(task, target, {"op": "fan_in", "destination": destination},
+                                 {"digest": a["digest"]}, "ACCEPTED")
+            self.world.event("tbc_fan_in_accepted", {"task": task["id"], "producer": producer,
+                                                     "coordinator": target["id"], "operator": name,
+                                                     "digest": a["digest"]})
+            return {"artifact": accepted, "digest": a["digest"]}
+
+    # -- Freshness ----------------------------------------------------------------
+    # A fresh check alone leaves a check-then-act race. An adapter that commits
+    # outside this transaction presents a freshness proof and rejects it when the
+    # task epoch moved, the task stopped, or the proof is older than max_age.
+    # A partitioned worker that cannot obtain one must stop.
+
+    def issue_freshness(self, token, task_id):
+        self._admin(token, "operator")
+        with self.transaction():
+            task = self._task(task_id)
+            issued = self._now()
+            proof = self._put("freshness", {"task": task_id, "epoch": task["epoch"], "issued": issued})
+            return {"proof": proof, "epoch": task["epoch"], "issued": issued}
+
+    def check_freshness(self, proof, *, max_age):
+        integer(max_age, 1)
+        try:
+            p = self._get(proof, "freshness")
+            task = self._task(p["task"])
+        except AuthorityDenied as error:
+            raise AuthorityDenied("FRESHNESS_UNPROVEN") from error
+        require(task["epoch"] == p["epoch"] and task["state"] != "QUARANTINED"
+                and 0 <= self._now() - p["issued"] <= max_age, "FRESHNESS_UNPROVEN")
+        return {"task": p["task"], "epoch": p["epoch"]}
+
+    def manual_queue(self, token):
+        """Work deferred by the minimum review time, for the named manual route."""
+        self._admin_any(token, {"operator", "reviewer"})
+        return [dict(row) for row in self.db.execute("SELECT * FROM tbc_manual_queue ORDER BY queued")]
+
+
 
 class Guardian:
     """Authority-asymmetric assurance API: no grant or restoration method.
@@ -773,6 +1056,19 @@ class Guardian:
             require(r.db.execute("SELECT 1 FROM tbc_agents WHERE id=?", (agent_id,)).fetchone(), "UNKNOWN_AGENT")
             r.db.execute("UPDATE tbc_agents SET revoked=1 WHERE id=?", (agent_id,))
             r.world.event("tbc_revoke", {"agent": agent_id})
+
+    def revoke_task(self, task_id, *, reason="revocation"):
+        """Raise the task epoch so queued work, stale leases and later release chunks fail.
+
+        Agents stay enrolled and must obtain fresh leases; information already
+        disclosed cannot be recalled. This contracts authority and grants none.
+        """
+        r = self._runtime
+        with r.transaction():
+            r._task(task_id)
+            r.db.execute("UPDATE tbc_tasks SET epoch=epoch+1 WHERE id=?", (task_id,))
+            r.world.event("tbc_revoke", {"task": task_id, "epoch_raised": True,
+                                         "reason_digest": digest(reason)})
 
     def evaluate(self, task_id):
         """Return concrete source-to-sink counterexample paths and quarantine on violation."""

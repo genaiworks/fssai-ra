@@ -36,6 +36,13 @@ The demo executes: enroll task → issue short-lived capability → authorize co
 | Semantic Airlock | `send_message`, `receive_message` | Typed channels, recipient rights, inherited labels, epoch, live sender and source validation; text never grants authority |
 | Security Digital Twin | `Guardian._evaluate_locked` | Declared agent/message graph, transitive reachability and concrete source-to-public counterexample paths |
 | Guardian | `Guardian`, `TrustRuntime.restore` | Five nested modes, contraction, ancestor revocation, configuration drift detection; restoration requires named operator authority and fresh leases |
+| Decision receipts | `decision_receipts`, `prune_receipts` | Every model request, allowed or denied, and every fan-in acceptance writes an integrity-checked receipt binding policy version, Passport digest, task epoch, source lineage, artifact digest, recipient, outcome and stable refusal code. Receipts carry identifiers and digests, not record text; only operator or monitor authority reads them, and a configured retention horizon prunes them |
+| Shared budget reservations | `reserve_budget`, `settle_reservation`, `cancel_reservation` | A trusted scheduler reserves from the one task and workload balance before dispatching parallel workers; settlement returns unused budget, cancellation returns all of it, and a reservation settles at most once |
+| Declared task graph (P10) | `admit_graph`, `task_graph` | Opt-in per task. Once declared, an agent acts only after operator admission as a node, and a message crosses only an admitted (source, target, channel) edge; replanning is a further admission. Tasks without a declaration behave as before |
+| Fan-in gate | `accept_result` | Before a coordinator accepts a worker result: object MAC and exact expected digest, a live producer in the same task, the current epoch, admitted edge when a graph is declared, labels within the coordinator's data rights, unquarantined sources and a permitted destination |
+| Task revocation epoch | `Guardian.revoke_task` | Raises the task epoch so queued proposals and approvals, stale leases, escrows and later release chunks fail revalidation; disclosed bytes are not recalled |
+| Freshness proofs | `issue_freshness`, `check_freshness` | An adapter committing outside the mediator's transaction rejects a proof whose epoch moved, whose task stopped or quarantined, or which is older than its bound; a partitioned worker without a fresh proof must stop |
+| Minimum review time | `TrustRuntime(min_deliberation_seconds=...)`, `manual_queue` | An approval issued sooner than the floor after its proposal is refused with `REVIEW_DEFERRED_TO_MANUAL` and recorded on a manual route; the default floor of 0 keeps previous behaviour |
 | SDK integration | `SDKClient`, `tbc/api.py` | Transport-independent model client and optional HTTP endpoint; administrative grant/approval/restoration APIs are not exposed on the model endpoint |
 
 ## Authority and transaction model
@@ -47,6 +54,10 @@ The service checks all ancestors on every use. A child has an opaque identity to
 `BEGIN IMMEDIATE` serializes authorization, balance consumption, immutable object creation, record effects, release-use consumption and evidence. A denied authenticated attempt consumes one call and receives a denial receipt, while a savepoint rolls back its effects and other resource charges. If evidence is unavailable, the whole transaction rolls back. Anonymous ingress needs deployment rate limiting. Independent-process tests exercise both exhausted shared budgets and concurrent use of one escrow approval. A release is a committed local sink record; `collect_release` returns that record only to the matching recipient identity. This is not a network-delivery protocol or an exactly-once guarantee for remote APIs.
 
 The existing `joined_workflow.Workflow` performs the actual domain mutation and its version/replay checks. TBC databases carry a persistent mediator marker; opening them through the default legacy workflow fails. This prevents accidentally serving the same database through the older JSON dispatcher. A trusted process that can change code or directly read SQLite is still inside the security boundary.
+
+## Composition controls
+
+The controls above the SDK row implement the composition contract in the V27 paper. None adds a model primitive, so the Passport inventory and dispatcher schemas are unchanged; all are trusted-side calls under operator, reviewer or monitor authority. Reservations, admission, fan-in acceptance and freshness proofs are issued by the control service, never by agent output. Agreement among agents is not an input to any of them. Distributed enforcement across separate control services, remote exactly-once effects and the manual-route outcome itself remain outside what these local tests show; `tests/test_tbc_composition_controls.py` exercises each refusal.
 
 ## Model-side client
 
