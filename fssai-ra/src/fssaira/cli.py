@@ -1697,6 +1697,44 @@ def cmd_mcp_approver_key(args) -> int:
     return 0
 
 
+def cmd_mcp_gateway(args) -> int:
+    """Run the gate as a shared Streamable HTTP service, one gate per caller session."""
+    from .integration.mcp_gate import GateConfig, McpGateDenied, ReceiptLog, load_lock
+    from .integration.mcp_gateway import Gateway, GatewayPolicy, make_server
+
+    try:
+        policy = GatewayPolicy.load(args.config)
+        gateway = Gateway(GateConfig.load(args.config), load_lock(args.lock), policy,
+                          receipts=ReceiptLog(args.receipts))
+        server = make_server(gateway, args.host, args.port)
+    except McpGateDenied as exc:
+        print(red(f"refused: {exc}"), file=sys.stderr)
+        return 2
+    print(f"fssaira mcp gateway on http://{args.host}:{server.server_address[1]}/mcp  "
+          f"({len(policy.clients) or 'no'} registered callers, up to {policy.max_sessions} sessions)",
+          file=sys.stderr)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+        gateway.close()
+    return 0
+
+
+def cmd_mcp_client_token(args) -> int:
+    """Issue a bearer token for one caller; only its digest goes in the policy."""
+    from .integration.mcp_gateway import new_client_token
+
+    token, digest = new_client_token()
+    print(green(f"token for {args.name} (shown once; give it to that caller only):"))
+    print(f"  {token}\n")
+    print("Register the caller in the gateway policy:\n")
+    print(f"gateway:\n  clients:\n    {json.dumps(args.name)}: {{token_sha256: {digest}}}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fssaira",
@@ -1891,6 +1929,16 @@ def build_parser() -> argparse.ArgumentParser:
     mcp_key.add_argument("--name", required=True)
     mcp_key.add_argument("--out", type=Path, required=True)
     mcp_key.set_defaults(func=cmd_mcp_approver_key)
+    mcp_gateway = mcp_sub.add_parser("gateway", help="run a shared gateway over Streamable HTTP")
+    mcp_gateway.add_argument("--config", type=Path, required=True, help="gate policy YAML (with a gateway: section)")
+    mcp_gateway.add_argument("--lock", type=Path, required=True)
+    mcp_gateway.add_argument("--receipts", type=Path, help="shared receipt log (JSON lines)")
+    mcp_gateway.add_argument("--host", default="127.0.0.1")
+    mcp_gateway.add_argument("--port", type=int, default=8765)
+    mcp_gateway.set_defaults(func=cmd_mcp_gateway)
+    mcp_token = mcp_sub.add_parser("client-token", help="issue a gateway bearer token for one named caller")
+    mcp_token.add_argument("--name", required=True)
+    mcp_token.set_defaults(func=cmd_mcp_client_token)
     mcp_verify = add_output(mcp_sub.add_parser("verify", help="verify a receipt log's hash chain"))
     mcp_verify.add_argument("receipts", type=Path)
     mcp_verify.set_defaults(func=cmd_mcp_verify)

@@ -92,6 +92,8 @@ This is the same for every agent, and each item is independently useful:
   - Give the session an expiry and a call budget.
 
   Remote vendor tools (Streamable HTTP) are gated the same way as local ones.
+  For many agents, run one shared gateway (`fssaira mcp gateway`). Each agent
+  authenticates, and each session gets its own gate.
   A complete example is in
   [`examples/mcp/gate.authority.yaml`](../examples/mcp/gate.authority.yaml).
 

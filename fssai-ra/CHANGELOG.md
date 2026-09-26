@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased — shared gateway
+
+- **`fssaira mcp gateway`** serves the gate over Streamable HTTP for many
+  callers. Each session gets its own gate, so one caller's taint and budget
+  never become another's.
+  - Callers present bearer tokens, stored only as digests
+    (`fssaira mcp client-token`).
+  - A session is bound to the caller that opened it.
+  - A caller can be narrowed to named tools.
+  - Foreign `Origin` headers are refused.
+  - Sessions are capped and expire when idle.
+  - Every receipt names the caller and the session.
+  - The gateway refuses to listen off loopback without registered callers.
+- Stdio and HTTP now share one message handler (`handle_message`).
+- Tests: `tests/test_mcp_gateway.py`.
+
 ## Unreleased — gate hardening
 
 - **Signed approvals.** Approvers are registered by Ed25519 key

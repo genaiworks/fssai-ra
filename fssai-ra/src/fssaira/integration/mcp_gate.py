@@ -141,6 +141,7 @@ class McpGateCodes:
     SERVER_NEEDS_COMMAND_OR_URL = "SERVER_NEEDS_COMMAND_OR_URL"
     NOTIFY_FAILED = "NOTIFY_FAILED"
     APPROVAL_ALREADY_USED = "APPROVAL_ALREADY_USED"
+    CALLER_NOT_PERMITTED = "CALLER_NOT_PERMITTED"
     UPSTREAM_RESPONSE_TOO_LARGE = "UPSTREAM_RESPONSE_TOO_LARGE"
     # calls
     ARGUMENTS_MUST_BE_AN_OBJECT = "ARGUMENTS_MUST_BE_AN_OBJECT"
@@ -1161,9 +1162,15 @@ class Gate:
     """One agent session: the host on one side, pinned upstream servers on the other."""
 
     def __init__(self, config: GateConfig, lock_data: Mapping[str, Any], *,
-                 receipts: ReceiptLog, clock: Callable[[], float] = time.time) -> None:
+                 receipts: ReceiptLog, clock: Callable[[], float] = time.time,
+                 allowed_tools: Iterable[str] | None = None,
+                 context: Mapping[str, str] | None = None) -> None:
         _require(lock_data.get("schema") == LOCK_SCHEMA, "UNSUPPORTED_LOCK_FILE")
         self.config = config
+        #: When set, the only qualified tools this session's caller may see or call.
+        self.allowed = frozenset(allowed_tools) if allowed_tools is not None else None
+        #: Added to every receipt, e.g. the authenticated caller and the session.
+        self.context = dict(context or {})
         self.receipts = receipts
         self.registry = McpToolRegistry(clock=clock)
         self.chain = CallChain(trusted_sources=config.trusted())
@@ -1265,6 +1272,10 @@ class Gate:
                                       if k in ("title", "description", "inputSchema",
                                                "outputSchema", "annotations")}
                 visible[qualified]["name"] = wire_name(qualified)
+        if self.allowed is not None:
+            for qualified in list(visible):
+                if qualified not in self.allowed and not visible[qualified].get("_hidden"):
+                    visible[qualified] = {"_hidden": True, "_code": "CALLER_NOT_PERMITTED"}
         self.visible = visible
         return [tool for tool in visible.values() if not tool.get("_hidden")]
 
@@ -1357,7 +1368,7 @@ class Gate:
 
     def _record(self, event: str, subject: str, decision: str, code: str, **extra: Any) -> None:
         self.receipts.append(event=event, subject=subject, decision=decision, code=code,
-                             chain_untrusted=self.chain.untrusted, **extra)
+                             chain_untrusted=self.chain.untrusted, **self.context, **extra)
 
     def status(self) -> dict:
         return {"tools": sorted(k for k, v in self.visible.items() if not v.get("_hidden")),
@@ -1383,15 +1394,38 @@ def _refusal(code: str, detail: str = "") -> dict:
 # -- the host-facing server --------------------------------------------------------
 
 
+def _reply(ident: Any, *, result: Any = None, error: dict | None = None) -> dict:
+    message: dict = {"jsonrpc": "2.0", "id": ident}
+    message.update({"error": error} if error else {"result": result})
+    return message
+
+
+def handle_message(gate: Gate, message: Any) -> dict | None:
+    """One host message in, one reply out (None for notifications). Shared by stdio and HTTP."""
+    if not isinstance(message, dict):
+        return _reply(None, error={"code": -32600, "message": "invalid request"})
+    method, ident, params = message.get("method"), message.get("id"), message.get("params") or {}
+    if method is None or ident is None:
+        return None  # notifications and stray responses need no answer
+    if method == "initialize":
+        requested = params.get("protocolVersion")
+        return _reply(ident, result={
+            "protocolVersion": requested if requested in PROTOCOL_VERSIONS else LATEST_PROTOCOL,
+            "capabilities": {"tools": {"listChanged": False}},
+            "serverInfo": {"name": GATE_NAME, "version": "1"},
+            "instructions": ("Tools are named server__tool. Calls are checked by an independent "
+                             "gate; a refusal names its reason and is final for this session.")})
+    if method == "ping":
+        return _reply(ident, result={})
+    if method == "tools/list":
+        return _reply(ident, result={"tools": gate.refresh()})
+    if method == "tools/call":
+        return _reply(ident, result=gate.call(params.get("name"), params.get("arguments")))
+    return _reply(ident, error={"code": -32601, "message": f"method not offered by the gate: {method}"})
+
+
 def serve(gate: Gate, stdin: IO[str] = sys.stdin, stdout: IO[str] = sys.stdout) -> None:
     """Speak MCP over stdio to the host until it closes the stream."""
-
-    def reply(ident: Any, *, result: Any = None, error: dict | None = None) -> None:
-        message: dict = {"jsonrpc": "2.0", "id": ident}
-        message.update({"error": error} if error else {"result": result})
-        stdout.write(json.dumps(message, separators=(",", ":"), ensure_ascii=False) + "\n")
-        stdout.flush()
-
     for line in stdin:
         line = line.strip()
         if not line:
@@ -1399,30 +1433,12 @@ def serve(gate: Gate, stdin: IO[str] = sys.stdin, stdout: IO[str] = sys.stdout) 
         try:
             message = json.loads(line)
         except json.JSONDecodeError:
-            reply(None, error={"code": -32700, "message": "parse error"})
-            continue
-        if not isinstance(message, dict):
-            reply(None, error={"code": -32600, "message": "invalid request"})
-            continue
-        method, ident, params = message.get("method"), message.get("id"), message.get("params") or {}
-        if method is None or ident is None:
-            continue  # notifications and stray responses need no answer
-        if method == "initialize":
-            requested = params.get("protocolVersion")
-            reply(ident, result={
-                "protocolVersion": requested if requested in PROTOCOL_VERSIONS else LATEST_PROTOCOL,
-                "capabilities": {"tools": {"listChanged": False}},
-                "serverInfo": {"name": GATE_NAME, "version": "1"},
-                "instructions": ("Tools are named server__tool. Calls are checked by an independent "
-                                 "gate; a refusal names its reason and is final for this session.")})
-        elif method == "ping":
-            reply(ident, result={})
-        elif method == "tools/list":
-            reply(ident, result={"tools": gate.refresh()})
-        elif method == "tools/call":
-            reply(ident, result=gate.call(params.get("name"), params.get("arguments")))
+            reply: dict | None = _reply(None, error={"code": -32700, "message": "parse error"})
         else:
-            reply(ident, error={"code": -32601, "message": f"method not offered by the gate: {method}"})
+            reply = handle_message(gate, message)
+        if reply is not None:
+            stdout.write(json.dumps(reply, separators=(",", ":"), ensure_ascii=False) + "\n")
+            stdout.flush()
 
 
 def load_lock(path: str | Path) -> dict:
@@ -1438,6 +1454,6 @@ __all__ = [
     "GATE_NAME", "LATEST_PROTOCOL", "LOCK_SCHEMA", "PROTOCOL_VERSIONS", "RECEIPT_SCHEMA",
     "UNDECLARED_POLICY", "UPSTREAM_REQUESTS_REFUSED", "WIRE_SEPARATOR", "Gate", "GateConfig", "HttpUpstream",
     "ApprovalStore", "McpGateCodes", "McpGateDenied", "McpToolRegistry", "ReceiptLog", "SessionContract", "ToolPolicy", "Upstream", "UpstreamSpec", "annotation_findings",
-    "executable_hash", "load_lock", "approval_payload", "approval_signature_valid", "generate_approver_key", "check_upstream_url", "lock", "locked_governance", "open_upstream", "parse_approvers", "sign_approval", "tool_governance", "manifest_for", "model_text", "qualified_from_wire",
+    "executable_hash", "handle_message", "load_lock", "approval_payload", "approval_signature_valid", "generate_approver_key", "check_upstream_url", "lock", "locked_governance", "open_upstream", "parse_approvers", "sign_approval", "tool_governance", "manifest_for", "model_text", "qualified_from_wire",
     "scan", "serve", "verify_receipts", "wire_name", "write_json",
 ]

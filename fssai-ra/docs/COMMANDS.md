@@ -54,6 +54,8 @@ Most experiments print a report and support `--output PATH` for JSON. Consult ea
 | `fssaira mcp approve ID --config gate.yaml --by NAME [--key-file KEY]` | Approve one held call (signed when approvers are registered); `deny` refuses it |
 | `fssaira mcp approver-key --name NAME --out KEY` | Create a named approver's owner-only signing key and print its registration line |
 | `fssaira framework plan USE_CASE.yaml` | Target level, applicable controls, first sprint and stop conditions for one use case ([guide](ADOPT.md)) |
+| `fssaira mcp gateway --config gate.yaml --lock mcp.lock.json [--port 8765]` | Run a shared Streamable HTTP gateway: authenticated callers, one gate per session |
+| `fssaira mcp client-token --name NAME` | Issue a gateway bearer token; print the digest to register |
 | `fssaira mcp verify PATH` | Verify a gate receipt log's hash chain |
 | `fssaira evidence verify PATH` | Verify exported evidence JSON |
 | `fssaira packet-check PATH --expected-sha256 DIGEST` | Inspect a private decision packet against an independent digest |

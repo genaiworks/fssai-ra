@@ -197,6 +197,9 @@
   "BYTE_CEILING_EXCEEDED": [
    "fssaira.integration.transport"
   ],
+  "CALLER_NOT_PERMITTED": [
+   "fssaira.integration.mcp_gate"
+  ],
   "CALL_BUDGET_EXHAUSTED": [
    "fssaira.accountable_action"
   ],
@@ -547,6 +550,27 @@
   ],
   "FS_WRONG_PERIOD": [
    "fssaira.forward_secure"
+  ],
+  "GATEWAY_AT_CAPACITY": [
+   "fssaira.integration.mcp_gateway"
+  ],
+  "GATEWAY_BODY_TOO_LARGE": [
+   "fssaira.integration.mcp_gateway"
+  ],
+  "GATEWAY_CLIENT_INVALID": [
+   "fssaira.integration.mcp_gateway"
+  ],
+  "GATEWAY_NEEDS_CLIENT_AUTH": [
+   "fssaira.integration.mcp_gateway"
+  ],
+  "GATEWAY_ORIGIN_REFUSED": [
+   "fssaira.integration.mcp_gateway"
+  ],
+  "GATEWAY_SESSION_UNKNOWN": [
+   "fssaira.integration.mcp_gateway"
+  ],
+  "GATEWAY_UNAUTHENTICATED": [
+   "fssaira.integration.mcp_gateway"
   ],
   "GATE_CONFIG_NEEDS_SERVERS": [
    "fssaira.integration.mcp_gate"
@@ -1593,6 +1617,6 @@
    "fssaira.joined_workflow"
   ]
  },
- "count": 522,
+ "count": 530,
  "generated_by": "fssaira.refusal_registry"
 }

@@ -272,6 +272,47 @@ token is the same server, and a new URL is a different one. The session id the
 server issues is carried on every request and closed on exit. A request the
 server sends inside an event stream is refused, exactly as on stdio.
 
+## One gateway for the whole organisation
+
+`fssaira mcp serve` runs one gate for one host. To operate one gateway that
+every agent host connects to, add a `gateway:` section and run it over
+Streamable HTTP:
+
+```bash
+fssaira mcp client-token --name alice          # the token is shown once; only its digest is stored
+fssaira mcp gateway --config gate.yaml --lock mcp.lock.json --receipts receipts.jsonl --port 8765
+```
+
+```yaml
+gateway:
+  clients:
+    alice:  {token_sha256: 5f1c...}
+    reader: {token_sha256: 9a0e..., tools: [casework/lookup_case]}   # narrowed to one tool
+  allowed_origins: [https://console.example.org]
+  max_sessions: 16
+  idle_seconds: 900
+```
+
+- **One gate per session.** Each MCP session has its own upstream connections,
+  call chain, budgets and expiry. A session that reads a hostile page cannot
+  taint another caller's session.
+- **Callers authenticate with bearer tokens.** Only the SHA-256 of each token
+  is stored. A session is bound to the caller that opened it, so another
+  caller's token cannot use it (`GATEWAY_SESSION_UNKNOWN`).
+- **Callers can be narrowed** to named tools. Every other tool is hidden and
+  refused (`CALLER_NOT_PERMITTED`).
+- **Browser rebinding is refused.** A request whose `Origin` header is not on
+  the allow-list is rejected (`GATEWAY_ORIGIN_REFUSED`).
+- **Sessions are capped** (`GATEWAY_AT_CAPACITY`) and expire when idle.
+- **Every receipt names the caller and the session,** in one shared log.
+- **An unauthenticated gateway may only listen on loopback.** Binding to a
+  network interface without registered callers is refused
+  (`GATEWAY_NEEDS_CLIENT_AUTH`).
+
+Point each host at `https://<gateway>/mcp` with its token in the
+`Authorization` header. Terminate TLS in front of the gateway, because the
+gateway itself serves plain HTTP.
+
 ## How the decisions are made
 
 * **Identity.** A server's pin is the SHA-256 of its command, arguments,
@@ -309,6 +350,6 @@ attest what a server's code does when called; a server that honestly describes
 ([P23 contained agent cell](framework/PATTERNS.md#p23-contained-agent-cell),
 `deploy/k8s/agent-cell.yaml`: default-deny egress), not a gate.
 The description scan is a review aid with a low bar, so a clean scan is not
-evidence of safety. The gate serves one host session over stdio; a shared,
-multi-user gateway service is not provided. Hosts that cap tool names at 64
-characters need `server__tool` to fit.
+evidence of safety. The gateway serves plain HTTP and expects TLS to be
+terminated in front of it. Hosts that cap tool names at 64 characters need
+`server__tool` to fit.
