@@ -4,21 +4,21 @@
 >
 > **Recommended next:** Answer the questions below in the assessment template (`fssaira framework init`), then run `fssaira framework assess`.
 
-Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.0) by `fssaira framework render`. Do not edit by hand: a test fails if this file and the catalogue differ.
+Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.1) by `fssaira framework render`. Do not edit by hand: a test fails if this file and the catalogue differ.
 
-**50 controls** in 9 domains. Maturity levels: 1 Access-controlled · 2 Authority-bound · 3 Disclosure-governed · 4 Composition-safe · 5 Evidenced.
+**59 controls** in 9 domains. Maturity levels: 1 Access-controlled · 2 Authority-bound · 3 Disclosure-governed · 4 Composition-safe · 5 Evidenced.
 
 | Domain | Controls | By level |
 |---|---|---|
-| **GOV** Governance and accountability | 4 | L1: 1, L2: 1, L3: 1, L4: 1 |
-| **IDN** Identity, credentials and containment | 4 | L1: 3, L4: 1 |
-| **AUT** Authority over actions | 5 | L2: 3, L4: 2 |
-| **DAT** Data and disclosure | 6 | L3: 5, L4: 1 |
+| **GOV** Governance and accountability | 6 | L1: 2, L2: 2, L3: 1, L4: 1 |
+| **IDN** Identity, credentials and containment | 5 | L1: 4, L4: 1 |
+| **AUT** Authority over actions | 6 | L2: 4, L4: 2 |
+| **DAT** Data and disclosure | 7 | L3: 6, L4: 1 |
 | **SWM** Swarm composition | 8 | L4: 8 |
 | **EFF** Effects and adapters | 3 | L2: 1, L4: 1, L5: 1 |
-| **EVD** Evidence | 8 | L1: 1, L2: 1, L3: 3, L5: 3 |
+| **EVD** Evidence | 10 | L1: 1, L2: 1, L3: 5, L5: 3 |
 | **OVS** Human oversight | 5 | L2: 1, L4: 3, L5: 1 |
-| **ASR** Assurance and verification | 7 | L2: 1, L3: 2, L4: 1, L5: 3 |
+| **ASR** Assurance and verification | 9 | L2: 1, L3: 2, L4: 1, L5: 5 |
 
 ## GOV — Governance and accountability
 
@@ -69,6 +69,29 @@ Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.0) by `fssair
 - **Refusal codes:** `FERPA_CONSENT_REQUIRED`, `FERPA_PATH_NOT_MODELLED`
 - **Standards:** FERPA 34 CFR 99, GDPR Art. 6, HIPAA Privacy Rule
 
+### GOV-5 · Kernel floor and mandate linting (level 2)
+
+- **Objective:** Validate packs against the kernel floor and task mandates against the declared purpose profile before use.
+- **Prevents:** weakened packs and excess privileges relative to the declared purpose
+- **Ask yourself:** Do weakened packs and over-broad mandates fail before a task starts?
+- **Owner:** Policy owner
+- **Requires:** GOV-2
+- **Implemented in:** `src/fssaira/pack_floor.py`, `src/fssaira/tbc/mandate.py`
+- **Prove it:** `tests/test_profile_floor.py::test_the_runtime_refuses_to_start_with_a_weakened_pack`; `tests/test_mandate_lint.py::test_with_declared_purposes_an_over_broad_mandate_does_not_start`
+- **Refusal codes:** `PACK_NON_HUMAN_APPROVER`
+- **Standards:** 
+
+### GOV-6 · Explicit deployment posture (level 1)
+
+- **Objective:** Publish declared limits and reject incompatible pilot or production teaching defaults before startup.
+- **Prevents:** silent defaults and a declared deployment posture contradicting active controls
+- **Ask yourself:** Are undeclared limits visible and unsafe teaching defaults rejected for a pilot or production declaration?
+- **Owner:** Deployment owner
+- **Requires:** GOV-1
+- **Implemented in:** `src/fssaira/security.py`, `src/fssaira/api.py`
+- **Prove it:** `tests/test_production_posture.py::test_a_pilot_with_teaching_defaults_refuses_to_start`; `tests/test_api.py::test_health_publishes_what_this_deployment_has_declared`
+- **Standards:** 
+
 
 ## IDN — Identity, credentials and containment
 
@@ -118,6 +141,17 @@ Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.0) by `fssair
 - **Implemented in:** `src/fssaira/agent_cell.py`, `src/fssaira/isolation.py`
 - **Prove it:** `tests/test_isolation.py::test_reachable_cloud_metadata_is_a_violation`; `tests/test_isolation.py::test_a_readable_service_account_token_is_a_violation`; `tests/test_agent_cell.py::test_every_property_must_be_observed_and_satisfied`
 - **Standards:** OWASP LLM06 Excessive Agency, NIST AI 600-1 Information Security
+
+### IDN-5 · Bounded code execution (level 1)
+
+- **Objective:** Run generated code with a cleared environment, parent-observed resource limits and process-group timeout.
+- **Prevents:** unbounded execution and child processes surviving a timeout
+- **Ask yourself:** Are execution limits measured and the entire process group stopped on timeout?
+- **Owner:** Enforcer operations
+- **Requires:** IDN-1
+- **Implemented in:** `src/fssaira/integration/sandbox.py`
+- **Prove it:** `tests/integration/test_integration_sandbox.py::test_wall_clock_timeout_kills_the_process_group`
+- **Standards:** 
 
 
 ## AUT — Authority over actions
@@ -181,6 +215,18 @@ Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.0) by `fssair
 - **Prove it:** `tests/test_effect_escrow.py::test_an_objection_inside_the_window_cancels_the_effect`; `tests/test_effect_escrow.py::test_revoking_the_task_during_the_window_cancels_at_commit`
 - **Refusal codes:** `OBJECTION_WINDOW_CLOSED`, `EFFECT_NOT_PENDING`
 - **Standards:** NIST AI RMF MANAGE
+
+### AUT-6 · Source-grounded confirmation (level 2)
+
+- **Objective:** Require configured source confirmation of the proposed value before approving a grounded effect.
+- **Prevents:** unsupported values relative to the trusted source record
+- **Ask yourself:** Does a proposed value unsupported by the configured source fail confirmation?
+- **Owner:** Workflow owner
+- **Requires:** AUT-2
+- **Implemented in:** `src/fssaira/tbc/runtime.py`
+- **Prove it:** `tests/test_behaviour_watch.py::test_a_steered_wrong_value_is_refused_at_the_sources_confirmation`
+- **Refusal codes:** `UNSUPPORTED_PROPOSAL`
+- **Standards:** 
 
 
 ## DAT — Data and disclosure
@@ -255,6 +301,18 @@ Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.0) by `fssair
 - **Prove it:** `tests/test_channel_budget.py::test_releases_past_the_channel_budget_go_to_a_person`; `tests/test_master_guide_measures.py::test_channel_slo_is_a_rate_and_fails_when_unbounded`
 - **Refusal codes:** `CHANNEL_BUDGET_EXHAUSTED`, `CHANNEL_SLO_EXCEEDED`
 - **Standards:** NIST AI 600-1 Information Security
+
+### DAT-7 · Erasure through key custody (level 3)
+
+- **Objective:** Destroy subject custody keys and test that restoring encrypted application data does not restore access.
+- **Prevents:** recovery of erased plaintext through retained ciphertext alone
+- **Ask yourself:** Does a database restore remain unable to decrypt data after subject-key destruction?
+- **Owner:** Data custodian
+- **Requires:** DAT-1
+- **Implemented in:** `src/fssaira/key_custody.py`, `src/fssaira/custody_store.py`
+- **Prove it:** `tests/test_custody_persistence.py::test_a_database_restore_does_not_resurrect_an_erased_subject`
+- **Refusal codes:** `CUSTODY_KEY_DESTROYED`
+- **Standards:** 
 
 
 ## SWM — Swarm composition
@@ -488,6 +546,28 @@ Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.0) by `fssair
 - **Refusal codes:** `EVIDENCE_ROOT_MISMATCH`, `EVIDENCE_RECORD_NOT_INCLUDED`
 - **Standards:** NIST AI 600-1 Information Integrity
 
+### EVD-9 · Divergence-refusing archive (level 3)
+
+- **Objective:** Keep an archive whose append path rejects primary-history rewrites and rollback.
+- **Prevents:** silently replacing preserved history with a changed primary log
+- **Ask yourself:** Does the archive reject a rewritten primary ledger?
+- **Owner:** Evidence auditor
+- **Requires:** EVD-1
+- **Implemented in:** `src/fssaira/iceberg_backend.py`, `src/fssaira/small_data.py`
+- **Prove it:** `tests/test_tier_equivalence.py::test_rewritten_ledger_is_refused`
+- **Standards:** 
+
+### EVD-10 · Authenticated and continuous ingestion (level 3)
+
+- **Objective:** Verify crossing integrity, quarantine rejected bytes by position and digest, and halt on lost records or generations.
+- **Prevents:** forged imports, hostile content copied into quarantine and silent evidence gaps
+- **Ask yourself:** Are forged imports quarantined without content and missing positions refused?
+- **Owner:** Ingestion operator
+- **Requires:** EVD-1
+- **Implemented in:** `src/fssaira/import_boundary.py`, `src/fssaira/small_data.py`
+- **Prove it:** `tests/test_small_data.py::test_content_hash_mismatch_commits_nothing`; `tests/test_small_data.py::test_forged_record_is_quarantined_by_position_not_content`; `tests/test_small_data.py::test_a_record_deleted_before_import_stops_the_sink`
+- **Standards:** 
+
 
 ## OVS — Human oversight
 
@@ -627,3 +707,26 @@ Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.0) by `fssair
 - **Implemented in:** `docs/PILOT_PROTOCOL.md`, `docs/GAPS.md`
 - **Prove it:** `attestation: independent review report and pilot exit report, versioned to the deployment`
 - **Standards:** NIST AI RMF GOVERN, ISO/IEC 42001
+
+### ASR-8 · Assurance bound to implementation identity (level 5)
+
+- **Objective:** Bind conformance evidence to the exact implementation digest and reject records after implementation changes.
+- **Prevents:** transferring a previous qualification to changed code
+- **Ask yourself:** Does changing implementation invalidate its prior assurance record?
+- **Owner:** Evidence auditor
+- **Requires:** ASR-2
+- **Implemented in:** `src/fssaira/kernel/assurance.py`
+- **Prove it:** `tests/kernel/test_kernel_assurance.py::test_code_changed_after_the_run_refuses`
+- **Refusal codes:** `ASSURANCE_IMPLEMENTATION_CHANGED`
+- **Standards:** 
+
+### ASR-9 · Evidence-tier equivalence (level 5)
+
+- **Objective:** Run the same archive and verification scenarios on each selected evidence backend, recording skips and host-specific costs separately.
+- **Prevents:** assuming equal assurance from backend labels or throughput
+- **Ask yourself:** Do every selected backend and tier pass the same evidence scenarios without hidden skips?
+- **Owner:** Platform owner
+- **Requires:** EVD-9, EVD-10
+- **Implemented in:** `src/fssaira/small_data.py`, `src/fssaira/iceberg_backend.py`
+- **Prove it:** `tests/test_tier_equivalence.py::test_missing_tail_is_caught_only_by_the_signed_checkpoint`
+- **Standards:**

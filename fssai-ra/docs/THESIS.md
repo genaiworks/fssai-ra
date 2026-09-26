@@ -1,12 +1,14 @@
 # The Mediation Thesis
 
+> **Canonical framework:** [Trust by Construction](FRAMEWORK.md) · [P1–P34 catalogue](framework/PATTERNS.md) · [Operational controls](framework/CONTROLS.md). This guide is a supporting view of that single framework.
+
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
 >
 > **Recommended next:** Run `fssaira thesis` to try to refute it, then read the obligations in [`SPECIFICATION.md`](SPECIFICATION.md).
 
 ## The thesis
 
-> **Intelligence is untrusted. Power and data are mediated.**
+> **Intelligence is untrusted. Power and data are mediated. Trust requires independently checked evidence and bounded visibility.**
 
 Every AI system that can affect people, records, resources, or confidential
 information should be built on one foundation. The model reasons. It never holds

@@ -1,5 +1,7 @@
 # trustkernel
 
+> This is the coding-agent companion profile of the [Trust by Construction framework](../fssai-ra/docs/FRAMEWORK.md). The [canonical P1–P34 catalogue](../fssai-ra/docs/framework/PATTERNS.md) defines the framework; this package demonstrates a subset and does not inherit whole-framework conformance.
+
 [![tests](https://github.com/genaiworks/fssai-ra/actions/workflows/security-systems.yml/badge.svg)](https://github.com/genaiworks/fssai-ra/actions/workflows/security-systems.yml)
 
 **Test agent authority at the tool dispatcher, then attack the controls.**

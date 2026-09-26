@@ -1,5 +1,7 @@
 # FSSAI-RA implementation
 
+> **Canonical framework:** [Trust by Construction](docs/FRAMEWORK.md) · [P1–P34 catalogue](docs/framework/PATTERNS.md) · [Operational controls](docs/framework/CONTROLS.md). This guide is a supporting view of that single framework.
+
 This directory contains the Python implementation of **Fail-Secure Sovereign AI Reference Architecture**, using the **Trust by Construction** approach. The platform supports research and integration across multiple sectors and publications.
 
 [Project overview](../README.md) · [User guide](docs/USER_GUIDE.md) · [Features](docs/FEATURES.md) · [Documentation map](docs/README.md) · [Research and citation](docs/RESEARCH_GUIDE.md)

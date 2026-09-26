@@ -16,7 +16,7 @@
 #   names the condition that makes the control mandatory.
 # verify: "tests/<file>::<name>" (executable), "command: ..." (run it), or
 #   "attestation: ..." (a named role signs on a cadence).
-version: "1.0"
+version: "1.1"
 levels:
   1: Access-controlled
   2: Authority-bound
@@ -780,3 +780,661 @@ controls:
     verify: ["attestation: independent review report and pilot exit report, versioned to the deployment"]
     codes: []
     standards: [NIST AI RMF GOVERN, ISO/IEC 42001]
+
+  # Controls recovered from the full V28 pattern set.
+  - id: GOV-5
+    domain: GOV
+    level: 2
+    name: Kernel floor and mandate linting
+    objective: Validate packs against the kernel floor and task mandates against the declared purpose profile
+      before use.
+    prevents: weakened packs and excess privileges relative to the declared purpose
+    question: Do weakened packs and over-broad mandates fail before a task starts?
+    owner: Policy owner
+    requires:
+    - GOV-2
+    implementation:
+    - src/fssaira/pack_floor.py
+    - src/fssaira/tbc/mandate.py
+    verify:
+    - tests/test_profile_floor.py::test_the_runtime_refuses_to_start_with_a_weakened_pack
+    - tests/test_mandate_lint.py::test_with_declared_purposes_an_over_broad_mandate_does_not_start
+    codes:
+    - PACK_NON_HUMAN_APPROVER
+    standards: []
+  - id: GOV-6
+    domain: GOV
+    level: 1
+    name: Explicit deployment posture
+    objective: Publish declared limits and reject incompatible pilot or production teaching defaults before startup.
+    prevents: silent defaults and a declared deployment posture contradicting active controls
+    question: Are undeclared limits visible and unsafe teaching defaults rejected for a pilot or production declaration?
+    owner: Deployment owner
+    requires:
+    - GOV-1
+    implementation:
+    - src/fssaira/security.py
+    - src/fssaira/api.py
+    verify:
+    - tests/test_production_posture.py::test_a_pilot_with_teaching_defaults_refuses_to_start
+    - tests/test_api.py::test_health_publishes_what_this_deployment_has_declared
+    codes: []
+    standards: []
+  - id: IDN-5
+    domain: IDN
+    level: 1
+    name: Bounded code execution
+    objective: Run generated code with a cleared environment, parent-observed resource limits and process-group
+      timeout.
+    prevents: unbounded execution and child processes surviving a timeout
+    question: Are execution limits measured and the entire process group stopped on timeout?
+    owner: Enforcer operations
+    requires:
+    - IDN-1
+    implementation:
+    - src/fssaira/integration/sandbox.py
+    verify:
+    - tests/integration/test_integration_sandbox.py::test_wall_clock_timeout_kills_the_process_group
+    codes: []
+    standards: []
+  - id: AUT-6
+    domain: AUT
+    level: 2
+    name: Source-grounded confirmation
+    objective: Require configured source confirmation of the proposed value before approving a grounded effect.
+    prevents: unsupported values relative to the trusted source record
+    question: Does a proposed value unsupported by the configured source fail confirmation?
+    owner: Workflow owner
+    requires:
+    - AUT-2
+    implementation:
+    - src/fssaira/tbc/runtime.py
+    verify:
+    - tests/test_behaviour_watch.py::test_a_steered_wrong_value_is_refused_at_the_sources_confirmation
+    codes:
+    - UNSUPPORTED_PROPOSAL
+    standards: []
+  - id: DAT-7
+    domain: DAT
+    level: 3
+    name: Erasure through key custody
+    objective: Destroy subject custody keys and test that restoring encrypted application data does not restore
+      access.
+    prevents: recovery of erased plaintext through retained ciphertext alone
+    question: Does a database restore remain unable to decrypt data after subject-key destruction?
+    owner: Data custodian
+    requires:
+    - DAT-1
+    implementation:
+    - src/fssaira/key_custody.py
+    - src/fssaira/custody_store.py
+    verify:
+    - tests/test_custody_persistence.py::test_a_database_restore_does_not_resurrect_an_erased_subject
+    codes:
+    - CUSTODY_KEY_DESTROYED
+    standards: []
+  - id: EVD-9
+    domain: EVD
+    level: 3
+    name: Divergence-refusing archive
+    objective: Keep an archive whose append path rejects primary-history rewrites and rollback.
+    prevents: silently replacing preserved history with a changed primary log
+    question: Does the archive reject a rewritten primary ledger?
+    owner: Evidence auditor
+    requires:
+    - EVD-1
+    implementation:
+    - src/fssaira/iceberg_backend.py
+    - src/fssaira/small_data.py
+    verify:
+    - tests/test_tier_equivalence.py::test_rewritten_ledger_is_refused
+    codes: []
+    standards: []
+  - id: EVD-10
+    domain: EVD
+    level: 3
+    name: Authenticated and continuous ingestion
+    objective: Verify crossing integrity, quarantine rejected bytes by position and digest, and halt on lost
+      records or generations.
+    prevents: forged imports, hostile content copied into quarantine and silent evidence gaps
+    question: Are forged imports quarantined without content and missing positions refused?
+    owner: Ingestion operator
+    requires:
+    - EVD-1
+    implementation:
+    - src/fssaira/import_boundary.py
+    - src/fssaira/small_data.py
+    verify:
+    - tests/test_small_data.py::test_content_hash_mismatch_commits_nothing
+    - tests/test_small_data.py::test_forged_record_is_quarantined_by_position_not_content
+    - tests/test_small_data.py::test_a_record_deleted_before_import_stops_the_sink
+    codes: []
+    standards: []
+  - id: ASR-8
+    domain: ASR
+    level: 5
+    name: Assurance bound to implementation identity
+    objective: Bind conformance evidence to the exact implementation digest and reject records after implementation
+      changes.
+    prevents: transferring a previous qualification to changed code
+    question: Does changing implementation invalidate its prior assurance record?
+    owner: Evidence auditor
+    requires:
+    - ASR-2
+    implementation:
+    - src/fssaira/kernel/assurance.py
+    verify:
+    - tests/kernel/test_kernel_assurance.py::test_code_changed_after_the_run_refuses
+    codes:
+    - ASSURANCE_IMPLEMENTATION_CHANGED
+    standards: []
+  - id: ASR-9
+    domain: ASR
+    level: 5
+    name: Evidence-tier equivalence
+    objective: Run the same archive and verification scenarios on each selected evidence backend, recording skips
+      and host-specific costs separately.
+    prevents: assuming equal assurance from backend labels or throughput
+    question: Do every selected backend and tier pass the same evidence scenarios without hidden skips?
+    owner: Platform owner
+    requires:
+    - EVD-9
+    - EVD-10
+    implementation:
+    - src/fssaira/small_data.py
+    - src/fssaira/iceberg_backend.py
+    verify:
+    - tests/test_tier_equivalence.py::test_missing_tail_is_caught_only_by_the_signed_checkpoint
+    codes: []
+    standards: []
+
+# Canonical design patterns. V27 is the P1-P10 view; V28 adds P11-P34.
+patterns:
+- id: P1
+  name: Declared authority ceiling
+  family: Decision and composition
+  rule: The operator installs a workload’s maximum authority. A model never requests it.
+  controls:
+  - GOV-2
+  - IDN-2
+  verify:
+  - tests/test_tbc_sdk.py::test_lease_cannot_expand_any_authority_axis
+  codes:
+  - ENVELOPE_DENIED
+  scope: local-reference
+  limits: The installed ceiling can itself be wrong; policy ownership and independent review remain necessary.
+  observation: ENVELOPE_DENIED
+- id: P2
+  name: Task contract
+  family: Decision and composition
+  rule: Every task names purpose, subject, tenant, scope, budget and expiry before work starts.
+  controls:
+  - GOV-2
+  - SWM-1
+  - SWM-6
+  verify:
+  - tests/test_tbc_sdk.py::test_aggregate_sibling_budget_does_not_multiply
+  codes:
+  - INVALID_TASK_FIELDS
+  scope: local-reference
+  limits: Shared-state and freshness tests cover declared local configurations, not arbitrary distributed interleavings.
+  observation: INVALID_TASK_FIELDS
+- id: P3
+  name: Credentialless runtime
+  family: Decision and composition
+  rule: The component that reasons holds no store credential and no write credential.
+  controls:
+  - IDN-1
+  - AUT-1
+  verify:
+  - tests/test_isolation.py::test_standing_credentials_in_the_agent_environment_are_a_violation
+  codes: []
+  scope: deployment-dependent
+  limits: Credential separation depends on the deployed process, host and connector boundaries; SDK conventions
+    alone do not isolate an agent.
+  observation: no path exists
+- id: P4
+  name: Attenuated delegation
+  family: Decision and composition
+  rule: A child holds the intersection of every ancestor, and expires no later than its parent.
+  controls:
+  - SWM-2
+  - SWM-4
+  verify:
+  - tests/test_delegation.py::test_a_hop_cannot_pass_on_authority_it_does_not_hold
+  codes:
+  - SCOPE_NOT_ATTENUATED
+  scope: local-reference
+  limits: Attenuation does not establish correctness or benevolence of an authorised action.
+  observation: SCOPE_NOT_ATTENUATED
+- id: P5
+  name: Mediated context
+  family: Decision and composition
+  rule: The gate alone reads records, and returns grant ∩ request ∩ live consent ∩ zone.
+  controls:
+  - DAT-1
+  - DAT-2
+  verify:
+  - tests/test_tbc_sdk.py::test_lease_expiry_and_task_expiry_are_checked_on_use
+  codes:
+  - CONTEXT_SCOPE_DENIED
+  scope: local-reference
+  limits: Purpose identifiers select policy; they do not prove the model’s intention or source truth.
+  observation: CONTEXT_SCOPE_DENIED
+- id: P6
+  name: Reauthorised memory
+  family: Decision and composition
+  rule: Stored context carries provenance and retention, and is rechecked against live authority.
+  controls:
+  - SWM-8
+  verify:
+  - tests/test_tbc_sdk.py::test_memory_integrity_retention_scope_and_reauthorization
+  codes:
+  - MEMORY_REAUTHORIZATION_DENIED
+  scope: local-reference
+  limits: Restrictions are only as complete as the captured context and provenance; a claim to forget is not
+    isolation.
+  observation: MEMORY_REAUTHORIZATION_DENIED
+- id: P7
+  name: Typed effect
+  family: Decision and composition
+  rule: An effect names operation, resource, expected version and state; approval signs that digest.
+  controls:
+  - AUT-1
+  - AUT-2
+  - AUT-3
+  - AUT-4
+  - EFF-1
+  - EFF-2
+  - EFF-3
+  verify:
+  - tests/test_approval_boundary.py::test_executor_independently_refuses_signed_self_approval
+  codes:
+  - RESOURCE_RIGHTS_DENIED
+  scope: local-reference
+  limits: External effects require qualified adapters and reconciliation. A receipt does not make an irreversible
+    effect reversible.
+  observation: RESOURCE_RIGHTS_DENIED
+- id: P8
+  name: Sealed release
+  family: Decision and composition
+  rule: Release is a named review of exact bytes to an authenticated recipient, used once.
+  controls:
+  - DAT-2
+  - DAT-3
+  - DAT-4
+  verify:
+  - tests/test_tbc_sdk.py::test_memory_and_generated_output_cannot_drop_session_lineage
+  codes:
+  - DESTINATION_DENIED
+  scope: local-reference
+  limits: Already disclosed bytes cannot be recalled; redaction is not a general de-identification guarantee.
+  observation: DESTINATION_DENIED
+- id: P9
+  name: Restricting monitor
+  family: Decision and composition
+  rule: A monitor may contract authority. It can never grant any.
+  controls:
+  - SWM-7
+  verify:
+  - tests/test_monitor_evaluation.py::test_a_hostile_monitor_costs_availability_not_authority
+  codes: []
+  scope: local-reference
+  limits: A hostile monitor can deny service. It must not expand authority.
+  observation: contraction only
+- id: P10
+  name: Declared task graph
+  family: Decision and composition
+  rule: The agent and message graph is declared; a gate admits each node and edge before use.
+  controls:
+  - SWM-3
+  - SWM-5
+  verify:
+  - tests/test_tbc_composition_controls.py::test_declared_graph_admits_each_node_and_edge_before_use
+  codes:
+  - AIRLOCK_CHANNEL_DENIED
+  scope: local-reference
+  limits: The declared graph must include every actual channel. Orchestrator-scale completeness is a deployment
+    obligation.
+  observation: AIRLOCK_CHANNEL_DENIED
+- id: P11
+  name: Intent before effect
+  family: Evidence and lifecycle
+  rule: Record what is about to cross a boundary before it crosses; an unclosed intent is a recoverable signal
+  controls:
+  - EVD-1
+  - EVD-2
+  verify:
+  - tests/test_import_api.py::test_import_gateway_records_an_unclosed_intent_when_delivery_fails
+  codes: []
+  scope: local-reference
+  limits: Intent records identify incomplete work; durable mutation-and-outcome atomicity depends on the chosen
+    backend.
+  observation: no evidence write authority
+- id: P12
+  name: Witnessed checkpoints
+  family: Evidence and lifecycle
+  rule: Sign the ledger's count and head; an out-of-process witness co-signs only heads that extend what it
+    already signed
+  controls:
+  - EVD-3
+  - EVD-6
+  - EVD-7
+  - EVD-8
+  verify:
+  - tests/test_witness.py::test_an_enforcer_holding_the_notary_key_cannot_get_a_rewritten_past_cosigned
+  codes:
+  - WITNESS_FORK
+  scope: deployment-dependent
+  limits: Independent administration and external retention must be established in deployment. Witnesses cannot
+    prevent a compromised enforcer from signing new false events.
+  observation: WITNESS_FORK
+- id: P13
+  name: Divergence-refusing archive
+  family: Evidence and lifecycle
+  rule: Keep a second copy under other administration; refuse to archive a primary that got shorter or different
+  controls:
+  - EVD-9
+  verify:
+  - tests/test_tier_equivalence.py::test_rewritten_ledger_is_refused
+  codes: []
+  scope: deployment-dependent
+  limits: Detects divergence against the retained archive; it does not establish truth of original events or
+    independence of administrators.
+  observation: ARCHIVE_DIVERGED
+- id: P14
+  name: Recompute, never read
+  family: Evidence and lifecycle
+  rule: A separate process recomputes every hash from the archived copy; incremental passes are anchored and
+    a full pass recurs
+  controls:
+  - EVD-4
+  verify:
+  - tests/test_small_data.py::test_incremental_pass_catches_a_bad_new_record_and_a_changed_head
+  codes: []
+  scope: deployment-dependent
+  limits: Incremental passes do not re-read all earlier records; detection latency depends on full-verification
+    cadence and retained anchors.
+  observation: VERIFIED_HEAD_CHANGED
+- id: P15
+  name: Signed crossing
+  family: Evidence and lifecycle
+  rule: Inputs are source-signed at the gateway and MAC-sealed onward; the sink recomputes the content hash
+    before any commit
+  controls:
+  - EVD-10
+  verify:
+  - tests/test_small_data.py::test_content_hash_mismatch_commits_nothing
+  codes: []
+  scope: deployment-dependent
+  limits: Authenticated origin is not truth; signing keys and source identity must be protected.
+  observation: invalid import envelope or content hash
+- id: P16
+  name: Quarantine by position
+  family: Evidence and lifecycle
+  rule: A rejected record is kept as its position and a hash of its bytes, never its content; the stream continues
+  controls:
+  - EVD-10
+  verify:
+  - tests/test_small_data.py::test_forged_record_is_quarantined_by_position_not_content
+  codes: []
+  scope: local-reference
+  limits: Positions and hashes remain metadata requiring access controls and retention limits.
+  observation: envelope MAC missing or invalid
+- id: P17
+  name: No silent loss
+  family: Evidence and lifecycle
+  rule: Logs carry a generation; a reset, truncation or gap stops the sink instead of being skipped
+  controls:
+  - EVD-10
+  verify:
+  - tests/test_small_data.py::test_a_record_deleted_before_import_stops_the_sink
+  codes: []
+  scope: deployment-dependent
+  limits: Continuity checks cover declared logs and generations, not unknown events never recorded by the source.
+  observation: a record was deleted before it was imported
+- id: P18
+  name: Assurance bound to exact code
+  family: Evidence and lifecycle
+  rule: A backend inherits no assurance until conformance ran on its exact implementation digest
+  controls:
+  - ASR-8
+  verify:
+  - tests/kernel/test_kernel_assurance.py::test_code_changed_after_the_run_refuses
+  codes:
+  - ASSURANCE_IMPLEMENTATION_CHANGED
+  scope: deployment-dependent
+  limits: A digest pins identity, not correctness. A passing conformance suite supports only its exercised
+    properties.
+  observation: ASSURANCE_IMPLEMENTATION_CHANGED
+- id: P19
+  name: Kernel floor
+  family: Evidence and lifecycle
+  rule: A domain pack may tighten the kernel, never loosen it; a weakening pack stops the server from starting
+  controls:
+  - GOV-5
+  verify:
+  - tests/test_profile_floor.py::test_the_runtime_refuses_to_start_with_a_weakened_pack
+  codes:
+  - PACK_NON_HUMAN_APPROVER
+  scope: local-reference
+  limits: The kernel floor is itself trusted policy and must be reviewed; pack validation does not establish
+    regulatory compliance.
+  observation: PACK_NON_HUMAN_APPROVER
+- id: P20
+  name: Fail-secure declaration
+  family: Evidence and lifecycle
+  rule: A deployment that declares itself pilot or production refuses to start with a teaching default or an
+    unknown declaration
+  controls:
+  - GOV-6
+  verify:
+  - tests/test_production_posture.py::test_a_pilot_with_teaching_defaults_refuses_to_start
+  codes: []
+  scope: deployment-dependent
+  limits: A configuration declaration does not prove physical deployment. Startup checks cover recognised settings.
+  observation: TEACHING_APPROVAL_KEY
+- id: P21
+  name: Proportionate evidence plane
+  family: Evidence and lifecycle
+  rule: The decision plane is identical at every scale; only the evidence plane is sized, and its verdicts
+    must not change
+  controls:
+  - ASR-9
+  verify:
+  - tests/test_tier_equivalence.py::test_missing_tail_is_caught_only_by_the_signed_checkpoint
+  codes: []
+  scope: deployment-dependent
+  limits: Equivalence is bounded to the exercised scenarios. Backend concurrency and failure modes may differ;
+    cost measurements are host-specific.
+  observation: BIG_TIER_WITHOUT_BROKER
+- id: P22
+  name: Erasure by key destruction
+  family: Evidence and lifecycle
+  rule: Subject data is sealed under custody keys; erasure destroys the key, so backups, indexes and restores
+    stay unreadable
+  controls:
+  - DAT-7
+  verify:
+  - tests/test_custody_persistence.py::test_a_database_restore_does_not_resurrect_an_erased_subject
+  codes:
+  - CUSTODY_KEY_DESTROYED
+  scope: deployment-dependent
+  limits: Erasure requires destruction of every usable key copy; exported plaintext and independent key backups
+    remain outside this guarantee.
+  observation: CUSTODY_KEY_DESTROYED
+- id: P23
+  name: Contained agent cell
+  family: Containment and visibility
+  rule: Qualify each deployed agent cell from inside its actual host boundary; refuse unmet or unmeasurable
+    requirements.
+  controls:
+  - IDN-4
+  verify:
+  - tests/test_agent_cell.py::test_a_real_cell_is_isolated_when_measured_from_inside
+  codes: []
+  scope: deployment-dependent
+  limits: A local container probe is a host observation, not proof against kernel exploits or evidence that
+    every swarm worker is isolated.
+  observation: CELL_NOT_ISOLATED
+- id: P24
+  name: Bounded execution
+  family: Containment and visibility
+  rule: Generated code runs in a separate interpreter with an empty environment, limits recorded by the parent,
+    and a timeout that kills its process group
+  controls:
+  - IDN-5
+  verify:
+  - tests/integration/test_integration_sandbox.py::test_wall_clock_timeout_kills_the_process_group
+  codes: []
+  scope: deployment-dependent
+  limits: A process under the same operating-system user is not a strong isolation boundary; use a qualified
+    cell for hostile code.
+  observation: the sandbox requires POSIX rlimits and process groups
+- id: P25
+  name: Monitor without trust
+  family: Containment and visibility
+  rule: A monitor can only restrict; across oracle, blind and hostile monitors and the live-model adapter,
+    no protected outcome changes
+  controls:
+  - SWM-7
+  verify:
+  - tests/test_monitor_evaluation.py::test_a_hostile_monitor_costs_availability_not_authority
+  codes: []
+  scope: bounded-mitigation
+  limits: Scripted and stand-in monitor results do not estimate production detector accuracy; an in-policy
+    attack can evade detection.
+  observation: finding outside the declared vocabulary
+- id: P26
+  name: Metadata-only visibility
+  family: Containment and visibility
+  rule: Monitors see task metadata and the evidence head; metrics export counters; neither carries protected
+    text, so watching cannot become a data path
+  controls:
+  - EVD-5
+  - DAT-5
+  verify:
+  - tests/test_agent_dossier.py::test_the_dossier_holds_no_protected_content
+  codes: []
+  scope: local-reference
+  limits: Metadata can identify people or reveal activity; avoid protected payloads and apply access controls
+    and retention limits.
+  observation: metadata only, by construction
+- id: P27
+  name: Measured covert channels
+  family: Containment and visibility
+  rule: Compute and declare capacity for the explicitly modelled release choices; report unbounded or unmeasured
+    dimensions.
+  controls:
+  - DAT-6
+  verify:
+  - tests/test_covert_channels.py::test_the_measured_leak_never_exceeds_the_declared_capacity
+  codes: []
+  scope: bounded-mitigation
+  limits: Only modelled choices are measured. Unmodelled timing, count, payload and side channels may exceed
+    the declared capacity.
+  observation: EgressBudgetExhausted
+- id: P28
+  name: Self-describing deployment
+  family: Containment and visibility
+  rule: Publish declared and undeclared limits and derive agent dossiers from mediated state and integrity-checked
+    receipts.
+  controls:
+  - GOV-6
+  - EVD-5
+  verify:
+  - tests/test_api.py::test_health_publishes_what_this_deployment_has_declared
+  codes: []
+  scope: local-reference
+  limits: A dossier reports mediated records and declared limits, not hidden behavior or model reasoning.
+  observation: 'not declared: approvals are unlimited and the ceiling is unbounded'
+- id: P29
+  name: Evidence-grounded effect
+  family: Correctness and consequence
+  rule: The source confirms only the value its own record supports; a wrong or steered value never gets the
+    confirmation an approval needs
+  controls:
+  - AUT-6
+  verify:
+  - tests/test_behaviour_watch.py::test_a_steered_wrong_value_is_refused_at_the_sources_confirmation
+  codes:
+  - UNSUPPORTED_PROPOSAL
+  scope: bounded-mitigation
+  limits: Source confirmation proves consistency with a configured source, not that the source is correct,
+    fair or current.
+  observation: UNSUPPORTED_PROPOSAL
+- id: P30
+  name: Mandate linting
+  family: Correctness and consequence
+  rule: A task contract is checked against its declared purpose and a corpus of known-bad mandates; any excess
+    stops it starting
+  controls:
+  - GOV-5
+  verify:
+  - tests/test_mandate_lint.py::test_with_declared_purposes_an_over_broad_mandate_does_not_start
+  codes: []
+  scope: bounded-mitigation
+  limits: A wrong purpose profile or incomplete known-bad corpus can admit a harmful mandate.
+  observation: MANDATE_UNNEEDED_OPERATION
+- id: P31
+  name: Behaviour watch
+  family: Correctness and consequence
+  rule: Boundary probing is counted from receipts and sandbagging measured on canaries; findings restrict the
+    task, never grant
+  controls:
+  - SWM-7
+  verify:
+  - tests/test_behaviour_watch.py::test_an_agent_probing_its_boundary_is_quarantined
+  codes: []
+  scope: bounded-mitigation
+  limits: Canaries and boundary-probing heuristics can miss strategic behavior that stays within the tested
+    observables.
+  observation: BOUNDARY_PROBING
+- id: P32
+  name: Delayed commitment
+  family: Correctness and consequence
+  rule: An approved effect waits out a window in which objection, revocation or an epoch change cancels it;
+    it commits once, rechecked
+  controls:
+  - AUT-5
+  verify:
+  - tests/test_effect_escrow.py::test_revoking_the_agent_during_the_window_cancels_at_commit
+  codes:
+  - OBJECTION_WINDOW_CLOSED
+  scope: bounded-mitigation
+  limits: Objection windows delay effects; effects delivered after a valid window still cannot necessarily
+    be undone.
+  observation: OBJECTION_WINDOW_CLOSED
+- id: P33
+  name: Reviewer canaries
+  family: Correctness and consequence
+  rule: Use declared review capacity and non-executing canaries to restrict review authority under the configured
+    calibration model.
+  controls:
+  - OVS-1
+  - OVS-2
+  - OVS-3
+  - OVS-4
+  - OVS-5
+  verify:
+  - tests/test_review_calibration.py::test_a_reviewer_who_approves_canaries_loses_capacity_and_gains_a_second_reviewer
+  codes: []
+  scope: bounded-mitigation
+  limits: Synthetic calibration is not a human study; recognisable canaries and manual-route outcomes need
+    field evaluation.
+  observation: REVIEWER_CALIBRATION_LOW
+- id: P34
+  name: Channel budget
+  family: Correctness and consequence
+  rule: Each release is charged the bits its open choices can carry against a task budget; past it, releases
+    go to a person
+  controls:
+  - DAT-6
+  verify:
+  - tests/test_channel_budget.py::test_releases_past_the_channel_budget_go_to_a_person
+  codes:
+  - CHANNEL_BUDGET_EXHAUSTED
+  scope: bounded-mitigation
+  limits: Enforcement applies to the declared channel model and observed releases; it is not a bound on all
+    information leakage.
+  observation: CHANNEL_BUDGET_EXHAUSTED

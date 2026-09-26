@@ -1,5 +1,8 @@
 # Trust by Construction: a pattern language for AI systems over sensitive data
 
+> **Canonical framework:** [Trust by Construction](FRAMEWORK.md) · [P1–P34 catalogue](framework/PATTERNS.md) · [Operational controls](framework/CONTROLS.md). This guide is a supporting view of that single framework.
+> The A-, D- and S-series labels below are retained recipe aliases for older links. They do not replace or renumber the canonical P1–P34 patterns.
+
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Policy route](README.md#policy-leader-route) · [Engineering route](README.md#ai-engineer-route) · [Glossary](GLOSSARY.md)
 >
 > **Recommended next:** Choose a blueprint below, then build its first pack with [`EXTENDING.md`](EXTENDING.md) and measure it with `make reviewer`.
@@ -24,7 +27,7 @@ language exists to eliminate.**
 
 ## The thesis
 
-> **Intelligence is untrusted. Power and data are mediated.**
+> **Intelligence is untrusted. Power and data are mediated. Trust requires independently checked evidence and bounded visibility.**
 
 The thesis, its invariants, and the six ways it could be refuted are in
 [`THESIS.md`](THESIS.md). The two rules below follow from it.

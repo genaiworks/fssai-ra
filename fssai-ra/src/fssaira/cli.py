@@ -1371,7 +1371,8 @@ def cmd_framework_catalogue(args) -> int:
 
     catalogue = load()
     problems = validate(catalogue)
-    heading(f"Framework catalogue {catalogue.version} — {len(catalogue.controls)} controls")
+    heading(f"Framework catalogue {catalogue.version} — {len(catalogue.patterns)} patterns, "
+            f"{len(catalogue.controls)} controls")
     for code, name in catalogue.domains.items():
         controls = [c for c in catalogue.controls if c.domain == code]
         print(f"  {code}  {name:<40} {len(controls):>3} controls")
@@ -1382,7 +1383,8 @@ def cmd_framework_catalogue(args) -> int:
                          f"{len(problems)} broken reference(s)"))
     for problem in problems:
         print(red(f"    {problem}"))
-    emit({"controls": len(catalogue.controls), "problems": problems}, args.output)
+    emit({"patterns": len(catalogue.patterns), "controls": len(catalogue.controls),
+          "problems": problems}, args.output)
     return 0 if not problems else 2
 
 
@@ -1433,18 +1435,41 @@ def cmd_framework_init(args) -> int:
 
 
 def cmd_framework_render(args) -> int:
-    from .framework import render_markdown
+    from .framework import render_markdown, render_patterns, validate
 
-    text = render_markdown()
-    target = args.path
-    if args.check:
-        current = target.read_text(encoding="utf-8") if target.exists() else ""
-        ok = current == text
-        print(verdict(ok, f"{target} matches the catalogue", f"{target} is stale; run render"))
-        return 0 if ok else 2
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(text, encoding="utf-8")
-    print(f"wrote {target}")
+    problems = validate()
+    if problems:
+        for problem in problems:
+            print(red(problem))
+        return 2
+    ok = True
+    for target, text in ((args.path, render_markdown()), (args.patterns_path, render_patterns())):
+        if args.check:
+            current = target.read_text(encoding="utf-8") if target.exists() else ""
+            matches = current == text
+            ok = ok and matches
+            print(verdict(matches, f"{target} matches the catalogue", f"{target} is stale; run render"))
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text, encoding="utf-8")
+            print(f"wrote {target}")
+    return 0 if ok else 2
+
+
+def cmd_framework_patterns(args) -> int:
+    from .framework import pattern_manifest, validate
+
+    problems = validate()
+    if problems:
+        for problem in problems:
+            print(red(problem))
+        emit({"problems": problems}, args.output)
+        return 2
+    manifest = pattern_manifest()
+    if args.output is None:
+        print(json.dumps(manifest, indent=2))
+    else:
+        emit(manifest, args.output)
     return 0
 
 
@@ -1892,8 +1917,12 @@ def build_parser() -> argparse.ArgumentParser:
                                 "benefits"])
     finit.add_argument("--target-level", type=int, default=4)
     finit.set_defaults(func=cmd_framework_init)
-    frender = framework_sub.add_parser("render", help="regenerate docs/framework/CONTROLS.md")
+    fpatterns = add_output(framework_sub.add_parser(
+        "patterns", help="export canonical P1-P34 bindings and the assessment scale"))
+    fpatterns.set_defaults(func=cmd_framework_patterns)
+    frender = framework_sub.add_parser("render", help="regenerate canonical pattern and control guides")
     frender.add_argument("--path", type=Path, default=Path("docs/framework/CONTROLS.md"))
+    frender.add_argument("--patterns-path", type=Path, default=Path("docs/framework/PATTERNS.md"))
     frender.add_argument("--check", action="store_true")
     frender.set_defaults(func=cmd_framework_render)
 

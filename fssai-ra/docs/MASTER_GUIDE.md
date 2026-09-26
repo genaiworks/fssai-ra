@@ -1,5 +1,7 @@
 # Master guide: secure agent swarms by construction
 
+> **Canonical framework:** [Trust by Construction](FRAMEWORK.md) · [P1–P34 catalogue](framework/PATTERNS.md) · [Operational controls](framework/CONTROLS.md). This guide is a supporting view of that single framework.
+
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Specification](SPECIFICATION.md) · [Glossary and acronyms](GLOSSARY.md#acronyms-in-plain-language)
 >
 > **Recommended next:** Start from the framework's front door, [`FRAMEWORK.md`](FRAMEWORK.md): `fssaira framework init`, then `fssaira framework assess --roadmap`. This guide is the reasoning behind it.
@@ -32,7 +34,7 @@ named person answers for the decision. Evidence that anyone can recompute shows 
 
 Every control below names **where it is implemented**, **the test that fails if it is
 removed**, and **the refusal code an auditor searches for**. The registry of all codes
-(470 at the time of writing) is generated from the source into
+(the current count is published in the registry) is generated from the source into
 [`refusal_registry.json`](refusal_registry.json). A test fails if a code is added without being
 registered.
 

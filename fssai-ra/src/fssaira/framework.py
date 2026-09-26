@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import yaml
@@ -55,11 +55,28 @@ class Control:
 
 
 @dataclass(frozen=True)
+class Pattern:
+    """Stable manuscript identity tied to operational controls and bounded evidence."""
+
+    id: str
+    name: str
+    family: str
+    rule: str
+    controls: tuple[str, ...]
+    verify: tuple[str, ...]
+    codes: tuple[str, ...]
+    scope: str
+    limits: str
+    observation: str
+
+
+@dataclass(frozen=True)
 class Catalogue:
     version: str
     levels: dict[int, str]
     domains: dict[str, str]
     controls: tuple[Control, ...]
+    patterns: tuple[Pattern, ...] = ()
 
     def by_id(self) -> dict[str, Control]:
         return {c.id: c for c in self.controls}
@@ -70,8 +87,10 @@ def load(path: Path = CATALOGUE) -> Catalogue:
     controls = tuple(Control(**{**c, **{k: tuple(c.get(k) or ()) for k in (
         "requires", "implementation", "verify", "codes", "standards")}})
         for c in raw["controls"])
+    patterns = tuple(Pattern(**{**p, **{k: tuple(p.get(k) or ()) for k in (
+        "controls", "verify", "codes")}}) for p in raw["patterns"])
     return Catalogue(str(raw["version"]), {int(k): v for k, v in raw["levels"].items()},
-                     dict(raw["domains"]), controls)
+                     dict(raw["domains"]), controls, patterns)
 
 
 # ---------------------------------------------------------------------------
@@ -121,6 +140,31 @@ def validate(catalogue: Catalogue | None = None, root: Path = REPO) -> list[str]
         _topological(catalogue.controls)
     except ValueError as cycle:
         problems.append(str(cycle))
+    if catalogue.patterns:
+        pattern_ids = [p.id for p in catalogue.patterns]
+        if len(pattern_ids) != len(set(pattern_ids)):
+            problems.append("duplicate pattern ids")
+        if set(pattern_ids) != {f"P{n}" for n in range(1, 35)}:
+            problems.append("canonical patterns must cover P1-P34 exactly")
+        for p in catalogue.patterns:
+            if not p.controls:
+                problems.append(f"{p.id}: no operational controls")
+            for cid in p.controls:
+                if cid not in index:
+                    problems.append(f"{p.id}: unknown operational control {cid}")
+            if p.scope not in {"local-reference", "deployment-dependent", "bounded-mitigation"}:
+                problems.append(f"{p.id}: unknown evidence scope {p.scope}")
+            for field in ("name", "family", "rule", "limits", "observation"):
+                if not str(getattr(p, field)).strip():
+                    problems.append(f"{p.id}: {field} is empty")
+            if not p.verify:
+                problems.append(f"{p.id}: no verification")
+            for check in p.verify:
+                if not check.startswith("tests/") or not locator_exists(root, check):
+                    problems.append(f"{p.id}: test missing: {check}")
+            for code in p.codes:
+                if code not in codes:
+                    problems.append(f"{p.id}: refusal code not registered: {code}")
     return problems
 
 
@@ -192,7 +236,7 @@ def assess(answers: dict[str, str], catalogue: Catalogue | None = None) -> dict:
     counts = {s: sum(1 for v in status.values() if v == s) for s in STATUSES}
     evidenced_level = _level(applicable, evidenced)
     claimed_level = _level(applicable, claimed)
-    return {"catalogue": catalogue.version,
+    return {"catalogue": catalogue.version, "assessment_basis": "self-reported control status",
             "evidenced_level": evidenced_level,
             "evidenced_level_name": catalogue.levels.get(evidenced_level, "Model-centred"),
             "claimed_level": claimed_level,
@@ -274,6 +318,61 @@ def render_markdown(catalogue: Catalogue | None = None) -> str:
 # ---------------------------------------------------------------------------
 # Starter kit
 # ---------------------------------------------------------------------------
+
+
+def pattern_manifest(catalogue: Catalogue | None = None) -> dict:
+    """The paper, CLI and guides consume the same pattern identities and scale."""
+    catalogue = catalogue or load()
+    return {
+        "framework": "Trust by Construction",
+        "catalogue_version": catalogue.version,
+        "basis": "Catalogue bindings; test execution and deployment evidence are separate",
+        "levels": {0: "Model-centred", **catalogue.levels},
+        "pattern_count": len(catalogue.patterns),
+        "control_count": len(catalogue.controls),
+        "patterns": [asdict(p) for p in catalogue.patterns],
+    }
+
+
+def render_patterns(catalogue: Catalogue | None = None) -> str:
+    catalogue = catalogue or load()
+    index = catalogue.by_id()
+    lines = [
+        "# Trust by Construction canonical patterns", "",
+        "[Framework](../FRAMEWORK.md) · [Operational controls](CONTROLS.md)", "",
+        f"Generated from `src/fssaira/framework_catalogue.yaml` (catalogue {catalogue.version}) "
+        "by `fssaira framework render`. Edit the catalogue, not this document.", "",
+        f"**{len(catalogue.patterns)} patterns, {len(catalogue.controls)} operational controls, "
+        "one framework.** P1–P10 retain the reviewed V27 decision and composition core. "
+        "P11–P34 retain V28's evidence, containment, visibility and consequence extensions. "
+        "Controls add owners, dependencies and assessment obligations; they are not a second pattern list.", "",
+        "The evidence scopes below describe reference mechanisms and their limits. "
+        "A named test is an executable evidence locator, not a claim that it passed on your host. "
+        "Observations may be refusals, configuration findings or properties; only the separately "
+        "listed registered codes belong to the refusal-code registry.", "",
+        "## One assessment scale", "",
+        "| Level | Name |", "|---|---|", "| 0 | Model-centred (no evidenced level) |",
+        *[f"| {level} | {name} |" for level, name in sorted(catalogue.levels.items())], "",
+        "V28's alternative labels for levels 3–5 are superseded. Level 0 is a baseline, "
+        "not an additional certified tier. Assessment answers are self-reported; an evidence "
+        "bundle and reviewer must substantiate them. No level grants blanket production approval.", "",
+        "## Pattern index", "",
+        "| Pattern | Family | Operational controls | Evidence scope |",
+        "|---|---|---|---|",
+    ]
+    for p in catalogue.patterns:
+        lines.append(f"| {p.id} {p.name} | {p.family} | {', '.join(p.controls)} | {p.scope} |")
+    for p in catalogue.patterns:
+        lines += ["", f"## {p.id} {p.name}", "", p.rule, "",
+                  "- **Operational controls:** " + ", ".join(p.controls),
+                  "- **Implementation:** " + ", ".join(f"`{path}`" for path in sorted({
+                      path for cid in p.controls for path in index[cid].implementation})),
+                  "- **Test:** " + "; ".join(f"`{check}`" for check in p.verify),
+                  f"- **Test observation:** {p.observation}",
+                  "- **Registered refusal codes:** " + (", ".join(f"`{c}`" for c in p.codes)
+                                                        or "none specified for this binding"),
+                  f"- **Evidence scope:** {p.scope}", f"- **Limits:** {p.limits}"]
+    return "\n".join(lines).rstrip() + "\n"
 
 _K8S = """\
 # Hardened agent cell. Verify it from inside with fssaira.agent_cell.probe_cell.
@@ -358,7 +457,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install "fssai-ra[privacy]"
+      - run: pip install "fssaira[privacy]"
       - name: Assurance report (fails on any failing section)
         run: fssaira assure report --output evidence/assurance-report.json
       - name: Maturity must not regress

@@ -1,5 +1,7 @@
 # FSSAI-RA documentation index
 
+> **Canonical framework:** [Trust by Construction](FRAMEWORK.md) · [P1–P34 catalogue](framework/PATTERNS.md) · [Operational controls](framework/CONTROLS.md). This guide is a supporting view of that single framework.
+
 
 [End-to-end technical workflow](END_TO_END_WORKFLOW.md) — the whole system in four simple flows, step by step. Read this first.
 
@@ -44,7 +46,7 @@ Its central rule is:
 Both rules follow from one thesis, stated in [`THESIS.md`](THESIS.md) and tested by
 `fssaira thesis`:
 
-> **Intelligence is untrusted. Power and data are mediated.**
+> **Intelligence is untrusted. Power and data are mediated. Trust requires independently checked evidence and bounded visibility.**
 
 Its second rule governs the read path, where most harm in systems over
 corporate and medical data occurs:

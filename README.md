@@ -1,13 +1,15 @@
-# FSSAI-RA — Governed Agentic AI Reference Architecture
+# Trust by Construction — consolidated framework
 
-**Fail-Secure Sovereign AI Reference Architecture (FSSAI-RA)** is a reusable research and engineering platform for controlling what AI agents may read, propose, execute, delegate, and release. The design approach is called **Trust by Construction**.
+**Trust by Construction (TBC)** is the single framework for governing AI agents and swarms in this repository. **FSSAI-RA** is its reference implementation. The reviewed V27 core and the full V28 extensions are consolidated into **34 canonical patterns and 59 operational controls**, maintained together in one executable catalogue.
+
+**Start with the [consolidated framework](fssai-ra/docs/FRAMEWORK.md).** Read its [P1–P34 pattern catalogue](fssai-ra/docs/framework/PATTERNS.md), [operational controls](fssai-ra/docs/framework/CONTROLS.md), and [consolidation record](publications/CONSOLIDATION.md). Manuscript versions are historical publication views of this framework, not competing definitions.
 
 > A model may propose an action. It cannot manufacture the authority to execute it.
 > A model may request data. Independent controls decide what it may see and release.
 
 The repository supports experiments, teaching, integration work, and multiple research papers across sectors. It includes six synthetic domain profiles covering education, corporate data, healthcare, consumer finance, and government benefits. Publication packages are supporting records; no conference defines the scope of the platform.
 
-[Start learning](fssai-ra/docs/START_HERE.md) · [Complete user guide](fssai-ra/docs/USER_GUIDE.md) · [All features](fssai-ra/docs/FEATURES.md) · [Documentation index](fssai-ra/docs/README.md)
+[Learn the implementation](fssai-ra/docs/START_HERE.md) · [Complete user guide](fssai-ra/docs/USER_GUIDE.md) · [All features](fssai-ra/docs/FEATURES.md) · [Documentation index](fssai-ra/docs/README.md)
 
 **Technical builders:** [Full data-pipeline walkthrough](fssai-ra/docs/PIPELINE_WALKTHROUGH.md) — sample records, cryptography, PostgreSQL rows, Redis keys, Kafka/Spark/Iceberg, runnable lab and verification.
 

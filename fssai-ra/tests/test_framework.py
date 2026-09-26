@@ -145,3 +145,56 @@ def test_cli_assess_gates_on_the_minimum_level(tmp_path, capsys):
     assert main(['framework', 'assess', str(answers), '--min-level', '1']) == 2
     assert main(['framework', 'catalogue']) == 0
     assert 'Wave to level 1' in capsys.readouterr().out
+
+
+def test_v27_and_v28_patterns_have_one_canonical_identity_and_control_binding():
+    from fssaira.framework import pattern_manifest
+
+    catalogue = load()
+    manifest = pattern_manifest(catalogue)
+    assert [p.id for p in catalogue.patterns] == [f'P{n}' for n in range(1, 35)]
+    assert manifest['levels'][3] == 'Disclosure-governed'
+    assert manifest['levels'][4] == 'Composition-safe'
+    assert manifest['levels'][5] == 'Evidenced'
+    assert all(p.controls and p.verify and p.limits for p in catalogue.patterns)
+    assert manifest['pattern_count'] == 34
+    # Evidence may be self-reported in an assessment, never inferred from a test locator.
+    assert assess(all_status('evidenced'))['assessment_basis'] == 'self-reported control status'
+
+
+def test_pattern_validation_rejects_drift_and_unsupported_evidence():
+    from dataclasses import replace
+
+    catalogue = load()
+    first = catalogue.patterns[0]
+    bad = replace(first, controls=('MISSING-1',), verify=('tests/missing.py::test_missing',),
+                  codes=('MADE_UP_CODE',), scope='production-proven', limits='')
+    problems = '\n'.join(validate(replace(catalogue, patterns=(bad, *catalogue.patterns[1:]))))
+    for message in ('unknown operational control', 'test missing', 'not registered',
+                    'unknown evidence scope', 'limits is empty'):
+        assert message in problems
+    assert 'canonical patterns' in '\n'.join(validate(replace(catalogue, patterns=catalogue.patterns[:-1])))
+    assert 'duplicate pattern ids' in '\n'.join(validate(replace(
+        catalogue, patterns=(*catalogue.patterns, first))))
+
+
+def test_generated_pattern_guide_cannot_drift_from_the_catalogue():
+    from fssaira.framework import render_patterns
+
+    assert (ROOT / 'docs/framework/PATTERNS.md').read_text() == render_patterns()
+
+
+def test_cli_exports_patterns_and_checks_both_generated_guides(tmp_path, capsys):
+    import json
+
+    output = tmp_path / 'patterns.json'
+    assert main(['framework', 'patterns', '--output', str(output)]) == 0
+    assert json.loads(output.read_text())['pattern_count'] == 34
+    assert main(['framework', 'patterns']) == 0
+    assert 'Trust by Construction' in capsys.readouterr().out
+    controls, patterns = tmp_path / 'CONTROLS.md', tmp_path / 'PATTERNS.md'
+    args = ['framework', 'render', '--path', str(controls), '--patterns-path', str(patterns)]
+    assert main(args) == 0
+    assert main([*args, '--check']) == 0
+    patterns.write_text('stale V28 numbering')
+    assert main([*args, '--check']) == 2
