@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased — injection benchmark
+
+- **`fssaira bench injection`** (`injection_bench.py`,
+  `examples/bench/workplace_server.py`). An AgentDojo-style grid of 6 user
+  tasks and 4 injection goals runs through the real gate under five defences:
+  none, allowlist, contract, taint and full.
+  - Success is judged on the effects the server executed.
+  - A worst-case agent that obeys every injection bounds attack success for
+    any model.
+  - Local models run through Ollama with bounded, token-recorded turns.
+  - Runs are resumable.
+- **Worst-case results:** full framework 0% attack success and 100% utility at
+  0.7 reviews per case. Allowlist 17%, contract 4%, taint 17% with 50%
+  utility; each leaks only where the design predicts, and the tests assert it.
+- Tests: `tests/test_injection_bench.py`. Guide: `docs/INJECTION_BENCH.md`.
+
 ## Unreleased — shared gateway
 
 - **`fssaira mcp gateway`** serves the gate over Streamable HTTP for many

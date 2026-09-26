@@ -56,6 +56,7 @@ Most experiments print a report and support `--output PATH` for JSON. Consult ea
 | `fssaira framework plan USE_CASE.yaml` | Target level, applicable controls, first sprint and stop conditions for one use case ([guide](ADOPT.md)) |
 | `fssaira mcp gateway --config gate.yaml --lock mcp.lock.json [--port 8765]` | Run a shared Streamable HTTP gateway: authenticated callers, one gate per session |
 | `fssaira mcp client-token --name NAME` | Issue a gateway bearer token; print the digest to register |
+| `fssaira bench injection --out DIR [--agents scripted,ollama:MODEL]` | Injection benchmark through the real gate: attack success and utility per defence ([guide](INJECTION_BENCH.md)) |
 | `fssaira mcp verify PATH` | Verify a gate receipt log's hash chain |
 | `fssaira evidence verify PATH` | Verify exported evidence JSON |
 | `fssaira packet-check PATH --expected-sha256 DIGEST` | Inspect a private decision packet against an independent digest |

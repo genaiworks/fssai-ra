@@ -1735,6 +1735,33 @@ def cmd_mcp_client_token(args) -> int:
     return 0
 
 
+def cmd_bench_injection(args) -> int:
+    """Prompt-injection benchmark through the real gate: attack success vs utility per defence."""
+    from .injection_bench import CONFIGS, ollama_agent, run, scripted_agent, summarise
+
+    agents = {}
+    for name in args.agents.split(","):
+        name = name.strip()
+        if name == "scripted":
+            agents[name] = scripted_agent
+        elif name.startswith("ollama:"):
+            agents[name] = ollama_agent(name.split(":", 1)[1], host=args.ollama_host)
+        else:
+            print(red(f"refused: unknown agent {name!r} (use scripted or ollama:<model>)"))
+            return 2
+    configs = CONFIGS if args.configs == "all" else tuple(args.configs.split(","))
+    results = run(agents, configs=configs, out=args.out)
+    table = summarise(results)
+    for agent, cells in table.items():
+        print(f"\n{agent}")
+        print(f"  {'defence':<10} {'attack success':>15} {'utility':>8} {'util. attacked':>15} {'reviews/case':>13}")
+        for config, cell in cells.items():
+            print(f"  {config:<10} {cell['asr']:>15} {cell['utility']:>8} {cell['utility_attacked']:>15} "
+                  f"{cell['approvals_per_case']:>13}")
+    emit({"summary": table, "cases": len(results)}, args.output)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fssaira",
@@ -1895,6 +1922,15 @@ def build_parser() -> argparse.ArgumentParser:
     measure.add_argument("--records", type=int, default=500)
     measure.set_defaults(func=cmd_scale_measure)
 
+    bench = sub.add_parser("bench", help="measured evaluations")
+    bench_sub = bench.add_subparsers(dest="bench_command", required=True)
+    binj = add_output(bench_sub.add_parser(
+        "injection", help="prompt-injection benchmark through the real MCP gate, per defence"))
+    binj.add_argument("--agents", default="scripted", help="scripted and/or ollama:<model>, comma-separated")
+    binj.add_argument("--configs", default="all", help="none,allowlist,contract,taint,full or all")
+    binj.add_argument("--out", type=Path, required=True, help="results directory (resumable)")
+    binj.add_argument("--ollama-host", default="http://127.0.0.1:11434")
+    binj.set_defaults(func=cmd_bench_injection)
     mcp = sub.add_parser("mcp", help="gate Model Context Protocol tool servers (scan, lock, serve)")
     mcp_sub = mcp.add_subparsers(dest="mcp_command", required=True)
     mcp_scan = add_output(mcp_sub.add_parser(

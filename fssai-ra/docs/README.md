@@ -19,6 +19,7 @@ remain available when you need more depth.
 |---|---|
 | [User guide](USER_GUIDE.md) | Prerequisites, first run, evidence walkthrough, installation, API, console, and a new domain |
 | [Adopt it](ADOPT.md) | For organisations: triage one use case, the first sprint, what to ask vendors, and when not to automate |
+| [Injection benchmark](INJECTION_BENCH.md) | Attack success and utility for five defences, worst case and local models, through the real gate |
 | [MCP gate](MCP_GATE.md) | Put Trust by Construction in front of the MCP tool servers your agent already uses, with a five-minute hostile-server tour |
 | [Feature catalogue](FEATURES.md) | Every major implementation area, how to exercise it, and what its evidence does not establish |
 | [Command reference](COMMANDS.md) | CLI commands, Make targets, working directories, dependencies, and validation tiers |
