@@ -1366,6 +1366,88 @@ def cmd_assure_chaos(args) -> int:
     return 0 if report["design_holds"] and all(report["ablations_detected"].values()) else 2
 
 
+def cmd_framework_catalogue(args) -> int:
+    from .framework import load, validate
+
+    catalogue = load()
+    problems = validate(catalogue)
+    heading(f"Framework catalogue {catalogue.version} — {len(catalogue.controls)} controls")
+    for code, name in catalogue.domains.items():
+        controls = [c for c in catalogue.controls if c.domain == code]
+        print(f"  {code}  {name:<40} {len(controls):>3} controls")
+    for level, name in sorted(catalogue.levels.items()):
+        print(dim(f"  level {level} {name}: "
+                  f"{sum(c.level == level for c in catalogue.controls)} controls become required"))
+    print("  " + verdict(not problems, "every module, test and refusal code it cites exists",
+                         f"{len(problems)} broken reference(s)"))
+    for problem in problems:
+        print(red(f"    {problem}"))
+    emit({"controls": len(catalogue.controls), "problems": problems}, args.output)
+    return 0 if not problems else 2
+
+
+def cmd_framework_assess(args) -> int:
+    from .framework import assess, load_answers, roadmap
+
+    answers = load_answers(args.answers)
+    result = assess(answers)
+    heading(f"Maturity — evidenced level {result['evidenced_level']} "
+            f"({result['evidenced_level_name']}), claimed level {result['claimed_level']}")
+    for code, domain in result["domains"].items():
+        print(f"  {code}  {domain['name']:<40} evidenced L{domain['evidenced_level']}  "
+              f"claimed L{domain['claimed_level']}  "
+              f"({domain['evidenced']}/{domain['applicable']} evidenced)")
+    if result["claim_gap"]:
+        print(yellow(f"  claim gap: {result['claim_gap']} level(s) implemented but not evidenced"))
+    for warning in result["warnings"]:
+        print(yellow(f"  ! {warning}"))
+    payload = {"assessment": result}
+    if args.roadmap:
+        plan = roadmap(answers)
+        payload["roadmap"] = plan
+        for wave in plan["waves"]:
+            title = "Wave to level {} — {}".format(wave["to_level"], wave["name"])
+            print(f"\n  {bold(title)}")
+            for item in wave["controls"]:
+                blocked = f"  after {', '.join(item['blocked_by'])}" if item["blocked_by"] else ""
+                tag = "prove" if item["evidence_only"] else "build"
+                print(f"    {item['id']:<7} {tag:<5} {item['name']}  [{item['owner']}]{dim(blocked)}")
+    emit(payload, args.output)
+    if args.min_level is not None and result["evidenced_level"] < args.min_level:
+        print(red(f"\n  evidenced level {result['evidenced_level']} is below the required "
+                  f"{args.min_level}"))
+        return 2
+    return 0
+
+
+def cmd_framework_init(args) -> int:
+    from .framework import init_workspace
+
+    written = init_workspace(args.directory, org=args.org, sector=args.sector,
+                             target_level=args.target_level)
+    heading(f"Starter workspace for {args.org} ({args.sector}) — {len(written)} files")
+    for path in written:
+        print(f"  {path}")
+    print(f"\n  next: fssaira framework assess {args.directory / 'assessment.yaml'} --roadmap")
+    return 0
+
+
+def cmd_framework_render(args) -> int:
+    from .framework import render_markdown
+
+    text = render_markdown()
+    target = args.path
+    if args.check:
+        current = target.read_text(encoding="utf-8") if target.exists() else ""
+        ok = current == text
+        print(verdict(ok, f"{target} matches the catalogue", f"{target} is stale; run render"))
+        return 0 if ok else 2
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    print(f"wrote {target}")
+    return 0
+
+
 def cmd_assure_report(args) -> int:
     from .assurance_report import build_report
 
@@ -1788,6 +1870,32 @@ def build_parser() -> argparse.ArgumentParser:
     areport.add_argument("--seeds", type=int, default=100)
     areport.add_argument("--qualification-seeds", type=int, default=20)
     areport.set_defaults(func=cmd_assure_report)
+
+    framework = sub.add_parser(
+        "framework", help="the adoption framework: catalogue, self-assessment, roadmap, starter kit")
+    framework_sub = framework.add_subparsers(dest="framework_command", required=True)
+    fcat = add_output(framework_sub.add_parser(
+        "catalogue", help="summarise and validate the control catalogue"))
+    fcat.set_defaults(func=cmd_framework_catalogue)
+    fassess = add_output(framework_sub.add_parser(
+        "assess", help="score a self-assessment; --roadmap for the build order"))
+    fassess.add_argument("answers", type=Path, help="assessment.yaml from `framework init`")
+    fassess.add_argument("--roadmap", action="store_true")
+    fassess.add_argument("--min-level", type=int,
+                         help="exit non-zero if the evidenced level is below this (CI gate)")
+    fassess.set_defaults(func=cmd_framework_assess)
+    finit = framework_sub.add_parser("init", help="write a starter workspace for an organisation")
+    finit.add_argument("directory", type=Path)
+    finit.add_argument("--org", required=True)
+    finit.add_argument("--sector", required=True,
+                       choices=["education", "healthcare", "finance", "corporate", "government",
+                                "benefits"])
+    finit.add_argument("--target-level", type=int, default=4)
+    finit.set_defaults(func=cmd_framework_init)
+    frender = framework_sub.add_parser("render", help="regenerate docs/framework/CONTROLS.md")
+    frender.add_argument("--path", type=Path, default=Path("docs/framework/CONTROLS.md"))
+    frender.add_argument("--check", action="store_true")
+    frender.set_defaults(func=cmd_framework_render)
 
     return parser
 

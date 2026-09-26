@@ -4,6 +4,18 @@ This directory contains the Python implementation of **Fail-Secure Sovereign AI 
 
 [Project overview](../README.md) · [User guide](docs/USER_GUIDE.md) · [Features](docs/FEATURES.md) · [Documentation map](docs/README.md) · [Research and citation](docs/RESEARCH_GUIDE.md)
 
+## Adopting agent swarms in your organisation?
+
+Start at the framework's front door, [`docs/FRAMEWORK.md`](docs/FRAMEWORK.md): 50 controls in
+nine domains, five maturity levels, a self-assessment with an ordered roadmap, a starter
+workspace, and one reproducible assurance report.
+
+```bash
+fssaira framework init my-programme --org "My Org" --sector healthcare
+fssaira framework assess my-programme/assessment.yaml --roadmap
+fssaira assure report
+```
+
 ## Start from this directory
 
 You are in the application directory when `pyproject.toml`, `src/`, and `profiles/` are present. From here:

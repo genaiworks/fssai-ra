@@ -10,7 +10,8 @@ def test_report_passes_and_its_digest_is_reproducible():
     assert first['digest'] == second['digest'] and len(first['digest']) == 64
     sections = first['deterministic']['sections']
     assert set(sections) == {'revocation', 'adapter_qualification', 'evidence_federation',
-                             'trusted_base', 'registry', 'specification_profile'}
+                             'trusted_base', 'registry', 'specification_profile',
+                             'framework_catalogue'}
     assert sections['evidence_federation']['rewrite']['code'] == 'WITNESS_QUORUM_NOT_MET'
     assert sections['revocation']['arms']['fenced']['stale_effects'] == 0
     assert 'seconds' in first['host'] and 'seconds' not in str(sections)

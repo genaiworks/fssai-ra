@@ -21,6 +21,16 @@ evidence count or claim changed.
 - **Measurement.** Trusted-base SLOC, CycloneDX SBOM and build measurement
   (`fssaira assure trusted-base`); review staffing to the floor
   (`fssaira assure staffing`); covert-channel rate objective (`channel_slo`).
+- **Adoption framework.** `docs/FRAMEWORK.md` is the front door for organisations
+  adopting agent swarms. `src/fssaira/framework_catalogue.yaml` holds 50 controls in
+  nine domains and five maturity levels; each names its objective, the failure it
+  prevents, a self-assessment question, owner, dependencies, implementation, proof,
+  refusal codes and standards. `fssaira framework assess` separates evidenced from
+  claimed maturity and emits a dependency-ordered roadmap (and a CI gate with
+  `--min-level`); `fssaira framework init` writes a starter workspace (assessment,
+  sector pack, hardened agent-cell manifests, witness and time-server registries, CI
+  workflow, runbooks, evidence checklist); `docs/framework/CONTROLS.md` is generated
+  and drift-tested.
 - **Adapter qualification.** `adapter_qualification`: a deployment's own authority
   store and effect sink run inside the chaos campaign; real threads race revocation
   and the store's ordered log is audited for superseded-epoch commits. Reference

@@ -1,0 +1,782 @@
+# Trust by Construction framework -- control catalogue.
+#
+# The single source of truth for the framework. docs/framework/CONTROLS.md, the
+# self-assessment (`fssaira framework assess`) and the starter kit
+# (`fssaira framework init`) are all generated from this file, and
+# tests/test_framework.py fails the build if any control cites a module, test or
+# refusal code that does not exist, depends on a control at a higher level, or
+# forms a dependency cycle.
+#
+# level: the maturity level (docs/PATTERNS.md#maturity-levels) at which the
+#   control becomes required.
+#   1 access-controlled · 2 authority-bound · 3 disclosure-governed ·
+#   4 composition-safe · 5 evidenced
+# requires: controls that must be in place first (roadmap ordering).
+# applies_when: present only on controls an organisation may mark "n/a", and
+#   names the condition that makes the control mandatory.
+# verify: "tests/<file>::<name>" (executable), "command: ..." (run it), or
+#   "attestation: ..." (a named role signs on a cadence).
+version: "1.0"
+levels:
+  1: Access-controlled
+  2: Authority-bound
+  3: Disclosure-governed
+  4: Composition-safe
+  5: Evidenced
+domains:
+  GOV: Governance and accountability
+  IDN: Identity, credentials and containment
+  AUT: Authority over actions
+  DAT: Data and disclosure
+  SWM: Swarm composition
+  EFF: Effects and adapters
+  EVD: Evidence
+  OVS: Human oversight
+  ASR: Assurance and verification
+
+controls:
+  # -- Governance ---------------------------------------------------------------
+  - id: GOV-1
+    domain: GOV
+    level: 1
+    name: Named owners and a manual fallback for every workflow
+    objective: Every agentic workflow has a named accountable owner and a human service route used whenever automation refuses.
+    prevents: refusals that strand the person being served, and decisions nobody answers for
+    question: Does every agentic workflow have a named owner and a documented manual route that works when the system says no?
+    owner: Workflow owner
+    requires: []
+    implementation: [packs/template.pack.yaml, src/fssaira/scaffold.py]
+    verify: ["attestation: manual_fallback and owner declared in every domain pack"]
+    codes: []
+    standards: [NIST AI RMF GOVERN, ISO/IEC 42001]
+  - id: GOV-2
+    domain: GOV
+    level: 2
+    name: Task contract with purpose, exact scope, budget and expiry
+    objective: Work starts only from a contract naming task, purpose, subject, tenant, exact scope, shared budget and expiry; over-broad mandates do not start.
+    prevents: wildcard authority and open-ended agents
+    question: Does every agent task start from a written contract with exact identifiers, a budget and an expiry, and is an over-broad one refused?
+    owner: Workflow owner
+    requires: [GOV-1]
+    implementation: [src/fssaira/tbc/contracts.py, src/fssaira/tbc/mandate.py]
+    verify:
+      - tests/test_mandate_lint.py::test_with_declared_purposes_an_over_broad_mandate_does_not_start
+      - tests/test_tbc_sdk.py::test_lease_expiry_and_task_expiry_are_checked_on_use
+    codes: [TASK_EXPIRED, TASK_BUDGET_EXCEEDS_PASSPORT]
+    standards: [OWASP LLM06 Excessive Agency, NIST AI RMF MAP]
+  - id: GOV-3
+    domain: GOV
+    level: 4
+    name: Versioned policy with sanctioned migration
+    objective: Policy changes only through a named, reasoned, monotonic migration that contracts uncovered tasks and sends held effects to re-review.
+    prevents: silent rule changes, and approvals given under old rules executing under new ones
+    question: Can you change agent policy without stopping everything, with in-flight approvals re-reviewed under the new rules?
+    owner: Risk, legal, DPO
+    requires: [GOV-2]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify: [tests/test_approval_policy_pinning.py::test_migration_is_named_monotonic_and_survives_restart]
+    codes: [POLICY_VERSION_NOT_INCREASING, POLICY_WORKLOAD_MISMATCH, PASSPORT_DRIFT]
+    standards: [ISO/IEC 42001, NIST AI RMF GOVERN]
+  - id: GOV-4
+    domain: GOV
+    level: 3
+    name: Sector release table with cited basis
+    objective: Where law defines who may receive data, encode it as a decision table in which every answer cites its basis and unmodelled paths are refused.
+    prevents: releases that are technically authorised but legally wrong
+    question: Are your sector's disclosure rules (FERPA, HIPAA, GDPR, banking secrecy...) encoded as testable decisions that cite their legal basis?
+    owner: Risk, legal, DPO
+    requires: [GOV-2]
+    applies_when: the workflow touches regulated personal data
+    implementation: [src/fssaira/ferpa.py, packs/healthcare.pack.yaml, packs/finance.pack.yaml]
+    verify: [tests/test_ferpa_pack.py::test_consent_must_match_holder_records_recipient_and_purpose]
+    codes: [FERPA_CONSENT_REQUIRED, FERPA_PATH_NOT_MODELLED]
+    standards: [FERPA 34 CFR 99, GDPR Art. 6, HIPAA Privacy Rule]
+
+  # -- Identity, credentials, containment ---------------------------------------
+  - id: IDN-1
+    domain: IDN
+    level: 1
+    name: Agents hold no credentials
+    objective: No process that runs a model holds a credential for a record store or external system; the gateway acts on its behalf.
+    prevents: a manipulated model using standing access directly
+    question: Is every agent unable, even when fully compromised, to reach a database, API key or cloud role on its own?
+    owner: Enforcer operations
+    requires: []
+    implementation: [src/fssaira/isolation.py, src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_isolation.py::test_standing_credentials_in_the_agent_environment_are_a_violation
+      - tests/test_privilege_invariance.py::test_model_output_cannot_introduce_a_capability
+    codes: [ENVELOPE_DENIED]
+    standards: [OWASP LLM06 Excessive Agency, NIST AI RMF MANAGE]
+  - id: IDN-2
+    domain: IDN
+    level: 1
+    name: Authenticated agents with expiring, non-expanding leases
+    objective: Every call carries an agent identity and a capability lease that expires and can never widen any authority axis.
+    prevents: token reuse, forged capability and lease escalation
+    question: Does every agent call carry its own short-lived capability that cannot grant more than its parent holds?
+    owner: Enforcer operations
+    requires: [IDN-1]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_tbc_sdk.py::test_wrong_tokens_duplicate_fields_nonfinite_and_foreign_capability
+      - tests/test_tbc_sdk.py::test_lease_cannot_expand_any_authority_axis
+    codes: [AUTHENTICATION_REQUIRED, STALE_OR_FOREIGN_CAPABILITY, CAPABILITY_SCOPE_DENIED]
+    standards: [NIST AI RMF MANAGE]
+  - id: IDN-3
+    domain: IDN
+    level: 1
+    name: Declared interfaces only
+    objective: Agents reach the trusted base only through declared primitives with declared fields; anything else fails closed with no effect.
+    prevents: undeclared tools and side doors
+    question: Is there a closed list of operations an agent can call, with everything else refused before it does anything?
+    owner: Enforcer operations
+    requires: [IDN-1]
+    implementation: [src/fssaira/integration/messages.py, src/fssaira/tbc/runtime.py]
+    verify: [tests/test_tbc_sdk.py::test_untrusted_interfaces_fail_closed_without_effects]
+    codes: [UNDECLARED_INTERFACE, OBJECT_REQUIRED]
+    standards: [OWASP LLM05 Improper Output Handling]
+  - id: IDN-4
+    domain: IDN
+    level: 4
+    name: Measured agent cells; unqualified hosts refused
+    objective: Each agent runs in a cell measured from inside -- no metadata service, no service-account token, default-deny egress, non-root, immutable code -- and production refuses a cell it cannot confirm.
+    prevents: ambient cloud or cluster credentials leaking into a supposedly credential-less agent
+    question: Have you measured, from inside the running agent container, that it cannot reach cloud metadata, cluster tokens or the internet?
+    owner: Enforcer operations
+    requires: [IDN-1]
+    implementation: [src/fssaira/agent_cell.py, src/fssaira/isolation.py]
+    verify:
+      - tests/test_isolation.py::test_reachable_cloud_metadata_is_a_violation
+      - tests/test_isolation.py::test_a_readable_service_account_token_is_a_violation
+      - tests/test_agent_cell.py::test_every_property_must_be_observed_and_satisfied
+    codes: []
+    standards: [OWASP LLM06 Excessive Agency, NIST AI 600-1 Information Security]
+
+  # -- Authority -----------------------------------------------------------------
+  - id: AUT-1
+    domain: AUT
+    level: 2
+    name: A proposal is not authority
+    objective: Model output is a structured proposal; only an enforcement point independent of the model executes, and the action's class comes from an institution catalogue.
+    prevents: prompt injection turning into action
+    question: Is model output only ever a proposal, so that even a fully manipulated model cannot change a record, send a message or move money by itself?
+    owner: Enforcer operations
+    requires: [IDN-3]
+    implementation: [src/fssaira/exact_action.py, src/fssaira/control_plane.py]
+    verify:
+      - tests/test_privilege_invariance.py::test_a_class_downgrading_model_gains_nothing
+      - tests/test_ablations.py::test_removing_least_privilege_lets_agent_approve_awards
+    codes: [AI_IR_SCOPE_DENIED]
+    standards: [OWASP LLM01 Prompt Injection, OWASP LLM06 Excessive Agency]
+  - id: AUT-2
+    domain: AUT
+    level: 2
+    name: Exact-action approval
+    objective: An approval binds the exact proposal digest, resource version, role, audience and expiry; any change voids it.
+    prevents: approving X and executing Y
+    question: If a draft changes by one character after approval, is the approval void?
+    owner: Approvers
+    requires: [AUT-1]
+    implementation: [src/fssaira/exact_action.py]
+    verify:
+      - tests/test_exact_action.py::test_target_or_arguments_changed_after_approval_are_denied
+      - tests/test_exact_action.py::test_changed_authoritative_case_requires_renewed_review
+    codes: [EXACT_APPROVAL_REQUIRED, ARTIFACT_DIGEST_MISMATCH]
+    standards: [NIST AI RMF MANAGE]
+  - id: AUT-3
+    domain: AUT
+    level: 2
+    name: No self-approval; independent confirmation
+    objective: The proposer never approves its own proposal, and consequential effects need a confirmation from a different named person.
+    prevents: agreement between agents, or one person, masquerading as oversight
+    question: Does every consequential action need approval from someone other than whoever proposed it?
+    owner: Approvers
+    requires: [AUT-2]
+    implementation: [src/fssaira/exact_action.py, src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_exact_action.py::test_requester_cannot_approve_own_proposal
+      - tests/test_tbc_sdk.py::test_full_sdk_workflow_uses_independent_approval_and_real_effect
+    codes: [INDEPENDENT_CONFIRMATION_REQUIRED]
+    standards: [ISO/IEC 42001, NIST AI RMF GOVERN]
+  - id: AUT-4
+    domain: AUT
+    level: 4
+    name: Policy-bound approval
+    objective: Proposals and approvals record the policy version; execution under any other version is refused and re-reviewed.
+    prevents: approve under old rules, execute under new
+    question: Does an approval stop working when the policy it was given under changes?
+    owner: Approvers
+    requires: [AUT-2, GOV-3]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify: [tests/test_approval_policy_pinning.py::test_approval_under_old_policy_does_not_execute_under_new]
+    codes: [POLICY_VERSION_CHANGED]
+    standards: [ISO/IEC 42001]
+  - id: AUT-5
+    domain: AUT
+    level: 4
+    name: Objection window for irreversible effects
+    objective: Approved effects wait a declared window in which an objection or revocation cancels them before they reach the system of record.
+    prevents: irreversible effects (email, payment) that revocation arrives too late for
+    question: For actions you cannot undo, is there a window in which a person can still stop them?
+    owner: Workflow owner
+    requires: [AUT-2]
+    applies_when: agents can trigger irreversible external effects
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_effect_escrow.py::test_an_objection_inside_the_window_cancels_the_effect
+      - tests/test_effect_escrow.py::test_revoking_the_task_during_the_window_cancels_at_commit
+    codes: [OBJECTION_WINDOW_CLOSED, EFFECT_NOT_PENDING]
+    standards: [NIST AI RMF MANAGE]
+
+  # -- Data and disclosure --------------------------------------------------------
+  - id: DAT-1
+    domain: DAT
+    level: 3
+    name: Purpose-bound grants through a single gate
+    objective: Data enters a model context only through a gate that alone holds the record-store credential, under a grant naming holder, purpose, subjects, fields and expiry.
+    prevents: agents reading whatever they can reach
+    question: Does every read by an agent name the person, the fields and the purpose, and go through one gate that alone can read the store?
+    owner: Risk, legal, DPO
+    requires: [IDN-1, GOV-2]
+    implementation: [src/fssaira/disclosure.py, src/fssaira/disclosure_api.py]
+    verify:
+      - tests/test_disclosure_api.py::test_governed_model_task_reads_only_what_the_grant_allows_and_labels_its_output
+      - tests/test_disclosure.py::test_requests_must_name_subjects_and_fields_and_endpoints_must_be_declared
+    codes: [PURPOSE_MISMATCH, CONTEXT_SCOPE_DENIED]
+    standards: [OWASP LLM02 Sensitive Information Disclosure, GDPR Art. 5(1)(b)]
+  - id: DAT-2
+    domain: DAT
+    level: 3
+    name: Live consent and revocation at read and at release
+    objective: Consent, revocation and expiry are checked at every read and again at every release of anything derived.
+    prevents: consent withdrawn after the read but before the release
+    question: If someone withdraws consent mid-task, does the next read and the pending release both fail?
+    owner: Risk, legal, DPO
+    requires: [DAT-1]
+    implementation: [src/fssaira/disclosure.py]
+    verify:
+      - tests/test_disclosure.py::test_consent_withdrawal_and_revocation_take_effect_at_next_read
+      - tests/test_disclosure.py::test_release_rechecks_consent_and_revocation_after_the_read
+    codes: [RELEASE_CONSENT_WITHDRAWN, CONSENT_REVOKED]
+    standards: [GDPR Art. 7(3)]
+  - id: DAT-3
+    domain: DAT
+    level: 3
+    name: Label inheritance and sealed release
+    objective: Every output carries the join of every label it was built from, ignores labels the model claims, and is released only to destinations cleared for all of them.
+    prevents: the reader -> summariser -> publisher leak
+    question: If an agent summarises a confidential record, does the summary stay confidential wherever it goes?
+    owner: Risk, legal, DPO
+    requires: [DAT-1]
+    implementation: [src/fssaira/disclosure.py, src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_disclosure.py::test_model_claimed_label_cannot_launder_a_summary
+      - tests/test_tbc_sdk.py::test_memory_and_generated_output_cannot_drop_session_lineage
+    codes: [DESTINATION_DENIED, DECLASSIFICATION_REQUIRED]
+    standards: [OWASP LLM02 Sensitive Information Disclosure]
+  - id: DAT-4
+    domain: DAT
+    level: 3
+    name: Independent, exact declassification
+    objective: A label is lowered only through a declared rule, with approval bound to the exact output digest by someone other than its holder.
+    prevents: self-declassification and "approve the gist"
+    question: Is lowering an output's sensitivity only possible through a declared rule and someone other than its holder?
+    owner: Risk, legal, DPO
+    requires: [DAT-3]
+    implementation: [src/fssaira/disclosure.py]
+    verify: [tests/test_disclosure.py::test_declassification_requires_exact_independent_approval]
+    codes: [DECLASSIFICATION_SELF_APPROVED, DECLASSIFICATION_WRONG_OUTPUT]
+    standards: [ISO/IEC 42001]
+  - id: DAT-5
+    domain: DAT
+    level: 3
+    name: Refusals reveal nothing
+    objective: Record sources are read only after authorization, and agents see only DENIED, so a refusal does not reveal whether a record exists.
+    prevents: existence oracles and policy probing through error codes
+    question: Do refusals look identical to the agent, so it cannot learn whether a record exists?
+    owner: Enforcer operations
+    requires: [DAT-1]
+    implementation: [src/fssaira/disclosure.py, src/fssaira/tbc/runtime.py]
+    verify: [tests/test_disclosure_production.py::test_record_sources_are_read_only_after_authorization_so_existence_does_not_leak]
+    codes: []
+    standards: [OWASP LLM02 Sensitive Information Disclosure]
+  - id: DAT-6
+    domain: DAT
+    level: 4
+    name: Covert-channel budget and rate objective
+    objective: Choices left to agents at release (destination, path, time, size, count) are made canonical where possible; the remainder is charged in bits against a budget and an organisation-wide bits-per-minute objective.
+    prevents: agents signalling through legitimate choices
+    question: Have you measured how many bits per minute agents could leak through their allowed choices, and set a limit?
+    owner: Enforcer operations
+    requires: [DAT-3]
+    applies_when: agent outputs leave the organisation or cross trust zones
+    implementation: [src/fssaira/covert_channels.py, src/fssaira/channel_slo.py]
+    verify:
+      - tests/test_channel_budget.py::test_releases_past_the_channel_budget_go_to_a_person
+      - tests/test_master_guide_measures.py::test_channel_slo_is_a_rate_and_fails_when_unbounded
+    codes: [CHANNEL_BUDGET_EXHAUSTED, CHANNEL_SLO_EXCEEDED]
+    standards: [NIST AI 600-1 Information Security]
+
+  # -- Swarm composition ------------------------------------------------------------
+  - id: SWM-1
+    domain: SWM
+    level: 4
+    name: One shared budget for the whole swarm
+    objective: Every descendant draws on the task budget through atomic reservations, so spawning workers multiplies neither spend nor data access.
+    prevents: parallelism as a budget and authority multiplier
+    question: When an agent spawns workers, do they all draw on one shared task budget?
+    owner: Enforcer operations
+    requires: [GOV-2]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_tbc_sdk.py::test_aggregate_sibling_budget_does_not_multiply
+      - tests/test_tbc_composition_controls.py::test_sibling_reservations_share_one_balance_and_settle_once
+    codes: [AGGREGATE_BUDGET_EXHAUSTED, CALL_BUDGET_EXHAUSTED]
+    standards: [OWASP LLM10 Unbounded Consumption]
+  - id: SWM-2
+    domain: SWM
+    level: 4
+    name: Attenuating delegation, verified across the whole chain
+    objective: A delegate receives at most the intersection of every grant above it, recomputed from the institutional root on every call; machines cannot pass on consequential authority without a named human.
+    prevents: authority laundering through a chain of agents (per-hop checks alone contained 2 of 10 risk classes)
+    question: When agent A delegates to B and B to C, is C's authority recomputed from the root every time, not just checked against B?
+    owner: Enforcer operations
+    requires: [IDN-2]
+    applies_when: agents delegate to other agents or tools
+    implementation: [src/fssaira/delegation.py, src/fssaira/grant_delegation.py]
+    verify:
+      - tests/test_delegation.py::test_a_hop_cannot_pass_on_authority_it_does_not_hold
+      - tests/test_delegation.py::test_a_machine_may_not_pass_consequential_authority_onward
+    codes: [DELEGATION_AMPLIFICATION, DELEGATION_DEPTH]
+    standards: [OWASP LLM06 Excessive Agency]
+  - id: SWM-3
+    domain: SWM
+    level: 4
+    name: Declared task graph
+    objective: Every node and message edge in the swarm is admitted before use; retracting an edge stops messages already queued on it.
+    prevents: undeclared agents and side channels between agents
+    question: Is the shape of your swarm (who may talk to whom) declared up front and enforced?
+    owner: Workflow owner
+    requires: [SWM-2]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_tbc_composition_controls.py::test_declared_graph_admits_each_node_and_edge_before_use
+      - tests/test_tbc_composition_controls.py::test_retracting_an_edge_stops_messages_already_queued_on_it
+    codes: [GRAPH_NOT_DECLARED, NODE_NOT_ADMITTED]
+    standards: [NIST AI RMF MAP]
+  - id: SWM-4
+    domain: SWM
+    level: 4
+    name: Population and depth ceilings
+    objective: A task has a maximum number of agents and a maximum delegation depth.
+    prevents: runaway spawning
+    question: Is there a hard ceiling on how many agents a task may create and how deep delegation may go?
+    owner: Enforcer operations
+    requires: [SWM-1]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_tbc_sdk.py::test_population_ceiling_is_enforced
+      - tests/test_tbc_sdk.py::test_population_depth_ancestry_and_revocation
+    codes: [POPULATION_LIMIT, DELEGATION_DEPTH]
+    standards: [OWASP LLM10 Unbounded Consumption]
+  - id: SWM-5
+    domain: SWM
+    level: 4
+    name: Fan-in gate; agreement is evidence, not authority
+    objective: A coordinator accepts a worker result only with verified identity, provenance, current epoch and permitted destination; consensus among agents never substitutes for approval.
+    prevents: poisoned or stale worker results and fake consensus
+    question: When a coordinator combines worker outputs, does it verify where each came from, and is agreement ever treated as permission?
+    owner: Enforcer operations
+    requires: [SWM-3]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_tbc_composition_controls.py::test_fan_in_checks_identity_provenance_epoch_and_destination
+      - tests/test_tbc_composition_controls.py::test_fan_in_refuses_results_without_provenance_or_from_revoked_workers
+    codes: [STALE_RESULT]
+    standards: [OWASP LLM09 Misinformation]
+  - id: SWM-6
+    domain: SWM
+    level: 4
+    name: Revocation epoch and freshness proofs
+    objective: Revocation raises the task epoch so queued work, stale leases and later release chunks fail; adapters outside the transaction demand a fresh proof.
+    prevents: work that outlives the authority that started it
+    question: When consent or authority is withdrawn, does queued and in-flight agent work fail immediately?
+    owner: Enforcer operations
+    requires: [SWM-1]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_tbc_composition_controls.py::test_task_revocation_fails_queued_writes_and_later_release_chunks
+      - tests/test_tbc_composition_controls.py::test_freshness_proof_fails_on_epoch_change_age_stop_or_forgery
+    codes: [STALE_PROPOSAL, FRESHNESS_UNPROVEN, AGENT_REVOKED_OR_EXPIRED]
+    standards: [NIST AI RMF MANAGE]
+  - id: SWM-7
+    domain: SWM
+    level: 4
+    name: Monitors are brakes, never keys
+    objective: Monitors and behaviour watches can restrict or quarantine but hold no method to grant or restore authority; probing agents are contracted.
+    prevents: a fooled or hostile monitor escalating privilege
+    question: Can your monitoring stack only ever restrict agents, never grant them power?
+    owner: Evidence auditor
+    requires: [SWM-6]
+    implementation: [src/fssaira/tbc/runtime.py, src/fssaira/tbc/behaviour.py]
+    verify:
+      - tests/test_behaviour_watch.py::test_an_agent_probing_its_boundary_is_quarantined
+      - tests/test_behaviour_watch.py::test_only_a_monitor_can_run_the_watch
+    codes: [MONITOR_REPLAY, STALE_MONITOR_EVIDENCE]
+    standards: [NIST AI RMF MEASURE]
+  - id: SWM-8
+    domain: SWM
+    level: 4
+    name: Agent memory is scoped, retained and lineage-carrying
+    objective: Persistent memory is namespaced, epoch-bound, expires on a declared retention, and keeps the labels and lineage of what was stored.
+    prevents: memory poisoning across tasks and label laundering through memory
+    question: Is agent memory scoped to its task and expiring, so it cannot leak into or poison another task?
+    owner: Enforcer operations
+    requires: [DAT-3, SWM-6]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify: [tests/test_tbc_sdk.py::test_memory_integrity_retention_scope_and_reauthorization]
+    codes: [RETENTION_TOO_LONG]
+    standards: [OWASP LLM04 Data and Model Poisoning]
+
+  # -- Effects and adapters -----------------------------------------------------------
+  - id: EFF-1
+    domain: EFF
+    level: 2
+    name: Idempotent retries and reconciled uncertain outcomes
+    objective: Retries reuse a persistent request identity; an outcome that is unknown is marked uncertain and reconciled once, never blindly retried.
+    prevents: the double email and the double payment
+    question: When a call times out, does your system establish whether the action happened before it retries?
+    owner: Enforcer operations
+    requires: [AUT-1]
+    implementation: [src/fssaira/exact_action.py]
+    verify:
+      - tests/test_exact_action.py::test_retry_is_idempotent_and_cross_request_reuse_is_denied
+      - tests/test_exact_action.py::test_completed_mutation_is_marked_uncertain_then_reconciled_once
+    codes: []
+    standards: [NIST AI RMF MANAGE]
+  - id: EFF-2
+    domain: EFF
+    level: 4
+    name: Fenced commit across adapters
+    objective: External effects commit in one linearizable step against the current epoch, carry an idempotency key, and are held when the store is unreachable.
+    prevents: stale effects under partition or clock skew, and duplicates on retry
+    question: Do your real adapters commit each action at most once and never after revocation, even under network faults?
+    owner: Enforcer operations
+    requires: [EFF-1, SWM-6]
+    applies_when: agents cause effects in external systems
+    implementation: [src/fssaira/revocation_chaos.py]
+    verify:
+      - tests/test_revocation_chaos.py::test_fenced_commit_holds_every_invariant_and_each_ablation_breaks_one
+      - "command: fssaira assure chaos"
+    codes: []
+    standards: [NIST AI RMF MANAGE]
+  - id: EFF-3
+    domain: EFF
+    level: 5
+    name: Your own store and sink are qualified
+    objective: The deployment's own authority store and external systems pass the fault campaign and the concurrent linearization audit.
+    prevents: a correct protocol running on an incorrect database or connector
+    question: Have your production authority store and connectors themselves passed fault-injected qualification?
+    owner: Enforcer operations
+    requires: [EFF-2]
+    applies_when: agents cause effects in external systems
+    implementation: [src/fssaira/adapter_qualification.py]
+    verify:
+      - tests/test_adapter_qualification.py::test_reference_sql_store_and_sink_qualify
+      - tests/test_adapter_qualification.py::test_a_store_that_forgets_the_epoch_is_not_qualified
+    codes: [ADAPTER_NOT_QUALIFIED, STORE_STALE_COMMIT]
+    standards: [NIST AI RMF MEASURE]
+
+  # -- Evidence -----------------------------------------------------------------------
+  - id: EVD-1
+    domain: EVD
+    level: 1
+    name: Tamper-evident log, intent before effect, no protected values
+    objective: Intent is recorded before any effect, the log is hash-chained and written through a credential agents do not hold, and it never contains protected values.
+    prevents: silent actions and logs that become a second data breach
+    question: Is every agent action logged before it happens, in a log agents cannot write to and that contains no personal data?
+    owner: Evidence auditor
+    requires: []
+    implementation: [src/fssaira/evidence.py, src/fssaira/joined_workflow.py]
+    verify:
+      - tests/test_disclosure.py::test_intent_evidence_failure_releases_nothing
+      - tests/test_disclosure.py::test_evidence_never_contains_protected_values
+    codes: [LEDGER_CHAIN_BROKEN]
+    standards: [NIST AI RMF MEASURE, ISO/IEC 42001]
+  - id: EVD-2
+    domain: EVD
+    level: 2
+    name: Decision receipts
+    objective: Every decision yields a chained receipt binding policy version, epoch, lineage, artifact digest, recipient and outcome -- digests, never text.
+    prevents: incidents and appeals nobody can reconstruct
+    question: For any agent decision, can you show which policy, which inputs and which approval produced it, without reading the data?
+    owner: Evidence auditor
+    requires: [EVD-1]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_tbc_composition_controls.py::test_receipts_bind_policy_epoch_lineage_digest_recipient_and_outcome
+      - tests/test_tbc_composition_controls.py::test_receipt_chain_detects_deletion_and_survives_pruning
+    codes: []
+    standards: [ISO/IEC 42001, NIST AI RMF GOVERN]
+  - id: EVD-3
+    domain: EVD
+    level: 3
+    name: Signed checkpoints and an independent witness
+    objective: A notary signs checkpoints and a separately administered witness co-signs only consistent growth, refusing forks and rollbacks.
+    prevents: an insider or compromised enforcer rewriting history
+    question: Would a party outside your administrators detect it if someone with admin access rewrote the agent logs?
+    owner: Evidence auditor
+    requires: [EVD-1]
+    implementation: [src/fssaira/evidence_notary.py, src/fssaira/witness.py]
+    verify:
+      - tests/test_witness.py::test_an_enforcer_holding_the_notary_key_cannot_get_a_rewritten_past_cosigned
+      - tests/test_witness.py::test_a_truncated_ledger_is_a_rollback
+    codes: [WITNESS_FORK, WITNESS_ROLLBACK, LEDGER_HISTORY_REWRITTEN]
+    standards: [NIST AI 600-1 Information Integrity]
+  - id: EVD-4
+    domain: EVD
+    level: 3
+    name: Independent recomputation on a cadence
+    objective: A verifier outside the enforcer recomputes the archive hourly (incremental) and daily (full); forged records are quarantined by position, not content.
+    prevents: trusting stored verdicts
+    question: Does someone other than the system itself recompute the evidence regularly?
+    owner: Evidence auditor
+    requires: [EVD-3]
+    implementation: [src/fssaira/small_data.py, src/fssaira/chain_verification.py]
+    verify:
+      - tests/test_small_data.py::test_forged_record_is_quarantined_by_position_not_content
+      - "command: fssaira small verify --mode full"
+    codes: []
+    standards: [NIST AI RMF MEASURE]
+  - id: EVD-5
+    domain: EVD
+    level: 3
+    name: Metadata-only visibility and agent dossiers
+    objective: Dashboards and dossiers show identity, authority, actions, refusals and channel capacity per agent, without protected content.
+    prevents: observability that becomes surveillance or a leak
+    question: Can you see what each agent may do and has done without anyone reading protected data?
+    owner: Evidence auditor
+    requires: [EVD-2]
+    implementation: [src/fssaira/tbc/runtime.py]
+    verify: [tests/test_agent_dossier.py::test_the_dossier_holds_no_protected_content]
+    codes: []
+    standards: [NIST AI RMF MEASURE]
+  - id: EVD-6
+    domain: EVD
+    level: 5
+    name: Merkle proofs and a witness quorum across organisations
+    objective: Evidence is committed in an RFC 9162 tree; witnesses in distinct administrative domains co-sign from consistency proofs; split views are detected.
+    prevents: one organisation (or one coerced witness) vouching for history; different logs for different audiences
+    question: Do at least two organisations outside yours co-sign your evidence, and would they catch you showing different logs to different people?
+    owner: Evidence auditor
+    requires: [EVD-3]
+    implementation: [src/fssaira/transparency.py]
+    verify:
+      - tests/test_transparency.py::test_quorum_counts_distinct_domains_not_keys
+      - tests/test_transparency.py::test_split_view_is_proven_by_two_signed_heads
+    codes: [WITNESS_QUORUM_NOT_MET, EVIDENCE_SPLIT_VIEW, MERKLE_FORK]
+    standards: [NIST AI 600-1 Information Integrity]
+  - id: EVD-7
+    domain: EVD
+    level: 5
+    name: Forward-secure keys and anchored time
+    objective: Checkpoints are signed with period keys erased after use and anchored to several independent time sources.
+    prevents: a stolen key or a moved clock backdating history
+    question: If your signing key were stolen today, would a checkpoint the thief backdated to last month be rejected?
+    owner: Evidence auditor
+    requires: [EVD-6]
+    implementation: [src/fssaira/forward_secure.py, src/fssaira/time_anchor.py]
+    verify:
+      - tests/test_forward_secure_and_time.py::test_a_key_stolen_today_cannot_sign_yesterday
+      - tests/test_forward_secure_and_time.py::test_a_lying_server_is_caught_by_the_chain
+    codes: [FS_WRONG_PERIOD, TIME_SOURCES_DISAGREE, CHECKPOINT_TIME_UNANCHORED]
+    standards: [NIST AI 600-1 Information Integrity]
+  - id: EVD-8
+    domain: EVD
+    level: 5
+    name: Federated publication with per-record proofs
+    objective: Each checkpoint is published in one step (root, forward-secure signature, time anchor, quorum) and verified in one verdict; any single record can be proven included.
+    prevents: evidence controls checked piecemeal, and appeals that need the whole ledger
+    question: Can an auditor verify a checkpoint in one step, and can you prove one decision is in it without revealing the rest?
+    owner: Evidence auditor
+    requires: [EVD-6, EVD-7]
+    implementation: [src/fssaira/evidence_federation.py]
+    verify: [tests/test_evidence_federation.py::test_the_real_runtime_ledger_publishes_and_proves_a_receipt]
+    codes: [EVIDENCE_ROOT_MISMATCH, EVIDENCE_RECORD_NOT_INCLUDED]
+    standards: [NIST AI 600-1 Information Integrity]
+
+  # -- Human oversight -------------------------------------------------------------------
+  - id: OVS-1
+    domain: OVS
+    level: 2
+    name: Deliberation floor
+    objective: Approvals faster than a declared minimum review time are refused and routed to the manual queue.
+    prevents: rubber-stamping
+    question: Are approvals faster than a declared minimum review time refused and sent to a person?
+    owner: Workflow owner
+    requires: [AUT-3]
+    implementation: [src/fssaira/oversight.py, src/fssaira/tbc/runtime.py]
+    verify:
+      - tests/test_oversight.py::test_an_approval_faster_than_the_deliberation_floor_is_refused
+      - tests/test_tbc_composition_controls.py::test_minimum_review_time_defers_fast_approvals_to_the_manual_route
+    codes: [REVIEW_DEFERRED_TO_MANUAL]
+    standards: [NIST AI 600-1 Human-AI Configuration]
+  - id: OVS-2
+    domain: OVS
+    level: 4
+    name: Declared review capacity and escalation
+    objective: Each reviewer's capacity is declared; approvals past it are refused, and sustained load escalates to a second distinct reviewer.
+    prevents: fatigue silently deleting the last human control
+    question: Do you know how many consequential approvals a reviewer can do well per day, and does the system stop at that number?
+    owner: Workflow owner
+    requires: [OVS-1]
+    implementation: [src/fssaira/oversight.py]
+    verify:
+      - tests/test_oversight.py::test_the_ceiling_refuses_the_next_approval_rather_than_flagging_it
+      - tests/test_oversight.py::test_sustained_load_escalates_to_a_second_distinct_reviewer
+    codes: []
+    standards: [NIST AI 600-1 Human-AI Configuration]
+  - id: OVS-3
+    domain: OVS
+    level: 4
+    name: Staffed to the floor
+    objective: Headcount is computed from arrival rate and review time with the floor as minimum service time; understaffing defers, never lowers the floor.
+    prevents: queues that tempt someone to switch the floor off
+    question: Is review staffing calculated from demand, and is the answer to overload "more people", never "faster approvals"?
+    owner: Workflow owner
+    requires: [OVS-2]
+    implementation: [src/fssaira/oversight_staffing.py]
+    verify:
+      - tests/test_master_guide_measures.py::test_staffing_honours_the_floor_and_reports_understaffing
+      - "command: fssaira assure staffing"
+    codes: []
+    standards: [NIST AI RMF MANAGE]
+  - id: OVS-4
+    domain: OVS
+    level: 4
+    name: Independent assistance for review
+    objective: A lowered floor for AI-assisted review needs declared model, evidence-path and adversarial independence from the proposer.
+    prevents: the assistant repeating the proposer's error while every control stays green
+    question: If an AI helps reviewers, is it independent of the AI that made the proposal?
+    owner: Workflow owner
+    requires: [OVS-1]
+    applies_when: reviewers are assisted by an AI model
+    implementation: [src/fssaira/assisted_review.py]
+    verify: [tests/test_assisted_review.py::test_a_lowered_floor_without_declared_independence_is_refused]
+    codes: [ASSISTANCE_NOT_DECLARED]
+    standards: [NIST AI 600-1 Human-AI Configuration]
+  - id: OVS-5
+    domain: OVS
+    level: 5
+    name: Reviewer calibration with canaries
+    objective: Known-wrong canary proposals are planted at a declared rate; a reviewer who approves them loses capacity and gains a second reviewer; canaries never execute.
+    prevents: capacity declared but never measured
+    question: Do you test, continuously and safely, that reviewers actually catch bad proposals?
+    owner: Workflow owner
+    requires: [OVS-2]
+    implementation: [src/fssaira/review_calibration.py]
+    verify:
+      - tests/test_review_calibration.py::test_a_reviewer_who_approves_canaries_loses_capacity_and_gains_a_second_reviewer
+      - tests/test_review_calibration.py::test_a_canary_never_executes_whatever_the_reviewer_decides
+    codes: []
+    standards: [NIST AI RMF MEASURE]
+
+  # -- Assurance -------------------------------------------------------------------------
+  - id: ASR-1
+    domain: ASR
+    level: 2
+    name: Registered refusal codes
+    objective: Every refusal code the build can emit is in a registry generated from source; the build fails when it drifts.
+    prevents: contracts and dashboards that test for codes that do not exist
+    question: Is there a complete, generated list of every reason your system can refuse?
+    owner: Evidence auditor
+    requires: []
+    implementation: [src/fssaira/refusal_registry.py]
+    verify: [tests/test_master_guide_measures.py::test_refusal_registry_is_current_with_the_code]
+    codes: []
+    standards: [ISO/IEC 42001]
+  - id: ASR-2
+    domain: ASR
+    level: 3
+    name: Every control is load-bearing
+    objective: Removing each control in turn brings back a named harm.
+    prevents: controls that exist on paper but do nothing
+    question: For each control, have you shown the harm that returns when it is switched off?
+    owner: Evidence auditor
+    requires: [ASR-1]
+    implementation: [src/fssaira/conformance.py]
+    verify:
+      - tests/test_ablations.py::test_removing_human_approval_enables_unilateral_high_impact
+      - tests/test_ablations.py::test_removing_egress_control_enables_exfiltration
+    codes: []
+    standards: [NIST AI RMF MEASURE]
+  - id: ASR-3
+    domain: ASR
+    level: 3
+    name: Bounded model check of the authority space
+    objective: The declared authority and disclosure space is enumerated against a reference predicate written independently of the implementation.
+    prevents: configurations nobody thought to test
+    question: Has every combination of role, operation and state in your policy been checked, not just the happy paths?
+    owner: Evidence auditor
+    requires: [ASR-2]
+    implementation: [src/fssaira/verification.py]
+    verify: [tests/test_verification_and_conformance.py::test_the_declared_authority_space_contains_no_violation]
+    codes: []
+    standards: [NIST AI RMF MEASURE]
+  - id: ASR-4
+    domain: ASR
+    level: 4
+    name: Falsification campaign
+    objective: Every falsifier is run for every domain pack in scope; removing one mediator check must produce a counterexample.
+    prevents: a safety claim nobody tried to break
+    question: Do you actively try to break your own safety claims, and does the attempt succeed when a check is removed?
+    owner: Evidence auditor
+    requires: [ASR-3]
+    implementation: [src/fssaira/thesis.py, src/fssaira/falsification.py]
+    verify: [tests/test_thesis.py::test_the_falsifiers_find_counterexamples_when_one_mediator_check_is_removed]
+    codes: []
+    standards: [NIST AI RMF MEASURE]
+  - id: ASR-5
+    domain: ASR
+    level: 5
+    name: Trusted base measured and attested
+    objective: SLOC per trusted component, an SBOM and a build measurement pinned by attestation; a changed measurement is a changed enforcer.
+    prevents: the phrase "small trusted base" used as an unfalsifiable slogan
+    question: Do you know exactly which code you trust, how big it is, and that production runs that code?
+    owner: Enforcer operations
+    requires: [ASR-1]
+    implementation: [src/fssaira/trusted_base.py]
+    verify:
+      - tests/test_master_guide_measures.py::test_trusted_base_is_measured_and_a_minority_of_the_package
+      - "command: fssaira assure trusted-base"
+    codes: []
+    standards: [OWASP LLM03 Supply Chain]
+  - id: ASR-6
+    domain: ASR
+    level: 5
+    name: Reproducible assurance report per release
+    objective: Each release carries a digest-stamped report of every engineering check; buyers reproduce the digest.
+    prevents: assurance that is a slide, not a result
+    question: Can a buyer or auditor rerun your assurance and get the same digest?
+    owner: Evidence auditor
+    requires: [ASR-5, EFF-2, EVD-8]
+    implementation: [src/fssaira/assurance_report.py]
+    verify:
+      - tests/test_assurance_report.py::test_report_passes_and_its_digest_is_reproducible
+      - "command: fssaira assure report"
+    codes: []
+    standards: [ISO/IEC 42001]
+  - id: ASR-7
+    domain: ASR
+    level: 5
+    name: Independent review and field evidence
+    objective: An independent security review and a bounded pilot produce findings, remediation and outcome measures for this deployment.
+    prevents: authors grading their own threat model
+    question: Has someone outside the team attacked this deployment, and has a real pilot measured outcomes?
+    owner: Executive sponsor
+    requires: [ASR-6]
+    implementation: [docs/PILOT_PROTOCOL.md, docs/GAPS.md]
+    verify: ["attestation: independent review report and pilot exit report, versioned to the deployment"]
+    codes: []
+    standards: [NIST AI RMF GOVERN, ISO/IEC 42001]

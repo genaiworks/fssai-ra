@@ -51,6 +51,7 @@ the mechanism exists and a deployment still has to qualify it.
 | Protocol qualified, deployment's own store and sink not | `adapter_qualification.py`: real store and sink in the chaos loop; concurrent linearization audit | `tests/test_adapter_qualification.py` | running it against your production database and external systems |
 | Evidence controls verified one by one | `evidence_federation.py`: one publication step and one verdict; per-record inclusion proofs on the runtime ledger | `tests/test_evidence_federation.py` | publishing to parties outside the institution |
 | No single reproducible assurance artefact | `assurance_report.py`, `fssaira assure report`: digest-stamped deterministic section | `tests/test_assurance_report.py` | a buyer reproducing the digest |
+| No single adoption path across the documentation | `framework.py`, `framework_catalogue.yaml`, `docs/FRAMEWORK.md`: catalogue, self-assessment, roadmap, starter kit | `tests/test_framework.py` | an organisation's own honest answers, with the named proofs run in its deployment |
 | Refusal codes not registered | `refusal_registry.py`, `docs/refusal_registry.json` | `tests/test_master_guide_measures.py` | none |
 
 ## What code can still improve without pretending these gaps are closed

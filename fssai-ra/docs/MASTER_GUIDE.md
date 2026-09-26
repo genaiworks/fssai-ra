@@ -2,7 +2,7 @@
 
 > **Documentation navigation:** [Documentation map](README.md) · [Start here](START_HERE.md) · [Specification](SPECIFICATION.md) · [Glossary and acronyms](GLOSSARY.md#acronyms-in-plain-language)
 >
-> **Recommended next:** Run `fssaira assure trusted-base` and `fssaira assure chaos`, then choose your conformance classes in [`SPECIFICATION.md`](SPECIFICATION.md).
+> **Recommended next:** Start from the framework's front door, [`FRAMEWORK.md`](FRAMEWORK.md): `fssaira framework init`, then `fssaira framework assess --roadmap`. This guide is the reasoning behind it.
 >
 > **Who this is for:** CIOs, CISOs, enterprise architects, risk, legal and data-protection
 > officers, and the engineers who will build and run the system. Each section says who acts on it.

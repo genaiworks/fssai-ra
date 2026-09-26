@@ -16,7 +16,9 @@ Sections:
   and a rewrite shown to fail;
 * ``trusted_base`` -- SLOC per component, build measurement, SBOM summary;
 * ``registry`` and ``specification_profile`` -- refusal codes and the swarm
-  profile's cited tests.
+  profile's cited tests;
+* ``framework_catalogue`` -- every module, test and code the adoption
+  framework's control catalogue cites exists.
 
 A report says what the reference implementation does here. It is the input to
 the deployment evidence bundle, not a substitute for it.
@@ -142,6 +144,14 @@ def _profile() -> dict:
     return {"passed": bool(rows) and not missing, "requirements": len(rows), "missing": missing}
 
 
+def _framework() -> dict:
+    from .framework import load, validate
+
+    problems = validate()
+    return {"passed": not problems, "controls": len(load().controls),
+            "broken_references": len(problems)}
+
+
 def build_report(*, seeds: int = 100, qualification_seeds: int = 20) -> dict:
     started = time.perf_counter()
     with tempfile.TemporaryDirectory(prefix="fssaira-assure-") as tmp:
@@ -155,6 +165,7 @@ def build_report(*, seeds: int = 100, qualification_seeds: int = 20) -> dict:
             "trusted_base": _trusted_base(),
             "registry": _registry(),
             "specification_profile": _profile(),
+            "framework_catalogue": _framework(),
         }
     host = {"python": platform.python_version(), "platform": platform.platform(),
             "seconds": round(time.perf_counter() - started, 2)}

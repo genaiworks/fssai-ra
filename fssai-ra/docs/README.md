@@ -223,6 +223,8 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`THESIS.md`](THESIS.md) — the Mediation Thesis: intelligence is untrusted; power and data are mediated. Three commitments, precise invariants, six falsifiers, predictions, and what an institution does next.
 - [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) — the study that closes the field-evidence gap: pre-conditions, evidence indicators, human-judged outcomes, and stop criteria.
 - [`SPECIFICATION.md`](SPECIFICATION.md) — normative requirements in six conformance classes, each tied to an executable test, attestation, or measurement.
+- [`FRAMEWORK.md`](FRAMEWORK.md) — **the front door for organisations adopting agent swarms:** five-minute start, nine domains, five maturity levels, the eight-step journey, routes by role and every command.
+- [`framework/CONTROLS.md`](framework/CONTROLS.md) — the 50-control catalogue generated from `src/fssaira/framework_catalogue.yaml`: objective, failure prevented, self-assessment question, owner, dependencies, implementation, proof, refusal codes and standards.
 - [`MASTER_GUIDE.md`](MASTER_GUIDE.md) — the master guide for secure agent swarms: critical review of the draft, control catalogue, trusted-base measurement, distributed revocation invariants, staffing, procurement clauses, and the one-page checklist.
 - [`SPECIFICATION_SWARM_PROFILE.md`](SPECIFICATION_SWARM_PROFILE.md) — companion profile: fourteen requirements for cooperating agents, distributed adapters and witness federation, each tied to a test.
 - [`refusal_registry.json`](refusal_registry.json) — every refusal code the build can emit, generated from source; a test fails if it drifts.
