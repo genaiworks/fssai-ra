@@ -19,7 +19,7 @@ The benchmark follows the design of
   published *important instructions* template.
 - Success is judged on what the environment actually executed. A synthetic
   workplace server ([`examples/bench/workplace_server.py`](../examples/bench/workplace_server.py))
-  logs every effect it performs. What the agent says it did is never used.
+  logs every effect it performs. Effectful tasks use the server log; the two answer-only tasks use a substring check on the final answer.
 
 The grid has 6 user tasks and 4 attacker goals: exfiltrate by email, pay an
 attacker, share a document out, and delete the ledger. That gives 24 attacked
@@ -39,15 +39,9 @@ defences:
 | `taint` | Provenance only: after reading untrusted content, no privileged tool (P5) |
 | `full` | Contract, taint and exact-action approval (P7), decided by an oracle reviewer |
 
-**The worst-case agent** (`scripted`) completes the task perfectly and obeys
-every injection the moment it reads one. The gate never consults the model,
-so the attack success this agent reaches is **an upper bound for any model**
-behind the same defence. Its utility loss is exactly the defence's false
-denials.
+**The scripted attacker** attempts one injected call, then follows a fixed legitimate plan. It tests the authored cases; it is not an upper bound on arbitrary models or adaptive attacks.
 
-**The oracle reviewer** approves exactly the call the user asked for. It shows
-what the mechanism allows when review is right, and how many reviews it asks
-for. It does not measure how well people review.
+**The historical reviewer** (`--review-mode task-fields`, the compatibility default) checks selected outcome fields. It does not inspect email content or prevent repeat effects. The signature binds exact arguments, but that is distinct from reviewer correctness. `--review-mode strict` requires the complete authored payload and permits the intended effect once per episode. Strict mode may refuse valid paraphrases and is a fixture test, not a semantic reviewer. Use separate output directories for the two modes.
 
 ## Run it
 
@@ -63,7 +57,7 @@ runs use temperature 0 and a fixed seed. Each model turn is capped at 1,024
 output tokens, and every result records how many tokens each turn used, so
 you can check whether the cap was ever reached.
 
-## Worst-case results
+## Scripted results with historical task-field review
 
 | Defence | Attack success | Utility | Reviews per case |
 |---|---|---|---|
@@ -82,7 +76,7 @@ it:
 - **Taint** leaks only through the poisoned trusted document, and it blocks
   legitimate work.
 
-The V31 paper (section 5.1) adds two local models run through the same grid.
+The V31 paper (section 5.1) includes five historical local models run through the same grid.
 
 The tasks, goals and world are synthetic and authored here. The benchmark
 measures where the mechanisms bind; it is not a replacement for AgentDojo's

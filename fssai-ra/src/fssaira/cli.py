@@ -1750,7 +1750,7 @@ def cmd_bench_injection(args) -> int:
             print(red(f"refused: unknown agent {name!r} (use scripted or ollama:<model>)"))
             return 2
     configs = CONFIGS if args.configs == "all" else tuple(args.configs.split(","))
-    results = run(agents, configs=configs, out=args.out)
+    results = run(agents, configs=configs, out=args.out, review_mode=args.review_mode)
     table = summarise(results)
     for agent, cells in table.items():
         print(f"\n{agent}")
@@ -1929,6 +1929,8 @@ def build_parser() -> argparse.ArgumentParser:
     binj.add_argument("--agents", default="scripted", help="scripted and/or ollama:<model>, comma-separated")
     binj.add_argument("--configs", default="all", help="none,allowlist,contract,taint,full or all")
     binj.add_argument("--out", type=Path, required=True, help="results directory (resumable)")
+    binj.add_argument("--review-mode", choices=("task-fields", "strict"), default="task-fields",
+                      help="Historical selected-field reviewer or exact fixture review")
     binj.add_argument("--ollama-host", default="http://127.0.0.1:11434")
     binj.set_defaults(func=cmd_bench_injection)
     mcp = sub.add_parser("mcp", help="gate Model Context Protocol tool servers (scan, lock, serve)")
