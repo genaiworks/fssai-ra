@@ -57,6 +57,7 @@ browser tab). A deployment that has such paths should start sessions untrusted
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
@@ -134,6 +135,11 @@ class McpGateCodes:
     SERVER_NOT_LOCKED = "SERVER_NOT_LOCKED"
     SERVER_IDENTITY_ROTATED = "SERVER_IDENTITY_ROTATED"
     UPSTREAM_REQUEST_NOT_FORWARDED = "UPSTREAM_REQUEST_NOT_FORWARDED"
+    UPSTREAM_URL_MUST_BE_HTTPS = "UPSTREAM_URL_MUST_BE_HTTPS"
+    UPSTREAM_REDIRECT_REFUSED = "UPSTREAM_REDIRECT_REFUSED"
+    UPSTREAM_HEADER_ENV_MISSING = "UPSTREAM_HEADER_ENV_MISSING"
+    SERVER_NEEDS_COMMAND_OR_URL = "SERVER_NEEDS_COMMAND_OR_URL"
+    NOTIFY_FAILED = "NOTIFY_FAILED"
     # calls
     ARGUMENTS_MUST_BE_AN_OBJECT = "ARGUMENTS_MUST_BE_AN_OBJECT"
     ARGUMENT_OUT_OF_SCOPE = "ARGUMENT_OUT_OF_SCOPE"
@@ -146,6 +152,10 @@ class McpGateCodes:
     APPROVAL_REQUEST_UNKNOWN = "APPROVAL_REQUEST_UNKNOWN"
     APPROVAL_REQUEST_NOT_PENDING = "APPROVAL_REQUEST_NOT_PENDING"
     INVALID_ARGUMENT_SCOPE = "INVALID_ARGUMENT_SCOPE"
+    INVALID_APPROVER_KEY = "INVALID_APPROVER_KEY"
+    APPROVER_NOT_REGISTERED = "APPROVER_NOT_REGISTERED"
+    APPROVAL_SIGNATURE_INVALID = "APPROVAL_SIGNATURE_INVALID"
+    APPROVAL_SIGNATURE_REQUIRED = "APPROVAL_SIGNATURE_REQUIRED"
     INVALID_SESSION_CONTRACT = "INVALID_SESSION_CONTRACT"
     TOOL_NOT_OFFERED = "TOOL_NOT_OFFERED"
     TOOL_CALL_LIMIT_REACHED = "TOOL_CALL_LIMIT_REACHED"
@@ -230,11 +240,83 @@ class ToolPolicy:
                 "approval": self.approval, "scope": {k: list(v) for k, v in sorted(self.scope.items())}}
 
 
+
 def locked_governance(policy: Mapping[str, Any]) -> dict:
     """The same view read back from a lock file; absent fields meant 'off' when it was written."""
     return {"trusted_output": bool(policy.get("trusted_output", False)),
             "max_calls": policy.get("max_calls"), "approval": bool(policy.get("approval", False)),
-            "scope": {k: list(v) for k, v in sorted((policy.get("scope") or {}).items())}}
+            "scope": {k: list(v) for k, v in sorted((policy.get("scope") or {}).items())},
+            "approvers": list(policy.get("approvers") or [])}
+
+
+def parse_approvers(value: Any) -> dict[str, str]:
+    raw = value or {}
+    _require(isinstance(raw, dict), "INVALID_APPROVER_KEY")
+    approvers = {}
+    for name, key in raw.items():
+        _require(isinstance(name, str) and bool(name.strip()), "APPROVAL_NEEDS_A_NAMED_HUMAN")
+        _require(isinstance(key, str) and key.startswith("ed25519:"), "INVALID_APPROVER_KEY")
+        hexkey = key.split(":", 1)[1]
+        _require(len(hexkey) == 64 and all(c in "0123456789abcdef" for c in hexkey), "INVALID_APPROVER_KEY")
+        approvers[name.strip()] = hexkey
+    return approvers
+
+
+def approval_payload(record: Mapping[str, Any]) -> bytes:
+    """What an approver's signature covers: the request, the exact call and the decision."""
+    return canonical({k: record.get(k) for k in (
+        "id", "tool", "args_sha256", "status", "decided_by", "decided_at", "expires_at")})
+
+
+def generate_approver_key(path: str | Path, name: str) -> str:
+    """Write an owner-only Ed25519 key for one named approver; return the config line."""
+    from ..evidence_notary import _ed25519
+
+    private_cls, _, _, encoding, public_format = _ed25519()
+    _require(isinstance(name, str) and bool(name.strip()), "APPROVAL_NEEDS_A_NAMED_HUMAN")
+    key = private_cls.generate()
+    from cryptography.hazmat.primitives.serialization import NoEncryption, PrivateFormat
+
+    private = key.private_bytes(encoding.Raw, PrivateFormat.Raw, NoEncryption()).hex()
+    public = key.public_key().public_bytes(encoding.Raw, public_format.Raw).hex()
+    path = Path(path)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        json.dump({"name": name.strip(), "ed25519_private": private, "ed25519_public": public}, handle)
+    return f"ed25519:{public}"
+
+
+def sign_approval(record: dict, key_path: str | Path) -> dict:
+    from ..evidence_notary import _ed25519
+
+    private_cls = _ed25519()[0]
+    key = json.loads(Path(key_path).read_text(encoding="utf-8"))
+    _require(key.get("name") == record.get("decided_by"), "APPROVER_NOT_REGISTERED")
+    signer = private_cls.from_private_bytes(bytes.fromhex(key["ed25519_private"]))
+    return {**record, "signature": signer.sign(approval_payload(record)).hex()}
+
+
+def approval_signature_valid(record: Mapping[str, Any], approvers: Mapping[str, str]) -> bool:
+    from ..evidence_notary import _ed25519
+
+    _, public_cls, invalid, _, _ = _ed25519()
+    key = approvers.get(str(record.get("decided_by")))
+    signature = record.get("signature")
+    if key is None or not isinstance(signature, str):
+        return False
+    try:
+        public_cls.from_public_bytes(bytes.fromhex(key)).verify(bytes.fromhex(signature),
+                                                                approval_payload(record))
+    except (invalid, ValueError):
+        return False
+    return True
+
+
+def tool_governance(config: GateConfig, spec: UpstreamSpec, tool: str) -> dict:
+    """A tool's pinned governance: its policy, plus who may approve it."""
+    policy = spec.policy_for(tool)
+    approvers = sorted(f"{n}={k}" for n, k in config.approvers.items()) if policy.approval else []
+    return {**policy.governance(), "approvers": approvers}
 
 
 @dataclass(frozen=True)
@@ -258,7 +340,7 @@ class SessionContract:
 
 @dataclass(frozen=True)
 class UpstreamSpec:
-    """One stdio MCP server the gate launches on the host's behalf."""
+    """One MCP server: launched on stdio, or reached at a Streamable HTTP ``url``."""
 
     name: str
     command: tuple[str, ...]
@@ -267,6 +349,10 @@ class UpstreamSpec:
     cwd: str | None = None
     pin_files: tuple[str, ...] = ()
     tools: Mapping[str, ToolPolicy] = field(default_factory=dict)
+    url: str | None = None
+    #: Header values of the form ``env:NAME`` are read from the gate's
+    #: environment at connect time, so secrets never sit in the policy file.
+    headers: Mapping[str, str] = field(default_factory=dict)
 
     def launch_identity(self, base: Path) -> str:
         """The server's identity pin: how it is launched, plus pinned file bytes.
@@ -282,8 +368,12 @@ class UpstreamSpec:
             resolved = (base / path) if not os.path.isabs(path) else Path(path)
             _require(resolved.is_file(), "PINNED_FILE_MISSING")
             files[path] = sha256(resolved.read_bytes())
-        return sha256(canonical({"command": list(self.command), "env": dict(self.env),
-                                 "cwd": self.cwd, "files": files}))
+        identity: dict[str, Any] = {"command": list(self.command), "env": dict(self.env),
+                                    "cwd": self.cwd, "files": files}
+        if self.url is not None:
+            # Header names, not values: a rotated token is not a different server.
+            identity.update(url=self.url, headers=sorted(self.headers))
+        return sha256(canonical(identity))
 
     def policy_for(self, tool: str) -> ToolPolicy:
         return self.tools.get(tool) or ToolPolicy.parse(None)
@@ -299,6 +389,11 @@ class GateConfig:
     session: SessionContract = SessionContract()
     approvals: Path | None = None
     approval_ttl: float = 900.0
+    #: ``{name: public-key hex}``. When set, only these people can approve,
+    #: and only with a signature the gate verifies.
+    approvers: Mapping[str, str] = field(default_factory=dict)
+    #: Where to announce a held call (a chat or ticketing webhook). Metadata only.
+    notify_url: str | None = None
 
     @classmethod
     def load(cls, path: str | Path) -> GateConfig:
@@ -312,22 +407,28 @@ class GateConfig:
         for name, spec in raw["servers"].items():
             _require(isinstance(spec, dict), "INVALID_SERVER_ENTRY")
             _require(WIRE_SEPARATOR not in str(name), "SERVER_NAME_CONTAINS_WIRE_SEPARATOR")
+            url = spec.get("url")
+            _require((url is None) != (spec.get("command") is None), "SERVER_NEEDS_COMMAND_OR_URL")
             command = spec.get("command")
             if isinstance(command, str):
                 command = [command]
             command = list(command or []) + list(spec.get("args") or [])
-            _require(bool(command) and all(isinstance(p, str) for p in command),
-                     "SERVER_COMMAND_REQUIRED")
-            # Launch with the interpreter running the gate when a config says
-            # ``python``, so examples work inside a virtual environment.
-            if command[0] in ("python", "python3"):
-                command[0] = sys.executable
+            if url is None:
+                _require(bool(command) and all(isinstance(p, str) for p in command),
+                         "SERVER_COMMAND_REQUIRED")
+                # Launch with the interpreter running the gate when a config says
+                # ``python``, so examples work inside a virtual environment.
+                if command[0] in ("python", "python3"):
+                    command[0] = sys.executable
+            else:
+                check_upstream_url(url)
             tools = {tool: ToolPolicy.parse(policy)
                      for tool, policy in (spec.get("tools") or {}).items()}
             servers.append(UpstreamSpec(
                 name=name, command=tuple(command), operator=str(spec.get("operator") or ""),
                 env={str(k): str(v) for k, v in (spec.get("env") or {}).items()},
-                cwd=spec.get("cwd"), pin_files=tuple(spec.get("pin_files") or ()), tools=tools))
+                cwd=spec.get("cwd"), pin_files=tuple(spec.get("pin_files") or ()), tools=tools,
+                url=url, headers={str(k): str(v) for k, v in (spec.get("headers") or {}).items()}))
         trusted = frozenset(raw.get("trusted_sources") or ())
         for source in trusted:
             _require(isinstance(source, str) and source.count("/") == 1, "TRUSTED_SOURCE_MUST_BE_QUALIFIED")
@@ -340,7 +441,9 @@ class GateConfig:
                      session_starts_untrusted=bool(raw.get("session_starts_untrusted", False)),
                      call_timeout=float(raw.get("call_timeout", 60.0)), base=base,
                      session=SessionContract.parse(raw.get("session")),
-                     approvals=(base / approvals) if approvals else None, approval_ttl=float(ttl))
+                     approvals=(base / approvals) if approvals else None, approval_ttl=float(ttl),
+                     approvers=parse_approvers(raw.get("approvers")),
+                     notify_url=check_upstream_url(raw["notify_url"]) if raw.get("notify_url") else None)
         needs_store = any(p.approval for s in config.servers for p in s.tools.values())
         _require(config.approvals is not None or not needs_store, "APPROVAL_STORE_REQUIRED")
         return config
@@ -448,16 +551,7 @@ class Upstream:
         return result
 
     def list_tools(self) -> list[dict]:
-        tools: list[dict] = []
-        cursor = None
-        for _ in range(64):  # a server that paginates forever does not get to stall the gate
-            result = self.request("tools/list", {"cursor": cursor} if cursor else {})
-            tools.extend(t for t in result.get("tools") or [] if isinstance(t, dict))
-            cursor = result.get("nextCursor")
-            if not cursor:
-                self.list_changed = False
-                return tools
-        raise McpGateDenied("UPSTREAM_PAGINATION_UNBOUNDED")
+        return _list_all_tools(self)
 
     def call_tool(self, name: str, arguments: dict) -> dict:
         return self.request("tools/call", {"name": name, "arguments": arguments})
@@ -473,6 +567,185 @@ class Upstream:
         except subprocess.TimeoutExpired:
             self._process.kill()
             self._process.wait()
+
+
+def _list_all_tools(upstream: Any) -> list[dict]:
+    tools: list[dict] = []
+    cursor = None
+    for _ in range(64):  # a server that paginates forever does not get to stall the gate
+        result = upstream.request("tools/list", {"cursor": cursor} if cursor else {})
+        tools.extend(t for t in result.get("tools") or [] if isinstance(t, dict))
+        cursor = result.get("nextCursor")
+        if not cursor:
+            upstream.list_changed = False
+            return tools
+    raise McpGateDenied("UPSTREAM_PAGINATION_UNBOUNDED")
+
+
+def _json_or_none(text: str | bytes) -> Any:
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
+
+
+def check_upstream_url(url: Any) -> str:
+    """HTTPS, or plain HTTP to this machine only. Nothing else carries a credential."""
+    from urllib.parse import urlsplit
+
+    _require(isinstance(url, str), "UPSTREAM_URL_MUST_BE_HTTPS")
+    parts = urlsplit(url)
+    loopback = parts.hostname in ("localhost", "127.0.0.1", "::1")
+    _require(parts.scheme == "https" or (parts.scheme == "http" and loopback), "UPSTREAM_URL_MUST_BE_HTTPS")
+    return url
+
+
+class HttpUpstream:
+    """A Streamable HTTP client for one remote MCP server, with the stdio client's interface.
+
+    Each JSON-RPC message is POSTed to the server's endpoint. A reply is either
+    one JSON body or an event stream that may carry server requests and
+    notifications before the response; server requests are answered, and
+    refused, exactly as on stdio. Redirects are refused rather than followed,
+    so a credential header can never be replayed to another host.
+    """
+
+    def __init__(self, spec: UpstreamSpec, *, timeout: float = 60.0,
+                 on_request: Callable[[str, dict], None] | None = None) -> None:
+        import urllib.request
+
+        self.spec = spec
+        self.timeout = timeout
+        self.list_changed = False
+        self.server_info: dict = {}
+        self._next_id = 0
+        self._on_request = on_request
+        self._session: str | None = None
+        self._protocol: str | None = None
+        self._headers = {}
+        for key, value in spec.headers.items():
+            if value.startswith("env:"):
+                resolved = os.environ.get(value[4:])
+                if resolved is None:
+                    raise McpGateDenied("UPSTREAM_HEADER_ENV_MISSING")
+                value = resolved
+            self._headers[key] = value
+
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *args: Any, **kwargs: Any) -> None:
+                raise McpGateDenied("UPSTREAM_REDIRECT_REFUSED")
+
+        self._opener = urllib.request.build_opener(NoRedirect)
+
+    def _post(self, message: dict) -> Any:
+        import urllib.error
+        import urllib.request
+
+        headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream",
+                   **self._headers}
+        if self._session:
+            headers["Mcp-Session-Id"] = self._session
+        if self._protocol:
+            headers["MCP-Protocol-Version"] = self._protocol
+        request = urllib.request.Request(str(self.spec.url), data=json.dumps(message).encode(),
+                                         headers=headers, method="POST")
+        try:
+            return self._opener.open(request, timeout=self.timeout)
+        except McpGateDenied:
+            raise
+        except urllib.error.HTTPError as exc:
+            if 300 <= exc.code < 400:
+                raise McpGateDenied("UPSTREAM_REDIRECT_REFUSED") from exc
+            raise McpGateDenied("UPSTREAM_ERROR") from exc
+        except (urllib.error.URLError, OSError, TimeoutError) as exc:
+            raise McpGateDenied("UPSTREAM_UNAVAILABLE") from exc
+
+    def _messages(self, response: Any) -> Iterable[dict]:
+        kind = (response.headers.get("Content-Type") or "").split(";")[0].strip()
+        if kind == "text/event-stream":
+            data: list[str] = []
+            for raw in response:
+                line = raw.decode("utf-8").rstrip("\r\n")
+                if line.startswith("data:"):
+                    data.append(line[5:].lstrip())
+                elif not line and data:
+                    parsed = _json_or_none("\n".join(data))
+                    data = []
+                    if parsed is not None:
+                        yield parsed
+            if data and (parsed := _json_or_none("\n".join(data))) is not None:
+                yield parsed
+        else:
+            parsed = _json_or_none(response.read() or b"null")
+            if parsed is not None:
+                yield parsed
+
+    def notify(self, method: str, params: dict | None = None) -> None:
+        self._post({"jsonrpc": "2.0", "method": method, **({"params": params} if params else {})}).close()
+
+    def request(self, method: str, params: dict | None = None) -> dict:
+        self._next_id += 1
+        ident = self._next_id
+        response = self._post({"jsonrpc": "2.0", "id": ident, "method": method, "params": params or {}})
+        with response:
+            session = response.headers.get("Mcp-Session-Id")
+            if session and self._session is None:
+                self._session = session
+            for message in self._messages(response):
+                if not isinstance(message, dict):
+                    continue
+                if "method" in message and "id" in message:
+                    self._answer_upstream_request(message)
+                elif "method" in message:
+                    if message["method"] == "notifications/tools/list_changed":
+                        self.list_changed = True
+                elif message.get("id") == ident:
+                    if "error" in message:
+                        raise McpGateDenied("UPSTREAM_ERROR")
+                    return message.get("result") or {}
+        raise McpGateDenied("UPSTREAM_UNAVAILABLE")
+
+    def _answer_upstream_request(self, message: dict) -> None:
+        method = message.get("method", "")
+        if method == "ping":
+            self._post({"jsonrpc": "2.0", "id": message["id"], "result": {}}).close()
+            return
+        if self._on_request is not None:
+            self._on_request(method, message.get("params") or {})
+        self._post({"jsonrpc": "2.0", "id": message["id"],
+                    "error": {"code": -32601, "message": "UPSTREAM_REQUEST_NOT_FORWARDED"}}).close()
+
+    def initialize(self) -> dict:
+        result = self.request("initialize", {
+            "protocolVersion": LATEST_PROTOCOL, "capabilities": {},
+            "clientInfo": {"name": GATE_NAME, "version": "1"}})
+        self.server_info = dict(result.get("serverInfo") or {})
+        version = result.get("protocolVersion")
+        self._protocol = version if version in PROTOCOL_VERSIONS else LATEST_PROTOCOL
+        self.notify("notifications/initialized")
+        return result
+
+    def list_tools(self) -> list[dict]:
+        return _list_all_tools(self)
+
+    def call_tool(self, name: str, arguments: dict) -> dict:
+        return self.request("tools/call", {"name": name, "arguments": arguments})
+
+    def close(self) -> None:
+        if self._session:
+            import urllib.request
+
+            request = urllib.request.Request(str(self.spec.url), method="DELETE",
+                                             headers={**self._headers, "Mcp-Session-Id": self._session})
+            with contextlib.suppress(Exception):  # ending a session is best effort
+                self._opener.open(request, timeout=min(self.timeout, 5)).close()
+
+
+def open_upstream(spec: UpstreamSpec, *, base: Path, timeout: float,
+                  on_request: Callable[[str, dict], None] | None = None) -> Upstream | HttpUpstream:
+    if spec.url is not None:
+        return HttpUpstream(spec, timeout=timeout, on_request=on_request)
+    return Upstream(spec, base=base, timeout=timeout, on_request=on_request)
 
 
 # -- turning an MCP listing into a manifest ------------------------------------
@@ -571,7 +844,7 @@ def _survey(config: GateConfig) -> list[dict]:
     survey = []
     for spec in config.servers:
         identity = spec.launch_identity(config.base)
-        upstream = Upstream(spec, base=config.base, timeout=config.call_timeout)
+        upstream = open_upstream(spec, base=config.base, timeout=config.call_timeout)
         try:
             upstream.initialize()
             listing = upstream.list_tools()
@@ -591,7 +864,7 @@ def _survey(config: GateConfig) -> list[dict]:
                 "output_hash": manifest.output_hash,
                 "annotations": tool.get("annotations") or {},
                 "policy": {"power": policy.power, "irreversibility": policy.irreversibility,
-                           "effects": sorted(policy.effects), **policy.governance(),
+                           "effects": sorted(policy.effects), **tool_governance(config, spec, manifest.name),
                            "declared": manifest.name in spec.tools},
                 "privileged": ToolRegistry.is_privileged(manifest),
                 "findings": list(scan_description(text, known_servers=known, own_server=spec.name))
@@ -763,19 +1036,20 @@ class ApprovalStore:
         return sorted(records, key=lambda r: r.get("requested_at", 0))
 
     def request(self, tool: str, args_digest: str, arguments: Mapping[str, Any]) -> dict:
-        """Reuse the pending request for this exact call, or open one."""
+        """Reuse the pending request for this exact call, or open one (``new`` says which)."""
         with self._lock:
             for record in self.all():
                 if (record["status"] == "pending" and record["tool"] == tool
                         and record["args_sha256"] == args_digest):
-                    return record
+                    return {**record, "new": False}
             record = {"id": sha256(f"{tool}|{args_digest}|{self._clock()}|{os.urandom(8).hex()}")[:20],
                       "tool": tool, "args_sha256": args_digest, "arguments": dict(arguments),
                       "requested_at": round(self._clock(), 3), "status": "pending"}
             self._write(record)
-            return record
+            return {**record, "new": True}
 
-    def decide(self, request_id: str, *, by: str, approve: bool, ttl: float = 900.0) -> dict:
+    def decide(self, request_id: str, *, by: str, approve: bool, ttl: float = 900.0,
+               key_path: str | Path | None = None) -> dict:
         _require(isinstance(by, str) and bool(by.strip()), "APPROVAL_NEEDS_A_NAMED_HUMAN")
         with self._lock:
             record = self.get(request_id)
@@ -785,27 +1059,56 @@ class ApprovalStore:
                           decided_at=round(now, 3))
             if approve:
                 record["expires_at"] = round(now + ttl, 3)
+                if key_path is not None:
+                    record = sign_approval(record, key_path)
             else:
                 record.pop("arguments", None)
             self._write(record)
             return record
 
-    def consume(self, tool: str, args_digest: str) -> dict | None:
-        """Use one live approval for exactly this call, or return None."""
+    def consume(self, tool: str, args_digest: str, *,
+                approvers: Mapping[str, str] | None = None,
+                on_reject: Callable[[dict, str], None] | None = None) -> dict | None:
+        """Use one live approval for exactly this call, or return None.
+
+        Use is claimed by renaming the request file, which the operating
+        system does atomically: of two gate processes racing for one approval,
+        exactly one succeeds. With registered approvers, an approval counts
+        only if its signature verifies against the named approver's key.
+        """
         with self._lock:
             now = self._clock()
             for record in self.all():
-                if (record["status"] == "approved" and record["tool"] == tool
+                if not (record["status"] == "approved" and record["tool"] == tool
                         and record["args_sha256"] == args_digest):
-                    if record.get("expires_at", 0) <= now:
-                        record["status"] = "expired"
-                        record.pop("arguments", None)
-                        self._write(record)
-                        continue
+                    continue
+                path = self._path(record["id"])
+                claim = path.with_suffix(f".claim-{os.getpid()}-{threading.get_ident()}")
+                try:
+                    os.rename(path, claim)
+                except FileNotFoundError:
+                    continue  # another gate claimed it first
+                record = json.loads(claim.read_text(encoding="utf-8"))
+                reason = None
+                if record.get("status") != "approved":
+                    reason = "APPROVAL_REQUEST_NOT_PENDING"
+                elif record.get("expires_at", 0) <= now:
+                    record["status"], reason = "expired", "APPROVAL_EXPIRED"
+                elif approvers and record.get("decided_by") not in approvers:
+                    record["status"], reason = "rejected", "APPROVER_NOT_REGISTERED"
+                elif approvers and "signature" not in record:
+                    record["status"], reason = "rejected", "APPROVAL_SIGNATURE_REQUIRED"
+                elif approvers and not approval_signature_valid(record, approvers):
+                    record["status"], reason = "rejected", "APPROVAL_SIGNATURE_INVALID"
+                else:
                     record.update(status="used", used_at=round(now, 3))
-                    record.pop("arguments", None)
-                    self._write(record)
+                record.pop("arguments", None)
+                self._write(record)
+                claim.unlink(missing_ok=True)
+                if reason is None:
                     return record
+                if on_reject is not None and reason != "APPROVAL_EXPIRED":
+                    on_reject(record, reason)
             return None
 
 
@@ -825,7 +1128,7 @@ class Gate:
         if config.session_starts_untrusted:
             self.chain.absorb("host/untrusted-context")
         self.calls: dict[str, int] = {}
-        self.upstreams: dict[str, Upstream] = {}
+        self.upstreams: dict[str, Upstream | HttpUpstream] = {}
         self.visible: dict[str, dict] = {}
         self._clock = clock
         self.started_at = clock()
@@ -855,8 +1158,8 @@ class Gate:
                 self._record("server", spec.name, "deny",
                              "SERVER_NOT_LOCKED" if locked is None else "SERVER_IDENTITY_ROTATED")
                 continue
-            upstream = Upstream(spec, base=self.config.base, timeout=self.config.call_timeout,
-                                on_request=self._upstream_request_refused(spec.name))
+            upstream = open_upstream(spec, base=self.config.base, timeout=self.config.call_timeout,
+                                     on_request=self._upstream_request_refused(spec.name))
             try:
                 upstream.initialize()
             except McpGateDenied as exc:
@@ -899,7 +1202,7 @@ class Gate:
                     self.registry.offer(manifest, model_text(tool))
                     # Scope, approval and limits are policy the reviewer approved
                     # too; widening any of them after the lock is drift.
-                    _require(spec.policy_for(manifest.name).governance()
+                    _require(tool_governance(self.config, spec, manifest.name)
                              == locked_governance(self._locked_policy.get(qualified, {})),
                              "POLICY_CHANGED_AFTER_APPROVAL")
                 except ToolSupplyDenied as exc:
@@ -949,11 +1252,16 @@ class Gate:
             approval = None
             if policy.approval:
                 assert self.approvals is not None  # GateConfig.load refuses a config without a store
-                approval = self.approvals.consume(qualified, args_digest)
+                approval = self.approvals.consume(
+                    qualified, args_digest, approvers=self.config.approvers,
+                    on_reject=lambda r, why: self._record("approval", qualified, "deny", why,
+                                                          args_sha256=args_digest, request=r["id"]))
                 if approval is None:
                     pending = self.approvals.request(qualified, args_digest, arguments or {})
                     self._record("approval", qualified, "hold", "APPROVAL_REQUIRED",
                                  args_sha256=args_digest, request=pending["id"])
+                    if pending["new"]:
+                        self._notify(pending)
                     return _refusal("APPROVAL_REQUIRED", (
                         f" Request {pending['id']} holds these exact arguments for a named person. "
                         "Retry the same call, unchanged, after it is approved; any change needs a new approval."))
@@ -980,6 +1288,23 @@ class Gate:
         self._record("call", qualified, "allow", "AUTHORISED", args_sha256=args_digest,
                      result_sha256=sha256(canonical(result)), **extra)
         return result
+
+    def _notify(self, pending: Mapping[str, Any]) -> None:
+        """Tell approvers a call is waiting. Never the arguments; never blocking."""
+        if not self.config.notify_url:
+            return
+        import urllib.request
+
+        body = {"event": "approval_requested", "gate": GATE_NAME, "request": pending["id"],
+                "tool": pending["tool"], "args_sha256": pending["args_sha256"],
+                "requested_at": pending["requested_at"],
+                "review": f"fssaira mcp approvals --config <gate.yaml>  (request {pending['id']})"}
+        request = urllib.request.Request(self.config.notify_url, data=json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            urllib.request.urlopen(request, timeout=5).close()  # noqa: S310 - scheme checked at load
+        except Exception:  # noqa: BLE001 - a failed notification must not change the decision
+            self._record("notify", pending["tool"], "error", "NOTIFY_FAILED", request=pending["id"])
 
     def _record(self, event: str, subject: str, decision: str, code: str, **extra: Any) -> None:
         self.receipts.append(event=event, subject=subject, decision=decision, code=code,
@@ -1059,8 +1384,8 @@ def write_json(data: Mapping[str, Any], path: str | Path) -> None:
 
 __all__ = [
     "GATE_NAME", "LATEST_PROTOCOL", "LOCK_SCHEMA", "PROTOCOL_VERSIONS", "RECEIPT_SCHEMA",
-    "UNDECLARED_POLICY", "UPSTREAM_REQUESTS_REFUSED", "WIRE_SEPARATOR", "Gate", "GateConfig",
+    "UNDECLARED_POLICY", "UPSTREAM_REQUESTS_REFUSED", "WIRE_SEPARATOR", "Gate", "GateConfig", "HttpUpstream",
     "ApprovalStore", "McpGateCodes", "McpGateDenied", "McpToolRegistry", "ReceiptLog", "SessionContract", "ToolPolicy", "Upstream", "UpstreamSpec", "annotation_findings",
-    "executable_hash", "load_lock", "lock", "locked_governance", "manifest_for", "model_text", "qualified_from_wire",
+    "executable_hash", "load_lock", "approval_payload", "approval_signature_valid", "generate_approver_key", "check_upstream_url", "lock", "locked_governance", "open_upstream", "parse_approvers", "sign_approval", "tool_governance", "manifest_for", "model_text", "qualified_from_wire",
     "scan", "serve", "verify_receipts", "wire_name", "write_json",
 ]

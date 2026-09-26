@@ -86,9 +86,12 @@ This is the same for every agent, and each item is independently useful:
   - `scan` flags poisoned tool text, and `lock` records a named person's
     approval of the exact text.
   - Scope each sensitive argument to exact values.
-  - Mark each irreversible tool `approval: required`.
+  - Mark each irreversible tool `approval: required`, and register the people
+    who may approve it (`fssaira mcp approver-key`), so an approval is a
+    signature rather than a file anyone could write.
   - Give the session an expiry and a call budget.
 
+  Remote vendor tools (Streamable HTTP) are gated the same way as local ones.
   A complete example is in
   [`examples/mcp/gate.authority.yaml`](../examples/mcp/gate.authority.yaml).
 

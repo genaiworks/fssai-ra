@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased — gate hardening
+
+- **Signed approvals.** Approvers are registered by Ed25519 key
+  (`fssaira mcp approver-key`), and an approval counts only if it is signed by
+  one of them. Unsigned, unregistered, wrong-key and edited approvals are
+  refused and recorded. The approver list is pinned by the lock.
+- **Single use across processes.** Use of an approval is claimed by an atomic
+  rename; a race of six gate stores leaves exactly one winner in each of 20
+  trials.
+- **Remote MCP servers.** The gate is now a Streamable HTTP client:
+  - HTTPS only, except for loopback;
+  - redirects refused;
+  - header secrets read from the environment and never pinned by value;
+  - server session ids carried on every request;
+  - server requests inside an event stream refused, as on stdio.
+- **Approver notification.** A `notify_url` webhook announces each held call
+  with metadata only; a failed notification changes nothing.
+- Tests: `tests/test_mcp_gate_hardening.py`.
+
 ## Unreleased — adoption planner and authority-bound gate
 
 - **`fssaira framework plan`** (`adoption_plan.py`). About ten yes-or-no answers

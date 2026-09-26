@@ -51,7 +51,8 @@ Most experiments print a report and support `--output PATH` for JSON. Consult ea
 | `fssaira mcp lock --config gate.yaml --lock mcp.lock.json --approved-by NAME` | Record a named approval of the exact current tool listing |
 | `fssaira mcp serve --config gate.yaml --lock mcp.lock.json --receipts PATH` | Run the gate as an MCP server on stdio for a host to launch |
 | `fssaira mcp approvals --config gate.yaml` | List calls held for exact-action approval, with their arguments |
-| `fssaira mcp approve ID --config gate.yaml --by NAME` | Approve one held call; `deny` refuses it |
+| `fssaira mcp approve ID --config gate.yaml --by NAME [--key-file KEY]` | Approve one held call (signed when approvers are registered); `deny` refuses it |
+| `fssaira mcp approver-key --name NAME --out KEY` | Create a named approver's owner-only signing key and print its registration line |
 | `fssaira framework plan USE_CASE.yaml` | Target level, applicable controls, first sprint and stop conditions for one use case ([guide](ADOPT.md)) |
 | `fssaira mcp verify PATH` | Verify a gate receipt log's hash chain |
 | `fssaira evidence verify PATH` | Verify exported evidence JSON |

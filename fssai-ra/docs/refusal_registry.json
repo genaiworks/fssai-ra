@@ -67,9 +67,18 @@
    "fssaira.exact_action"
   ],
   "APPROVAL_SIGNATURE_INVALID": [
-   "fssaira.exact_action"
+   "fssaira.exact_action",
+   "fssaira.integration.mcp_gate"
+  ],
+  "APPROVAL_SIGNATURE_REQUIRED": [
+   "fssaira.cli",
+   "fssaira.integration.mcp_gate"
   ],
   "APPROVAL_STORE_REQUIRED": [
+   "fssaira.cli",
+   "fssaira.integration.mcp_gate"
+  ],
+  "APPROVER_NOT_REGISTERED": [
    "fssaira.cli",
    "fssaira.integration.mcp_gate"
   ],
@@ -611,6 +620,9 @@
   "INVALID_ANCESTRY": [
    "fssaira.tbc.runtime"
   ],
+  "INVALID_APPROVER_KEY": [
+   "fssaira.integration.mcp_gate"
+  ],
   "INVALID_ARGUMENT_SCOPE": [
    "fssaira.integration.mcp_gate"
   ],
@@ -820,6 +832,9 @@
   ],
   "NOTHING_TO_RESTORE": [
    "fssaira.privacy_pipeline"
+  ],
+  "NOTIFY_FAILED": [
+   "fssaira.integration.mcp_gate"
   ],
   "NOT_QUALIFIED_FOR_OPERATIONAL_USE": [
    "fssaira.joined_workflow"
@@ -1206,6 +1221,9 @@
   "SERVER_NAME_CONTAINS_WIRE_SEPARATOR": [
    "fssaira.integration.mcp_gate"
   ],
+  "SERVER_NEEDS_COMMAND_OR_URL": [
+   "fssaira.integration.mcp_gate"
+  ],
   "SERVER_NOT_LOCKED": [
    "fssaira.integration.mcp_gate"
   ],
@@ -1502,7 +1520,13 @@
   "UPSTREAM_ERROR": [
    "fssaira.integration.mcp_gate"
   ],
+  "UPSTREAM_HEADER_ENV_MISSING": [
+   "fssaira.integration.mcp_gate"
+  ],
   "UPSTREAM_PAGINATION_UNBOUNDED": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "UPSTREAM_REDIRECT_REFUSED": [
    "fssaira.integration.mcp_gate"
   ],
   "UPSTREAM_REQUEST_NOT_FORWARDED": [
@@ -1515,6 +1539,9 @@
    "fssaira.integration.mcp_gate"
   ],
   "UPSTREAM_UNAVAILABLE": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "UPSTREAM_URL_MUST_BE_HTTPS": [
    "fssaira.integration.mcp_gate"
   ],
   "USE_CASE_NEEDS_A_NAME": [
@@ -1560,6 +1587,6 @@
    "fssaira.joined_workflow"
   ]
  },
- "count": 512,
+ "count": 520,
  "generated_by": "fssaira.refusal_registry"
 }

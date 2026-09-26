@@ -1663,8 +1663,14 @@ def cmd_mcp_decide(args) -> int:
 
     try:
         config, store = _approval_store(args.config)
-        record = store.decide(args.request, by=args.by, approve=args.command_name == "approve",
-                              ttl=config.approval_ttl)
+        approving = args.command_name == "approve"
+        if approving and config.approvers:
+            if args.key_file is None:
+                raise McpGateDenied("APPROVAL_SIGNATURE_REQUIRED")
+            if args.by not in config.approvers:
+                raise McpGateDenied("APPROVER_NOT_REGISTERED")
+        record = store.decide(args.request, by=args.by, approve=approving, ttl=config.approval_ttl,
+                              key_path=args.key_file if approving else None)
     except McpGateDenied as exc:
         print(red(f"refused: {exc}"))
         return 2
@@ -1673,6 +1679,21 @@ def cmd_mcp_decide(args) -> int:
     if word == "approved":
         print(f"  single use; the same call with the same arguments may now run once "
               f"within {config.approval_ttl:.0f} s")
+    return 0
+
+
+def cmd_mcp_approver_key(args) -> int:
+    """Create one approver's signing key; print the line to register them."""
+    from .integration.mcp_gate import generate_approver_key
+
+    try:
+        line = generate_approver_key(args.out, args.name)
+    except FileExistsError:
+        print(red(f"refused: {args.out} already exists; a key is never overwritten"))
+        return 2
+    print(green(f"wrote {args.out} (owner-only). Keep it where the agent cannot read it."))
+    print("Register the approver in the gate policy, then lock again:\n")
+    print(f"approvers:\n  {json.dumps(args.name)}: {line}")
     return 0
 
 
@@ -1863,7 +1884,13 @@ def build_parser() -> argparse.ArgumentParser:
         decide.add_argument("request")
         decide.add_argument("--config", type=Path, required=True, help="gate policy YAML")
         decide.add_argument("--by", required=True, help="the named person deciding")
+        decide.add_argument("--key-file", type=Path,
+                            help="the approver's key from `mcp approver-key` (required when approvers are registered)")
         decide.set_defaults(func=cmd_mcp_decide, command_name=verb)
+    mcp_key = mcp_sub.add_parser("approver-key", help="create a named approver's signing key")
+    mcp_key.add_argument("--name", required=True)
+    mcp_key.add_argument("--out", type=Path, required=True)
+    mcp_key.set_defaults(func=cmd_mcp_approver_key)
     mcp_verify = add_output(mcp_sub.add_parser("verify", help="verify a receipt log's hash chain"))
     mcp_verify.add_argument("receipts", type=Path)
     mcp_verify.set_defaults(func=cmd_mcp_verify)

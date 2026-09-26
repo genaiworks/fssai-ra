@@ -196,9 +196,74 @@ approval_ttl: 900
   scope, approval and limits. Widening any of them after review hides the
   tool until someone locks it again.
 
-The gate cannot tell who ran `fssaira mcp approve`. It knows only that someone
-with write access to the approvals directory did. So run the gate and that
-directory under an operating-system user the agent does not share.
+### Signed approvals: who may approve, provably
+
+Without registered approvers, the gate cannot tell who ran `fssaira mcp
+approve`. It knows only that someone with write access to the approvals
+directory did, and that could include an agent that has a file-writing tool.
+For anything irreversible, register the approvers:
+
+```bash
+fssaira mcp approver-key --name "Registrar B" --out ~/.config/approver-b.json   # owner-only; never overwritten
+```
+
+```yaml
+approvers:
+  "Registrar B": ed25519:3b6a27bc...    # the line the command prints
+```
+
+Once approvers are registered:
+
+- An approval counts only if it is signed with a registered approver's key
+  (`fssaira mcp approve <id> --by "Registrar B" --key-file ...`).
+- The signature covers the request, the tool, the argument digest, the
+  decision, the approver and the expiry.
+- An unsigned approval, one from an unregistered name, a signature from the
+  wrong key, and a record edited after signing are all refused. Each refusal
+  is recorded (`APPROVAL_SIGNATURE_REQUIRED`, `APPROVER_NOT_REGISTERED`,
+  `APPROVAL_SIGNATURE_INVALID`), and the call stays held.
+- The list of approvers is pinned by the lock, so adding one after review
+  hides the tools that need approval until someone locks it again.
+
+Keep key files where the agent cannot read them. A signature proves which key
+approved the call, not that the person holding it looked carefully.
+
+**Single use holds across processes.** A gate uses an approval by renaming its
+file, which the operating system does atomically. So of several gate sessions
+sharing one approvals directory, exactly one runs the approved call.
+
+**Approvers are told.** Set `notify_url` to a chat or ticketing webhook. Each
+new held call is announced with its request id, tool and argument digest,
+never the arguments. The approver reads those with `fssaira mcp approvals`. A
+failed notification is recorded (`NOTIFY_FAILED`) and never changes a
+decision.
+
+## Remote servers
+
+A server can be reached at a Streamable HTTP endpoint instead of launched:
+
+```yaml
+servers:
+  vendor:
+    url: https://tools.vendor.example/mcp
+    operator: vendor-x
+    headers: {Authorization: "env:VENDOR_TOKEN"}   # read from the gate's environment
+    tools: { ... }
+```
+
+Remote servers get the same scan, lock, drift checks, scope, approval, taint
+and receipts as local ones. Three rules are specific to them:
+
+- **HTTPS only,** except for loopback (`UPSTREAM_URL_MUST_BE_HTTPS`).
+- **Redirects are refused, not followed** (`UPSTREAM_REDIRECT_REFUSED`), so a
+  credential header can never be replayed to another host.
+- **Header values come from the environment.** They never sit in the policy
+  file, and a missing variable is refused rather than sent empty.
+
+The server's identity is its URL plus the names of its headers. A rotated
+token is the same server, and a new URL is a different one. The session id the
+server issues is carried on every request and closed on exit. A request the
+server sends inside an event stream is refused, exactly as on stdio.
 
 ## How the decisions are made
 
@@ -225,8 +290,9 @@ unchanged. The gate
 wire protocol, the lock file, the receipts, and an MCP-compatible tool-name
 rule (`getWeather` is valid; server names stay lower-case). Tests are in
 [`tests/test_mcp_gate.py`](../tests/test_mcp_gate.py) and
-[`tests/test_mcp_gate_authority.py`](../tests/test_mcp_gate_authority.py), and they run the hostile
-server over real stdio.
+[`tests/test_mcp_gate_authority.py`](../tests/test_mcp_gate_authority.py) and
+[`tests/test_mcp_gate_hardening.py`](../tests/test_mcp_gate_hardening.py). They run the hostile
+server over real stdio, and a Streamable HTTP server over a real socket.
 
 ## What this is not
 
@@ -236,6 +302,6 @@ attest what a server's code does when called; a server that honestly describes
 ([P23 contained agent cell](framework/PATTERNS.md#p23-contained-agent-cell),
 `deploy/k8s/agent-cell.yaml`: default-deny egress), not a gate.
 The description scan is a review aid with a low bar, so a clean scan is not
-evidence of safety. Only stdio servers are proxied today. Remote
-(Streamable HTTP) servers can be gated by running a local stdio bridge under
-the gate. Hosts that cap tool names at 64 characters need `server__tool` to fit.
+evidence of safety. The gate serves one host session over stdio; a shared,
+multi-user gateway service is not provided. Hosts that cap tool names at 64
+characters need `server__tool` to fit.
