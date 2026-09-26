@@ -57,7 +57,7 @@ gate offers: casework__lookup_case, casework__fetch_page, casework__send_email
   ✓ 7. lookup_case after the server redefined it (rug pull)    REFUSED DEFINITION_CHANGED_AFTER_APPROVAL
 
 gate now offers: casework__fetch_page, casework__send_email
-receipts: 11 hash-chained, verified=True
+receipts: 10 hash-chained, verified=True
 ```
 
 Step 4 is allowed on purpose. The gate does not ban privileged tools. It makes
