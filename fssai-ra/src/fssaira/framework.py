@@ -339,7 +339,11 @@ def render_patterns(catalogue: Catalogue | None = None) -> str:
     index = catalogue.by_id()
     lines = [
         "# Trust by Construction canonical patterns", "",
-        "[Framework](../FRAMEWORK.md) · [Operational controls](CONTROLS.md)", "",
+        "> **Documentation navigation:** [Documentation map](../README.md) · "
+        "[Framework](../FRAMEWORK.md) · [Operational controls](CONTROLS.md)",
+        ">",
+        "> **Recommended next:** Map each pattern to its operational controls in "
+        "[CONTROLS.md](CONTROLS.md), then assess your deployment with `fssaira framework assess`.", "",
         f"Generated from `src/fssaira/framework_catalogue.yaml` (catalogue {catalogue.version}) "
         "by `fssaira framework render`. Edit the catalogue, not this document.", "",
         f"**{len(catalogue.patterns)} patterns, {len(catalogue.controls)} operational controls, "

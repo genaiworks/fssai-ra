@@ -1,6 +1,8 @@
 # Trust by Construction canonical patterns
 
-[Framework](../FRAMEWORK.md) · [Operational controls](CONTROLS.md)
+> **Documentation navigation:** [Documentation map](../README.md) · [Framework](../FRAMEWORK.md) · [Operational controls](CONTROLS.md)
+>
+> **Recommended next:** Map each pattern to its operational controls in [CONTROLS.md](CONTROLS.md), then assess your deployment with `fssaira framework assess`.
 
 Generated from `src/fssaira/framework_catalogue.yaml` (catalogue 1.1) by `fssaira framework render`. Edit the catalogue, not this document.
 

@@ -1529,6 +1529,75 @@ def cmd_assure_staffing(args) -> int:
     return 0
 
 
+def cmd_mcp_scan(args) -> int:
+    """List what each MCP server would show a model, and flag instruction-like text."""
+    from .integration.mcp_gate import GateConfig, scan
+
+    report = scan(GateConfig.load(args.config))
+    for server in report["servers"]:
+        print(f"{server['name']}  ({server['server_info'].get('name', '?')} "
+              f"{server['server_info'].get('version', '')}, operator {server['operator'] or 'UNDECLARED'})")
+        for tool in server["tools"]:
+            flags = ", ".join(f["finding"] for f in tool["findings"])
+            mark = red("✗") if flags else green("✓")
+            role = "privileged" if tool["privileged"] else "ordinary"
+            declared = "" if tool["policy"]["declared"] else yellow(" [no policy: treated as privileged]")
+            print(f"  {mark} {tool['wire_name']:<32} {role}{declared}" + (f"  {red(flags)}" if flags else ""))
+    print(f"\n{report['tools']} tool(s), {report['flagged_tools']} flagged. "
+          "A clean scan is a review aid, not approval.")
+    emit(report, args.output)
+    return 1 if report["flagged_tools"] else 0
+
+
+def cmd_mcp_lock(args) -> int:
+    """Record a named human's approval of exactly what the servers list now."""
+    from .integration.mcp_gate import GateConfig, lock, write_json
+
+    data = lock(GateConfig.load(args.config), approved_by=args.approved_by,
+                accept_findings=args.accept_findings or ())
+    write_json(data, args.lock)
+    approved = sum(len(s["tools"]) for s in data["servers"])
+    print(green(f"locked {approved} tool(s) for {len(data['servers'])} server(s), "
+                f"approved by {data['approved_by']}") + f"  -> {args.lock}")
+    for item in data["excluded"]:
+        print(red(f"  excluded {item['tool']}: " + ", ".join(f["finding"] for f in item["findings"])))
+    if data["excluded"]:
+        print("  review the text, then pass --accept-findings server/tool to approve it knowingly")
+    return 0
+
+
+def cmd_mcp_serve(args) -> int:
+    """Run the gate on stdio. Protocol on stdout; everything else on stderr."""
+    from .integration.mcp_gate import Gate, GateConfig, ReceiptLog, load_lock, serve
+
+    gate = Gate(GateConfig.load(args.config), load_lock(args.lock), receipts=ReceiptLog(args.receipts))
+    gate.start()
+    status = gate.status()
+    print(f"fssaira mcp gate: {len(status['tools'])} tool(s) offered, {len(status['hidden'])} hidden; "
+          f"receipts -> {args.receipts or 'memory only'}", file=sys.stderr)
+    try:
+        serve(gate)
+    finally:
+        gate.close()
+    return 0
+
+
+
+def cmd_mcp_verify(args) -> int:
+    """Recompute a receipt log's hash chain."""
+    from .integration.mcp_gate import verify_receipts
+
+    report = verify_receipts(args.receipts)
+    print(verdict(report["verified"], f"{report['receipts']} receipt(s) chain to {report['head'][:16]}",
+                  "receipt log does not verify"))
+    for key, count in report["decisions"].items():
+        print(f"  {key:<28} {count}")
+    for problem in report["problems"]:
+        print(red(f"  seq {problem['seq']}: {problem['problem']}"))
+    emit(report, args.output)
+    return 0 if report["verified"] else 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fssaira",
@@ -1688,6 +1757,28 @@ def build_parser() -> argparse.ArgumentParser:
         "measure", help="measure durable SQLite evidence appends on this host"))
     measure.add_argument("--records", type=int, default=500)
     measure.set_defaults(func=cmd_scale_measure)
+
+    mcp = sub.add_parser("mcp", help="gate Model Context Protocol tool servers (scan, lock, serve)")
+    mcp_sub = mcp.add_subparsers(dest="mcp_command", required=True)
+    mcp_scan = add_output(mcp_sub.add_parser(
+        "scan", help="show what each server would tell a model; flags instruction-like text"))
+    mcp_scan.add_argument("--config", type=Path, required=True, help="gate policy YAML")
+    mcp_scan.set_defaults(func=cmd_mcp_scan)
+    mcp_lock = mcp_sub.add_parser("lock", help="approve the current listing, by name, into a lock file")
+    mcp_lock.add_argument("--config", type=Path, required=True, help="gate policy YAML")
+    mcp_lock.add_argument("--lock", type=Path, required=True, help="lock file to write")
+    mcp_lock.add_argument("--approved-by", required=True, help="the named human approving")
+    mcp_lock.add_argument("--accept-findings", action="append", metavar="SERVER/TOOL",
+                          help="approve one flagged tool knowingly (repeatable)")
+    mcp_lock.set_defaults(func=cmd_mcp_lock)
+    mcp_serve = mcp_sub.add_parser("serve", help="run the gate as an MCP server on stdio")
+    mcp_serve.add_argument("--config", type=Path, required=True, help="gate policy YAML")
+    mcp_serve.add_argument("--lock", type=Path, required=True, help="lock file from `mcp lock`")
+    mcp_serve.add_argument("--receipts", type=Path, help="append-only receipt log (JSON lines)")
+    mcp_serve.set_defaults(func=cmd_mcp_serve)
+    mcp_verify = add_output(mcp_sub.add_parser("verify", help="verify a receipt log's hash chain"))
+    mcp_verify.add_argument("receipts", type=Path)
+    mcp_verify.set_defaults(func=cmd_mcp_verify)
 
     witness = sub.add_parser("witness", help="out-of-process witness for evidence checkpoints")
     witness_sub = witness.add_subparsers(dest="witness_command", required=True)

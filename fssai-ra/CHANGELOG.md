@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased — MCP gate
+
+`fssaira mcp` puts the tool-supply rules of `integration/tool_servers.py` in front
+of any Model Context Protocol host, with no change to the host or the servers.
+Additive only: the core registry, its name rule and its tests are unchanged.
+
+- **scan / lock / serve / verify.** Every model-visible string, parameter
+  descriptions included, is scanned and pinned. A named person locks the exact
+  listing, and a flagged tool is accepted only by name. Drift, including a
+  weakened policy, quarantines the tool. Once a session has read untrusted
+  output it cannot reach a privileged tool. Upstream `sampling/createMessage`
+  and `elicitation/create` requests are refused. Receipts are hash-chained and
+  hold digests only.
+- **Hostile-server tour.** `scripts/mcp_gate_demo.py` runs a deliberately hostile
+  server (`examples/mcp/`) through the real gate over stdio. Seven attack and
+  control steps each end as expected, and the receipts verify.
+- **Refusal registry.** The gate's codes are declared in `McpGateCodes` and
+  published. `APPROVAL_NEEDS_A_NAMED_HUMAN` and `INVALID_TOOL_NAME` were raised
+  before this change but never registered; they are now.
+- Guide: `docs/MCP_GATE.md`. Tests: `tests/test_mcp_gate.py`.
+
 ## Unreleased — master guide for secure agent swarms
 
 `docs/MASTER_GUIDE.md` reviews a draft adoption guide critically and closes the

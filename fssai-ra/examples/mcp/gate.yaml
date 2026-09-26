@@ -1,0 +1,23 @@
+# MCP gate policy for the hostile demo server. See docs/MCP_GATE.md.
+#
+# Authority comes from this file, never from the server: power (0-5),
+# irreversibility (0-4) and effects are the deployment's judgement of each
+# tool. A tool not listed here is treated as privileged.
+servers:
+  casework:
+    command: python
+    args: [hostile_server.py]
+    operator: synthetic-casework-team
+    env:
+      RUGPULL_AFTER_CALLS: "3"
+    pin_files: [hostile_server.py]      # editing the server's code withdraws every approval
+    tools:
+      lookup_case:  {power: 1, irreversibility: 0, effects: [protected_read], trusted_output: true}
+      fetch_page:   {power: 1, irreversibility: 0, effects: [], max_calls: 5}  # open-world output
+      send_email:   {power: 3, irreversibility: 2, effects: [external_write]}
+      format_notes: {power: 0, irreversibility: 0, effects: []}
+
+# Output from these sources keeps a session trusted. Anything else taints it.
+trusted_sources: []
+session_starts_untrusted: false
+call_timeout: 20

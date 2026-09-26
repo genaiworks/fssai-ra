@@ -42,6 +42,9 @@
   "APPROVAL_LIFETIME_INVALID": [
    "fssaira.exact_action"
   ],
+  "APPROVAL_NEEDS_A_NAMED_HUMAN": [
+   "fssaira.integration.mcp_gate"
+  ],
   "APPROVAL_NOT_FOUND": [
    "fssaira.control_plane",
    "fssaira.verification"
@@ -61,6 +64,9 @@
   ],
   "APPROVER_ROLE_NOT_ALLOWED": [
    "fssaira.exact_action"
+  ],
+  "ARGUMENTS_MUST_BE_AN_OBJECT": [
+   "fssaira.integration.mcp_gate"
   ],
   "ARTIFACT_DIGEST_MISMATCH": [
    "fssaira.integration.transport"
@@ -516,6 +522,9 @@
   "FS_WRONG_PERIOD": [
    "fssaira.forward_secure"
   ],
+  "GATE_CONFIG_NEEDS_SERVERS": [
+   "fssaira.integration.mcp_gate"
+  ],
   "GRANT_EXPIRED": [
    "fssaira.disclosure"
   ],
@@ -630,8 +639,17 @@
   "INVALID_SCOPE_FIELDS": [
    "fssaira.tbc.contracts"
   ],
+  "INVALID_SERVER_ENTRY": [
+   "fssaira.integration.mcp_gate"
+  ],
   "INVALID_TASK_FIELDS": [
    "fssaira.tbc.contracts"
+  ],
+  "INVALID_TOOL_CALL_LIMIT": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "INVALID_TOOL_NAME": [
+   "fssaira.integration.mcp_gate"
   ],
   "INVALID_VALUE": [
    "fssaira.joined_workflow"
@@ -916,6 +934,9 @@
   "PINNED_ADDRESS_UNREACHABLE": [
    "fssaira.integration.transport"
   ],
+  "PINNED_FILE_MISSING": [
+   "fssaira.integration.mcp_gate"
+  ],
   "PINNING_UNAVAILABLE": [
    "fssaira.integration.transport"
   ],
@@ -961,14 +982,26 @@
   "PURPOSE_UNDECLARED": [
    "fssaira.disclosure"
   ],
+  "QUALIFIED_NAME_REQUIRED": [
+   "fssaira.integration.mcp_gate"
+  ],
   "READ_TIMEOUT": [
    "fssaira.integration.transport"
   ],
   "REASON_REQUIRED": [
    "fssaira.tbc.runtime"
   ],
+  "RECEIPT_CHAIN_BROKEN": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "RECEIPT_HASH_MISMATCH": [
+   "fssaira.integration.mcp_gate"
+  ],
   "RECEIPT_LIMIT": [
    "fssaira.tbc.runtime"
+  ],
+  "RECEIPT_SEQUENCE_BROKEN": [
+   "fssaira.integration.mcp_gate"
   ],
   "RECEIPT_SIGNATURE_INVALID": [
    "fssaira.evidence_notary"
@@ -1135,6 +1168,18 @@
    "fssaira.control_plane",
    "fssaira.exact_action"
   ],
+  "SERVER_COMMAND_REQUIRED": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "SERVER_IDENTITY_ROTATED": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "SERVER_NAME_CONTAINS_WIRE_SEPARATOR": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "SERVER_NOT_LOCKED": [
+   "fssaira.integration.mcp_gate"
+  ],
   "SESSION_HOLDER_MISMATCH": [
    "fssaira.disclosure"
   ],
@@ -1225,6 +1270,9 @@
   "TLS_VERSION_BELOW_FLOOR": [
    "fssaira.integration.transport"
   ],
+  "TOOL_CALL_LIMIT_REACHED": [
+   "fssaira.integration.mcp_gate"
+  ],
   "TOOL_DENIED": [
    "fssaira.tbc.runtime"
   ],
@@ -1233,6 +1281,9 @@
   ],
   "TOOL_NOT_GRANTED": [
    "fssaira.accountable_action"
+  ],
+  "TOOL_NOT_OFFERED": [
+   "fssaira.integration.mcp_gate"
   ],
   "TOOL_OUTPUT_BOUND": [
    "fssaira.tbc.runtime"
@@ -1246,6 +1297,9 @@
   ],
   "TRUNCATED_RESPONSE": [
    "fssaira.integration.transport"
+  ],
+  "TRUSTED_SOURCE_MUST_BE_QUALIFIED": [
+   "fssaira.integration.mcp_gate"
   ],
   "TYPED_ARRAY_TOO_LONG": [
    "fssaira.integration.typed"
@@ -1374,11 +1428,17 @@
   "UNKNOWN_SCHEDULED_EFFECT": [
    "fssaira.tbc.runtime"
   ],
+  "UNKNOWN_SERVER": [
+   "fssaira.integration.mcp_gate"
+  ],
   "UNKNOWN_SUBJECT": [
    "fssaira.joined_workflow"
   ],
   "UNKNOWN_TASK": [
    "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_TOOL_POLICY_FIELD": [
+   "fssaira.integration.mcp_gate"
   ],
   "UNKNOWN_VALUE": [
    "fssaira.joined_workflow"
@@ -1395,11 +1455,32 @@
   "UNSUPPORTED_INTERFACE_OR_FIELD": [
    "fssaira.joined_workflow"
   ],
+  "UNSUPPORTED_LOCK_FILE": [
+   "fssaira.integration.mcp_gate"
+  ],
   "UNSUPPORTED_PROPOSAL": [
    "fssaira.joined_workflow"
   ],
   "UNTRUSTED_CHAIN_CANNOT_REACH_PRIVILEGED_TOOL": [
    "fssaira.integration.tool_servers"
+  ],
+  "UPSTREAM_ERROR": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "UPSTREAM_PAGINATION_UNBOUNDED": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "UPSTREAM_REQUEST_NOT_FORWARDED": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "UPSTREAM_TIMEOUT": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "UPSTREAM_TOOL_WITHOUT_NAME": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "UPSTREAM_UNAVAILABLE": [
+   "fssaira.integration.mcp_gate"
   ],
   "VALUE_NOT_ISSUED": [
    "fssaira.disclosure"
@@ -1441,6 +1522,6 @@
    "fssaira.joined_workflow"
   ]
  },
- "count": 473,
+ "count": 500,
  "generated_by": "fssaira.refusal_registry"
 }

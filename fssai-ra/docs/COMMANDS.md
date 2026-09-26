@@ -47,6 +47,10 @@ Most experiments print a report and support `--output PATH` for JSON. Consult ea
 | `fssaira model list` | Discover model backends |
 | `fssaira model health NAME` | Probe a configured backend; may contact a service |
 | `fssaira model propose "TASK" --name NAME` | Obtain proposals without execution; choose a configured backend |
+| `fssaira mcp scan --config gate.yaml` | Show what each MCP server tells a model; flags instruction-like text; exits 1 if flagged ([guide](MCP_GATE.md)) |
+| `fssaira mcp lock --config gate.yaml --lock mcp.lock.json --approved-by NAME` | Record a named approval of the exact current tool listing |
+| `fssaira mcp serve --config gate.yaml --lock mcp.lock.json --receipts PATH` | Run the gate as an MCP server on stdio for a host to launch |
+| `fssaira mcp verify PATH` | Verify a gate receipt log's hash chain |
 | `fssaira evidence verify PATH` | Verify exported evidence JSON |
 | `fssaira packet-check PATH --expected-sha256 DIGEST` | Inspect a private decision packet against an independent digest |
 | `fssaira diode inventory` | Inspect one-way transport declarations |

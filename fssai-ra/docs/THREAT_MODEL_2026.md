@@ -273,6 +273,12 @@ and naming. The behaviour of a remote server when it is actually called is not
 attested here, and bounding the damage of a server that lies is what section 6
 measures.
 
+`fssaira mcp serve` enforces these rules on the wire, in front of any MCP host,
+and adds two MCP-specific closures: upstream servers cannot send
+`sampling/createMessage` or `elicitation/create` requests to the host, and
+every string the model reads (parameter descriptions included) is scanned
+and pinned. See [MCP_GATE.md](MCP_GATE.md).
+
 ## 9. Effects that leave the transaction
 
 A local transaction cannot make a remote effect exactly-once. The call that

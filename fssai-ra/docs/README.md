@@ -18,6 +18,7 @@ remain available when you need more depth.
 | Guide | What you will learn |
 |---|---|
 | [User guide](USER_GUIDE.md) | Prerequisites, first run, evidence walkthrough, installation, API, console, and a new domain |
+| [MCP gate](MCP_GATE.md) | Put Trust by Construction in front of the MCP tool servers your agent already uses, with a five-minute hostile-server tour |
 | [Feature catalogue](FEATURES.md) | Every major implementation area, how to exercise it, and what its evidence does not establish |
 | [Command reference](COMMANDS.md) | CLI commands, Make targets, working directories, dependencies, and validation tiers |
 | [Repository map](REPOSITORY_MAP.md) | Source layout, reading order, generated evidence, and historical artifacts |

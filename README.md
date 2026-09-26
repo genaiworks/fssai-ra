@@ -20,6 +20,7 @@ The repository supports experiments, teaching, integration work, and multiple re
 | See an authorized action and a rejected attack | Offline joined workflow with a browser evidence viewer |
 | Define who may do what | Domain profiles, seven-field control contracts, exact-action approvals |
 | Control sensitive information | Purpose-bound disclosure, consent, inherited labels, recipient and release checks |
+| Gate the MCP tools your agent already uses | [`fssaira mcp`](fssai-ra/docs/MCP_GATE.md): named tool approval, rug-pull quarantine, injection-to-privileged-tool blocking, digest-only receipts |
 | Govern cooperating agents | Delegation checks; SDK task, memory, population, messaging, and Guardian controls |
 | Test a security claim | Adversarial scenarios, ablations, bounded verification, conformance, race and recovery checks |
 | Explore human oversight | Capacity and assisted-review simulations with explicit assumptions |
