@@ -140,6 +140,8 @@ class McpGateCodes:
     UPSTREAM_HEADER_ENV_MISSING = "UPSTREAM_HEADER_ENV_MISSING"
     SERVER_NEEDS_COMMAND_OR_URL = "SERVER_NEEDS_COMMAND_OR_URL"
     NOTIFY_FAILED = "NOTIFY_FAILED"
+    APPROVAL_ALREADY_USED = "APPROVAL_ALREADY_USED"
+    UPSTREAM_RESPONSE_TOO_LARGE = "UPSTREAM_RESPONSE_TOO_LARGE"
     # calls
     ARGUMENTS_MUST_BE_AN_OBJECT = "ARGUMENTS_MUST_BE_AN_OBJECT"
     ARGUMENT_OUT_OF_SCOPE = "ARGUMENT_OUT_OF_SCOPE"
@@ -394,6 +396,9 @@ class GateConfig:
     approvers: Mapping[str, str] = field(default_factory=dict)
     #: Where to announce a held call (a chat or ticketing webhook). Metadata only.
     notify_url: str | None = None
+    #: Gate-owned record of used approvals. Put it where only gates can write,
+    #: so restoring a spent approval file in ``approvals`` achieves nothing.
+    spent_ledger: Path | None = None
 
     @classmethod
     def load(cls, path: str | Path) -> GateConfig:
@@ -443,7 +448,9 @@ class GateConfig:
                      session=SessionContract.parse(raw.get("session")),
                      approvals=(base / approvals) if approvals else None, approval_ttl=float(ttl),
                      approvers=parse_approvers(raw.get("approvers")),
-                     notify_url=check_upstream_url(raw["notify_url"]) if raw.get("notify_url") else None)
+                     notify_url=check_upstream_url(raw["notify_url"]) if raw.get("notify_url") else None,
+                     spent_ledger=(base / raw["spent_ledger"]) if raw.get("spent_ledger")
+                     else ((base / approvals / ".spent") if approvals else None))
         needs_store = any(p.approval for s in config.servers for p in s.tools.values())
         _require(config.approvals is not None or not needs_store, "APPROVAL_STORE_REQUIRED")
         return config
@@ -660,11 +667,19 @@ class HttpUpstream:
         except (urllib.error.URLError, OSError, TimeoutError) as exc:
             raise McpGateDenied("UPSTREAM_UNAVAILABLE") from exc
 
+    #: A response larger than this is refused rather than buffered.
+    MAX_RESPONSE_BYTES = 16 * 1024 * 1024
+
     def _messages(self, response: Any) -> Iterable[dict]:
         kind = (response.headers.get("Content-Type") or "").split(";")[0].strip()
+        deadline, received = time.monotonic() + self.timeout, 0
         if kind == "text/event-stream":
             data: list[str] = []
             for raw in response:
+                # A server that trickles an endless stream does not hold the gate.
+                received += len(raw)
+                _require(received <= self.MAX_RESPONSE_BYTES, "UPSTREAM_RESPONSE_TOO_LARGE")
+                _require(time.monotonic() < deadline, "UPSTREAM_TIMEOUT")
                 line = raw.decode("utf-8").rstrip("\r\n")
                 if line.startswith("data:"):
                     data.append(line[5:].lstrip())
@@ -676,7 +691,9 @@ class HttpUpstream:
             if data and (parsed := _json_or_none("\n".join(data))) is not None:
                 yield parsed
         else:
-            parsed = _json_or_none(response.read() or b"null")
+            body = response.read(self.MAX_RESPONSE_BYTES + 1)
+            _require(len(body) <= self.MAX_RESPONSE_BYTES, "UPSTREAM_RESPONSE_TOO_LARGE")
+            parsed = _json_or_none(body or b"null")
             if parsed is not None:
                 yield parsed
 
@@ -953,6 +970,12 @@ class ReceiptLog:
                 self.seq, self.head = record["seq"], record["hash"]
         self.records: list[dict] = []
 
+    def history(self) -> list[dict]:
+        """Every receipt, including those written before this process started."""
+        if self.path and self.path.exists():
+            return _read_receipts(self.path)
+        return list(self.records)
+
     def append(self, **fields: Any) -> dict:
         with self._lock:
             body = {"schema": RECEIPT_SCHEMA, "seq": self.seq + 1, "prev": self.head,
@@ -1004,11 +1027,23 @@ class ApprovalStore:
     only that someone who could write here did.
     """
 
-    def __init__(self, directory: str | Path, *, clock: Callable[[], float] = time.time) -> None:
+    def __init__(self, directory: str | Path, *, clock: Callable[[], float] = time.time,
+                 spent: str | Path | None = None) -> None:
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
+        self.spent = Path(spent) if spent else self.directory / ".spent"
+        self.spent.mkdir(parents=True, exist_ok=True)
         self._clock = clock
         self._lock = threading.Lock()
+
+    def _mark_spent(self, request_id: str) -> bool:
+        """Create the spent marker exclusively; False if any gate already used it."""
+        try:
+            fd = os.open(self.spent / self._path(request_id).stem, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        except FileExistsError:
+            return False
+        os.close(fd)
+        return True
 
     def _path(self, request_id: str) -> Path:
         _require(isinstance(request_id, str) and request_id.isalnum() and 8 <= len(request_id) <= 64,
@@ -1068,7 +1103,8 @@ class ApprovalStore:
 
     def consume(self, tool: str, args_digest: str, *,
                 approvers: Mapping[str, str] | None = None,
-                on_reject: Callable[[dict, str], None] | None = None) -> dict | None:
+                on_reject: Callable[[dict, str], None] | None = None,
+                spent: Iterable[str] = ()) -> dict | None:
         """Use one live approval for exactly this call, or return None.
 
         Use is claimed by renaming the request file, which the operating
@@ -1090,7 +1126,11 @@ class ApprovalStore:
                     continue  # another gate claimed it first
                 record = json.loads(claim.read_text(encoding="utf-8"))
                 reason = None
-                if record.get("status") != "approved":
+                if record.get("id") in set(spent):
+                    # The file says unused, the gate's own record says used: someone
+                    # who can write this directory restored a spent approval.
+                    record["status"], reason = "rejected", "APPROVAL_ALREADY_USED"
+                elif record.get("status") != "approved":
                     reason = "APPROVAL_REQUEST_NOT_PENDING"
                 elif record.get("expires_at", 0) <= now:
                     record["status"], reason = "expired", "APPROVAL_EXPIRED"
@@ -1100,6 +1140,8 @@ class ApprovalStore:
                     record["status"], reason = "rejected", "APPROVAL_SIGNATURE_REQUIRED"
                 elif approvers and not approval_signature_valid(record, approvers):
                     record["status"], reason = "rejected", "APPROVAL_SIGNATURE_INVALID"
+                elif not self._mark_spent(record["id"]):
+                    record["status"], reason = "rejected", "APPROVAL_ALREADY_USED"
                 else:
                     record.update(status="used", used_at=round(now, 3))
                 record.pop("arguments", None)
@@ -1132,7 +1174,11 @@ class Gate:
         self.visible: dict[str, dict] = {}
         self._clock = clock
         self.started_at = clock()
-        self.approvals = ApprovalStore(config.approvals, clock=clock) if config.approvals else None
+        self.approvals = (ApprovalStore(config.approvals, clock=clock, spent=config.spent_ledger)
+                          if config.approvals else None)
+        #: Approvals this gate has used, from its own receipts: the approvals
+        #: directory is not trusted to remember, because it can be rewritten.
+        self.spent: set[str] = {r["approval"] for r in receipts.history() if r.get("approval")}
         self._locked = {s["name"]: s for s in lock_data.get("servers") or []}
         self._locked_policy = {f"{s['name']}/{t['name']}": t.get("policy") or {}
                                for s in self._locked.values() for t in s["tools"]}
@@ -1245,15 +1291,16 @@ class Gate:
                      "SESSION_CALL_BUDGET_EXHAUSTED")
             policy = self.config.server(server).policy_for(tool)
             for argument, allowed in policy.scope.items():
-                _require(argument in (arguments or {}) and (arguments or {})[argument] in allowed,
-                         "ARGUMENT_OUT_OF_SCOPE")
+                value = (arguments or {}).get(argument, _MISSING)
+                # Type-strict: in Python True == 1, and a scope of [1] must not admit true.
+                _require(any(type(value) is type(v) and value == v for v in allowed), "ARGUMENT_OUT_OF_SCOPE")
             used = self.calls.get(qualified, 0)
             _require(policy.max_calls is None or used < policy.max_calls, "TOOL_CALL_LIMIT_REACHED")
             approval = None
             if policy.approval:
                 assert self.approvals is not None  # GateConfig.load refuses a config without a store
                 approval = self.approvals.consume(
-                    qualified, args_digest, approvers=self.config.approvers,
+                    qualified, args_digest, approvers=self.config.approvers, spent=self.spent,
                     on_reject=lambda r, why: self._record("approval", qualified, "deny", why,
                                                           args_sha256=args_digest, request=r["id"]))
                 if approval is None:
@@ -1285,6 +1332,8 @@ class Gate:
         # means the very next call is judged with this content counted.
         self.chain.absorb(qualified)
         extra = {"approval": approval["id"], "approved_by": approval["decided_by"]} if approval else {}
+        if approval:
+            self.spent.add(approval["id"])
         self._record("call", qualified, "allow", "AUTHORISED", args_sha256=args_digest,
                      result_sha256=sha256(canonical(result)), **extra)
         return result
@@ -1315,6 +1364,9 @@ class Gate:
                 "hidden": {k: v["_code"] for k, v in sorted(self.visible.items()) if v.get("_hidden")},
                 "chain_untrusted": self.chain.untrusted, "sources": sorted(self.chain.sources),
                 "quarantined": dict(self.registry.quarantined()), "receipt_head": self.receipts.head}
+
+
+_MISSING = object()
 
 
 def _refusal(code: str, detail: str = "") -> dict:

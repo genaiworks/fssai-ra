@@ -3,6 +3,7 @@ import json
 import shutil
 import stat
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -201,6 +202,8 @@ class RemoteServer:
         {"name": "read_note", "description": "Read one note.", "inputSchema": {"type": "object"}},
         {"name": "fetch_page", "description": "Fetch a public page.", "inputSchema": {"type": "object"}},
         {"name": "send_email", "description": "Send an email.", "inputSchema": {"type": "object"}},
+        {"name": "stall", "description": "Never answer.", "inputSchema": {"type": "object"}},
+        {"name": "flood", "description": "Answer at length.", "inputSchema": {"type": "object"}},
     ]
 
     def __init__(self):
@@ -251,6 +254,20 @@ class RemoteServer:
                         headers=[("Mcp-Session-Id", "session-42")])
                 elif method == "tools/list":
                     self._json({"jsonrpc": "2.0", "id": ident, "result": {"tools": outer.TOOLS}})
+                elif method == "tools/call" and message["params"]["name"] in ("stall", "flood"):
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/event-stream")
+                    self.end_headers()
+                    stall = message["params"]["name"] == "stall"
+                    chunk = b": keep-alive\n\n" if stall else b"data: " + b"x" * 65536 + b"\n"
+                    try:
+                        for _ in range(400):
+                            self.wfile.write(chunk)
+                            self.wfile.flush()
+                            if stall:
+                                time.sleep(0.05)
+                    except (BrokenPipeError, ConnectionResetError):
+                        pass
                 elif method == "tools/call" and message["params"]["name"] == "fetch_page":
                     self.send_response(200)
                     self.send_header("Content-Type", "text/event-stream")
@@ -288,7 +305,9 @@ def remote_config(tmp_path, url, **extra):
         "url": url, "operator": "vendor-x", "headers": {"Authorization": "env:REMOTE_TOKEN"},
         "tools": {"read_note": {"power": 1, "irreversibility": 0, "effects": [], "trusted_output": True},
                   "fetch_page": {"power": 1, "irreversibility": 0, "effects": []},
-                  "send_email": {"power": 3, "irreversibility": 2, "effects": ["external_write"]}}}},
+                  "send_email": {"power": 3, "irreversibility": 2, "effects": ["external_write"]},
+                  "stall": {"power": 0, "irreversibility": 0, "effects": []},
+                  "flood": {"power": 0, "irreversibility": 0, "effects": []}}}},
         **extra}
     (tmp_path / "remote.yaml").write_text(yaml.safe_dump(raw))
     return GateConfig.load(tmp_path / "remote.yaml")
@@ -299,7 +318,8 @@ def test_a_remote_server_is_gated_like_a_local_one(tmp_path, remote, monkeypatch
     config = remote_config(tmp_path, remote.url + "/mcp")
     gate = open_gate(config)
     try:
-        assert gate.status()["tools"] == ["remote/fetch_page", "remote/read_note", "remote/send_email"]
+        assert gate.status()["tools"] == ["remote/fetch_page", "remote/flood", "remote/read_note",
+                                          "remote/send_email", "remote/stall"]
         assert not gate.call("remote__read_note", {}).get("isError")
         assert not gate.call("remote__send_email", SEND).get("isError")  # trusted so far
         page = gate.call("remote__fetch_page", {})
@@ -406,3 +426,90 @@ def test_a_failed_notification_is_recorded_and_changes_nothing(workdir):
         assert any(r["event"] == "notify" and r["code"] == "NOTIFY_FAILED" for r in gate.receipts.records)
     finally:
         gate.close()
+
+
+# -- found by attacking the first version of this gate ------------------------------------------
+
+
+def test_a_restored_approval_file_cannot_be_replayed(workdir, keys):
+    config = signed_config(workdir, keys)
+    gate, store = open_gate(config), ApprovalStore(config.approvals)
+    try:
+        request = held_request(gate, store)
+        store.decide(request, by="Registrar B", approve=True, key_path=keys["Registrar B"][0])
+        path = config.approvals / f"{request}.json"
+        signed = path.read_text()                      # an agent that can write here keeps a copy
+        assert not gate.call("casework__send_email", SEND).get("isError")
+        path.write_text(signed)                        # ...and puts it back after use
+        assert code(gate.call("casework__send_email", SEND)) == "APPROVAL_REQUIRED"
+        assert any(r["code"] == "APPROVAL_ALREADY_USED" for r in gate.receipts.records)
+    finally:
+        gate.close()
+    path.write_text(signed)                            # a restarted gate remembers from its receipts
+    restarted = Gate(config, lock(config, approved_by="Reviewer A"),
+                     receipts=ReceiptLog(config.base / "receipts.jsonl"))
+    restarted.start()
+    try:
+        assert code(restarted.call("casework__send_email", SEND)) == "APPROVAL_REQUIRED"
+    finally:
+        restarted.close()
+
+
+def test_an_endless_stream_does_not_hold_the_gate(tmp_path, remote, monkeypatch):
+    monkeypatch.setenv("REMOTE_TOKEN", "Bearer secret-1")
+    config = remote_config(tmp_path, remote.url + "/mcp", call_timeout=1)
+    gate = open_gate(config)
+    try:
+        started = time.monotonic()
+        assert code(gate.call("remote__stall", {})) == "UPSTREAM_TIMEOUT"
+        assert time.monotonic() - started < 5
+    finally:
+        gate.close()
+
+
+def test_an_oversized_response_is_refused_not_buffered(tmp_path, remote, monkeypatch):
+    from fssaira.integration.mcp_gate import HttpUpstream
+
+    monkeypatch.setenv("REMOTE_TOKEN", "Bearer secret-1")
+    monkeypatch.setattr(HttpUpstream, "MAX_RESPONSE_BYTES", 1024 * 1024)
+    gate = open_gate(remote_config(tmp_path, remote.url + "/mcp"))
+    try:
+        assert code(gate.call("remote__flood", {})) == "UPSTREAM_RESPONSE_TOO_LARGE"
+    finally:
+        gate.close()
+
+
+def test_scope_is_type_strict(workdir):
+    config = configure(workdir, lambda raw: (
+        raw["servers"]["casework"]["tools"]["send_email"].pop("approval"),
+        raw["servers"]["casework"]["tools"]["lookup_case"].update({"scope": {"case_id": [1]}})))
+    gate = open_gate(config)
+    try:
+        assert not gate.call("casework__lookup_case", {"case_id": 1}).get("isError")
+        assert code(gate.call("casework__lookup_case", {"case_id": True})) == "ARGUMENT_OUT_OF_SCOPE"
+        assert code(gate.call("casework__lookup_case", {"case_id": 1.0})) == "ARGUMENT_OUT_OF_SCOPE"
+    finally:
+        gate.close()
+
+
+def test_a_second_gate_process_cannot_reuse_a_restored_approval(workdir, keys):
+    config = signed_config(workdir, keys)
+    data = lock(config, approved_by="Reviewer A")
+    first = Gate(config, data, receipts=ReceiptLog(workdir / "a.jsonl"))
+    second = Gate(config, data, receipts=ReceiptLog(workdir / "b.jsonl"))  # its own receipts
+    first.start()
+    second.start()
+    store = ApprovalStore(config.approvals, spent=config.spent_ledger)
+    try:
+        request = held_request(first, store)
+        store.decide(request, by="Registrar B", approve=True, key_path=keys["Registrar B"][0])
+        path = config.approvals / f"{request}.json"
+        signed = path.read_text()
+        assert not first.call("casework__send_email", SEND).get("isError")
+        path.write_text(signed)
+        assert code(second.call("casework__send_email", SEND)) == "APPROVAL_REQUIRED"
+        assert any(r["code"] == "APPROVAL_ALREADY_USED" for r in second.receipts.records)
+    finally:
+        first.close()
+        second.close()
+

@@ -15,6 +15,14 @@
   - header secrets read from the environment and never pinned by value;
   - server session ids carried on every request;
   - server requests inside an event stream refused, as on stdio.
+- **Replay closed.** A signed approval file restored after use is refused
+  (`APPROVAL_ALREADY_USED`). Use is recorded in a gate-owned spent ledger by
+  exclusive create, and each gate also remembers its own uses from its
+  receipts. The replay was found by attacking the first version of this code,
+  and the test fails if the fix is removed.
+- **Bounded remote responses.** An endless or oversized event stream is
+  refused (`UPSTREAM_TIMEOUT`, `UPSTREAM_RESPONSE_TOO_LARGE`).
+- **Type-strict scope.** A scope of `[1]` no longer admits `true`.
 - **Approver notification.** A `notify_url` webhook announces each held call
   with metadata only; a failed notification changes nothing.
 - Tests: `tests/test_mcp_gate_hardening.py`.

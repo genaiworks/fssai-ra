@@ -228,9 +228,16 @@ Once approvers are registered:
 Keep key files where the agent cannot read them. A signature proves which key
 approved the call, not that the person holding it looked carefully.
 
-**Single use holds across processes.** A gate uses an approval by renaming its
-file, which the operating system does atomically. So of several gate sessions
-sharing one approvals directory, exactly one runs the approved call.
+**Single use holds across processes and against replay.** A gate uses an
+approval by renaming its file, which the operating system does atomically, so
+of several gate sessions sharing one approvals directory exactly one runs the
+approved call. Use is also recorded in a gate-owned spent ledger: a marker is
+created with an exclusive create, so it can happen only once. The gate
+remembers the approvals it used from its own receipts as well. A signed
+approval file restored after use is therefore refused
+(`APPROVAL_ALREADY_USED`), including by a different gate process. Set
+`spent_ledger:` to a directory only gates can write; it defaults to
+`approvals/.spent`.
 
 **Approvers are told.** Set `notify_url` to a chat or ticketing webhook. Each
 new held call is announced with its request id, tool and argument digest,

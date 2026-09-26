@@ -27,6 +27,9 @@
   "ALLOWED_WITH_APPROVAL": [
    "fssaira.accountable_action"
   ],
+  "APPROVAL_ALREADY_USED": [
+   "fssaira.integration.mcp_gate"
+  ],
   "APPROVAL_AUDIENCE_MISMATCH": [
    "fssaira.exact_action"
   ],
@@ -1532,6 +1535,9 @@
   "UPSTREAM_REQUEST_NOT_FORWARDED": [
    "fssaira.integration.mcp_gate"
   ],
+  "UPSTREAM_RESPONSE_TOO_LARGE": [
+   "fssaira.integration.mcp_gate"
+  ],
   "UPSTREAM_TIMEOUT": [
    "fssaira.integration.mcp_gate"
   ],
@@ -1587,6 +1593,6 @@
    "fssaira.joined_workflow"
   ]
  },
- "count": 520,
+ "count": 522,
  "generated_by": "fssaira.refusal_registry"
 }
