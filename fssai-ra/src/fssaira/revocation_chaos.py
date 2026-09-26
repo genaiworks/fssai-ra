@@ -73,6 +73,51 @@ class ChaosConfig:
     retry_every: float = 1.0
 
 
+class MemoryAuthorityStore:
+    """The authority store as one linearizable object: epochs and fenced commits.
+
+    A deployment's own store (see :mod:`fssaira.adapter_qualification`) exposes
+    the same four methods and is driven by the same harness.
+    """
+
+    def __init__(self, tasks: int) -> None:
+        self._epoch = [0] * tasks
+        self._committed: dict[str, float] = {}
+
+    def revoke(self, task: int) -> None:
+        self._epoch[task] += 1
+
+    def epoch(self, task: int) -> int:
+        return self._epoch[task]
+
+    def commit(self, effect: str, task: int, epoch: int, now: float) -> float | None:
+        """Commit ``effect`` if ``epoch`` is current; idempotent. Returns commit time or None."""
+        if effect in self._committed:
+            return self._committed[effect]
+        if self._epoch[task] != epoch:
+            return None
+        self._committed[effect] = now
+        return now
+
+    def committed(self) -> dict[str, float]:
+        return dict(self._committed)
+
+
+class MemorySink:
+    """The external system. ``idempotent=False`` is the ablation."""
+
+    def __init__(self, *, idempotent: bool = True) -> None:
+        self.idempotent = idempotent
+        self._seen: set[str] = set()
+
+    def deliver(self, effect: str) -> bool:
+        """Apply the effect; False when the idempotency key was already used."""
+        if self.idempotent and effect in self._seen:
+            return False
+        self._seen.add(effect)
+        return True
+
+
 @dataclass
 class _Effect:
     id: str
@@ -85,7 +130,8 @@ class _Effect:
 
 
 class _Sim:
-    def __init__(self, config: ChaosConfig, discipline: str, seed: int) -> None:
+    def __init__(self, config: ChaosConfig, discipline: str, seed: int, *,
+                 store=None, sink=None) -> None:
         if discipline not in DISCIPLINES:
             raise ValueError(f"unknown discipline {discipline!r}")
         self.c, self.discipline = config, discipline
@@ -93,9 +139,10 @@ class _Sim:
         self.queue: list = []
         self.seq = 0
         self.now = 0.0
-        self.epoch = [0] * config.tasks
+        self.store = store if store is not None else MemoryAuthorityStore(config.tasks)
+        self.sink = sink if sink is not None else MemorySink(
+            idempotent=discipline != "no_idempotency")
         self.revoked_at: list[float | None] = [None] * config.tasks
-        self.committed: dict[str, float] = {}
         self.effects: dict[str, _Effect] = {}
         self.leases: dict[tuple[int, int], tuple[int, float]] = {}
         rng = self.rng
@@ -144,23 +191,19 @@ class _Sim:
 
     # -- the authority store (linearizable: one event at a time) -------------
     def on_revoke(self, task: int) -> None:
-        self.epoch[task] += 1
+        self.store.revoke(task)
         if self.revoked_at[task] is None:
             self.revoked_at[task] = self.now
 
     def on_commit_request(self, effect: str) -> None:
         e = self.effects[effect]
-        if effect in self.committed:                       # idempotent replay
-            self.send("commit_reply", e.adapter, effect=effect, ok=True)
-        elif self.epoch[e.task] == e.epoch:
-            self.committed[effect] = self.now
-            self.send("commit_reply", e.adapter, effect=effect, ok=True)
-        else:
-            self.send("commit_reply", e.adapter, effect=effect, ok=False)
+        committed_at = self.store.commit(effect, e.task, e.epoch, self.now)
+        self.send("commit_reply", e.adapter, effect=effect, ok=committed_at is not None,
+                  committed_at=committed_at)
 
     def on_epoch_read(self, effect: str) -> None:
         e = self.effects[effect]
-        self.send("epoch_reply", e.adapter, effect=effect, epoch=self.epoch[e.task],
+        self.send("epoch_reply", e.adapter, effect=effect, epoch=self.store.epoch(e.task),
                   issued=self.now)
 
     # -- adapters -----------------------------------------------------------
@@ -168,8 +211,8 @@ class _Sim:
         return bool(e.applied) or e.refused
 
     def apply(self, e: _Effect, linearized_at: float) -> None:
-        if e.applied and self.discipline != "no_idempotency":
-            return                                        # idempotency key
+        if not self.sink.deliver(e.id):
+            return                                        # idempotency key held
         e.applied.append(self.now)
         if e.linearized_at is None:
             e.linearized_at = linearized_at
@@ -193,12 +236,12 @@ class _Sim:
                 self.send("epoch_read", e.adapter, effect=effect)
                 self.at(self.now + self.c.retry_every, "request", effect=effect)
 
-    def on_commit_reply(self, effect: str, ok: bool) -> None:
+    def on_commit_reply(self, effect: str, ok: bool, committed_at: float | None) -> None:
         e = self.effects[effect]
-        if not ok:
+        if not ok or committed_at is None:
             e.refused = not e.applied
             return
-        self.apply(e, self.committed[effect])
+        self.apply(e, committed_at)
 
     def on_epoch_reply(self, effect: str, epoch: int, issued: float) -> None:
         e = self.effects[effect]
@@ -226,9 +269,9 @@ class _Sim:
         """Deliver committed effects whose reply never arrived, once."""
         replayed = 0
         if self.discipline in ("fenced", "no_idempotency"):
-            for effect, committed_at in self.committed.items():
+            for effect, committed_at in self.store.committed().items():
                 e = self.effects[effect]
-                if not e.applied:
+                if not e.applied and self.sink.deliver(effect):
                     e.applied.append(self.now)
                     e.linearized_at = committed_at
                     replayed += 1
@@ -259,15 +302,16 @@ class _Sim:
             "held": sum(not e.applied and not e.refused for e in self.effects.values()),
             "stale_effects": stale,
             "duplicate_applications": duplicate,
-            "unreconciled": len(applied ^ set(self.committed)) if fenced else None,
+            "unreconciled": len(applied ^ set(self.store.committed())) if fenced else None,
             "reconciled_by_replay": replayed,
             "committed_before_revoke_delivered_after": in_flight,
             "max_delivery_lag_after_revoke": round(max_lag, 3),
         }
 
 
-def run_once(discipline: str, seed: int, config: ChaosConfig | None = None) -> dict:
-    sim = _Sim(config or ChaosConfig(), discipline, seed)
+def run_once(discipline: str, seed: int, config: ChaosConfig | None = None, *,
+             store=None, sink=None) -> dict:
+    sim = _Sim(config or ChaosConfig(), discipline, seed, store=store, sink=sink)
     sim.run()
     return sim.report()
 
@@ -304,4 +348,5 @@ def run_campaign(*, seeds: int = 200, config: ChaosConfig | None = None,
     }
 
 
-__all__ = ["ChaosConfig", "DISCIPLINES", "run_campaign", "run_once"]
+__all__ = ["ChaosConfig", "DISCIPLINES", "MemoryAuthorityStore", "MemorySink", "run_campaign",
+           "run_once"]

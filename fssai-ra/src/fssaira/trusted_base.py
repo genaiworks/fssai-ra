@@ -44,7 +44,7 @@ TRUSTED_COMPONENTS: dict[str, tuple[str, ...]] = {
                        "envelope_mac.py"),
     "evidence plane": ("evidence.py", "evidence_notary.py", "chain_verification.py",
                        "checkpoint_notary.py", "witness.py", "transparency.py",
-                       "forward_secure.py", "time_anchor.py"),
+                       "forward_secure.py", "time_anchor.py", "evidence_federation.py"),
     "key custody": ("key_custody.py", "custody_store.py", "kms_vault.py"),
     "containment": ("agent_cell.py", "isolation.py"),
 }

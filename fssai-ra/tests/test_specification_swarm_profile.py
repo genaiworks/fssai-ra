@@ -12,7 +12,7 @@ ROW = re.compile(r"^\|\s*(SW-[A-Z]-\d+)\s*\|\s*(MUST NOT|MUST|SHOULD|MAY)\s*\|(.
 def test_profile_requirements_are_unique_and_cite_existing_tests():
     found = ROW.findall(PROFILE.read_text(encoding="utf-8"))
     ids = [row[0] for row in found]
-    assert len(ids) == 11 and len(set(ids)) == len(ids)
+    assert len(ids) == 14 and len(set(ids)) == len(ids)
     missing = []
     for rid, _level, _text, evidence in found:
         assert evidence.strip().startswith("test:"), f"{rid} names no test"

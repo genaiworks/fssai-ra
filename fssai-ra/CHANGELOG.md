@@ -21,10 +21,19 @@ evidence count or claim changed.
 - **Measurement.** Trusted-base SLOC, CycloneDX SBOM and build measurement
   (`fssaira assure trusted-base`); review staffing to the floor
   (`fssaira assure staffing`); covert-channel rate objective (`channel_slo`).
+- **Adapter qualification.** `adapter_qualification`: a deployment's own authority
+  store and effect sink run inside the chaos campaign; real threads race revocation
+  and the store's ordered log is audited for superseded-epoch commits. Reference
+  SQLite store and sink qualify; deliberately broken ones do not.
+- **Evidence federation.** `evidence_federation`: one publish step (Merkle root,
+  forward-secure signature, time anchor, domain quorum) and one verdict, with
+  per-record inclusion proofs over the live runtime ledger.
+- **Assurance report.** `fssaira assure report`: every engineering check in one
+  JSON whose deterministic section is SHA-256 digest-stamped for reproduction.
 - **Education pack.** `ferpa`: 34 CFR Part 99 release paths, each citing its
   section, with a stricter institutional mandate for minors.
 - **Registry and specification.** `docs/refusal_registry.json` generated from source
-  and checked in CI; eleven requirements in the companion
+  and checked in CI; fourteen requirements in the companion
   `docs/SPECIFICATION_SWARM_PROFILE.md` (the core specification and every figure
   computed from it are unchanged); acronyms in plain language in the glossary.
 

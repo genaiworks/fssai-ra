@@ -74,6 +74,14 @@ class ForwardSecureSignature:
     signature: str
     schedule: Schedule
 
+    @classmethod
+    def from_dict(cls, value: dict) -> ForwardSecureSignature:
+        schedule = value["schedule"]
+        return cls(value["key_id"], int(value["period"]), value["period_public"],
+                   value["period_cert"], value["schedule_cert"], value["signature"],
+                   Schedule(value["key_id"], float(schedule["start"]),
+                            float(schedule["period_seconds"]), int(schedule["periods"])))
+
     def to_dict(self) -> dict:
         return {"key_id": self.key_id, "period": self.period,
                 "period_public": self.period_public, "period_cert": self.period_cert,

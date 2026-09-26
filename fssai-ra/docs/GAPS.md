@@ -48,6 +48,9 @@ the mechanism exists and a deployment still has to qualify it.
 | Covert channel bounded per task, not as a rate | `channel_slo.py` | `tests/test_master_guide_measures.py` | a signed-off bits-per-minute objective |
 | Review floor without staffing arithmetic | `oversight_staffing.py`, `fssaira assure staffing` | `tests/test_master_guide_measures.py` | measured review-time distribution (the model assumes exponential) |
 | No sector release table for education | `ferpa.py`: 34 CFR Part 99 paths with citations; stricter minors mandate | `tests/test_ferpa_pack.py` | registrar and counsel validation |
+| Protocol qualified, deployment's own store and sink not | `adapter_qualification.py`: real store and sink in the chaos loop; concurrent linearization audit | `tests/test_adapter_qualification.py` | running it against your production database and external systems |
+| Evidence controls verified one by one | `evidence_federation.py`: one publication step and one verdict; per-record inclusion proofs on the runtime ledger | `tests/test_evidence_federation.py` | publishing to parties outside the institution |
+| No single reproducible assurance artefact | `assurance_report.py`, `fssaira assure report`: digest-stamped deterministic section | `tests/test_assurance_report.py` | a buyer reproducing the digest |
 | Refusal codes not registered | `refusal_registry.py`, `docs/refusal_registry.json` | `tests/test_master_guide_measures.py` | none |
 
 ## What code can still improve without pretending these gaps are closed

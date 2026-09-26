@@ -153,8 +153,9 @@ Deployments that run many cooperating agents also claim the requirements in
 [`SPECIFICATION_SWARM_PROFILE.md`](SPECIFICATION_SWARM_PROFILE.md): measured trusted
 base, policy-bound approval and migration, fenced commit under distributed faults, sector
 release tables, a covert-channel rate objective, review staffing, Merkle proofs, a
-witness quorum across domains, forward-secure keys, time anchoring and a generated
-refusal-code registry. They are kept in a separate profile so this core specification,
+witness quorum across domains, forward-secure keys, time anchoring, qualification of a
+deployment's own store and sink, federated checkpoint publication, a generated refusal-code
+registry and a digest-stamped assurance report. They are kept in a separate profile so this core specification,
 and every figure computed from it, stays stable.
 
 ## 5. What conformance does not mean

@@ -1,5 +1,11 @@
 {
  "codes": {
+  "ADAPTER_NOT_QUALIFIED": [
+   "fssaira.adapter_qualification"
+  ],
+  "ADAPTER_QUALIFIED": [
+   "fssaira.adapter_qualification"
+  ],
   "ADMIN_REQUIRED": [
    "fssaira.joined_workflow"
   ],
@@ -405,6 +411,18 @@
   ],
   "ENVELOPE_DENIED": [
    "fssaira.tbc.runtime"
+  ],
+  "EVIDENCE_FEDERATED_VALID": [
+   "fssaira.evidence_federation"
+  ],
+  "EVIDENCE_RECORD_INCLUDED": [
+   "fssaira.evidence_federation"
+  ],
+  "EVIDENCE_RECORD_NOT_INCLUDED": [
+   "fssaira.evidence_federation"
+  ],
+  "EVIDENCE_ROOT_MISMATCH": [
+   "fssaira.evidence_federation"
   ],
   "EVIDENCE_SPLIT_VIEW": [
    "fssaira.transparency"
@@ -1144,6 +1162,12 @@
   "STATE_CONTENTION": [
    "fssaira.redis_backend"
   ],
+  "STORE_LINEARIZABLE": [
+   "fssaira.adapter_qualification"
+  ],
+  "STORE_STALE_COMMIT": [
+   "fssaira.adapter_qualification"
+  ],
   "STORE_UNAVAILABLE": [
    "fssaira.disclosure"
   ],
@@ -1408,6 +1432,6 @@
    "fssaira.joined_workflow"
   ]
  },
- "count": 462,
+ "count": 470,
  "generated_by": "fssaira.refusal_registry"
 }

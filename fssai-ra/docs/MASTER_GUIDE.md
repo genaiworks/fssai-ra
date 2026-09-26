@@ -23,8 +23,8 @@ named person answers for the decision. Evidence that anyone can recompute shows 
 
 | If you are… | Read | Then run |
 |---|---|---|
-| Executive sponsor | §2, §3, §12 | nothing; ask for the §11 evidence bundle |
-| CISO / architect | §4–§7 | `fssaira assure trusted-base`, `fssaira assure chaos` |
+| Executive sponsor | §2, §3, §12 | nothing; ask for the §11 evidence bundle and the `fssaira assure report` digest |
+| CISO / architect | §4–§8 | `fssaira assure report` (every check below, one digest) |
 | Risk, legal, DPO | §3, §9, §11 | the sector pack tests (`tests/test_ferpa_pack.py` for education) |
 | Engineering lead | §4–§8 | the full conformance suite, `make test` |
 | Operations | §8, §10 | `fssaira assure staffing`, `fssaira small verify` |
@@ -32,7 +32,7 @@ named person answers for the decision. Evidence that anyone can recompute shows 
 
 Every control below names **where it is implemented**, **the test that fails if it is
 removed**, and **the refusal code an auditor searches for**. The registry of all codes
-(462 at the time of writing) is generated from the source into
+(470 at the time of writing) is generated from the source into
 [`refusal_registry.json`](refusal_registry.json). A test fails if a code is added without being
 registered.
 
@@ -159,11 +159,13 @@ returns when the control is removed. The named test demonstrates that harm.
 | 7 | Sealed release, label inheritance | `disclosure.py`, `authorize_release` | reader → summariser → publisher leak | `tests/test_disclosure.py` | `DESTINATION_DENIED`, `DECLASSIFICATION_REQUIRED` |
 | 8 | Revocation epoch and freshness | `revoke_task`, `check_freshness` | queued work survives consent withdrawal | `tests/test_tbc_composition_controls.py` | `STALE_PROPOSAL`, `FRESHNESS_UNPROVEN` |
 | 9 | **Fenced commit under chaos** *(new)* | `revocation_chaos.py` | stale effects under partition or skew; duplicate effects on retry | `tests/test_revocation_chaos.py` | invariant counts (§8) |
+| 9b | **Adapter qualification kit** *(new)* | `adapter_qualification.py` | a store that ignores the epoch or a sink without keys reaches production | `tests/test_adapter_qualification.py` | `ADAPTER_NOT_QUALIFIED`, `STORE_STALE_COMMIT` |
 | 10 | Declared task graph | `admit_graph` | undeclared spawn or edge | `tests/test_tbc_composition_controls.py` | `GRAPH_NOT_DECLARED`, `NODE_NOT_ADMITTED` |
 | 11 | Restricting monitor | `apply_monitor_finding`, `Guardian` | monitor grants authority | `tests/test_behaviour_watch.py` | `STALE_MONITOR_EVIDENCE`, `MONITOR_REPLAY` |
 | 12 | Contained agent cell | `agent_cell.verify_cell` | ambient credentials reachable | `tests/test_agent_cell.py` | `CellNotIsolated` (exception) |
 | 13 | Intent before effect, witnessed checkpoints | `evidence_notary.py`, `witness.py` | silent rewrite or truncation | `tests/test_witness.py` | `WITNESS_FORK`, `LEDGER_HISTORY_REWRITTEN` |
 | 14 | **Merkle proofs and domain quorum** *(new)* | `transparency.py` | proofs grow with the ledger; one organisation is every witness | `tests/test_transparency.py` | `MERKLE_FORK`, `WITNESS_QUORUM_NOT_MET`, `EVIDENCE_SPLIT_VIEW` |
+| 14b | **Federated checkpoint publication** *(new)* | `evidence_federation.py` | each evidence control checked separately, or not at all | `tests/test_evidence_federation.py` | `EVIDENCE_FEDERATED_VALID`, `EVIDENCE_ROOT_MISMATCH`, `EVIDENCE_RECORD_INCLUDED` |
 | 15 | **Forward-secure keys, time anchors** *(new)* | `forward_secure.py`, `time_anchor.py` | a stolen key backdates history | `tests/test_forward_secure_and_time.py` | `FS_WRONG_PERIOD`, `TIME_SOURCES_DISAGREE`, `CHECKPOINT_TIME_UNANCHORED` |
 | 16 | Covert-channel budget and **rate SLO** *(new)* | `covert_channels.py`, `channel_slo.py` | allowed choices become a signal | `tests/test_channel_budget.py`, `tests/test_master_guide_measures.py` | `CHANNEL_BUDGET_EXHAUSTED`, `CHANNEL_SLO_EXCEEDED` |
 | 17 | Review floor, capacity and **staffing** *(new)* | `approve_effect`, `oversight_staffing.py` | rubber-stamping | `tests/test_oversight.py`, `tests/test_master_guide_measures.py` | `REVIEW_DEFERRED_TO_MANUAL` |
@@ -182,7 +184,7 @@ returns when the control is removed. The named test demonstrates that harm.
 Run `fssaira assure trusted-base`. It reports four things:
 
 - **Size.** SLOC for each trusted component, and the trusted fraction of the package. In
-  this repository today: 7,844 of 32,352 SLOC (24%), in five components (kernel, decision
+  this repository today: 7,974 of 32,805 SLOC (24%), in five components (kernel, decision
   plane, evidence plane, key custody, containment). There is no native code in the package.
 - **Build measurement.** A SHA-256 over every trusted file. Your attestation service pins
   this digest (TPM quote, confidential-computing report, or signed deployment manifest). A
@@ -318,12 +320,41 @@ store and systems:
 3. **Reconciled.** After the reconciler replays committed but undelivered effects, the set of
    committed effects equals the set of applied effects.
 
+### 8.1 Qualify your own store and sink
+
+`fssaira.adapter_qualification` turns the simulation into a qualification of your own code.
+Wrap your authority store behind four methods (`revoke`, `epoch`, `commit`, `committed`) and
+your external system behind one (`deliver`). `qualify(store_factory, sink_factory)` then drives
+the real objects through the same seeded fault campaign. `concurrent_revocation_check` races real
+threads committing against a revoking thread, then replays the store's own ordered log to show
+that no commit carries a superseded epoch. The reference `SqlAuthorityStore` and `SqlSink`
+qualify. The kit's own tests include two deliberately broken versions, a store that trusts the
+adapter's epoch and a sink without keys, and both fail qualification. That is how you know the
+kit can catch what it claims to catch.
+
+```python
+from fssaira.adapter_qualification import qualify, concurrent_revocation_check
+result = qualify(lambda seed, tasks: MyStore(dsn, tasks), lambda seed: MySink(endpoint))
+assert result["code"] == "ADAPTER_QUALIFIED"
+```
+
 A partitioned adapter that cannot reach the store **holds** the effect. It never decides
 alone. An effect committed before the revocation may still be delivered after it; the
 harness reports the worst delivery lag. For irreversible effects (email, payment), use the
 objection window (`effect_delay_seconds`) so that revocation can still cancel them.
 
 ---
+
+### 8.2 Evidence: one publication step, one verdict
+
+`EvidenceFederation.publish(leaves)` commits the ledger to a Merkle root, signs the tree head
+with the forward-secure key for the current period, anchors its time with chained queries to
+several time servers, and collects co-signatures from witnesses in different domains. Each
+witness is given a logarithmic consistency proof, not the records themselves.
+`verify_federated` checks all of it, plus the recomputed root when you hold the leaves, and
+reports the first failure by code. `prove_record` and `verify_record` let an appeal or a spot
+check confirm that one receipt is in a published checkpoint without revealing the rest of the
+ledger. `runtime_leaves` reads the runtime's own evidence table, so this works on the live log.
 
 ## 9. Human oversight as capacity
 
@@ -432,7 +463,8 @@ from measured times (`review_calibration.py`).
 5. Release to an uncleared destination. Show `DESTINATION_DENIED`.
 6. Rewrite one archived record. Show the verifier failing and the witness refusing
    (`WITNESS_FORK`).
-7. Run `fssaira assure chaos` and `fssaira assure trusted-base`, and hand over the JSON.
+7. Run `fssaira assure report --output report.json`, and hand over the JSON and its digest.
+   The buyer runs the same command on the same commit and compares digests.
 
 ### 11.3 Evidence bundle required before go-live
 
@@ -475,7 +507,7 @@ instruments for each of them. The measurements are yours to produce.
 
 The normative text is in [`SPECIFICATION.md`](SPECIFICATION.md). Requirements added with this
 guide are in the companion [`SPECIFICATION_SWARM_PROFILE.md`](SPECIFICATION_SWARM_PROFILE.md)
-(SW-T-6, SW-A-7, SW-A-8, SW-C-8, SW-D-14, SW-D-15, SW-E-7 to SW-E-10, SW-V-13).
+(SW-T-6, SW-A-7 to SW-A-9, SW-C-8, SW-D-14, SW-D-15, SW-E-7 to SW-E-11, SW-V-13, SW-V-14).
 
 ---
 
@@ -488,8 +520,9 @@ guide are in the companion [`SPECIFICATION_SWARM_PROFILE.md`](SPECIFICATION_SWAR
       through `migrate_policy`.
 - [ ] Sealed release; unlabelled outputs are refused; the sector pack is validated by the
       registrar and counsel.
-- [ ] Revocation: your adapters pass the §8 invariants; irreversible effects wait out the
-      objection window.
+- [ ] Revocation: your store and sink return `ADAPTER_QUALIFIED` and `STORE_LINEARIZABLE`
+      (§8.1); irreversible effects wait out the objection window.
+- [ ] `fssaira assure report` is PASS, and its digest is recorded with the release.
 - [ ] Evidence: a witness quorum across at least two outside domains; split-view gossip;
       forward-secure keys; time-anchored checkpoints; hourly and daily verification.
 - [ ] Trusted base measured, SBOM delivered, build digest attested.

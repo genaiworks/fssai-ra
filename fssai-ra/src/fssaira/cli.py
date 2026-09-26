@@ -1366,6 +1366,20 @@ def cmd_assure_chaos(args) -> int:
     return 0 if report["design_holds"] and all(report["ablations_detected"].values()) else 2
 
 
+def cmd_assure_report(args) -> int:
+    from .assurance_report import build_report
+
+    report = build_report(seeds=args.seeds, qualification_seeds=args.qualification_seeds)
+    heading(f"Master-guide assurance report — {report['verdict']}")
+    for name, section in report["deterministic"]["sections"].items():
+        print("  " + verdict(section["passed"], name, name))
+    print(f"  digest sha256:{report['digest']}")
+    print(dim(f"  {report['host']['seconds']} s on Python {report['host']['python']}; compare "
+              "digests across hosts to confirm the same result"))
+    emit(report, args.output)
+    return 0 if report["verdict"] == "PASS" else 2
+
+
 def cmd_assure_trusted_base(args) -> int:
     from .refusal_registry import scan
     from .trusted_base import report as trusted_report
@@ -1769,6 +1783,11 @@ def build_parser() -> argparse.ArgumentParser:
     staff.add_argument("--service-level", type=float, default=0.8)
     staff.add_argument("--on-shift", type=int)
     staff.set_defaults(func=cmd_assure_staffing)
+    areport = add_output(assure_sub.add_parser(
+        "report", help="every master-guide engineering check in one digest-stamped report"))
+    areport.add_argument("--seeds", type=int, default=100)
+    areport.add_argument("--qualification-seeds", type=int, default=20)
+    areport.set_defaults(func=cmd_assure_report)
 
     return parser
 

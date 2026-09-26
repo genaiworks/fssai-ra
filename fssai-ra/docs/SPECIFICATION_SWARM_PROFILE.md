@@ -28,6 +28,7 @@ fails the build if a cited test stops existing.
 |---|---|---|---|
 | SW-A-7 | MUST | Bind every proposal and approval to the policy version in force, and refuse execution under any other version. Change policy only through a named, reasoned, monotonic migration that contracts tasks the new policy no longer covers and sends held effects to re-review. | test: `tests/test_approval_policy_pinning.py::test_approval_under_old_policy_does_not_execute_under_new` |
 | SW-A-8 | MUST | Commit every external effect in one linearizable step against the current epoch, carry an idempotency key the external system honours, and hold (never decide locally) when the authority store is unreachable. Qualify adapters against no-stale-effect, exactly-once and reconciled invariants under partition, loss, duplication, delay and clock skew. | test: `tests/test_revocation_chaos.py::test_fenced_commit_holds_every_invariant_and_each_ablation_breaks_one` |
+| SW-A-9 | MUST | Qualify the deployment's own authority store and effect sink, not only the protocol: drive them through the seeded fault campaign, and race real concurrent commits against revocation, then replay the store's own ordered log to show no commit carries a superseded epoch. | test: `tests/test_adapter_qualification.py::test_reference_sql_store_and_sink_qualify` |
 
 ## Governed disclosure
 
@@ -50,9 +51,11 @@ fails the build if a cited test stops existing.
 | SW-E-8 | SHOULD | Require checkpoint co-signatures from a quorum of distinct administrative domains, counted by the verifier's registry, and exchange signed heads to detect split views. | test: `tests/test_transparency.py::test_quorum_counts_distinct_domains_not_keys` |
 | SW-E-9 | SHOULD | Sign checkpoints with forward-secure keys so a key compromised in one period cannot sign for an earlier one. | test: `tests/test_forward_secure_and_time.py::test_a_key_stolen_today_cannot_sign_yesterday` |
 | SW-E-10 | SHOULD | Anchor checkpoint time to several independent, chained time sources and refuse a checkpoint whose claimed time falls outside the anchored interval. | test: `tests/test_forward_secure_and_time.py::test_a_lying_server_is_caught_by_the_chain` |
+| SW-E-11 | SHOULD | Publish each checkpoint in one step that commits the Merkle root, signs it with the current forward-secure period key, anchors its time, and collects the domain quorum; verify all of them, and the recomputed root, in one verdict. | test: `tests/test_evidence_federation.py::test_published_checkpoints_verify_end_to_end_as_the_log_grows` |
 
 ## Verification
 
 | ID | Level | Requirement | Evidence in this repository |
 |---|---|---|---|
 | SW-V-13 | MUST | Publish a registry of every refusal code the build can emit, generated from source, and fail the build when it drifts. | test: `tests/test_master_guide_measures.py::test_refusal_registry_is_current_with_the_code` |
+| SW-V-14 | SHOULD | Produce one assurance report per build whose deterministic section is digest-stamped, so independent parties can confirm they observed the same result; any failing section fails the report. | test: `tests/test_assurance_report.py::test_report_passes_and_its_digest_is_reproducible` |
