@@ -4,7 +4,7 @@
 >
 > **Recommended next:** Run `fssaira framework init my-programme --org "<your org>" --sector <sector>`, then `fssaira framework assess my-programme/assessment.yaml --roadmap`.
 
-**This is the canonical framework.** Trust by Construction governs agent authority, information flow, evidence, containment, observation and consequences through one lifecycle. FSSAI-RA implements it. V27-reviewed contributes the decision and composition core; V28 contributes independent evidence, containment, visibility and correctness controls. Their stable identifiers are now one [P1–P34 catalogue](framework/PATTERNS.md).
+**Adopting it for one agent? Start with [ADOPT.md](ADOPT.md) and `fssaira framework plan`.** **This is the canonical framework.** Trust by Construction governs agent authority, information flow, evidence, containment, observation and consequences through one lifecycle. FSSAI-RA implements it. V27-reviewed contributes the decision and composition core; V28 contributes independent evidence, containment, visibility and correctness controls. Their stable identifiers are now one [P1–P34 catalogue](framework/PATTERNS.md).
 
 The single machine-readable source is `src/fssaira/framework_catalogue.yaml`. It defines both the 34 design patterns and the 59 operational controls that supply owners, dependencies and assessment questions. A design pattern and an operational control are different views of the same requirements, not two frameworks. The [consolidation record](../../publications/CONSOLIDATION.md) explains conflicts resolved from the manuscripts.
 

@@ -52,8 +52,15 @@
   "APPROVAL_PAYLOAD_MISMATCH": [
    "fssaira.exact_action"
   ],
+  "APPROVAL_REQUEST_NOT_PENDING": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "APPROVAL_REQUEST_UNKNOWN": [
+   "fssaira.integration.mcp_gate"
+  ],
   "APPROVAL_REQUIRED": [
-   "fssaira.education_world"
+   "fssaira.education_world",
+   "fssaira.integration.mcp_gate"
   ],
   "APPROVAL_REUSED": [
    "fssaira.atomic_execution",
@@ -62,10 +69,17 @@
   "APPROVAL_SIGNATURE_INVALID": [
    "fssaira.exact_action"
   ],
+  "APPROVAL_STORE_REQUIRED": [
+   "fssaira.cli",
+   "fssaira.integration.mcp_gate"
+  ],
   "APPROVER_ROLE_NOT_ALLOWED": [
    "fssaira.exact_action"
   ],
   "ARGUMENTS_MUST_BE_AN_OBJECT": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "ARGUMENT_OUT_OF_SCOPE": [
    "fssaira.integration.mcp_gate"
   ],
   "ARTIFACT_DIGEST_MISMATCH": [
@@ -597,6 +611,9 @@
   "INVALID_ANCESTRY": [
    "fssaira.tbc.runtime"
   ],
+  "INVALID_ARGUMENT_SCOPE": [
+   "fssaira.integration.mcp_gate"
+  ],
   "INVALID_BUDGET_FIELDS": [
    "fssaira.tbc.contracts"
   ],
@@ -642,6 +659,9 @@
   "INVALID_SERVER_ENTRY": [
    "fssaira.integration.mcp_gate"
   ],
+  "INVALID_SESSION_CONTRACT": [
+   "fssaira.integration.mcp_gate"
+  ],
   "INVALID_TASK_FIELDS": [
    "fssaira.tbc.contracts"
   ],
@@ -653,6 +673,9 @@
   ],
   "INVALID_VALUE": [
    "fssaira.joined_workflow"
+  ],
+  "IRREVERSIBLE_EFFECTS_IMPLY_EXTERNAL_EFFECTS": [
+   "fssaira.adoption_plan"
   ],
   "LEASE_TOO_LONG": [
    "fssaira.tbc.runtime"
@@ -943,6 +966,9 @@
   "PIN_MISMATCH": [
    "fssaira.integration.transport"
   ],
+  "POLICY_CHANGED_AFTER_APPROVAL": [
+   "fssaira.integration.mcp_gate"
+  ],
   "POLICY_VERSION_CHANGED": [
    "fssaira.tbc.runtime"
   ],
@@ -1041,6 +1067,9 @@
   ],
   "REGISTRAR_REQUIRED": [
    "fssaira.joined_workflow"
+  ],
+  "REGULATED_DATA_IMPLIES_PROTECTED_DATA": [
+   "fssaira.adoption_plan"
   ],
   "RELEASE_CONSENT_WITHDRAWN": [
    "fssaira.disclosure"
@@ -1178,6 +1207,12 @@
    "fssaira.integration.mcp_gate"
   ],
   "SERVER_NOT_LOCKED": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "SESSION_CALL_BUDGET_EXHAUSTED": [
+   "fssaira.integration.mcp_gate"
+  ],
+  "SESSION_EXPIRED": [
    "fssaira.integration.mcp_gate"
   ],
   "SESSION_HOLDER_MISMATCH": [
@@ -1482,6 +1517,9 @@
   "UPSTREAM_UNAVAILABLE": [
    "fssaira.integration.mcp_gate"
   ],
+  "USE_CASE_NEEDS_A_NAME": [
+   "fssaira.adoption_plan"
+  ],
   "VALUE_NOT_ISSUED": [
    "fssaira.disclosure"
   ],
@@ -1522,6 +1560,6 @@
    "fssaira.joined_workflow"
   ]
  },
- "count": 500,
+ "count": 512,
  "generated_by": "fssaira.refusal_registry"
 }

@@ -2,7 +2,7 @@
 
 **Trust by Construction (TBC)** is the single framework for governing AI agents and swarms in this repository. **FSSAI-RA** is its reference implementation. The reviewed V27 core and the full V28 extensions are consolidated into **34 canonical patterns and 59 operational controls**, maintained together in one executable catalogue.
 
-**Start with the [consolidated framework](fssai-ra/docs/FRAMEWORK.md).** Read its [P1–P34 pattern catalogue](fssai-ra/docs/framework/PATTERNS.md), [operational controls](fssai-ra/docs/framework/CONTROLS.md), and [consolidation record](publications/CONSOLIDATION.md). Manuscript versions are historical publication views of this framework, not competing definitions.
+**Building or buying an agent? Start with [Adopt it](fssai-ra/docs/ADOPT.md)**: triage your use case with `fssaira framework plan`, then follow the first sprint. **The framework itself is [here](fssai-ra/docs/FRAMEWORK.md).** Read its [P1–P34 pattern catalogue](fssai-ra/docs/framework/PATTERNS.md), [operational controls](fssai-ra/docs/framework/CONTROLS.md), and [consolidation record](publications/CONSOLIDATION.md). Manuscript versions are historical publication views of this framework, not competing definitions.
 
 > A model may propose an action. It cannot manufacture the authority to execute it.
 > A model may request data. Independent controls decide what it may see and release.
@@ -20,7 +20,8 @@ The repository supports experiments, teaching, integration work, and multiple re
 | See an authorized action and a rejected attack | Offline joined workflow with a browser evidence viewer |
 | Define who may do what | Domain profiles, seven-field control contracts, exact-action approvals |
 | Control sensitive information | Purpose-bound disclosure, consent, inherited labels, recipient and release checks |
-| Gate the MCP tools your agent already uses | [`fssaira mcp`](fssai-ra/docs/MCP_GATE.md): named tool approval, rug-pull quarantine, injection-to-privileged-tool blocking, digest-only receipts |
+| Size the controls to your agent | [`fssaira framework plan`](fssai-ra/docs/ADOPT.md): target level, first sprint, stop conditions |
+| Gate the MCP tools your agent already uses | [`fssaira mcp`](fssai-ra/docs/MCP_GATE.md): named tool approval, rug-pull quarantine, injection-to-privileged-tool blocking, argument scope, exact-action human approval, digest-only receipts |
 | Govern cooperating agents | Delegation checks; SDK task, memory, population, messaging, and Guardian controls |
 | Test a security claim | Adversarial scenarios, ablations, bounded verification, conformance, race and recovery checks |
 | Explore human oversight | Capacity and assisted-review simulations with explicit assumptions |

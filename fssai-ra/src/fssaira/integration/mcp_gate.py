@@ -24,6 +24,20 @@ Three commands make up the workflow:
     output cannot reach a privileged tool. Every decision is appended to a
     hash-chained receipt log that records digests, never argument content.
 
+Beyond tool hygiene, the gate enforces a task contract on the wire (P2, P7):
+
+* a **session contract** -- an expiry and a total call budget for the session;
+* **argument scope** -- per tool, exact-match allow-lists for named arguments,
+  so an agent that may email two recipients cannot email a third, however it
+  is asked;
+* **exact-action approval** -- for a tool marked ``approval: required`` the
+  gate holds the call, records a request carrying the exact arguments, and
+  runs it only after a named person approves that request. The approval is
+  bound to the argument digest, single-use and expiring, so a changed
+  argument needs a new approval. A human approval of the exact action is also
+  the one thing that lets a session that has read untrusted content reach a
+  privileged tool: the person, not the page, is the authority.
+
 What the gate decides is taken from the deployment's policy file, never from
 the server. MCP tool annotations such as ``readOnlyHint`` are claims made by
 the party being governed; the gate hashes them, shows them to the reviewer,
@@ -122,6 +136,17 @@ class McpGateCodes:
     UPSTREAM_REQUEST_NOT_FORWARDED = "UPSTREAM_REQUEST_NOT_FORWARDED"
     # calls
     ARGUMENTS_MUST_BE_AN_OBJECT = "ARGUMENTS_MUST_BE_AN_OBJECT"
+    ARGUMENT_OUT_OF_SCOPE = "ARGUMENT_OUT_OF_SCOPE"
+    SESSION_EXPIRED = "SESSION_EXPIRED"
+    SESSION_CALL_BUDGET_EXHAUSTED = "SESSION_CALL_BUDGET_EXHAUSTED"
+    POLICY_CHANGED_AFTER_APPROVAL = "POLICY_CHANGED_AFTER_APPROVAL"
+    # exact-action approval
+    APPROVAL_REQUIRED = "APPROVAL_REQUIRED"
+    APPROVAL_STORE_REQUIRED = "APPROVAL_STORE_REQUIRED"
+    APPROVAL_REQUEST_UNKNOWN = "APPROVAL_REQUEST_UNKNOWN"
+    APPROVAL_REQUEST_NOT_PENDING = "APPROVAL_REQUEST_NOT_PENDING"
+    INVALID_ARGUMENT_SCOPE = "INVALID_ARGUMENT_SCOPE"
+    INVALID_SESSION_CONTRACT = "INVALID_SESSION_CONTRACT"
     TOOL_NOT_OFFERED = "TOOL_NOT_OFFERED"
     TOOL_CALL_LIMIT_REACHED = "TOOL_CALL_LIMIT_REACHED"
     # shared with the core registry, and raised by the gate directly as well
@@ -169,18 +194,66 @@ class ToolPolicy:
     effects: frozenset[str]
     trusted_output: bool = False
     max_calls: int | None = None
+    #: A named person approves each exact call before it runs.
+    approval: bool = False
+    #: ``{argument: (allowed, values)}``: exact matches only, no wildcards.
+    scope: Mapping[str, tuple] = field(default_factory=dict)
 
     @classmethod
     def parse(cls, value: Mapping[str, Any] | None) -> ToolPolicy:
         raw = dict(UNDECLARED_POLICY if value is None else value)
-        unknown = set(raw) - {"power", "irreversibility", "effects", "trusted_output", "max_calls"}
+        unknown = set(raw) - {"power", "irreversibility", "effects", "trusted_output", "max_calls",
+                              "approval", "scope"}
         _require(not unknown, "UNKNOWN_TOOL_POLICY_FIELD")
         max_calls = raw.get("max_calls")
         _require(max_calls is None or (type(max_calls) is int and max_calls >= 0),
                  "INVALID_TOOL_CALL_LIMIT")
+        approval = raw.get("approval", False)
+        _require(approval in (False, True, "required", "none"), "UNKNOWN_TOOL_POLICY_FIELD")
+        scope_raw = raw.get("scope") or {}
+        _require(isinstance(scope_raw, dict), "INVALID_ARGUMENT_SCOPE")
+        scope = {}
+        for argument, allowed in scope_raw.items():
+            # Exact values only. A pattern would be a second policy language
+            # with its own bypasses; an allow-list is reviewable at a glance.
+            _require(isinstance(allowed, list) and bool(allowed)
+                     and all(isinstance(v, (str, int, bool)) for v in allowed), "INVALID_ARGUMENT_SCOPE")
+            scope[str(argument)] = tuple(allowed)
         return cls(power=raw.get("power", 3), irreversibility=raw.get("irreversibility", 2),
                    effects=frozenset(raw.get("effects", ())),
-                   trusted_output=bool(raw.get("trusted_output", False)), max_calls=max_calls)
+                   trusted_output=bool(raw.get("trusted_output", False)), max_calls=max_calls,
+                   approval=approval in (True, "required"), scope=scope)
+
+    def governance(self) -> dict:
+        """The parts of policy that a lock pins beyond the manifest digest."""
+        return {"trusted_output": self.trusted_output, "max_calls": self.max_calls,
+                "approval": self.approval, "scope": {k: list(v) for k, v in sorted(self.scope.items())}}
+
+
+def locked_governance(policy: Mapping[str, Any]) -> dict:
+    """The same view read back from a lock file; absent fields meant 'off' when it was written."""
+    return {"trusted_output": bool(policy.get("trusted_output", False)),
+            "max_calls": policy.get("max_calls"), "approval": bool(policy.get("approval", False)),
+            "scope": {k: list(v) for k, v in sorted((policy.get("scope") or {}).items())}}
+
+
+@dataclass(frozen=True)
+class SessionContract:
+    """A task contract for one gate session: it ends, and it has a budget."""
+
+    expires_after_seconds: float | None = None
+    max_calls: int | None = None
+
+    @classmethod
+    def parse(cls, value: Any) -> SessionContract:
+        raw = value or {}
+        _require(isinstance(raw, dict) and set(raw) <= {"expires_after_seconds", "max_calls"},
+                 "INVALID_SESSION_CONTRACT")
+        expires, calls = raw.get("expires_after_seconds"), raw.get("max_calls")
+        _require(expires is None or (isinstance(expires, (int, float)) and not isinstance(expires, bool)
+                                     and 0 < expires < float("inf")), "INVALID_SESSION_CONTRACT")
+        _require(calls is None or (type(calls) is int and calls >= 0), "INVALID_SESSION_CONTRACT")
+        return cls(expires_after_seconds=expires, max_calls=calls)
 
 
 @dataclass(frozen=True)
@@ -223,6 +296,9 @@ class GateConfig:
     session_starts_untrusted: bool = False
     call_timeout: float = 60.0
     base: Path = Path(".")
+    session: SessionContract = SessionContract()
+    approvals: Path | None = None
+    approval_ttl: float = 900.0
 
     @classmethod
     def load(cls, path: str | Path) -> GateConfig:
@@ -255,9 +331,19 @@ class GateConfig:
         trusted = frozenset(raw.get("trusted_sources") or ())
         for source in trusted:
             _require(isinstance(source, str) and source.count("/") == 1, "TRUSTED_SOURCE_MUST_BE_QUALIFIED")
-        return cls(servers=tuple(servers), trusted_sources=trusted,
-                   session_starts_untrusted=bool(raw.get("session_starts_untrusted", False)),
-                   call_timeout=float(raw.get("call_timeout", 60.0)), base=path.resolve().parent)
+        base = path.resolve().parent
+        approvals = raw.get("approvals")
+        ttl = raw.get("approval_ttl", 900)
+        _require(isinstance(ttl, (int, float)) and not isinstance(ttl, bool) and 0 < ttl < float("inf"),
+                 "INVALID_SESSION_CONTRACT")
+        config = cls(servers=tuple(servers), trusted_sources=trusted,
+                     session_starts_untrusted=bool(raw.get("session_starts_untrusted", False)),
+                     call_timeout=float(raw.get("call_timeout", 60.0)), base=base,
+                     session=SessionContract.parse(raw.get("session")),
+                     approvals=(base / approvals) if approvals else None, approval_ttl=float(ttl))
+        needs_store = any(p.approval for s in config.servers for p in s.tools.values())
+        _require(config.approvals is not None or not needs_store, "APPROVAL_STORE_REQUIRED")
+        return config
 
     def server(self, name: str) -> UpstreamSpec:
         for spec in self.servers:
@@ -505,8 +591,7 @@ def _survey(config: GateConfig) -> list[dict]:
                 "output_hash": manifest.output_hash,
                 "annotations": tool.get("annotations") or {},
                 "policy": {"power": policy.power, "irreversibility": policy.irreversibility,
-                           "effects": sorted(policy.effects), "trusted_output": policy.trusted_output,
-                           "max_calls": policy.max_calls,
+                           "effects": sorted(policy.effects), **policy.governance(),
                            "declared": manifest.name in spec.tools},
                 "privileged": ToolRegistry.is_privileged(manifest),
                 "findings": list(scan_description(text, known_servers=known, own_server=spec.name))
@@ -632,6 +717,98 @@ def verify_receipts(path: str | Path) -> dict:
             "decisions": dict(sorted(counts.items())), "problems": problems}
 
 
+# -- exact-action approval --------------------------------------------------------
+
+
+class ApprovalStore:
+    """Requests a named person approves, one file each, outside the agent's reach.
+
+    A request carries the exact arguments, because a person cannot approve what
+    they have not seen. Once decided and used, the arguments are dropped and
+    only their digest remains, so the store does not become a second copy of
+    what the agent handled. The directory must not be writable by the agent's
+    operating-system user: the gate cannot tell who ran ``fssaira mcp approve``,
+    only that someone who could write here did.
+    """
+
+    def __init__(self, directory: str | Path, *, clock: Callable[[], float] = time.time) -> None:
+        self.directory = Path(directory)
+        self.directory.mkdir(parents=True, exist_ok=True)
+        self._clock = clock
+        self._lock = threading.Lock()
+
+    def _path(self, request_id: str) -> Path:
+        _require(isinstance(request_id, str) and request_id.isalnum() and 8 <= len(request_id) <= 64,
+                 "APPROVAL_REQUEST_UNKNOWN")
+        return self.directory / f"{request_id}.json"
+
+    def _write(self, record: dict) -> None:
+        path = self._path(record["id"])
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+
+    def get(self, request_id: str) -> dict:
+        path = self._path(request_id)
+        _require(path.is_file(), "APPROVAL_REQUEST_UNKNOWN")
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def all(self) -> list[dict]:
+        records = []
+        for path in sorted(self.directory.glob("*.json")):
+            try:
+                records.append(json.loads(path.read_text(encoding="utf-8")))
+            except (OSError, json.JSONDecodeError):
+                continue  # a file that is not a request is not a request
+        return sorted(records, key=lambda r: r.get("requested_at", 0))
+
+    def request(self, tool: str, args_digest: str, arguments: Mapping[str, Any]) -> dict:
+        """Reuse the pending request for this exact call, or open one."""
+        with self._lock:
+            for record in self.all():
+                if (record["status"] == "pending" and record["tool"] == tool
+                        and record["args_sha256"] == args_digest):
+                    return record
+            record = {"id": sha256(f"{tool}|{args_digest}|{self._clock()}|{os.urandom(8).hex()}")[:20],
+                      "tool": tool, "args_sha256": args_digest, "arguments": dict(arguments),
+                      "requested_at": round(self._clock(), 3), "status": "pending"}
+            self._write(record)
+            return record
+
+    def decide(self, request_id: str, *, by: str, approve: bool, ttl: float = 900.0) -> dict:
+        _require(isinstance(by, str) and bool(by.strip()), "APPROVAL_NEEDS_A_NAMED_HUMAN")
+        with self._lock:
+            record = self.get(request_id)
+            _require(record["status"] == "pending", "APPROVAL_REQUEST_NOT_PENDING")
+            now = self._clock()
+            record.update(status="approved" if approve else "denied", decided_by=by.strip(),
+                          decided_at=round(now, 3))
+            if approve:
+                record["expires_at"] = round(now + ttl, 3)
+            else:
+                record.pop("arguments", None)
+            self._write(record)
+            return record
+
+    def consume(self, tool: str, args_digest: str) -> dict | None:
+        """Use one live approval for exactly this call, or return None."""
+        with self._lock:
+            now = self._clock()
+            for record in self.all():
+                if (record["status"] == "approved" and record["tool"] == tool
+                        and record["args_sha256"] == args_digest):
+                    if record.get("expires_at", 0) <= now:
+                        record["status"] = "expired"
+                        record.pop("arguments", None)
+                        self._write(record)
+                        continue
+                    record.update(status="used", used_at=round(now, 3))
+                    record.pop("arguments", None)
+                    self._write(record)
+                    return record
+            return None
+
+
 # -- the gate ----------------------------------------------------------------------
 
 
@@ -650,7 +827,12 @@ class Gate:
         self.calls: dict[str, int] = {}
         self.upstreams: dict[str, Upstream] = {}
         self.visible: dict[str, dict] = {}
+        self._clock = clock
+        self.started_at = clock()
+        self.approvals = ApprovalStore(config.approvals, clock=clock) if config.approvals else None
         self._locked = {s["name"]: s for s in lock_data.get("servers") or []}
+        self._locked_policy = {f"{s['name']}/{t['name']}": t.get("policy") or {}
+                               for s in self._locked.values() for t in s["tools"]}
         for server in self._locked.values():
             # The lock's pin is registered first; the live pin below replaces it
             # only if it matches, and otherwise withdraws every approval.
@@ -715,6 +897,11 @@ class Gate:
                     manifest = manifest_for(spec, tool, executable_hash=exe)
                     qualified = self.registry.qualified_name(manifest)
                     self.registry.offer(manifest, model_text(tool))
+                    # Scope, approval and limits are policy the reviewer approved
+                    # too; widening any of them after the lock is drift.
+                    _require(spec.policy_for(manifest.name).governance()
+                             == locked_governance(self._locked_policy.get(qualified, {})),
+                             "POLICY_CHANGED_AFTER_APPROVAL")
                 except ToolSupplyDenied as exc:
                     label = f"{name}/{tool.get('name', '?')}"
                     previous = self.visible.get(label, {})
@@ -748,10 +935,35 @@ class Gate:
                 raise McpGateDenied("TOOL_NOT_OFFERED")
             if offered.get("_hidden"):
                 raise McpGateDenied(offered["_code"])
-            self.registry.authorise_call(qualified, self.chain)
-            limit = self.config.server(server).policy_for(tool).max_calls
+            contract = self.config.session
+            _require(contract.expires_after_seconds is None
+                     or self._clock() - self.started_at < contract.expires_after_seconds, "SESSION_EXPIRED")
+            _require(contract.max_calls is None or sum(self.calls.values()) < contract.max_calls,
+                     "SESSION_CALL_BUDGET_EXHAUSTED")
+            policy = self.config.server(server).policy_for(tool)
+            for argument, allowed in policy.scope.items():
+                _require(argument in (arguments or {}) and (arguments or {})[argument] in allowed,
+                         "ARGUMENT_OUT_OF_SCOPE")
             used = self.calls.get(qualified, 0)
-            _require(limit is None or used < limit, "TOOL_CALL_LIMIT_REACHED")
+            _require(policy.max_calls is None or used < policy.max_calls, "TOOL_CALL_LIMIT_REACHED")
+            approval = None
+            if policy.approval:
+                assert self.approvals is not None  # GateConfig.load refuses a config without a store
+                approval = self.approvals.consume(qualified, args_digest)
+                if approval is None:
+                    pending = self.approvals.request(qualified, args_digest, arguments or {})
+                    self._record("approval", qualified, "hold", "APPROVAL_REQUIRED",
+                                 args_sha256=args_digest, request=pending["id"])
+                    return _refusal("APPROVAL_REQUIRED", (
+                        f" Request {pending['id']} holds these exact arguments for a named person. "
+                        "Retry the same call, unchanged, after it is approved; any change needs a new approval."))
+            if approval is not None:
+                # A person approved these exact arguments: they, not the content the
+                # session read, are the authority. Everything else still applies.
+                self.registry.resolve(qualified)
+                self.chain.calls.append(qualified)
+            else:
+                self.registry.authorise_call(qualified, self.chain)
         except ToolSupplyDenied as exc:
             self._record("call", wire, "deny", str(exc), args_sha256=args_digest)
             return _refusal(str(exc))
@@ -764,8 +976,9 @@ class Gate:
         # Output enters the chain whatever it says. Absorbing before returning
         # means the very next call is judged with this content counted.
         self.chain.absorb(qualified)
+        extra = {"approval": approval["id"], "approved_by": approval["decided_by"]} if approval else {}
         self._record("call", qualified, "allow", "AUTHORISED", args_sha256=args_digest,
-                     result_sha256=sha256(canonical(result)))
+                     result_sha256=sha256(canonical(result)), **extra)
         return result
 
     def _record(self, event: str, subject: str, decision: str, code: str, **extra: Any) -> None:
@@ -779,7 +992,7 @@ class Gate:
                 "quarantined": dict(self.registry.quarantined()), "receipt_head": self.receipts.head}
 
 
-def _refusal(code: str) -> dict:
+def _refusal(code: str, detail: str = "") -> dict:
     """A refusal the model can read and cannot argue with.
 
     Returned as a tool result with ``isError`` rather than a protocol error, as
@@ -787,7 +1000,7 @@ def _refusal(code: str) -> dict:
     """
     return {"isError": True, "content": [{"type": "text", "text": (
         f"Refused by the Trust by Construction gate: {code}. This decision is made "
-        "outside the model and cannot be changed by rephrasing the request.")}]}
+        "outside the model and cannot be changed by rephrasing the request." + detail)}]}
 
 
 # -- the host-facing server --------------------------------------------------------
@@ -847,7 +1060,7 @@ def write_json(data: Mapping[str, Any], path: str | Path) -> None:
 __all__ = [
     "GATE_NAME", "LATEST_PROTOCOL", "LOCK_SCHEMA", "PROTOCOL_VERSIONS", "RECEIPT_SCHEMA",
     "UNDECLARED_POLICY", "UPSTREAM_REQUESTS_REFUSED", "WIRE_SEPARATOR", "Gate", "GateConfig",
-    "McpGateCodes", "McpGateDenied", "McpToolRegistry", "ReceiptLog", "ToolPolicy", "Upstream", "UpstreamSpec", "annotation_findings",
-    "executable_hash", "load_lock", "lock", "manifest_for", "model_text", "qualified_from_wire",
+    "ApprovalStore", "McpGateCodes", "McpGateDenied", "McpToolRegistry", "ReceiptLog", "SessionContract", "ToolPolicy", "Upstream", "UpstreamSpec", "annotation_findings",
+    "executable_hash", "load_lock", "lock", "locked_governance", "manifest_for", "model_text", "qualified_from_wire",
     "scan", "serve", "verify_receipts", "wire_name", "write_json",
 ]

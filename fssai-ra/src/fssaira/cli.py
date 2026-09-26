@@ -1434,6 +1434,33 @@ def cmd_framework_init(args) -> int:
     return 0
 
 
+def cmd_framework_plan(args) -> int:
+    """Turn one use case into a target level, a scoped control set and a first sprint."""
+    from .adoption_plan import UseCase, UseCaseError, assessment_yaml, plan
+
+    try:
+        result = plan(UseCase.load(args.use_case))
+    except UseCaseError as exc:
+        print(red(f"refused: {exc}"))
+        return 2
+    print(f"{result['use_case']}: target level {result['target_level']} ({result['target_level_name']})")
+    for item in result["why"]:
+        print(f"  L{item['level']}  {item['reason']}")
+    print(f"\n  {result['required_controls']} controls required, "
+          f"{len(result['not_applicable'])} not applicable, {result['beyond_target']} beyond the target")
+    print("\n  First sprint:")
+    for item in result["first_sprint"]:
+        print(f"    {item['id']:<9} {item['name']}  ({item['owner']})")
+    for stop in result["stop_conditions"]:
+        print(red(f"\n  STOP: {stop}"))
+    if args.write_assessment:
+        args.write_assessment.write_text(assessment_yaml(result), encoding="utf-8")
+        print(f"\n  wrote {args.write_assessment}; next: fssaira framework assess "
+              f"{args.write_assessment} --roadmap")
+    emit(result, args.output)
+    return 1 if result["stop_conditions"] else 0
+
+
 def cmd_framework_render(args) -> int:
     from .framework import render_markdown, render_patterns, validate
 
@@ -1596,6 +1623,57 @@ def cmd_mcp_verify(args) -> int:
         print(red(f"  seq {problem['seq']}: {problem['problem']}"))
     emit(report, args.output)
     return 0 if report["verified"] else 2
+
+
+def _approval_store(config_path):
+    from .integration.mcp_gate import ApprovalStore, GateConfig, McpGateDenied
+
+    config = GateConfig.load(config_path)
+    if config.approvals is None:
+        raise McpGateDenied("APPROVAL_STORE_REQUIRED")
+    return config, ApprovalStore(config.approvals)
+
+
+def cmd_mcp_approvals(args) -> int:
+    """Show held calls with their exact arguments, for a named person to decide."""
+    from .integration.mcp_gate import McpGateDenied
+
+    try:
+        _, store = _approval_store(args.config)
+    except McpGateDenied as exc:
+        print(red(f"refused: {exc}"))
+        return 2
+    records = [r for r in store.all() if args.all or r["status"] == "pending"]
+    if not records:
+        print("no pending requests")
+    for record in records:
+        print(f"{record['id']}  {record['status']:<8} {record['tool']}")
+        if "arguments" in record:
+            for key, value in sorted(record["arguments"].items()):
+                print(f"    {key} = {json.dumps(value, ensure_ascii=False)}")
+        if record.get("decided_by"):
+            print(dim(f"    decided by {record['decided_by']}"))
+    emit({"requests": records}, args.output)
+    return 0
+
+
+def cmd_mcp_decide(args) -> int:
+    """Approve or deny one held call by its request id."""
+    from .integration.mcp_gate import McpGateDenied
+
+    try:
+        config, store = _approval_store(args.config)
+        record = store.decide(args.request, by=args.by, approve=args.command_name == "approve",
+                              ttl=config.approval_ttl)
+    except McpGateDenied as exc:
+        print(red(f"refused: {exc}"))
+        return 2
+    word = "approved" if record["status"] == "approved" else "denied"
+    print((green if word == "approved" else red)(f"{word} {record['id']} ({record['tool']}) by {record['decided_by']}"))
+    if word == "approved":
+        print(f"  single use; the same call with the same arguments may now run once "
+              f"within {config.approval_ttl:.0f} s")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1776,6 +1854,16 @@ def build_parser() -> argparse.ArgumentParser:
     mcp_serve.add_argument("--lock", type=Path, required=True, help="lock file from `mcp lock`")
     mcp_serve.add_argument("--receipts", type=Path, help="append-only receipt log (JSON lines)")
     mcp_serve.set_defaults(func=cmd_mcp_serve)
+    mcp_list = add_output(mcp_sub.add_parser("approvals", help="list calls held for exact-action approval"))
+    mcp_list.add_argument("--config", type=Path, required=True, help="gate policy YAML")
+    mcp_list.add_argument("--all", action="store_true", help="include decided and used requests")
+    mcp_list.set_defaults(func=cmd_mcp_approvals)
+    for verb in ("approve", "deny"):
+        decide = mcp_sub.add_parser(verb, help=f"{verb} one held call, by request id, as a named person")
+        decide.add_argument("request")
+        decide.add_argument("--config", type=Path, required=True, help="gate policy YAML")
+        decide.add_argument("--by", required=True, help="the named person deciding")
+        decide.set_defaults(func=cmd_mcp_decide, command_name=verb)
     mcp_verify = add_output(mcp_sub.add_parser("verify", help="verify a receipt log's hash chain"))
     mcp_verify.add_argument("receipts", type=Path)
     mcp_verify.set_defaults(func=cmd_mcp_verify)
@@ -2011,6 +2099,11 @@ def build_parser() -> argparse.ArgumentParser:
     fpatterns = add_output(framework_sub.add_parser(
         "patterns", help="export canonical P1-P34 bindings and the assessment scale"))
     fpatterns.set_defaults(func=cmd_framework_patterns)
+    fplan = add_output(framework_sub.add_parser(
+        "plan", help="from one use case: target level, applicable controls, first sprint, stop conditions"))
+    fplan.add_argument("use_case", type=Path, help="use-case YAML (see examples/use-cases/)")
+    fplan.add_argument("--write-assessment", type=Path, help="also write a pre-filled assessment.yaml")
+    fplan.set_defaults(func=cmd_framework_plan)
     frender = framework_sub.add_parser("render", help="regenerate canonical pattern and control guides")
     frender.add_argument("--path", type=Path, default=Path("docs/framework/CONTROLS.md"))
     frender.add_argument("--patterns-path", type=Path, default=Path("docs/framework/PATTERNS.md"))

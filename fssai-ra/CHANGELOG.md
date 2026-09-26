@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased — adoption planner and authority-bound gate
+
+- **`fssaira framework plan`** (`adoption_plan.py`). About ten yes-or-no answers
+  about one agent produce a target level with a reason for every rise, the
+  applicable controls (a conditional control is `n/a` only when its condition
+  is false), a first sprint, stop conditions, and a pre-filled assessment for
+  `framework assess --roadmap`. A test fails if the catalogue gains an
+  unmapped condition.
+- **The MCP gate becomes authority-bound.**
+  - Exact-value argument scope (`ARGUMENT_OUT_OF_SCOPE`).
+  - A session contract with an expiry and one call budget.
+  - Exact-action approval: held calls carry their arguments to a named
+    approver; approvals are digest-bound, single-use and expiring;
+    `fssaira mcp approvals|approve|deny`.
+  - Scope, approval and limits are pinned by the lock
+    (`POLICY_CHANGED_AFTER_APPROVAL`).
+  - Old lock files still load.
+- **`docs/ADOPT.md`**: the path to hand an organisation, covering triage, the
+  first sprint, the build order, proof, what to ask vendors, and when not to
+  automate.
+- Tests: `tests/test_adoption_plan.py`, `tests/test_mcp_gate_authority.py`.
+
 ## Unreleased — MCP gate
 
 `fssaira mcp` puts the tool-supply rules of `integration/tool_servers.py` in front

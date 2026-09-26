@@ -1,0 +1,34 @@
+# The hostile demo server under an authority-bound policy (level 2 on the wire).
+# Compare with gate.yaml: the same tools, now inside a session contract, with
+# argument scope and exact-action approval for the one irreversible tool.
+servers:
+  casework:
+    command: python
+    args: [hostile_server.py]
+    operator: synthetic-casework-team
+    env:
+      RUGPULL_AFTER_CALLS: "3"
+    pin_files: [hostile_server.py]
+    tools:
+      lookup_case:
+        {power: 1, irreversibility: 0, effects: [protected_read], trusted_output: true,
+         scope: {case_id: ["C-7", "C-8"]}}          # only the cases this task names
+      fetch_page:   {power: 1, irreversibility: 0, effects: [], max_calls: 5}
+      send_email:
+        power: 3
+        irreversibility: 2
+        effects: [external_write]
+        scope: {to: ["caseworker@example.org", "registrar@example.org"]}
+        approval: required                          # a named person approves each exact email
+      format_notes: {power: 0, irreversibility: 0, effects: []}
+
+session:
+  expires_after_seconds: 3600     # the task ends; so does the authority
+  max_calls: 50                   # one budget across every tool
+
+approvals: approvals/             # keep outside anything the agent can write
+approval_ttl: 900                 # an approval is good for one call within 15 minutes
+
+trusted_sources: []
+session_starts_untrusted: false
+call_timeout: 20

@@ -147,6 +147,59 @@ record the head that `verify` prints somewhere the gate cannot write, such as a
 ticket or a witness (`fssaira witness`). The log is safe to hand to an auditor
 because it does not contain the data.
 
+## From tool hygiene to authority: scope, session and approval
+
+The table above covers attacks on the tool supply. The same policy file also
+makes the gate a task contract on the wire (level 2, *authority-bound*):
+
+```yaml
+tools:
+  send_email:
+    power: 3
+    irreversibility: 2
+    effects: [external_write]
+    scope: {to: ["caseworker@example.org", "registrar@example.org"]}   # exact values only
+    approval: required                                                 # a named person approves each call
+session: {expires_after_seconds: 3600, max_calls: 50}
+approvals: approvals/        # outside anything the agent can write
+approval_ttl: 900
+```
+
+- **Argument scope** (`ARGUMENT_OUT_OF_SCOPE`). A scoped argument must be
+  present and exactly one of the listed values. Scope applies in trusted
+  sessions too, so an agent that may email two people cannot email a third.
+  There are no wildcards: an allow-list can be reviewed at a glance, and a
+  pattern language would bring its own bypasses.
+- **Session contract** (`SESSION_EXPIRED`, `SESSION_CALL_BUDGET_EXHAUSTED`).
+  The session ends after its expiry, and one call budget covers every tool.
+- **Exact-action approval** (`APPROVAL_REQUIRED`). The gate holds the call and
+  records a request that carries the exact arguments, because a person cannot
+  approve what they have not seen. It tells the model to retry the same call,
+  unchanged, once the request is approved. A person then decides:
+
+  ```bash
+  fssaira mcp approvals --config gate.yaml                       # held calls, with arguments
+  fssaira mcp approve <request> --config gate.yaml --by "Registrar B"
+  fssaira mcp deny    <request> --config gate.yaml --by "Registrar B"
+  ```
+
+  An approval is bound to the digest of the arguments, is single-use and
+  expires after `approval_ttl`. A changed argument needs a new approval. Once
+  a request is used, denied or expired, its arguments are deleted and only the
+  digest remains. The receipt of the call that ran records who approved it.
+- **Approval is the only way past the untrusted-session rule.** An untrusted
+  session is one that has read content the gate cannot vouch for. It still
+  cannot reach a privileged tool on its own. With `approval: required`, a
+  person who has seen the exact arguments can let that one call through. The
+  person is the authority, not the page the session read.
+- **Policy is pinned too** (`POLICY_CHANGED_AFTER_APPROVAL`). The lock records
+  scope, approval and limits. Widening any of them after review hides the
+  tool until someone locks it again.
+
+The gate cannot tell who ran `fssaira mcp approve`. It knows only that someone
+with write access to the approvals directory did. So run the gate and that
+directory under an operating-system user the agent does not share.
+
 ## How the decisions are made
 
 * **Identity.** A server's pin is the SHA-256 of its command, arguments,
@@ -171,7 +224,8 @@ unchanged. The gate
 ([`integration/mcp_gate.py`](../src/fssaira/integration/mcp_gate.py)) adds the
 wire protocol, the lock file, the receipts, and an MCP-compatible tool-name
 rule (`getWeather` is valid; server names stay lower-case). Tests are in
-[`tests/test_mcp_gate.py`](../tests/test_mcp_gate.py), and they run the hostile
+[`tests/test_mcp_gate.py`](../tests/test_mcp_gate.py) and
+[`tests/test_mcp_gate_authority.py`](../tests/test_mcp_gate_authority.py), and they run the hostile
 server over real stdio.
 
 ## What this is not

@@ -1,0 +1,13 @@
+# The paper's worked case: an assistant that proposes grade corrections for a registrar.
+name: Student-record correction assistant
+reads_protected_data: true
+regulated_data: true
+external_effects: true
+irreversible_effects: false
+multi_agent: false
+third_party_tools: false
+untrusted_input: true          # students upload supporting documents
+outputs_leave_org: false
+autonomy: human_approves_consequential
+source_of_truth: true          # the gradebook confirms the corrected value
+manual_fallback: true

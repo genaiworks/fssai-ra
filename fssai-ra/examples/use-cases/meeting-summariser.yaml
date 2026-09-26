@@ -1,0 +1,7 @@
+# An internal assistant that summarises meeting notes for the team that held the meeting.
+name: Internal meeting summariser
+reads_protected_data: false
+external_effects: false
+third_party_tools: false
+untrusted_input: false
+autonomy: human_in_every_loop

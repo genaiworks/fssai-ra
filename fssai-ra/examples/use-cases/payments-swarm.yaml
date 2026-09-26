@@ -1,0 +1,15 @@
+# A swarm that reads supplier emails, reconciles invoices and pays them without a human.
+name: Autonomous accounts-payable swarm
+reads_protected_data: true
+regulated_data: true
+external_effects: true
+irreversible_effects: true     # a payment cannot be recalled
+multi_agent: true
+third_party_tools: true        # bank and ERP connectors from vendors
+untrusted_input: true          # supplier email is written by strangers
+outputs_leave_org: true
+ai_assisted_review: true
+record_relied_on: true         # disputes and audits rely on the record
+autonomy: autonomous
+source_of_truth: true
+manual_fallback: true
