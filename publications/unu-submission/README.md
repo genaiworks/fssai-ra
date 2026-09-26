@@ -21,6 +21,13 @@ Before claiming complete reproduction of the submitted paper, record:
 5. Claims that are analytical, cited from other work, attested, or unavailable,
    distinguished from results reproduced by executing this repository.
 
+## Reviewed manuscript claim map
+
+The [claim-to-evidence map](CLAIM_TO_EVIDENCE.md) records exact JSON field names,
+comparison denominators, oversight deferrals, and implemented versus proposed
+claims for the reviewed draft. It preserves the distinction between that local
+draft and the still-unidentified submitted artifact.
+
 ## Current executable evidence map
 
 The [public verification guide](../../fssai-ra/docs/PUBLIC_VERIFICATION.md) provides

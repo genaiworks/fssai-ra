@@ -99,6 +99,7 @@ executable evidence from the submitted manuscript identification still needed.
 README.md                   Project overview and first run
 CITATION.cff                 Software citation metadata
 publications/               Publication register and reusable paper template
+security_systems/           Companion trustkernel package for coding-agent demonstrations
 fssai-ra/
   src/fssaira/               Python implementation and CLI
   profiles/                 Domain policies and SDK example contracts

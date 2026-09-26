@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import threading
 import time
 import uuid
@@ -89,6 +90,16 @@ class ExecutionDenied(RuntimeError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(f"{code}: {message}")
         self.code = code
+
+
+def _finite_time(value: object) -> bool:
+    """Reject non-numeric, Boolean and non-finite clock/lifetime values."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
 
 
 def validate_replay(proposal: ActionProposal, prior: ExecutionResult) -> None:
@@ -271,6 +282,13 @@ class ApprovalAuthority:
         if approver == proposal.requester:
             raise ExecutionDenied("SEPARATION_OF_DUTIES", "requester cannot approve their own proposal")
         issued_at = time.time() if now is None else now
+        if not _finite_time(issued_at):
+            raise ExecutionDenied("AUTHORIZATION_TIME_INVALID", "issuance time must be finite")
+        if not _finite_time(ttl_seconds) or ttl_seconds <= 0:
+            raise ExecutionDenied("APPROVAL_LIFETIME_INVALID", "approval lifetime must be finite and positive")
+        expires_at = issued_at + ttl_seconds
+        if not _finite_time(expires_at) or expires_at <= issued_at:
+            raise ExecutionDenied("APPROVAL_EXPIRY_INVALID", "approval expiry must be finite and after issuance")
         if self._oversight is not None:
             # Refuse to *issue* rather than flag afterwards: an approval the
             # reviewer had no capacity to give must not exist to be verified.
@@ -287,7 +305,7 @@ class ApprovalAuthority:
             approver=approver,
             approver_role=approver_role,
             audience=self.audience,
-            expires_at=issued_at + ttl_seconds,
+            expires_at=expires_at,
             key_id=self.key_id,
             signature="",
             second_approver=second_approver or "",
@@ -439,6 +457,8 @@ class AccountableExecutor:
         exactly the kind of drift the control contract exists to prevent.
         """
         checked_at = time.time() if now is None else now
+        if not _finite_time(checked_at):
+            raise ExecutionDenied("AUTHORIZATION_TIME_INVALID", "authorization time must be finite")
         if proposal.operation not in self._allowed_operations:
             raise ExecutionDenied("OPERATION_NOT_ALLOWED", "executor does not permit this operation")
         signing_key = self._approval_keys.get(approval.key_id)
@@ -450,6 +470,10 @@ class AccountableExecutor:
             raise ExecutionDenied("APPROVAL_AUDIENCE_MISMATCH", "approval targets another executor")
         if approval.proposal_digest != proposal.digest:
             raise ExecutionDenied("APPROVAL_PAYLOAD_MISMATCH", "proposal changed after review")
+        if approval.approver == proposal.requester:
+            raise ExecutionDenied("SEPARATION_OF_DUTIES", "requester cannot approve their own proposal")
+        if not _finite_time(approval.expires_at):
+            raise ExecutionDenied("APPROVAL_EXPIRY_INVALID", "approval expiry must be finite")
         required_roles = self._required_approval_roles.get(
             (proposal.operation, proposal.from_status, proposal.to_status)
         )

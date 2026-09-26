@@ -229,9 +229,10 @@ def generate(output_dir: Path, tag: str) -> dict:
             "platform": platform.platform(),
         },
         "note": (
-            "Every figure the paper quotes is produced here. A number in the paper "
-            "that this file does not contain is a drift bug, and the alignment test "
-            "fails the build for it."
+            "This artifact records the declared synthetic evaluation figures. "
+            "The public drift check compares those figures with a fresh run; "
+            "it does not validate an unidentified submitted manuscript. "
+            "Historical manuscript alignment requires the private archive."
         ),
         "domain_packs": domain_pack_matrix,
         "figures": {
@@ -503,7 +504,7 @@ def generate(output_dir: Path, tag: str) -> dict:
             "reviewer; no human was observed, and reviewer accuracy under load remains open work",
             "the oversight deferral count is the cost of the control, reported rather than netted "
             "off; refusing an approval preserves the boundary and delays the student",
-            "the four domain packs test reuse of one authority kernel across synthetic workflow "
+            "the domain packs test reuse of one authority kernel across synthetic workflow "
             "shapes; they do not establish sector compliance or operational safety, and each "
             "domain must carry its own evidence",
             "the adversary corpus is contributed attacks, not a threat catalogue, and no attack in "
@@ -631,7 +632,8 @@ def render_markdown(summary: dict) -> str:
          f"{figures['coverage_unverified']} unverified; every requirement bound to a "
          "check that is itself checked to exist"),
 
-        ("Deterministic tests", str(figures["test_count"]), "no network, no model weights"),
+        ("Collected tests at snapshot", str(figures["test_count"]),
+         "collection count, not a passing-test count; obtain current execution results from pytest"),
     ]
     # Kept in a separate block because these answer different questions from the
     # containment table above, and merging them would invite reading an oversight
@@ -659,15 +661,15 @@ def render_markdown(summary: dict) -> str:
          "attentive reviewer is not throttled by the shipped policy"),
         ("Oversight — smallest floor that fully contains",
          f"{figures['sweep_smallest_floor_that_fully_contains']:g}s",
-         "across every swept cell where harm was possible; the number an institution needs "
-         "to set its own policy"),
+         "across the authored sweep where harm was possible; a simulation parameter, "
+         "not a recommended institutional review time"),
         ("Oversight — deferred to manual review",
          str(figures["oversight_deferred_to_manual"]),
          "the cost of the control, and a measurement of demand against declared capacity"),
         ("Domain packs — independently verified",
          str(figures["domains_verified"]),
          f"{figures['domain_pack_states_explored']:,} total bounded states; education, "
-         "corporate confidential data, and healthcare record access; synthetic fixtures, "
+         "corporate data, health records, consumer finance and public benefits; synthetic fixtures, "
          "not sector-compliance evidence"),
         ("Domain packs — containment and utility",
          f"{figures['domain_pack_scenarios_contained']}/"
@@ -724,9 +726,10 @@ def render_markdown(summary: dict) -> str:
         f"Generated {summary['generated_at']} on Python {summary['environment']['python_version']}, "
         f"{summary['environment']['platform']}.",
         "",
-        "Regenerate with `python scripts/generate_results.py`. Every figure the paper quotes "
-        "comes from this table, and `tests/test_paper_alignment.py` fails the build if the two "
-        "disagree.",
+        "Regenerate with `python scripts/generate_results.py`. The public `--check` command "
+        "compares tracked numerical figures with a fresh run, excluding timings and test count. "
+        "Historical manuscript alignment is optional and requires the local archive "
+        "(`make manuscript-check`); it does not identify or validate the submitted PDF.",
         "",
         "| Measure | Result | What it does and does not mean |",
         "|---|---|---|",

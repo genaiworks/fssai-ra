@@ -33,7 +33,13 @@
   "APPROVAL_EXPIRED": [
    "fssaira.exact_action"
   ],
+  "APPROVAL_EXPIRY_INVALID": [
+   "fssaira.exact_action"
+  ],
   "APPROVAL_KEY_UNTRUSTED": [
+   "fssaira.exact_action"
+  ],
+  "APPROVAL_LIFETIME_INVALID": [
    "fssaira.exact_action"
   ],
   "APPROVAL_NOT_FOUND": [
@@ -101,6 +107,9 @@
   "AUTHENTICATION_REQUIRED": [
    "fssaira.joined_workflow",
    "fssaira.tbc.runtime"
+  ],
+  "AUTHORIZATION_TIME_INVALID": [
+   "fssaira.exact_action"
   ],
   "BENEFICIARY_SCOPE_EXCEEDED": [
    "fssaira.delegation"
@@ -1432,6 +1441,6 @@
    "fssaira.joined_workflow"
   ]
  },
- "count": 470,
+ "count": 473,
  "generated_by": "fssaira.refusal_registry"
 }
