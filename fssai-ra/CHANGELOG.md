@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased — master guide for secure agent swarms
+
+`docs/MASTER_GUIDE.md` reviews a draft adoption guide critically and closes the
+engineering gaps it found. Additive only: no existing control, response shape,
+evidence count or claim changed.
+
+- **Policy migration.** `TrustRuntime.migrate_policy` is the sanctioned path to a
+  new policy version; proposals and approvals are pinned to the version in force
+  (`POLICY_VERSION_CHANGED`), uncovered tasks are contracted, held effects go to
+  re-review.
+- **Distributed revocation.** `revocation_chaos` and `fssaira assure chaos`: fenced
+  commit shows 0 stale and 0 duplicate effects under partition, loss, duplication,
+  delay and skew; check-then-act, local-clock leases and missing idempotency keys
+  are each caught.
+- **Evidence plane.** RFC 9162 Merkle inclusion and consistency proofs, a tree-head
+  witness, a quorum over distinct administrative domains and split-view detection
+  (`transparency`); forward-secure checkpoint keys (`forward_secure`); chained
+  multi-source time anchors (`time_anchor`).
+- **Measurement.** Trusted-base SLOC, CycloneDX SBOM and build measurement
+  (`fssaira assure trusted-base`); review staffing to the floor
+  (`fssaira assure staffing`); covert-channel rate objective (`channel_slo`).
+- **Education pack.** `ferpa`: 34 CFR Part 99 release paths, each citing its
+  section, with a stricter institutional mandate for minors.
+- **Registry and specification.** `docs/refusal_registry.json` generated from source
+  and checked in CI; eleven requirements in the companion
+  `docs/SPECIFICATION_SWARM_PROFILE.md` (the core specification and every figure
+  computed from it are unchanged); acronyms in plain language in the glossary.
+
 ## Unreleased — submission manuscript
 
 `paper/tbc-v15/Trust_by_Construction.docx` is the manuscript to submit, generated

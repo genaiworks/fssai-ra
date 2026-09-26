@@ -78,6 +78,25 @@ agents on one model that read one record count as one confirmation. The result i
 for a named reviewer; no code path accepts it as approval
 (`tests/test_independent_agreement.py`).
 
+## Correctness and consequence controls
+
+These answer failures that break no rule a gate can check. Each is opt-in, so an existing
+deployment behaves as before until it declares one.
+
+| Control | How to turn it on | What it refuses | Tests |
+|---|---|---|---|
+| Evidence-grounded effects | always on in the joined workflow | the source confirms only the value its record supports (`UNSUPPORTED_PROPOSAL`) | `test_behaviour_watch.py` |
+| Mandate linting | `TrustRuntime(mandate_purposes=load_purposes("profiles/tbc/purposes.json"))` | a contract broader than its purpose does not start (`MANDATE_*`); the corpus is `profiles/tbc/mandate-corpus/` | `test_mandate_lint.py` |
+| Delayed commitment | `TrustRuntime(effect_delay_seconds=N)`, then `commit_due`, `object_effect` | an approved effect waits `N` s; objection, revocation or an epoch change cancels it (`OBJECTION_WINDOW_CLOSED` after the window) | `test_effect_escrow.py` |
+| Channel budget | `TrustRuntime(channel_bits_per_release=b, channel_budget_bits=B)` | releases past the task's budget go to the manual queue (`CHANNEL_BUDGET_EXHAUSTED`) | `test_channel_budget.py` |
+| Behaviour watch | `fssaira.tbc.behaviour.BehaviourWatch(runtime, monitor_token, canaries=...)` | probing (from receipts) quarantines the task; canary underperformance makes it read-only | `test_behaviour_watch.py` |
+| Reviewer canaries | `fssaira.review_calibration.ReviewerCalibration(policy)` | a reviewer who approves canaries gets half the capacity, a longer floor and an earlier second reviewer; canaries never execute | `test_review_calibration.py` |
+
+Agent cells (`fssaira.agent_cell`) put each agent in its own container: a read-only root, no
+capabilities, a non-root user, no network, limits, and a process started with an empty
+environment. `probe_cell` measures every property from inside the cell and refuses one it
+cannot confirm (`CELL_NOT_ISOLATED`); `tests/test_agent_cell.py` runs it against Docker.
+
 ## Model-side client
 
 ```python
@@ -128,6 +147,10 @@ The modes form nested allowed-operation sets:
 A contraction can further narrow any scope axis and increments the task epoch. Old leases, effect proposals, memory authorizations, messages and escrow approvals cannot cross that epoch. A named operator may restore the original task ceiling, but cannot revive old leases or reset budgets through restoration. Ancestor revocation remains effective after restoration.
 
 Graph checks run inside every model request and before committing a new message edge. They consider both actual session labels and potential protected reads, so even a clean handshake is rejected if the resulting channel creates a future source-to-public route. On an already-present prohibited graph or changed stored Passport, the Guardian commits quarantine and denies the pending request. It emits the actual path as a counterexample. It observes only the declared topology: deployment events for new external channels must be imported by trusted adapters before those channels become usable.
+
+## Policy migration and policy-bound approval
+
+A changed Passport is drift: the Guardian quarantines the workload and a restart refuses it (`PASSPORT_DRIFT`). `migrate_policy(token, passport, reason=...)` is the one sanctioned path to new rules. It needs a named operator and a reason, the version must increase (`POLICY_VERSION_NOT_INCREASING`) and the workload must not change (`POLICY_WORKLOAD_MISMATCH`). Agent scopes are re-derived from the Passport on every call, so narrowed rules bind at the next request. What cannot be re-derived is carried explicitly: tasks whose contract no longer fits are contracted to quarantine, and pending held effects are cancelled and queued as `policy_changed_rereview`. Proposals and approvals record `policy_version`; approving, executing or committing one from another version refuses with `POLICY_VERSION_CHANGED`, and `commit_due` rechecks it as defence in depth. The `tbc_policy_migrated` evidence event records both Passport digests, the operator, and what was contracted and rerouted. Tests: `tests/test_approval_policy_pinning.py`.
 
 ## Maintenance and optional manuscript synchronization
 

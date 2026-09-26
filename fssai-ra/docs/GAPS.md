@@ -31,6 +31,25 @@ that produced it.
 | **Educational effectiveness** | A well-designed lab is not evidence that participants learned or changed practice | Provides learning outcomes, exercises, and an assessment rubric | Pre/post protocol, cohort and denominator, scored artifacts, retention or transfer measure, limitations, and consent/privacy controls |
 | **External adversary coverage** | An attack corpus written entirely by the project may share the authors' blind spots | Publishes a data-only contribution format and prints the external-contribution count | Reviewed external submissions from multiple domains, including failures the current design does not contain |
 
+## Engineering gaps closed in code by the master-guide pass
+
+[`MASTER_GUIDE.md`](MASTER_GUIDE.md) reviewed a draft list of eleven gaps against the code.
+The rows below were **engineering** gaps: the code lacked the mechanism, so a test can now close
+them. None of them closes a field row in the table above. Where a row says "your deployment",
+the mechanism exists and a deployment still has to qualify it.
+
+| Gap | Mechanism now in code | Test | Still needs, in your deployment |
+|---|---|---|---|
+| Trusted base size asserted, not measured | `trusted_base.py`, `fssaira assure trusted-base`: SLOC per component, CycloneDX SBOM, build measurement | `tests/test_master_guide_measures.py` | an attestation service pinning the measurement; independent review |
+| Revocation across adapters unqualified | `revocation_chaos.py`, `fssaira assure chaos`: fenced commit clean under partition, loss, duplication, delay, skew; three ablations caught | `tests/test_revocation_chaos.py` | your store and adapters meeting the same invariants under fault injection |
+| No sanctioned policy change; approvals not bound to rules | `TrustRuntime.migrate_policy`; policy-version pinning on proposals and approvals | `tests/test_approval_policy_pinning.py` | a policy-change runbook with named owners |
+| Evidence proofs linear in ledger size; one witness domain | `transparency.py`: RFC 9162 inclusion and consistency proofs, tree-head witness, domain-distinct quorum, split-view detection | `tests/test_transparency.py` | witnesses actually run by separate organisations |
+| Stolen key can backdate; clock is the enforcer's | `forward_secure.py`, `time_anchor.py` | `tests/test_forward_secure_and_time.py` | independent time servers; key erasure verified on the host |
+| Covert channel bounded per task, not as a rate | `channel_slo.py` | `tests/test_master_guide_measures.py` | a signed-off bits-per-minute objective |
+| Review floor without staffing arithmetic | `oversight_staffing.py`, `fssaira assure staffing` | `tests/test_master_guide_measures.py` | measured review-time distribution (the model assumes exponential) |
+| No sector release table for education | `ferpa.py`: 34 CFR Part 99 paths with citations; stricter minors mandate | `tests/test_ferpa_pack.py` | registrar and counsel validation |
+| Refusal codes not registered | `refusal_registry.py`, `docs/refusal_registry.json` | `tests/test_master_guide_measures.py` | none |
+
 ## What code can still improve without pretending these gaps are closed
 
 - Keep deployment declarations visible in `fssaira doctor` and `/health`.

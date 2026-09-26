@@ -54,6 +54,71 @@ glossary makes the translation explicit.
 > **[independent enforcement point]**; failure is demonstrated by **[test]**,
 > recorded as **[evidence]**, and recovered by **[named owner and route]**.
 
+## Acronyms in plain language
+
+Terms used in [`MASTER_GUIDE.md`](MASTER_GUIDE.md), procurement conversations and security
+reviews. Each gives what it stands for, what it means in one sentence, and why it matters here.
+
+### Security engineering
+
+| Acronym | Stands for | In plain words | Why it matters here |
+|---|---|---|---|
+| **SLOC** | Source lines of code | lines that actually do something, not counting blanks, comments or explanations | the trusted base is measured in SLOC so "small" is a number (`fssaira assure trusted-base`) |
+| **SBOM** | Software bill of materials | the ingredients list of a program: every third-party package and version it uses | a buyer's scanner checks the list for known vulnerabilities |
+| **TCB** | Trusted computing base | every part that must work correctly for the safety promise to hold | the model is deliberately outside it; the gate and evidence plane are inside |
+| **HSM** | Hardware security module | a tamper-resistant device that holds keys and signs without ever revealing them | notary and witness keys belong in one |
+| **KMS** | Key management service | a (usually cloud) service that stores keys and performs cryptography on request | the reference implementation reaches keys through `kms_vault.py` |
+| **TPM** | Trusted platform module | a chip that records what software booted, so a remote party can check it | one way to attest the enforcer's build measurement |
+| **TEE** | Trusted execution environment | a hardware-isolated area where code runs protected from the host | another way to attest the enforcer |
+| **ASLR** | Address space layout randomisation | the operating system shuffles memory locations so exploits cannot guess addresses | host hardening under the enforcer |
+| **CFI** | Control-flow integrity | a check that a program only jumps where its code intended | host hardening; not needed for memory-safe source |
+| **IAM** | Identity and access management | the system that says who someone is and what they may use | agents get no standing IAM credentials |
+| **IMDS** | Instance metadata service | the cloud address (169.254.169.254) a machine asks for its own credentials | must be blocked in an agent cell, or the cell is not credential-less |
+| **JIT** | Just in time | access granted at the moment it is needed and removed right after | effect tokens are minted per approved effect |
+| **mTLS** | Mutual transport layer security | both ends of a network connection prove their identity with certificates | gateway-to-adapter links |
+| **RBAC / ABAC** | Role- / attribute-based access control | permissions by job role / by properties of the person, data and situation | the gate intersects both with the task contract |
+| **MAC / HMAC** | (Hash-based) message authentication code | a keyed checksum proving a message came from a key holder and was not altered | receipts and envelopes are MAC'd |
+| **Ed25519** | an elliptic-curve signature scheme | a fast, widely reviewed way to sign data with a private key and verify with a public one | notary, witness, tree-head and time signatures |
+| **CT** | Certificate Transparency | the public, Merkle-tree logs that browsers use to catch bad web certificates | the evidence plane borrows its tree hashing (RFC 9162) and witnesses |
+| **STH** | Signed tree head | a signed statement "the log has N entries and this root hash" | what witnesses co-sign in `transparency.py` |
+| **TOFU** | Trust on first use | accepting the first thing you see as genuine, then checking consistency after | a witness says when its first checkpoint was TOFU |
+| **CAS** | Compare-and-set | "change it only if it still has the value I expect", as one indivisible step | how a fenced commit refuses a stale epoch |
+| **RPO / RTO** | Recovery point / time objective | how much data you may lose, and how long you may be down, after a failure | backup and failover targets for the evidence plane |
+
+### Standards, law and governance
+
+| Acronym | Stands for | In plain words | Why it matters here |
+|---|---|---|---|
+| **OWASP** | Open Worldwide Application Security Project | a non-profit publishing practical security guidance, including the Top 10 for LLM Applications and Agentic AI threat guidance | §13 of the master guide maps its risks to controls |
+| **NIST** | National Institute of Standards and Technology (US) | the US standards body; publishes the AI Risk Management Framework (AI 100-1) and its Generative AI Profile (AI 600-1) | the guide's KPIs and runbooks fill the RMF's Measure and Manage functions |
+| **AI RMF** | AI Risk Management Framework | NIST's structure for AI risk: Govern, Map, Measure, Manage | organises ownership and evidence |
+| **ISO/IEC 42001** | International standard for AI management systems | how an organisation runs AI responsibly, audited like ISO 27001 | policy versioning, roles and monitoring evidence |
+| **ISO/IEC 27001** | International standard for information security management | the common security-management certification | the enforcer and evidence plane sit inside its scope |
+| **RFC** | Request for Comments | the numbered documents that define internet standards | RFC 2119 defines MUST/SHOULD; RFC 9162 defines the Merkle tree |
+| **FERPA** | Family Educational Rights and Privacy Act (US, 20 U.S.C. 1232g; 34 CFR Part 99) | who may see a student's education record, and when consent is needed | `ferpa.py` encodes its release rules, each citing its section |
+| **CFR** | Code of Federal Regulations (US) | the published rules agencies make under a law | FERPA's detail is in 34 CFR Part 99 |
+| **COPPA** | Children's Online Privacy Protection Act (US) | rules for collecting data from children under 13 online | relevant when a workflow reaches young children directly |
+| **GDPR** | General Data Protection Regulation (EU) | EU law on personal data: lawful basis, purpose limits, rights to access and erasure | purpose-bound grants and retention map to it |
+| **HIPAA** | Health Insurance Portability and Accountability Act (US) | US law protecting health information | the healthcare pack's territory |
+| **PII / PHI** | Personally identifiable / protected health information | data that identifies a person / health data about them | what labels and sealed release protect |
+| **DPO** | Data protection officer | the person accountable for data-protection compliance | owns policy versions and the sector table |
+| **DPIA** | Data protection impact assessment | a documented check of privacy risk before a system goes live | uses the guide's evidence bundle as input |
+| **RACI** | Responsible, accountable, consulted, informed | a table of who does what | the master guide's ownership table |
+
+### Operations and measurement
+
+| Acronym | Stands for | In plain words | Why it matters here |
+|---|---|---|---|
+| **SLA** | Service level agreement | a promise to someone else, often with penalties | appeal deadlines, the FERPA 45-day access window |
+| **SLO** | Service level objective | an internal target you measure against | revocation cut-through, verifier cadence, channel bits per minute |
+| **KPI** | Key performance indicator | a number that shows whether things are working | each KPI in the guide names the command that computes it |
+| **QPS** | Queries per second | how many requests arrive each second | input to the tier choice (`fssaira scale advise`) |
+| **Erlang C** | a queueing formula (after A. K. Erlang) | predicts how long work waits for a free server, here a reviewer | `fssaira assure staffing` |
+| **CI** | Continuous integration | every change is built and tested automatically | the refusal registry and spec citations are checked there |
+| **K8s** | Kubernetes | software that runs and isolates containers across machines | the guide's agent-cell pod and network policy |
+| **OPA / Rego** | Open Policy Agent / its policy language | a separate engine that evaluates policy written as code | optional; if used it joins the trusted base |
+| **CIO / CISO** | Chief information / information security officer | the executives accountable for technology and for security | sponsors of adoption |
+
 If policy and engineering staff fill this sentence differently, the discrepancy
 is the work to do before deployment.
 

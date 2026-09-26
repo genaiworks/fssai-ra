@@ -1,0 +1,1413 @@
+{
+ "codes": {
+  "ADMIN_REQUIRED": [
+   "fssaira.joined_workflow"
+  ],
+  "AGENT_REVOKED_OR_EXPIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "AGGREGATE_BUDGET_EXHAUSTED": [
+   "fssaira.tbc.runtime"
+  ],
+  "AIRLOCK_CHANNEL_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "AIRLOCK_RECIPIENT_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "AI_IR_SCOPE_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "ALLOWED_WITH_APPROVAL": [
+   "fssaira.accountable_action"
+  ],
+  "APPROVAL_AUDIENCE_MISMATCH": [
+   "fssaira.exact_action"
+  ],
+  "APPROVAL_EXPIRED": [
+   "fssaira.exact_action"
+  ],
+  "APPROVAL_KEY_UNTRUSTED": [
+   "fssaira.exact_action"
+  ],
+  "APPROVAL_NOT_FOUND": [
+   "fssaira.control_plane",
+   "fssaira.verification"
+  ],
+  "APPROVAL_PAYLOAD_MISMATCH": [
+   "fssaira.exact_action"
+  ],
+  "APPROVAL_REQUIRED": [
+   "fssaira.education_world"
+  ],
+  "APPROVAL_REUSED": [
+   "fssaira.atomic_execution",
+   "fssaira.exact_action"
+  ],
+  "APPROVAL_SIGNATURE_INVALID": [
+   "fssaira.exact_action"
+  ],
+  "APPROVER_ROLE_NOT_ALLOWED": [
+   "fssaira.exact_action"
+  ],
+  "ARTIFACT_DIGEST_MISMATCH": [
+   "fssaira.integration.transport"
+  ],
+  "ARTIFACT_IDENTITY_MISMATCH": [
+   "fssaira.tbc.runtime"
+  ],
+  "ARTIFACT_SCOPE_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "ARTIFACT_SIZE": [
+   "fssaira.tbc.runtime"
+  ],
+  "ASSISTANCE_NOT_DECLARED": [
+   "fssaira.assisted_review"
+  ],
+  "ASSURANCE_BACKEND_MISMATCH": [
+   "fssaira.kernel.assurance"
+  ],
+  "ASSURANCE_CHECK_FAILED": [
+   "fssaira.kernel.assurance"
+  ],
+  "ASSURANCE_IMPLEMENTATION_CHANGED": [
+   "fssaira.kernel.assurance"
+  ],
+  "ASSURANCE_LOSS": [
+   "fssaira.tbc.runtime"
+  ],
+  "ASSURANCE_NO_EXECUTED_CHECKS": [
+   "fssaira.kernel.assurance"
+  ],
+  "ASSURANCE_NO_RECORD": [
+   "fssaira.kernel.assurance"
+  ],
+  "ASSURANCE_RECORD_MALFORMED": [
+   "fssaira.kernel.assurance"
+  ],
+  "ASSURANCE_SUITE_MISMATCH": [
+   "fssaira.kernel.assurance"
+  ],
+  "ASSURANCE_UNKNOWN_BACKEND": [
+   "fssaira.kernel.assurance"
+  ],
+  "AUTHENTICATION_REQUIRED": [
+   "fssaira.joined_workflow",
+   "fssaira.tbc.runtime"
+  ],
+  "BENEFICIARY_SCOPE_EXCEEDED": [
+   "fssaira.delegation"
+  ],
+  "BREAK_GLASS_NOT_PERMITTED": [
+   "fssaira.disclosure"
+  ],
+  "BREAK_GLASS_PURPOSE": [
+   "fssaira.disclosure"
+  ],
+  "BREAK_GLASS_REVIEW_OVERDUE": [
+   "fssaira.disclosure"
+  ],
+  "BREAK_GLASS_TOO_LONG": [
+   "fssaira.disclosure"
+  ],
+  "BREAK_GLASS_UNJUSTIFIED": [
+   "fssaira.disclosure"
+  ],
+  "BUNDLE_COMPONENT_CHANGED": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_ENDPOINT_MISMATCH": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_INCOMPLETE": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_MALFORMED_DIGEST": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_MEASUREMENT_UNAVAILABLE": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_NOT_ATTESTED": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_SELF_REPORTED_DIGEST_NOT_EVIDENCE": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_SIGNATURE_INVALID": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_SIGNER_UNTRUSTED": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_SUSPENDED_UNTIL_REATTESTED": [
+   "fssaira.integration.bundle"
+  ],
+  "BUNDLE_UNREGISTERED": [
+   "fssaira.integration.bundle"
+  ],
+  "BYTE_CEILING_EXCEEDED": [
+   "fssaira.integration.transport"
+  ],
+  "CALL_BUDGET_EXHAUSTED": [
+   "fssaira.accountable_action"
+  ],
+  "CAPABILITY_AMPLIFICATION": [
+   "fssaira.tbc.runtime"
+  ],
+  "CAPABILITY_SCOPE_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "CASE_NOT_FOUND": [
+   "fssaira.exact_action",
+   "fssaira.redis_backend",
+   "fssaira.sql_backend"
+  ],
+  "CASE_STATE_CONFLICT": [
+   "fssaira.control_plane",
+   "fssaira.exact_action",
+   "fssaira.redis_backend",
+   "fssaira.sql_backend"
+  ],
+  "CASE_VERSION_CONFLICT": [
+   "fssaira.exact_action",
+   "fssaira.redis_backend",
+   "fssaira.sql_backend"
+  ],
+  "CHAIN_BROKEN": [
+   "fssaira.delegation"
+  ],
+  "CHAIN_CYCLE": [
+   "fssaira.delegation"
+  ],
+  "CHAIN_NOT_ROOTED": [
+   "fssaira.delegation"
+  ],
+  "CHANNEL_BUDGET_EXHAUSTED": [
+   "fssaira.tbc.runtime"
+  ],
+  "CHANNEL_POLICY_INCOMPLETE": [
+   "fssaira.tbc.runtime"
+  ],
+  "CHANNEL_SLO_EXCEEDED": [
+   "fssaira.channel_slo"
+  ],
+  "CHANNEL_SLO_MET": [
+   "fssaira.channel_slo"
+  ],
+  "CHECKPOINT_KEY_UNTRUSTED": [
+   "fssaira.evidence_notary"
+  ],
+  "CHECKPOINT_SIGNATURE_INVALID": [
+   "fssaira.evidence_notary"
+  ],
+  "CHECKPOINT_TIME_UNANCHORED": [
+   "fssaira.time_anchor"
+  ],
+  "CHECKPOINT_VALID": [
+   "fssaira.evidence_notary"
+  ],
+  "CHUNKED_FRAMING_REFUSED": [
+   "fssaira.integration.transport"
+  ],
+  "CHUNK_TOO_LARGE": [
+   "fssaira.tbc.runtime"
+  ],
+  "CLASS_NOT_CLEARED": [
+   "fssaira.disclosure"
+  ],
+  "COMPOSITION_SCOPE": [
+   "fssaira.joined_workflow"
+  ],
+  "CONSENT_REVOKED": [
+   "fssaira.joined_workflow"
+  ],
+  "CONSENT_SERVICE_UNAVAILABLE": [
+   "fssaira.disclosure"
+  ],
+  "CONSENT_WITHDRAWN": [
+   "fssaira.disclosure"
+  ],
+  "CONSEQUENCE_NOT_DELEGABLE": [
+   "fssaira.delegation"
+  ],
+  "CONTEXT_AUTHORITY_WITHDRAWN": [
+   "fssaira.education_world"
+  ],
+  "CONTEXT_SCOPE_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "CROSS_TASK_ANCESTRY": [
+   "fssaira.tbc.runtime"
+  ],
+  "CUSTODY_CIPHERTEXT_BINDING_INVALID": [
+   "fssaira.key_custody"
+  ],
+  "CUSTODY_CREDENTIAL_UNKNOWN": [
+   "fssaira.key_custody"
+  ],
+  "CUSTODY_KEY_ABSENT": [
+   "fssaira.key_custody"
+  ],
+  "CUSTODY_KEY_DESTROYED": [
+   "fssaira.key_custody"
+  ],
+  "CUSTODY_KEY_UNWRAP_FAILED": [
+   "fssaira.key_custody"
+  ],
+  "CUSTODY_OPERATION_NOT_PERMITTED": [
+   "fssaira.key_custody"
+  ],
+  "CUSTODY_RESTORE_WITHOUT_JOURNAL": [
+   "fssaira.key_custody"
+  ],
+  "DATA_RIGHTS_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "DEADLINE_EXCEEDED": [
+   "fssaira.integration.transport"
+  ],
+  "DECLASSIFICATION_EXPIRED": [
+   "fssaira.disclosure"
+  ],
+  "DECLASSIFICATION_NOT_APPROVED": [
+   "fssaira.disclosure"
+  ],
+  "DECLASSIFICATION_OUT_OF_RULE": [
+   "fssaira.disclosure"
+  ],
+  "DECLASSIFICATION_REQUIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "DECLASSIFICATION_RULE_UNKNOWN": [
+   "fssaira.disclosure"
+  ],
+  "DECLASSIFICATION_SELF_APPROVED": [
+   "fssaira.disclosure"
+  ],
+  "DECLASSIFICATION_SIGNATURE_INVALID": [
+   "fssaira.disclosure"
+  ],
+  "DECLASSIFICATION_WRONG_OUTPUT": [
+   "fssaira.disclosure"
+  ],
+  "DECLASSIFICATION_WRONG_ROLE": [
+   "fssaira.disclosure"
+  ],
+  "DEFINITION_CHANGED_AFTER_APPROVAL": [
+   "fssaira.integration.tool_servers"
+  ],
+  "DELEGATED_GRANT_AUDIENCE_NOT_PERMITTED": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATED_GRANT_CHAIN_BROKEN": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATED_GRANT_DEPTH_EXCEEDED": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATED_GRANT_HOLDER_MISMATCH": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATED_GRANT_REVOKED": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATED_GRANT_ROOT_NOT_CURRENT": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATED_GRANT_SIGNATURE_INVALID": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATED_GRANT_ZONE_NOT_PERMITTED": [
+   "fssaira.grant_delegation"
+  ],
+  "DELEGATION_AMPLIFICATION": [
+   "fssaira.joined_workflow",
+   "fssaira.tbc.runtime"
+  ],
+  "DELEGATION_CYCLE_OR_DEPTH": [
+   "fssaira.joined_workflow"
+  ],
+  "DELEGATION_DEPTH": [
+   "fssaira.tbc.runtime"
+  ],
+  "DELEGATION_EXPIRED": [
+   "fssaira.delegation"
+  ],
+  "DELEGATION_KEY_UNTRUSTED": [
+   "fssaira.delegation"
+  ],
+  "DELEGATION_OUTLIVES_DELEGATOR": [
+   "fssaira.delegation"
+  ],
+  "DELEGATION_REVOKED": [
+   "fssaira.delegation"
+  ],
+  "DELEGATION_SIGNATURE_INVALID": [
+   "fssaira.delegation"
+  ],
+  "DELIBERATION_TOO_SHORT": [
+   "fssaira.control_plane",
+   "fssaira.oversight"
+  ],
+  "DELIBERATION_UNVERIFIABLE": [
+   "fssaira.control_plane",
+   "fssaira.oversight"
+  ],
+  "DELIVERY_ALREADY_STARTED": [
+   "fssaira.tbc.runtime"
+  ],
+  "DELIVERY_BINDING_REQUIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "DELIVERY_COMPLETE": [
+   "fssaira.tbc.runtime"
+  ],
+  "DELIVERY_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "DELIVERY_INTEGRITY": [
+   "fssaira.tbc.runtime"
+  ],
+  "DELIVERY_REVOKED": [
+   "fssaira.tbc.runtime"
+  ],
+  "DEPTH_EXCEEDED": [
+   "fssaira.delegation"
+  ],
+  "DESCRIPTION_MUST_BE_TEXT": [
+   "fssaira.integration.tool_servers"
+  ],
+  "DESTINATION_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "DUPLICATE_FIELD": [
+   "fssaira.joined_workflow"
+  ],
+  "DUPLICATE_HEADER": [
+   "fssaira.integration.transport"
+  ],
+  "EFFECT_NOT_PENDING": [
+   "fssaira.tbc.runtime"
+  ],
+  "EGRESS_BLOCKED": [
+   "fssaira.accountable_action"
+  ],
+  "EGRESS_IN_ARGUMENTS": [
+   "fssaira.accountable_action"
+  ],
+  "ENDPOINT_UNDECLARED": [
+   "fssaira.disclosure"
+  ],
+  "ENROLLMENT_RESTRICTED": [
+   "fssaira.tbc.runtime"
+  ],
+  "ENVELOPE_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "EVIDENCE_SPLIT_VIEW": [
+   "fssaira.transparency"
+  ],
+  "EVIDENCE_UNAVAILABLE": [
+   "fssaira.disclosure"
+  ],
+  "EXACT_APPROVAL_REQUIRED": [
+   "fssaira.joined_workflow",
+   "fssaira.tbc.runtime"
+  ],
+  "EXACT_CONFIRMATION_REQUIRED": [
+   "fssaira.joined_workflow"
+  ],
+  "EXACT_RELEASE_AUTHORITY_REQUIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "EXECUTION_STATE_INCONSISTENT": [
+   "fssaira.atomic_execution",
+   "fssaira.exact_action"
+  ],
+  "FERPA_CONSENT_INVALID": [
+   "fssaira.ferpa"
+  ],
+  "FERPA_CONSENT_REQUIRED": [
+   "fssaira.ferpa"
+  ],
+  "FERPA_NOT_RIGHTS_HOLDER": [
+   "fssaira.ferpa"
+  ],
+  "FERPA_NO_LEGITIMATE_INTEREST": [
+   "fssaira.ferpa"
+  ],
+  "FERPA_PATH_NOT_MODELLED": [
+   "fssaira.ferpa"
+  ],
+  "FERPA_RIGHTS_TRANSFERRED": [
+   "fssaira.ferpa"
+  ],
+  "FERPA_STATEMENT_MISSING": [
+   "fssaira.ferpa"
+  ],
+  "FERPA_THREAT_NOT_ARTICULATED": [
+   "fssaira.ferpa"
+  ],
+  "FIELD_NOT_MINIMUM_NECESSARY": [
+   "fssaira.disclosure"
+  ],
+  "FIELD_UNDECLARED": [
+   "fssaira.disclosure"
+  ],
+  "FLAGGED_DESCRIPTION_NOT_EXPLICITLY_ACCEPTED": [
+   "fssaira.integration.tool_servers"
+  ],
+  "FLOOR_BELOW_DECLARED_INDEPENDENCE": [
+   "fssaira.assisted_review"
+  ],
+  "FRESHNESS_UNPROVEN": [
+   "fssaira.tbc.runtime"
+  ],
+  "FS_KEY_ERASED": [
+   "fssaira.forward_secure"
+  ],
+  "FS_PERIOD_CERT_INVALID": [
+   "fssaira.forward_secure"
+  ],
+  "FS_ROOT_UNTRUSTED": [
+   "fssaira.forward_secure"
+  ],
+  "FS_SCHEDULE_EXHAUSTED": [
+   "fssaira.forward_secure"
+  ],
+  "FS_SCHEDULE_INVALID": [
+   "fssaira.forward_secure"
+  ],
+  "FS_SIGNATURE_INVALID": [
+   "fssaira.forward_secure"
+  ],
+  "FS_SIGNATURE_VALID": [
+   "fssaira.forward_secure"
+  ],
+  "FS_WRONG_PERIOD": [
+   "fssaira.forward_secure"
+  ],
+  "GRANT_EXPIRED": [
+   "fssaira.disclosure"
+  ],
+  "GRANT_HOLDER_MISMATCH": [
+   "fssaira.disclosure"
+  ],
+  "GRANT_KEY_UNTRUSTED": [
+   "fssaira.disclosure"
+  ],
+  "GRANT_NOT_SUPPLIED": [
+   "fssaira.disclosure"
+  ],
+  "GRANT_REVOKED": [
+   "fssaira.disclosure"
+  ],
+  "GRANT_SCOPE_OR_REVOKED": [
+   "fssaira.joined_workflow"
+  ],
+  "GRANT_SELF_ISSUED": [
+   "fssaira.disclosure"
+  ],
+  "GRANT_SIGNATURE_INVALID": [
+   "fssaira.disclosure"
+  ],
+  "GRANT_TOO_LONG": [
+   "fssaira.ferpa"
+  ],
+  "GRAPH_NOT_DECLARED": [
+   "fssaira.tbc.runtime"
+  ],
+  "GUARDIAN_CANNOT_EXPAND": [
+   "fssaira.tbc.runtime"
+  ],
+  "HEADER_LIMIT_EXCEEDED": [
+   "fssaira.integration.transport"
+  ],
+  "HUMAN_DENIED": [
+   "fssaira.accountable_action"
+  ],
+  "IDENTITY_EXCEEDS_PASSPORT": [
+   "fssaira.tbc.runtime"
+  ],
+  "IDENTITY_NOT_ENTITLED": [
+   "fssaira.privacy_pipeline"
+  ],
+  "IDENTITY_RESTORED": [
+   "fssaira.privacy_pipeline"
+  ],
+  "INCOMPLETE_INVENTORY": [
+   "fssaira.tbc.contracts"
+  ],
+  "INDEPENDENT_APPEAL_REQUIRED": [
+   "fssaira.joined_workflow"
+  ],
+  "INDEPENDENT_AUTHORITY_REQUIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "INDEPENDENT_CONFIRMATION_REQUIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "INITIAL_STATE_NOT_ALLOWED": [
+   "fssaira.control_plane"
+  ],
+  "INSTRUCTOR_REQUIRED": [
+   "fssaira.joined_workflow"
+  ],
+  "INTEGRITY_FAILURE": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_ANCESTRY": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_BUDGET_FIELDS": [
+   "fssaira.tbc.contracts"
+  ],
+  "INVALID_CHANNEL_CAPACITY": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_CONSENT": [
+   "fssaira.joined_workflow"
+  ],
+  "INVALID_DECLASSIFICATION": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_DIGEST": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_EDGE": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_IDENTIFIER": [
+   "fssaira.tbc.contracts"
+  ],
+  "INVALID_INTEGER": [
+   "fssaira.tbc.contracts"
+  ],
+  "INVALID_MONITOR_FINDING": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_MONITOR_SCHEMA": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_PASSPORT_FIELDS": [
+   "fssaira.tbc.contracts"
+  ],
+  "INVALID_REFERENCE": [
+   "fssaira.tbc.runtime"
+  ],
+  "INVALID_SCOPE": [
+   "fssaira.tbc.contracts"
+  ],
+  "INVALID_SCOPE_FIELDS": [
+   "fssaira.tbc.contracts"
+  ],
+  "INVALID_TASK_FIELDS": [
+   "fssaira.tbc.contracts"
+  ],
+  "INVALID_VALUE": [
+   "fssaira.joined_workflow"
+  ],
+  "LEASE_TOO_LONG": [
+   "fssaira.tbc.runtime"
+  ],
+  "LEDGER_CHAIN_BROKEN": [
+   "fssaira.evidence_notary"
+  ],
+  "LEDGER_HISTORY_REWRITTEN": [
+   "fssaira.evidence_notary"
+  ],
+  "LEDGER_TRUNCATED": [
+   "fssaira.evidence_notary"
+  ],
+  "LENGTH_MISMATCH": [
+   "fssaira.integration.transport"
+  ],
+  "LENGTH_REQUIRED": [
+   "fssaira.integration.transport"
+  ],
+  "MALFORMED_HEADER": [
+   "fssaira.integration.transport"
+  ],
+  "MALFORMED_STATUS": [
+   "fssaira.integration.transport"
+  ],
+  "MEDIATOR_MISMATCH": [
+   "fssaira.joined_workflow"
+  ],
+  "MEMORY_ARTIFACT_CONTENT_UNDER_LOWER_LABEL": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_IMPORT_LABEL_NOT_PRESERVED": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_IMPORT_PURPOSE_MISMATCH": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_INVALIDATED": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_NAMESPACE_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "MEMORY_OUTPUT_NOT_ISSUED_BY_GATE": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_REAUTHORIZATION_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "MEMORY_RETENTION_EXPIRED": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_RETENTION_EXTENDS_SOURCE": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_RETENTION_INVALID": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_UNKNOWN_ARTIFACT": [
+   "fssaira.integration.memory"
+  ],
+  "MEMORY_UNKNOWN_LINEAGE_QUARANTINED": [
+   "fssaira.integration.memory"
+  ],
+  "MERKLE_CONSISTENCY_INVALID": [
+   "fssaira.transparency"
+  ],
+  "MERKLE_CONSISTENCY_VALID": [
+   "fssaira.transparency"
+  ],
+  "MERKLE_FORK": [
+   "fssaira.transparency"
+  ],
+  "MERKLE_INCLUSION_INVALID": [
+   "fssaira.transparency"
+  ],
+  "MERKLE_INCLUSION_VALID": [
+   "fssaira.transparency"
+  ],
+  "MERKLE_ROLLBACK": [
+   "fssaira.transparency"
+  ],
+  "MINOR_DUAL_APPROVAL_REQUIRED": [
+   "fssaira.ferpa"
+  ],
+  "MINOR_GRANT_TOO_LONG": [
+   "fssaira.ferpa"
+  ],
+  "MINOR_RECIPIENT_NOT_NAMED": [
+   "fssaira.ferpa"
+  ],
+  "MODEL_ARTIFACT_DIGEST_MISMATCH": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_CLASS_NOT_APPROVED": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_ENDPOINT_UNREGISTERED": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_IDENTITY_MISMATCH": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_IDENTITY_UNAVAILABLE": [
+   "fssaira.disclosure_api"
+  ],
+  "MODEL_MANIFEST_ENDPOINT_UNDECLARED": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_MANIFEST_EXPIRED": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_MANIFEST_INCOMPLETE": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_MANIFEST_REVOKED": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_MANIFEST_SIGNATURE_INVALID": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_MANIFEST_SIGNER_UNTRUSTED": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_MANIFEST_ZONE_MISMATCH": [
+   "fssaira.model_registry"
+  ],
+  "MODEL_OR_ZONE_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "MODEL_PURPOSE_NOT_APPROVED": [
+   "fssaira.model_registry"
+  ],
+  "MONITOR_REPLAY": [
+   "fssaira.tbc.runtime"
+  ],
+  "MONOTONIC_VERSION_REQUIRED": [
+   "fssaira.joined_workflow"
+  ],
+  "NODE_NOT_ADMITTED": [
+   "fssaira.tbc.runtime"
+  ],
+  "NOTHING_TO_RESTORE": [
+   "fssaira.privacy_pipeline"
+  ],
+  "NOT_QUALIFIED_FOR_OPERATIONAL_USE": [
+   "fssaira.joined_workflow"
+  ],
+  "NOT_STOPPED": [
+   "fssaira.tbc.runtime"
+  ],
+  "NO_APPROVER_AVAILABLE": [
+   "fssaira.accountable_action"
+  ],
+  "NO_EFFECT": [
+   "fssaira.joined_workflow"
+  ],
+  "NO_PEER_CERTIFICATE": [
+   "fssaira.integration.transport"
+  ],
+  "OBJECTION_WINDOW_CLOSED": [
+   "fssaira.tbc.runtime"
+  ],
+  "OBJECT_REQUIRED": [
+   "fssaira.joined_workflow",
+   "fssaira.tbc.runtime"
+  ],
+  "OPERATION_NOT_ALLOWED": [
+   "fssaira.exact_action"
+  ],
+  "OPERATION_OUT_OF_SCOPE": [
+   "fssaira.accountable_action"
+  ],
+  "OUTPUT_UNKNOWN": [
+   "fssaira.disclosure"
+  ],
+  "OUT_OF_EFFECTIVE_SCOPE": [
+   "fssaira.delegation"
+  ],
+  "PACKET_INCONSISTENT": [
+   "fssaira.decision_packet"
+  ],
+  "PACKET_OUTCOME_MISSING": [
+   "fssaira.decision_packet"
+  ],
+  "PACK_ATTEMPTS_TO_DISABLE_KERNEL": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_BREAK_GLASS_UNBOUNDED": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_CAPABILITY_UNKNOWN": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_CONSEQUENCE_DOWNGRADED": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_CONTROL_CONTRACT_INCOMPLETE": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_CONTROL_CONTRACT_MISSING": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_DECLASSIFIER_HOLDS_NO_CONSEQUENTIAL_TRANSITION": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_DECLASSIFIER_NOT_INDEPENDENT": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_DELEGATION_UNBOUNDED": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_EMERGENCY_REVIEWER_NOT_INDEPENDENT": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_EMERGENCY_REVIEW_NOT_ENFORCED": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_ENFORCEMENT_POINT_UNKNOWN": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_EXTERNAL_RECIPIENT_RECEIVES_PROTECTED_DATA": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_FAILURE_RESPONSE_FAILS_OPEN": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_FAILURE_TEST_MISSING": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_KERNEL_CAPABILITY_MISSING": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_MANIFEST_DRIFT": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_MANIFEST_INVALID": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_MANUAL_FALLBACK_MISSING": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_MISMATCH": [
+   "fssaira.joined_workflow"
+  ],
+  "PACK_MODEL_APPROVAL_UNBOUNDED": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_NON_HUMAN_APPROVER": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_PLACEHOLDER_UNFILLED": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_PROTECTED_CLASS_IN_EXTERNAL_ZONE": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_REVIEW_OVERLOAD_FAILS_OPEN": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_SOURCE_INVALID": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_STRUCTURALLY_INVALID": [
+   "fssaira.pack_floor"
+  ],
+  "PACK_TEST_MISSING": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_UNDECLASSIFIED_CLASS_IN_PUBLIC_ZONE": [
+   "fssaira.kernel.packs"
+  ],
+  "PACK_UNKNOWN_KEY": [
+   "fssaira.pack_floor"
+  ],
+  "PASSPORT_DRIFT": [
+   "fssaira.tbc.runtime"
+  ],
+  "PINNED_ADDRESS_UNREACHABLE": [
+   "fssaira.integration.transport"
+  ],
+  "PINNING_UNAVAILABLE": [
+   "fssaira.integration.transport"
+  ],
+  "PIN_MISMATCH": [
+   "fssaira.integration.transport"
+  ],
+  "POLICY_VERSION_CHANGED": [
+   "fssaira.tbc.runtime"
+  ],
+  "POLICY_VERSION_NOT_INCREASING": [
+   "fssaira.tbc.runtime"
+  ],
+  "POLICY_WORKLOAD_MISMATCH": [
+   "fssaira.tbc.runtime"
+  ],
+  "POPULATION_BOUND_TOO_LARGE": [
+   "fssaira.tbc.contracts"
+  ],
+  "POPULATION_LIMIT": [
+   "fssaira.tbc.runtime"
+  ],
+  "PRINCIPAL_NOT_NAMED": [
+   "fssaira.delegation"
+  ],
+  "PROHIBITED_FLOW": [
+   "fssaira.tbc.runtime"
+  ],
+  "PROPOSAL_NOT_FOUND": [
+   "fssaira.control_plane"
+  ],
+  "PROVENANCE_REQUIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "PROXY_CONFIGURED": [
+   "fssaira.integration.transport"
+  ],
+  "PURPOSE_MISMATCH": [
+   "fssaira.disclosure"
+  ],
+  "PURPOSE_NOT_ATTENUATED": [
+   "fssaira.delegation"
+  ],
+  "PURPOSE_UNDECLARED": [
+   "fssaira.disclosure"
+  ],
+  "READ_TIMEOUT": [
+   "fssaira.integration.transport"
+  ],
+  "REASON_REQUIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "RECEIPT_LIMIT": [
+   "fssaira.tbc.runtime"
+  ],
+  "RECEIPT_SIGNATURE_INVALID": [
+   "fssaira.evidence_notary"
+  ],
+  "RECEIPT_VALID": [
+   "fssaira.evidence_notary"
+  ],
+  "RECIPIENT_CLASS_NOT_CLEARED": [
+   "fssaira.disclosure"
+  ],
+  "RECIPIENT_PURPOSE_NOT_PERMITTED": [
+   "fssaira.disclosure"
+  ],
+  "RECIPIENT_REQUIRED": [
+   "fssaira.joined_workflow"
+  ],
+  "RECIPIENT_SUBJECT_NOT_PERMITTED": [
+   "fssaira.disclosure"
+  ],
+  "RECIPIENT_UNDECLARED": [
+   "fssaira.disclosure"
+  ],
+  "RECIPIENT_ZONE_NOT_PERMITTED": [
+   "fssaira.disclosure"
+  ],
+  "RECONCILIATION_SCOPE": [
+   "fssaira.joined_workflow"
+  ],
+  "RECORD_SOURCE_READ_ONLY": [
+   "fssaira.disclosure"
+  ],
+  "RECORD_SOURCE_UNAVAILABLE": [
+   "fssaira.disclosure"
+  ],
+  "REGISTER_WRITE_CREDENTIAL_REQUIRED": [
+   "fssaira.education_world"
+  ],
+  "REGISTRAR_REQUIRED": [
+   "fssaira.joined_workflow"
+  ],
+  "RELEASE_CONSENT_WITHDRAWN": [
+   "fssaira.disclosure"
+  ],
+  "RELEASE_GRANT_NO_LONGER_CURRENT": [
+   "fssaira.disclosure"
+  ],
+  "REPLAY_IDENTITY_UNVERIFIABLE": [
+   "fssaira.exact_action"
+  ],
+  "REQUESTER_NOT_CHAIN_LEAF": [
+   "fssaira.delegation"
+  ],
+  "REQUEST_ID_CONFLICT": [
+   "fssaira.control_plane",
+   "fssaira.exact_action"
+  ],
+  "REQUEST_TOO_DEEP": [
+   "fssaira.joined_workflow"
+  ],
+  "REQUEST_TOO_LARGE": [
+   "fssaira.joined_workflow"
+  ],
+  "RESERVATION_ALREADY_BOUND": [
+   "fssaira.tbc.runtime"
+  ],
+  "RESERVATION_ALREADY_SETTLED": [
+   "fssaira.tbc.runtime"
+  ],
+  "RESERVATION_EXHAUSTED": [
+   "fssaira.tbc.runtime"
+  ],
+  "RESERVATION_RESTRICTED": [
+   "fssaira.tbc.runtime"
+  ],
+  "RESIDENCY_VIOLATION": [
+   "fssaira.disclosure"
+  ],
+  "RESOURCE_ALREADY_EXISTS": [
+   "fssaira.control_plane"
+  ],
+  "RESOURCE_RIGHTS_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "RETENTION_NOT_CONFIGURED": [
+   "fssaira.tbc.runtime"
+  ],
+  "RETENTION_TOO_LONG": [
+   "fssaira.tbc.runtime"
+  ],
+  "REVIEWER_IS_REQUESTER": [
+   "fssaira.review_queue"
+  ],
+  "REVIEWER_NOT_A_DECLARED_HUMAN": [
+   "fssaira.review_queue"
+  ],
+  "REVIEWER_OVER_CAPACITY": [
+   "fssaira.review_queue"
+  ],
+  "REVIEWER_ROLE_NOT_PERMITTED": [
+   "fssaira.review_queue"
+  ],
+  "REVIEW_CAPACITY_EXCEEDED": [
+   "fssaira.oversight"
+  ],
+  "REVIEW_DEFERRED_TO_MANUAL": [
+   "fssaira.tbc.runtime"
+  ],
+  "REVIEW_ENDORSEMENT_CONFLICT": [
+   "fssaira.control_plane"
+  ],
+  "REVIEW_ENDORSEMENT_INVALID": [
+   "fssaira.control_plane"
+  ],
+  "REVIEW_ITEM_NOT_PENDING": [
+   "fssaira.review_queue"
+  ],
+  "REVIEW_NOT_PERMITTED": [
+   "fssaira.disclosure"
+  ],
+  "REVIEW_QUEUE_FULL": [
+   "fssaira.control_plane"
+  ],
+  "REVIEW_SESSION_CONFLICT": [
+   "fssaira.control_plane"
+  ],
+  "REVIEW_TIMED_OUT": [
+   "fssaira.control_plane"
+  ],
+  "ROUTE_FIELD_UNDECLARED": [
+   "fssaira.semantic_router"
+  ],
+  "ROUTE_NO_PERMITTED_ENDPOINT": [
+   "fssaira.semantic_router"
+  ],
+  "SCOPE_NOT_ATTENUATED": [
+   "fssaira.delegation"
+  ],
+  "SECOND_APPROVER_FIELDS_INVALID": [
+   "fssaira.exact_action"
+  ],
+  "SECOND_APPROVER_IS_REQUESTER": [
+   "fssaira.exact_action"
+  ],
+  "SECOND_APPROVER_NOT_DISTINCT": [
+   "fssaira.exact_action"
+  ],
+  "SECOND_APPROVER_ROLE_MISSING": [
+   "fssaira.exact_action"
+  ],
+  "SECOND_APPROVER_ROLE_NOT_ALLOWED": [
+   "fssaira.exact_action"
+  ],
+  "SECOND_APPROVER_ROLE_WITHOUT_REVIEWER": [
+   "fssaira.exact_action"
+  ],
+  "SECOND_REVIEWER_NOT_DISTINCT": [
+   "fssaira.api",
+   "fssaira.oversight"
+  ],
+  "SECOND_REVIEWER_REQUIRED": [
+   "fssaira.oversight"
+  ],
+  "SEPARATION_OF_DUTIES": [
+   "fssaira.control_plane",
+   "fssaira.exact_action"
+  ],
+  "SESSION_HOLDER_MISMATCH": [
+   "fssaira.disclosure"
+  ],
+  "SETTLEMENT_EXCEEDS_RESERVATION": [
+   "fssaira.tbc.runtime"
+  ],
+  "SETTLEMENT_IS_METERED": [
+   "fssaira.tbc.runtime"
+  ],
+  "SOURCE_QUARANTINED": [
+   "fssaira.tbc.runtime"
+  ],
+  "STALE_APPEAL": [
+   "fssaira.joined_workflow"
+  ],
+  "STALE_AUTHORITY": [
+   "fssaira.joined_workflow"
+  ],
+  "STALE_CONTEXT": [
+   "fssaira.joined_workflow"
+  ],
+  "STALE_MONITOR_EVIDENCE": [
+   "fssaira.tbc.runtime"
+  ],
+  "STALE_OR_FOREIGN_CAPABILITY": [
+   "fssaira.tbc.runtime"
+  ],
+  "STALE_PROPOSAL": [
+   "fssaira.tbc.runtime"
+  ],
+  "STALE_RESULT": [
+   "fssaira.tbc.runtime"
+  ],
+  "STATE_CONTENTION": [
+   "fssaira.redis_backend"
+  ],
+  "STORE_UNAVAILABLE": [
+   "fssaira.disclosure"
+  ],
+  "STREAM_ALREADY_FINISHED": [
+   "fssaira.integration.streaming"
+  ],
+  "STREAM_LABEL_CHANGED_MID_STREAM": [
+   "fssaira.integration.streaming"
+  ],
+  "STREAM_STOPPED": [
+   "fssaira.integration.streaming"
+  ],
+  "SUBJECT_NOT_FOUND": [
+   "fssaira.disclosure"
+  ],
+  "SUBJECT_OUT_OF_SCOPE": [
+   "fssaira.disclosure"
+  ],
+  "TASK_BUDGET_EXCEEDS_PASSPORT": [
+   "fssaira.tbc.runtime"
+  ],
+  "TASK_EXCEEDS_HARD_ENVELOPE": [
+   "fssaira.tbc.runtime"
+  ],
+  "TASK_EXPIRED": [
+   "fssaira.tbc.runtime"
+  ],
+  "TIME_ANCHORED": [
+   "fssaira.time_anchor"
+  ],
+  "TIME_CHAIN_BROKEN": [
+   "fssaira.time_anchor"
+  ],
+  "TIME_QUORUM_NOT_MET": [
+   "fssaira.time_anchor"
+  ],
+  "TIME_SIGNATURE_INVALID": [
+   "fssaira.time_anchor"
+  ],
+  "TIME_SOURCES_DISAGREE": [
+   "fssaira.time_anchor"
+  ],
+  "TLS_REJECTED": [
+   "fssaira.integration.transport"
+  ],
+  "TLS_VERSION_BELOW_FLOOR": [
+   "fssaira.integration.transport"
+  ],
+  "TOOL_DENIED": [
+   "fssaira.tbc.runtime"
+  ],
+  "TOOL_NOT_APPROVED": [
+   "fssaira.integration.tool_servers"
+  ],
+  "TOOL_NOT_GRANTED": [
+   "fssaira.accountable_action"
+  ],
+  "TOOL_OUTPUT_BOUND": [
+   "fssaira.tbc.runtime"
+  ],
+  "TRANSITION_NOT_ALLOWED": [
+   "fssaira.control_plane",
+   "fssaira.exact_action"
+  ],
+  "TREE_HEAD_UNTRUSTED": [
+   "fssaira.transparency"
+  ],
+  "TRUNCATED_RESPONSE": [
+   "fssaira.integration.transport"
+  ],
+  "TYPED_ARRAY_TOO_LONG": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_BYTE_ORDER_MARK": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_DUPLICATE_KEY": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_ENCODING_INVALID": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_FIELD_NOT_ENUMERATED": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_MALFORMED_JSON": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_MISSING_FIELD": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_NESTING_TOO_DEEP": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_NON_CANONICAL_ID": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_NON_FINITE_NUMBER": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_NOT_AN_OBJECT": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_OBJECT_TOO_LARGE": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_OPERATION_NOT_ENUMERATED": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_PAYLOAD_TOO_LARGE": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_PURPOSE_NOT_ENUMERATED": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_SERVER_DERIVED_FIELD": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_STRING_TOO_LONG": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_TEXT_NOT_NFC": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_UNAUTHENTICATED_CALLER": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_UNKNOWN_FIELD": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_UNRESOLVED_DESTINATION": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_UNSUPPORTED_SCHEMA_VERSION": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_WRONG_KIND": [
+   "fssaira.integration.typed"
+  ],
+  "TYPED_WRONG_TYPE": [
+   "fssaira.integration.typed"
+  ],
+  "UNCLASSIFIED_CONTACT_DETAILS": [
+   "fssaira.privacy_pipeline"
+  ],
+  "UNDECLARED_INTERFACE": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNEXPECTED_STATUS": [
+   "fssaira.integration.transport"
+  ],
+  "UNIMPLEMENTED_PRIMITIVE": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_AGENT": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_BUDGET": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_CAPABILITY": [
+   "fssaira.accountable_action"
+  ],
+  "UNKNOWN_CHANGE": [
+   "fssaira.joined_workflow"
+  ],
+  "UNKNOWN_GRANT": [
+   "fssaira.joined_workflow"
+  ],
+  "UNKNOWN_GUARDIAN_STATE": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_MEDIATOR": [
+   "fssaira.joined_workflow"
+  ],
+  "UNKNOWN_OPERATION": [
+   "fssaira.joined_workflow"
+  ],
+  "UNKNOWN_PACK": [
+   "fssaira.joined_workflow"
+  ],
+  "UNKNOWN_PRIMITIVE": [
+   "fssaira.tbc.contracts"
+  ],
+  "UNKNOWN_REFERENCE": [
+   "fssaira.joined_workflow",
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_RESERVATION": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_ROLE": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_SCHEDULED_EFFECT": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_SUBJECT": [
+   "fssaira.joined_workflow"
+  ],
+  "UNKNOWN_TASK": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNKNOWN_VALUE": [
+   "fssaira.joined_workflow"
+  ],
+  "UNREGISTERED_TOOL": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNSAFE_FAILURE_STATE": [
+   "fssaira.tbc.contracts"
+  ],
+  "UNSUPPORTED_DOMAIN_BINDING": [
+   "fssaira.tbc.runtime"
+  ],
+  "UNSUPPORTED_INTERFACE_OR_FIELD": [
+   "fssaira.joined_workflow"
+  ],
+  "UNSUPPORTED_PROPOSAL": [
+   "fssaira.joined_workflow"
+  ],
+  "UNTRUSTED_CHAIN_CANNOT_REACH_PRIVILEGED_TOOL": [
+   "fssaira.integration.tool_servers"
+  ],
+  "VALUE_NOT_ISSUED": [
+   "fssaira.disclosure"
+  ],
+  "VAULT_RESTORE_NOT_AUTHORIZED": [
+   "fssaira.privacy_vault"
+  ],
+  "VAULT_TOKEN_IRREVERSIBLE": [
+   "fssaira.privacy_vault"
+  ],
+  "VAULT_TOKEN_UNKNOWN": [
+   "fssaira.privacy_vault"
+  ],
+  "WITNESS_EXTENSION_REQUIRED": [
+   "fssaira.witness"
+  ],
+  "WITNESS_FORK": [
+   "fssaira.witness"
+  ],
+  "WITNESS_INCONSISTENT": [
+   "fssaira.witness"
+  ],
+  "WITNESS_NOTARY_UNTRUSTED": [
+   "fssaira.witness"
+  ],
+  "WITNESS_QUORUM_MET": [
+   "fssaira.transparency"
+  ],
+  "WITNESS_QUORUM_NOT_MET": [
+   "fssaira.transparency"
+  ],
+  "WITNESS_ROLLBACK": [
+   "fssaira.witness"
+  ],
+  "WORKLOAD_STOPPED": [
+   "fssaira.tbc.runtime"
+  ],
+  "WRONG_HOLDER": [
+   "fssaira.joined_workflow"
+  ]
+ },
+ "count": 462,
+ "generated_by": "fssaira.refusal_registry"
+}

@@ -1350,6 +1350,64 @@ def cmd_pilot_report(args) -> int:
 # ---------------------------------------------------------------------------
 
 
+def cmd_assure_chaos(args) -> int:
+    from .revocation_chaos import run_campaign
+
+    report = run_campaign(seeds=args.seeds)
+    heading(f"Revocation under chaos — {args.seeds} seeded runs per discipline")
+    for name, arm in report["arms"].items():
+        clean = arm["stale_effects"] == 0 and arm["duplicate_applications"] == 0
+        label = "design" if name == "fenced" else "ablation"
+        print(f"  {verdict(clean, name, name):<28} {label:<9} stale={arm['stale_effects']:<5} "
+              f"duplicates={arm['duplicate_applications']:<6} refused={arm['refused_stale']}")
+    print("  " + verdict(report["design_holds"], "fenced commit holds every invariant",
+                         "fenced commit violated an invariant"))
+    emit(report, args.output)
+    return 0 if report["design_holds"] and all(report["ablations_detected"].values()) else 2
+
+
+def cmd_assure_trusted_base(args) -> int:
+    from .refusal_registry import scan
+    from .trusted_base import report as trusted_report
+
+    report = {**trusted_report(), "refusal_codes": len(scan())}
+    size = report["size"]
+    heading("Trusted base — measured, not asserted")
+    for name, component in size["components"].items():
+        print(f"  {name:<16} {component['files']:>3} files  {component['sloc']:>6} SLOC")
+    print(f"  trusted {size['trusted_sloc']} of {size['package_sloc']} SLOC "
+          f"({size['trusted_fraction']:.1%}); native code in package: "
+          f"{len(size['native_code_in_package'])}")
+    print(f"  build measurement sha256:{report['build']['measurement']}")
+    print(f"  SBOM: CycloneDX {report['sbom']['specVersion']}, "
+          f"{len(report['sbom']['components'])} dependencies; "
+          f"{report['refusal_codes']} registered refusal codes")
+    emit(report, args.output)
+    return 0
+
+
+def cmd_assure_staffing(args) -> int:
+    from .oversight_staffing import ReviewDemand, staffing
+
+    report = staffing(ReviewDemand(
+        arrivals_per_hour=args.arrivals_per_hour, mean_review_seconds=args.mean_review_seconds,
+        floor_seconds=args.floor_seconds, low_risk_per_hour=args.low_risk_per_hour,
+        audit_rate=args.audit_rate, target_wait_seconds=args.target_wait_seconds,
+        service_level=args.service_level), on_shift=args.on_shift)
+    heading("Review staffing for the declared floor")
+    print(f"  effective review time {report['effective_review_seconds']} s"
+          + (" (the floor binds)" if report["floor_binds"] else ""))
+    print(f"  reviewers needed: {report['reviewers_needed']}  "
+          f"(utilisation {report['at_needed']['utilisation']}, "
+          f"service level {report['at_needed']['service_level']})")
+    if args.on_shift is not None:
+        print("  " + verdict(report["verdict"] == "STAFFED", "staffed",
+                             f"understaffed: {report['deferred_per_hour']} items/h go to the "
+                             "manual route; do not lower the floor"))
+    emit(report, args.output)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fssaira",
@@ -1689,6 +1747,28 @@ def build_parser() -> argparse.ArgumentParser:
     lab = conference_sub.add_parser("lab", help="serve the educational attack lab on 127.0.0.1")
     lab.add_argument("--port", type=int, default=8765)
     lab.set_defaults(func=cmd_conference_lab)
+
+    assure = sub.add_parser(
+        "assure", help="master-guide assurance: revocation chaos, trusted base, review staffing")
+    assure_sub = assure.add_subparsers(dest="assure_command", required=True)
+    chaos = add_output(assure_sub.add_parser(
+        "chaos", help="revocation under partitions, duplicates, delay and clock skew"))
+    chaos.add_argument("--seeds", type=int, default=200)
+    chaos.set_defaults(func=cmd_assure_chaos)
+    tbase = add_output(assure_sub.add_parser(
+        "trusted-base", help="SLOC per trusted component, build measurement and SBOM"))
+    tbase.set_defaults(func=cmd_assure_trusted_base)
+    staff = add_output(assure_sub.add_parser(
+        "staffing", help="reviewers a declared review floor needs (Erlang C)"))
+    staff.add_argument("--arrivals-per-hour", type=float, required=True)
+    staff.add_argument("--mean-review-seconds", type=float, required=True)
+    staff.add_argument("--floor-seconds", type=float, default=45.0)
+    staff.add_argument("--low-risk-per-hour", type=float, default=0.0)
+    staff.add_argument("--audit-rate", type=float, default=0.0)
+    staff.add_argument("--target-wait-seconds", type=float, default=3600.0)
+    staff.add_argument("--service-level", type=float, default=0.8)
+    staff.add_argument("--on-shift", type=int)
+    staff.set_defaults(func=cmd_assure_staffing)
 
     return parser
 

@@ -223,6 +223,9 @@ is usually `python3`; after `source .venv/bin/activate`, use `python`.
 - [`THESIS.md`](THESIS.md) — the Mediation Thesis: intelligence is untrusted; power and data are mediated. Three commitments, precise invariants, six falsifiers, predictions, and what an institution does next.
 - [`PILOT_PROTOCOL.md`](PILOT_PROTOCOL.md) — the study that closes the field-evidence gap: pre-conditions, evidence indicators, human-judged outcomes, and stop criteria.
 - [`SPECIFICATION.md`](SPECIFICATION.md) — normative requirements in six conformance classes, each tied to an executable test, attestation, or measurement.
+- [`MASTER_GUIDE.md`](MASTER_GUIDE.md) — the master guide for secure agent swarms: critical review of the draft, control catalogue, trusted-base measurement, distributed revocation invariants, staffing, procurement clauses, and the one-page checklist.
+- [`SPECIFICATION_SWARM_PROFILE.md`](SPECIFICATION_SWARM_PROFILE.md) — companion profile: eleven requirements for cooperating agents, distributed adapters and witness federation, each tied to a test.
+- [`refusal_registry.json`](refusal_registry.json) — every refusal code the build can emit, generated from source; a test fails if it drifts.
 - [`RELATED_WORK.md`](RELATED_WORK.md) — foundations inherited, overlap with CaMeL, FIDES, agent design patterns, and AI control, and the contribution stated narrowly.
 - [`THREAT_MODEL_2026.md`](THREAT_MODEL_2026.md) — the 2026 record read architecturally: the public agent-intrusion disclosure, covert-objective and monitorability research, and which stages this kernel mediates, defers to a deployment, or does not cover.
 - [`PATTERNS.md`](PATTERNS.md) — pattern language, anti-patterns, blueprints, maturity levels, and design review checklist for AI systems over sensitive data.

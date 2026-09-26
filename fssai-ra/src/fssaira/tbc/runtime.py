@@ -76,7 +76,8 @@ class TrustRuntime:
 
     def __init__(self, path, passport: Passport, *, authorities, clock=None, pack="education",
                  min_deliberation_seconds=0, receipt_retention_seconds=None,
-                 effect_delay_seconds=0, mandate_purposes=None):
+                 effect_delay_seconds=0, mandate_purposes=None,
+                 channel_bits_per_release=None, channel_budget_bits=None):
         self.clock = clock or (lambda: int(time.time()))
         self.passport = passport
         # Agent whose request is being mediated; its bound reservation meters charges.
@@ -88,6 +89,17 @@ class TrustRuntime:
         #: Mandate linting: when purposes are declared, a task whose contract grants
         #: more than its purpose needs does not start (see fssaira.tbc.mandate).
         self.mandate_purposes = mandate_purposes
+        #: Covert-channel budget: every authorised release is charged the declared
+        #: bits its open choices can carry; past the task's budget, releases go to
+        #: a person instead (see fssaira.covert_channels for how to compute bits).
+        require((channel_bits_per_release is None) == (channel_budget_bits is None),
+                "CHANNEL_POLICY_INCOMPLETE")
+        for amount in (channel_bits_per_release, channel_budget_bits):
+            require(amount is None or (isinstance(amount, (int, float)) and not isinstance(amount, bool)
+                                       and math.isfinite(amount) and amount >= 0),
+                    "INVALID_CHANNEL_CAPACITY")
+        self.channel_bits_per_release = channel_bits_per_release
+        self.channel_budget_bits = channel_budget_bits
         self.receipt_retention_seconds = (None if receipt_retention_seconds is None
                                           else integer(receipt_retention_seconds, 1))
         self.authorities = {}
@@ -106,6 +118,7 @@ class TrustRuntime:
         CREATE TABLE IF NOT EXISTS tbc_invalid_sources(binding TEXT PRIMARY KEY, reason TEXT, operator TEXT);
         CREATE TABLE IF NOT EXISTS tbc_scheduled(id TEXT PRIMARY KEY, task TEXT, agent TEXT, epoch INTEGER,
           proposal TEXT UNIQUE, approval TEXT, not_before INTEGER, state TEXT, reason TEXT);
+        CREATE TABLE IF NOT EXISTS tbc_channel(task TEXT PRIMARY KEY, spent REAL);
         CREATE TABLE IF NOT EXISTS tbc_usage(id INTEGER PRIMARY KEY CHECK(id=1), remaining TEXT);
         CREATE TABLE IF NOT EXISTS tbc_config(id INTEGER PRIMARY KEY CHECK(id=1), body TEXT);
         CREATE TABLE IF NOT EXISTS tbc_tasks(id TEXT PRIMARY KEY, body TEXT, remaining TEXT,
@@ -530,7 +543,8 @@ class TrustRuntime:
                                "operation": q["operation"], "value": q["value"], "recipient": q["recipient"]})
             pid = self._put("proposal", {"task": task["id"], "agent": agent["id"],
                                          "epoch": task["epoch"], "joined": result["proposal"],
-                                         "created": self._now()})
+                                         "created": self._now(),
+                                         "policy_version": self.passport.policy_version})
             joined = self.world.get(result["proposal"], "proposal")
             ir = {"resource": q["context"], "canonical_resource": f'{task["contract"].tenant}/{task["contract"].subject}',
                   "operation": joined["operation"], "expected_version": joined["binding"]["version"],
@@ -546,6 +560,7 @@ class TrustRuntime:
                     "AI_IR_SCOPE_DENIED")
             approval = self._get(q["approval"], "approval")
             require(approval["proposal"] == q["proposal"], "EXACT_APPROVAL_REQUIRED")
+            self._require_current_policy(p, approval)
             if self.effect_delay_seconds:
                 return self._schedule_effect(task, agent, q["proposal"], q["approval"])
             return self._commit_effect(task, agent, q["proposal"], p, underlying, approval)
@@ -692,6 +707,7 @@ class TrustRuntime:
                             in scope.resources, "AI_IR_SCOPE_DENIED")
                     approval = self._get(row["approval"], "approval")
                     require(approval["proposal"] == row["proposal"], "EXACT_APPROVAL_REQUIRED")
+                    self._require_current_policy(p, approval)
                     self.db.execute("SAVEPOINT tbc_commit")
                     try:
                         result = self._commit_effect(task, agent, row["proposal"], p, underlying, approval)
@@ -707,10 +723,27 @@ class TrustRuntime:
                     code = refused.args[0] if refused.args else "DENIED"
                     self.db.execute("UPDATE tbc_scheduled SET state='cancelled', reason=? WHERE id=?",
                                     (str(code), row["id"]))
+                    if code == "POLICY_VERSION_CHANGED":
+                        # Approved under rules that no longer apply: a person
+                        # re-reviews it under the current rules.
+                        self.db.execute("INSERT OR IGNORE INTO tbc_manual_queue VALUES(?,?,?,?,?)",
+                                        (row["proposal"], row["task"], "policy-migration", self._now(),
+                                         "policy_changed_rereview"))
                     self._receipt_for_agent(row["agent"], row["task"], {"op": "execute_effect"},
                                             "DENIED", refused)
                     outcomes.append({"scheduled": row["id"], "state": "cancelled", "code": code})
         return outcomes
+
+    def _require_current_policy(self, *records):
+        """An approval binds the policy version it was given under.
+
+        Approving under one rule set and executing under another is the gap a
+        digest alone leaves open: the artifact is unchanged, the rules are not.
+        Records stored before this field existed carry no version and pass.
+        """
+        current = self.passport.policy_version
+        require(all(r.get("policy_version", current) == current for r in records),
+                "POLICY_VERSION_CHANGED")
 
     def scheduled_effects(self, token, task_id):
         self._admin_any(token, {"operator", "monitor", "reviewer", "source"})
@@ -733,6 +766,7 @@ class TrustRuntime:
             require(c["proposal"] == proposal and c["name"] != name, "INDEPENDENT_CONFIRMATION_REQUIRED")
             _, task, _ = self._agent(p["agent"])
             require(task["epoch"] == p["epoch"], "STALE_PROPOSAL")
+            self._require_current_policy(p)
             # Minimum review time: an approval faster than the floor is a
             # signature, not oversight, so the work goes to the manual route.
             # Proposals stored before this field existed carry no timestamp.
@@ -746,7 +780,8 @@ class TrustRuntime:
             else:
                 result = self.world.handle("registrar", "registrar", {"op": "approve", "proposal": p["joined"],
                                                                       "confirmation": c["joined"]})
-                aid = self._put("approval", {"proposal": proposal, "name": name, "joined": result["approval"]})
+                aid = self._put("approval", {"proposal": proposal, "name": name, "joined": result["approval"],
+                                             "policy_version": self.passport.policy_version})
                 self.world.event("tbc_named_approval", {"approval": aid, "reviewer": name, "source": c["name"]})
                 if self.db.execute("DELETE FROM tbc_manual_queue WHERE proposal=?", (proposal,)).rowcount:
                     self.world.event("tbc_manual_resolved", {"task": task["id"], "reviewer": name})
@@ -759,18 +794,36 @@ class TrustRuntime:
         require(type(declassify) is bool, "INVALID_DECLASSIFICATION")
         integer(ttl, 1)
         require(ttl <= self.passport.lease_seconds, "LEASE_TOO_LONG")
+        exhausted = False
         with self.transaction():
             a = self._get(artifact, "artifact")
             agent, task, scope = self._agent(a["audience"][0])
             self._artifact(artifact, agent, task, scope)
             require(destination in scope.destinations and "release_artifact" in scope.operations,
                     "DESTINATION_DENIED")
-            escrow = self._put("escrow", {"artifact": artifact, "digest": a["digest"], "destination": destination,
-                          "epoch": task["epoch"], "declassify": declassify, "reviewer": name,
-                          "expires": min(self._now() + ttl, task["contract"].expires)})
-            self.world.event("tbc_release_authorized", {"escrow": escrow, "reviewer": name,
-                                                       "declassify": declassify, "digest": a["digest"]})
-            return escrow
+            if self.channel_bits_per_release is not None:
+                row = self.db.execute("SELECT spent FROM tbc_channel WHERE task=?", (task["id"],)).fetchone()
+                spent = row[0] if row else 0.0
+                if spent + self.channel_bits_per_release > self.channel_budget_bits:
+                    self.db.execute("INSERT OR IGNORE INTO tbc_manual_queue VALUES(?,?,?,?,?)",
+                                    (f"release:{artifact}", task["id"], name, self._now(),
+                                     "channel_budget_exhausted"))
+                    self.world.event("tbc_channel_budget_exhausted", {"task": task["id"], "spent": spent})
+                    exhausted = True
+                else:
+                    self.db.execute("INSERT OR REPLACE INTO tbc_channel VALUES(?,?)",
+                                    (task["id"], spent + self.channel_bits_per_release))
+            if not exhausted:
+                escrow = self._put("escrow", {"artifact": artifact, "digest": a["digest"],
+                              "destination": destination, "epoch": task["epoch"],
+                              "declassify": declassify, "reviewer": name,
+                              "expires": min(self._now() + ttl, task["contract"].expires)})
+                self.world.event("tbc_release_authorized", {"escrow": escrow, "reviewer": name,
+                                                           "declassify": declassify, "digest": a["digest"]})
+        if exhausted:
+            # Raised after commit so the manual-route record survives the refusal.
+            raise AuthorityDenied("CHANNEL_BUDGET_EXHAUSTED")
+        return escrow
 
     def _delivery(self, name, receipt):
         row = self.db.execute("SELECT * FROM tbc_delivery WHERE id=?", (receipt,)).fetchone()
@@ -1069,7 +1122,14 @@ class TrustRuntime:
                 codes[code] = codes.get(code, 0) + 1
                 stopped.append({**entry, "outcome": body.get("outcome"), "code": code})
         destinations = sorted(scope.get("destinations", []))
-        if channel_capacity_bits is None:
+        if channel_capacity_bits is None and self.channel_bits_per_release is not None:
+            spent_row = self.db.execute("SELECT spent FROM tbc_channel WHERE task=?",
+                                        (row["task"],)).fetchone()
+            spent = spent_row[0] if spent_row else 0.0
+            leak = {"declared": True, "bits_per_release": self.channel_bits_per_release,
+                    "task_budget_bits": self.channel_budget_bits, "task_bits_spent": spent,
+                    "note": "enforced by the runtime: releases past the budget go to a person"}
+        elif channel_capacity_bits is None:
             leak = {"declared": False,
                     "destination_choice_bits_per_release": (
                         round(math.log2(len(destinations)), 3) if len(destinations) > 1 else 0.0),
@@ -1431,6 +1491,51 @@ class TrustRuntime:
             self.world.event("tbc_revoke", {"task": task_id, "epoch_raised": True, "operator": name,
                                             "reason_digest": digest(reason)})
             return {"task": task_id, "epoch": task["epoch"] + 1}
+
+    def migrate_policy(self, token, passport, *, reason):
+        """Named move to a new policy version without stopping the world.
+
+        Any other change to the passport is drift and quarantines the workload.
+        A migration is the sanctioned path: the version must increase and the
+        workload stay the same. Agent scopes are re-derived from the passport on
+        every call, so narrowed rules apply to the next request at once. What
+        cannot be re-derived is carried explicitly: a task whose contract no
+        longer fits the new policy is contracted to quarantine, and every held
+        effect approved under the old version is cancelled and sent to a person
+        for re-review. Receipts already carry the policy version and passport
+        digest, so the lineage across the migration is in the evidence.
+        """
+        name = self._admin(token, "operator")
+        require(isinstance(reason, str) and 0 < len(reason.strip()) <= 512, "REASON_REQUIRED")
+        old = self.passport
+        require(isinstance(passport, Passport) and passport.workload == old.workload,
+                "POLICY_WORKLOAD_MISMATCH")
+        require(passport.policy_version > old.policy_version, "POLICY_VERSION_NOT_INCREASING")
+        with self.transaction():
+            self.db.execute("UPDATE tbc_config SET body=? WHERE id=1", (canonical(passport.to_dict()),))
+            contracted = []
+            for row in self.db.execute("SELECT id,body FROM tbc_tasks WHERE state!='QUARANTINED'").fetchall():
+                contract = TaskContract.parse(json.loads(row["body"]))
+                if not (contract.scope.subset(passport.scope) and contract.budget.subset(passport.budget)):
+                    self.db.execute("UPDATE tbc_tasks SET state='QUARANTINED',epoch=epoch+1 WHERE id=?",
+                                    (row["id"],))
+                    contracted.append(row["id"])
+            rerouted = []
+            for row in self.db.execute("SELECT id,task,proposal FROM tbc_scheduled WHERE state='pending'").fetchall():
+                self.db.execute("UPDATE tbc_scheduled SET state='cancelled', reason=? WHERE id=?",
+                                ("POLICY_VERSION_CHANGED", row["id"]))
+                self.db.execute("INSERT OR IGNORE INTO tbc_manual_queue VALUES(?,?,?,?,?)",
+                                (row["proposal"], row["task"], "policy-migration", self._now(),
+                                 "policy_changed_rereview"))
+                rerouted.append(row["id"])
+            self.world.event("tbc_policy_migrated", {
+                "from_version": old.policy_version, "to_version": passport.policy_version,
+                "from_digest": digest(old.to_dict()), "to_digest": digest(passport.to_dict()),
+                "operator": name, "reason_digest": digest(reason),
+                "contracted": contracted, "rerouted": rerouted})
+        self.passport = passport
+        return {"from_version": old.policy_version, "to_version": passport.policy_version,
+                "contracted": contracted, "rerouted": rerouted}
 
     def issue_freshness(self, token, task_id):
         self._admin(token, "operator")

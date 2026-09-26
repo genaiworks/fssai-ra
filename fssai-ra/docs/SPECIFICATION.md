@@ -147,6 +147,16 @@ The safety case moves trust away from the model. It must say where that trust we
 | V-12 | SHOULD | Instrument every pilot with indicators computed from evidence, and state what those indicators cannot measure. | test: `tests/test_disclosure_tokens_and_concurrency.py::test_pilot_indicators_come_from_evidence_and_name_what_they_cannot_measure` |
 | V-9 | SHOULD | Obtain independent assessment and field evidence before production use. | measurement: open; see [`GAPS.md`](GAPS.md) |
 
+### Companion profile: agent swarms
+
+Deployments that run many cooperating agents also claim the requirements in
+[`SPECIFICATION_SWARM_PROFILE.md`](SPECIFICATION_SWARM_PROFILE.md): measured trusted
+base, policy-bound approval and migration, fenced commit under distributed faults, sector
+release tables, a covert-channel rate objective, review staffing, Merkle proofs, a
+witness quorum across domains, forward-secure keys, time anchoring and a generated
+refusal-code registry. They are kept in a separate profile so this core specification,
+and every figure computed from it, stays stable.
+
 ## 5. What conformance does not mean
 
 Conformance to this specification is not legal compliance, certification, a
